@@ -1233,14 +1233,19 @@ The initial operation registry includes:
 
 | Canonical key | Approved French label |
 |---|---|
-| `causes_and_consequences` | Causes et conséquences |
+| `establish_facts` | Établir des faits |
+| `causes_and_consequences` | Déterminer des causes et des conséquences |
 | `time_and_space` | Situer dans le temps et l'espace |
 | `relationships_between_facts` | Mettre en relation des faits |
-| `changes_and_continuities` | Changements et continuités |
-| `differences_and_similarities` | Différences et similitudes |
-| `causal_connections` | Liens de causalité |
+| `changes_and_continuities` | Déterminer des changements et des continuités |
+| `differences_and_similarities` | Déterminer des différences et des similitudes |
+| `causal_connections` | Établir des liens de causalité |
 
 The definitive curriculum mapping, wording, and assessment rules MUST be validated before these values become a production database enum or irreversible migration dependency.
+
+### 4.6.5A Disciplinary Competencies
+
+The disciplinary competencies **Caractériser une période de l'histoire du Québec et du Canada** (`C1`) and **Interpréter une réalité sociale** (`C2`) are distinct from Intellectual Operations. Questions and Socratic exchanges contribute to developing these competencies, but `C1` and `C2` MUST NOT become additional Intellectual Operation values, Progress Record targets, Mastery State indicators, or Student Dashboard indicators.
 
 ### 4.6.6 Learning Objective
 
@@ -1342,6 +1347,8 @@ A Practice Question MUST reference:
 - one or more Historical Knowledge targets;
 - one or more Intellectual Operations.
 
+The Question-to-Intellectual-Operation relationship is many-to-many: one Question may target one or more Intellectual Operations, and one Intellectual Operation may be targeted by many Questions.
+
 A Practice Question may contain:
 
 - an approved prompt;
@@ -1354,6 +1361,8 @@ A Practice Question may contain:
 - teacher validation metadata.
 
 A Practice Question MAY reference zero, one, or many Historical Documents. A Historical Document MAY support many Practice Questions. This Question-to-Document relationship is many-to-many. A Question with no Historical Document is a **Knowledge Question** (`Question de connaissances`) and is valid, not an error.
+
+The initial scope does not add a **Quiz éclair** Learning Mode, Practice type, or dashboard element.
 
 ### 4.7.6 Question Attempt
 
@@ -3953,14 +3962,17 @@ The card MUST show:
 
 The initial operation cards represent the approved registry:
 
-- Causes et conséquences;
+- Établir des faits;
+- Déterminer des causes et des conséquences;
 - Situer dans le temps et l'espace;
 - Mettre en relation des faits;
-- Changements et continuités;
-- Différences et similitudes;
-- Liens de causalité.
+- Déterminer des changements et des continuités;
+- Déterminer des différences et des similitudes;
+- Établir des liens de causalité.
 
 Each eligible card provides **Retravailler** and opens `P-09` with the selected target.
+
+The seven Intellectual Operations are the complete operation-indicator set for this dashboard version. `C1` and `C2` disciplinary competencies MUST NOT appear as additional progress cards or indicators.
 
 ### 7.11.7 Historical Knowledge
 
@@ -8059,7 +8071,7 @@ Random selection MUST:
 
 Intellectual Operation selection supports:
 
-- explicit selection;
+- explicit selection of one or more of the seven approved Intellectual Operations, including **Établir des faits**;
 - **Aléatoire** from the approved operation registry.
 
 The selection logic MUST:
@@ -8067,7 +8079,7 @@ The selection logic MUST:
 - use stable canonical operation identifiers;
 - respect question compatibility;
 - avoid unsupported combinations;
-- record the actual operation target for each question;
+- record the actual one-or-more operation targets for each question;
 - maintain balanced distribution where the configured Practice requires it.
 
 ## 12.12 Duration
@@ -9335,12 +9347,13 @@ Examples:
 
 | Operation | Tutoring focus |
 |---|---|
-| Causes et conséquences | Distinguish initiating conditions, causes, and effects. |
+| Établir des faits | Identify and state relevant facts supported by the approved question context or Historical Documents. |
+| Déterminer des causes et des conséquences | Distinguish initiating conditions, causes, and effects. |
 | Situer dans le temps et l'espace | Use chronology, sequence, territory, and spatial context. |
 | Mettre en relation des faits | Identify an explicit relationship supported by evidence. |
-| Changements et continuités | Compare before and after while identifying what persists. |
-| Différences et similitudes | Apply consistent comparison criteria. |
-| Liens de causalité | Explain how one fact contributes to another through a defensible connection. |
+| Déterminer des changements et des continuités | Compare before and after while identifying what persists. |
+| Déterminer des différences et des similitudes | Apply consistent comparison criteria. |
+| Établir des liens de causalité | Explain how one fact contributes to another through a defensible connection. |
 
 The definitive pedagogical mapping MUST remain aligned with the approved Québec curriculum terminology.
 
@@ -10420,7 +10433,7 @@ Student progress on `P-08` is contextual to the current Practice or selected rev
 - broader cumulative states when clearly labelled;
 - **Retravailler** actions for eligible targets.
 
-The interface MUST make the scope understandable.
+The interface MUST make the scope understandable and use the controlled seven-operation registry, including **Établir des faits**. Disciplinary competencies `C1` and `C2` are developed through Questions and exchanges but MUST NOT be calculated or displayed as additional dashboard Progress indicators.
 
 ## 14.31 Active Revision Selection
 
@@ -10473,6 +10486,8 @@ It presents:
 - approved recommendations.
 
 It MUST not contain complete conversations.
+
+Intellectual Operation progression evaluates only the registered operations actually exercised by eligible Questions and exchanges. **Établir des faits** follows the same deterministic evidence and Mastery State policy as every other registered operation. `C1` and `C2` remain disciplinary competencies rather than additional progress targets.
 
 ## 14.34 Group Learning Portrait
 
@@ -11116,6 +11131,8 @@ It MAY contain:
 - completion and processing metadata;
 - recommended Teacher follow-up.
 
+Teacher-facing summaries and Group reports MUST use the same seven-operation registry, include **Établir des faits** when it was actually exercised, and preserve one-or-more operation targets per Question. They MUST distinguish the `C1` and `C2` disciplinary competencies from Intellectual Operations and MUST NOT present those competencies as extra operation-status indicators.
+
 ## 15.19 Teacher Summary Restrictions
 
 The Teacher-facing Summary MUST NOT contain:
@@ -11687,6 +11704,8 @@ Lesson, Learning Objective, and Historical Document are related structures rathe
 
 Relationships MAY be many-to-many. In particular, a Practice Question MAY use zero, one, or many Historical Documents, and a Historical Document MAY be used by many Practice Questions. The implementation MUST not force every Historical Knowledge or Historical Document into one Lesson when the approved curriculum mapping requires multiple relationships.
 
+Intellectual Operation targeting is also many-to-many. A Practice Question MUST target one or more Intellectual Operations, while a Historical Document MAY be associated with one or more Intellectual Operations when pedagogically validated; each Intellectual Operation may relate to many Questions and many Historical Documents. Documents remain evidence resources rather than Progress evidence by themselves.
+
 ## 16.4 Course
 
 The initial Course is:
@@ -11745,6 +11764,8 @@ A Notion contains:
 
 Student-facing interfaces SHOULD use Notion titles such as **Industrialisation** or **Gouvernement responsable**, not internal lesson numbers as the primary label.
 
+The first pedagogical registry MAY begin with the two Notions **Acte d’Union** and **Industrialisation**. This is an initial content scope, not a closed taxonomy: Notions and Historical Knowledge MUST remain data-driven, versioned, and addable through approved content workflows without code changes or schema redesign. This initial scope MUST NOT be interpreted as a definitive list of Historical Knowledge, and no such definitive list is established here.
+
 ## 16.7 Lesson
 
 A Lesson represents the approved instructional sequence or source-material subdivision.
@@ -11800,12 +11821,13 @@ The initial registry includes:
 
 | Canonical key | Approved French label |
 |---|---|
-| `causes_and_consequences` | Causes et conséquences |
+| `establish_facts` | Établir des faits |
+| `causes_and_consequences` | Déterminer des causes et des conséquences |
 | `time_and_space` | Situer dans le temps et l'espace |
 | `relationships_between_facts` | Mettre en relation des faits |
-| `changes_and_continuities` | Changements et continuités |
-| `differences_and_similarities` | Différences et similitudes |
-| `causal_connections` | Liens de causalité |
+| `changes_and_continuities` | Déterminer des changements et des continuités |
+| `differences_and_similarities` | Déterminer des différences et des similitudes |
+| `causal_connections` | Établir des liens de causalité |
 
 The definitive terminology and mapping MUST be validated against the approved curriculum before production migration values are frozen.
 
@@ -12389,6 +12411,8 @@ A Question Bank item contains:
 - quality-review history.
 
 Question Bank content MUST be versioned independently from Practice placement.
+
+Each Question Bank version MUST use the many-to-many Question-to-Intellectual-Operation relationship and therefore may target one or more approved Intellectual Operations, including **Établir des faits**.
 
 ## 16.45 Question Bank Reuse
 
@@ -13254,7 +13278,10 @@ historical_document_themes
 historical_document_notions
 historical_document_lessons
 historical_document_learning_objectives
+historical_document_operations
 ```
+
+`historical_document_operations` is an explicit many-to-many relationship. A Historical Document version may reference one or more approved Intellectual Operations, including `establish_facts`, and an Intellectual Operation may reference many Historical Document versions.
 
 ## 17.23 Question Bank Tables
 
@@ -13300,6 +13327,8 @@ question_version_page_references
 ```
 
 `question_version_documents` includes display order and question-specific caption.
+
+`question_version_operations` is an explicit many-to-many relationship and MUST preserve all one-or-more approved operation targets for a Question version.
 
 ## 17.24 Practice Tables
 
@@ -28820,6 +28849,8 @@ Question and tutoring evaluation MUST use the approved Québec curriculum termin
 
 Tests MUST ensure Socrato does not merge, invent, rename, or misclassify intellectual operations without an approved specification change.
 
+Registry, Practice Creator, Question, Historical Document, Progress, Student Dashboard, and Teacher-report tests MUST use the same seven-operation set and verify that **Établir des faits** is available wherever Intellectual Operations are selected, related, evaluated, or displayed. They MUST also verify many-to-many operation relationships for Questions and Historical Documents and ensure `C1` and `C2` are never treated as additional Intellectual Operations or dashboard indicators.
+
 ## 28.53 Content Rights Tests
 
 Content workflows MUST verify:
@@ -38788,13 +38819,13 @@ Exact durations are governed by Section 21.
 | Student Identity and Access | `DBE-007`–`DBE-011` | 5 |
 | Curriculum | `DBE-012`–`DBE-024` | 13 |
 | Resources, Rights, and Assets | `DBE-025`–`DBE-029` | 5 |
-| Historical Documents | `DBE-030`–`DBE-035` | 6 |
+| Historical Documents | `DBE-030`–`DBE-035`, `DBE-090` | 7 |
 | Question Bank | `DBE-036`–`DBE-043` | 8 |
 | Practices and Assignments | `DBE-044`–`DBE-055` | 12 |
 | Learning Sessions and Temporary Interaction | `DBE-056`–`DBE-062` | 7 |
 | Evidence, Progress, Outcomes, and Summaries | `DBE-063`–`DBE-076` | 14 |
 | AI, Usage, Safety, Audit, and Operations | `DBE-077`–`DBE-089` | 13 |
-| **Total** | `DBE-001`–`DBE-089` | **89** |
+| **Total** | `DBE-001`–`DBE-090` | **90** |
 
 ---
 
@@ -39040,6 +39071,7 @@ Derivatives inherit rights and retention constraints from their source.
 | `DBE-033` | `historical_document_notions` | `content` | Core | Protected | Historical content |
 | `DBE-034` | `historical_document_lessons` | `content` | Core | Protected | Historical content |
 | `DBE-035` | `historical_document_learning_objectives` | `content` | Core | Protected | Historical content |
+| `DBE-090` | `historical_document_operations` | `content` | Core | Protected | Historical content |
 
 ### D.11.1 Stable Parent and Immutable Versions
 
@@ -39067,7 +39099,7 @@ Version records SHOULD include:
 
 ### D.11.3 Relationship Tables
 
-`DBE-032` through `DBE-035` connect exact document versions to curricular targets.
+`DBE-032` through `DBE-035` and `DBE-090` connect exact document versions to curricular targets. `DBE-090` preserves the many-to-many relationship between Historical Document versions and one or more Intellectual Operations, including **Établir des faits**.
 
 They MUST NOT associate an unpublished or rights-ineligible version with a published Practice.
 
@@ -39095,6 +39127,8 @@ Question versions include prompt, answer criteria, Socratic guidance, Hint confi
 ### D.12.2 Target Relationships
 
 `DBE-038` through `DBE-043` define approved pedagogical targeting.
+
+`DBE-040` preserves the many-to-many relationship between Question versions and their one-or-more Intellectual Operation targets.
 
 `question_version_documents` MUST reference exact Historical Document versions and store display order and question-specific caption where required.
 
@@ -39833,7 +39867,7 @@ Before approving a database change, reviewers SHOULD confirm:
 
 ## D.33 Final Registry Statement
 
-The initial Socrato relational model contains 89 registered entities identified as `DBE-001` through `DBE-089`.
+The initial Socrato relational model contains 90 registered entities identified as `DBE-001` through `DBE-090`.
 
 The registry includes core tables, explicit relationship tables, temporary privacy-sensitive tables, rebuildable aggregates, conditional capabilities, and future tenancy structures.
 
@@ -43747,6 +43781,8 @@ Do not durably retain `NO_EMERGENCY` assessments. Delete dismissed candidates wi
 
 Use a deterministic, versioned, conservative formative policy scoped independently to each Notion. States are `not_assessed`, `needs_work`, `consolidate`, and `mastered`. `mastered` requires multiple recent, consistent successes across at least two distinct Questions with little or no support; one correct answer or heavily guided evidence can never establish mastery. Isolated errors do not automatically lower a state, while multiple recent contradictions trigger reassessment. Update only the Historical Knowledge and Intellectual Operations actually exercised, leaving every other Notion unchanged. The visible progress notebook MUST change with the selected Notion.
 
+The operation registry contains seven Intellectual Operations and includes **Établir des faits**. The policy evaluates this operation under the same evidence rules as the other operations. The `C1` and `C2` disciplinary competencies are not additional Mastery State targets or Student Dashboard indicators.
+
 ### Historical Decision Question
 
 What evidence quantity, independence, recency, consistency, scaffold level, and contradiction rules determine `not_assessed`, `needs_work`, `consolidate`, and `mastered`?
@@ -43774,6 +43810,8 @@ Use conservative formative states. Do not mark mastery from one weak or heavily 
 ### Resolution
 
 Generate Student and Teacher views together in one API call from the same structured evidence. The Student view contains the Notion, Historical Knowledge covered, Intellectual Operations practiced, strengths, items to consolidate or revisit, optional pages, next action, and a short encouragement. The Teacher view additionally contains authorized local identity and internal Student code, Practice, target statuses, support level, observed strengths, items to revisit, pages, session state, date, and progress-policy version. Raw conversations, internal reasoning, diagnoses, and permanent traits are forbidden. Free text is short and bounded; targets are structured; correction supersedes the active version; conversation deletion follows verified Summary and Progress persistence.
+
+Both views use the same seven-operation registry, including **Établir des faits**, and retain every operation actually targeted by a Question. `C1` and `C2` remain distinct disciplinary competencies and are not emitted as extra Intellectual Operation status indicators.
 
 ### Historical Decision Question
 
