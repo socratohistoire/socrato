@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -18,7 +19,7 @@ export default function Home() {
 
         {/* En-tête */}
         <header className="relative z-10 px-6 pt-6 sm:px-10 sm:pt-8 lg:px-16">
-          <a
+          <Link
             href="/"
             className="inline-flex items-center"
             aria-label="Accueil Socrato"
@@ -44,7 +45,7 @@ export default function Home() {
                 TON TUTEUR INTELLIGENT EN HISTOIRE
               </div>
             </div>
-          </a>
+          </Link>
         </header>
 
         {/* Contenu principal */}
