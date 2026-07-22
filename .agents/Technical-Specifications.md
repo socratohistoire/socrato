@@ -3922,23 +3922,35 @@ Understand what to revise now and begin or continue the appropriate activity.
 ### 7.11.3 Route and Access
 
 ```text
-Route: /student
-Access: Student or Teacher Preview
+Route: /eleve/tableau-de-bord
+Access: active anonymous Student Session or Teacher Preview
 ```
+
+Without a valid Student Session, the route MUST redirect to `/eleve`.
+
+The selected context MUST be represented by non-sensitive query parameters:
+
+```text
+?mode=teacher-assigned&notion=<notion-slug>
+?mode=notion-review&notion=<notion-slug>
+```
+
+The URL MUST preserve the selected Notion and dashboard mode across reloads. An unknown Notion MUST fall back to the default Notion. An unknown mode MUST fall back to `teacher-assigned`. No Student name, access code, credential, or other sensitive value may appear in this URL.
 
 ### 7.11.4 Primary Layout
 
-The dashboard contains:
+The approved dashboard contains:
 
-- **Ma révision en cours** as the dominant card;
-- the active Learning Mode label;
+- a dominant contextual card labelled **Activité de révision** for a Teacher-assigned activity or **Révision par notion** for a Student-selected review;
 - completion information where applicable;
-- **Mes opérations intellectuelles**;
-- **Connaissances abordées dans cette notion** or the current contextual Historical Knowledge set;
+- **MES OPÉRATIONS INTELLECTUELLES**;
+- **CONNAISSANCES HISTORIQUES** for the active Notion;
 - **Réviser par notion**;
 - **Pratiques de l'enseignant** beneath the progress area;
-- a contextual **Cahier** card where applicable;
-- theme and system appearance controls according to the approved design.
+- a contextual **Recommandations de Socrato** card;
+- approved light and dark appearance controls.
+
+On large screens, the Operations and Historical Knowledge sections MUST have aligned upper and lower boundaries. Historical Knowledge MUST use an internal keyboard-accessible scrolling region when its content exceeds the shared panel height. A shaded control labelled **Voir les autres connaissances**, with two downward chevrons, MUST remain available while hidden content remains and MUST disappear at the end of the list. On stacked tablet and mobile layouts, the list MUST return to its natural height and the internal-scroll control MUST be hidden.
 
 ### 7.11.5 Active Revision Card
 
@@ -3951,12 +3963,28 @@ The card selection priority is:
 
 The card MUST show:
 
-- title;
-- Learning Mode;
-- concise target or context;
+- the Notion title as its only principal title, without a temporary or descriptive demonstration suffix;
+- the Notion's Historical Period;
+- the presentation origin supplied by data, using `teacher_assigned` or `student_selected`;
 - confirmed completion state or percentage where applicable;
-- one clear start or continue action;
-- an option to return to the Weekly Practice when another selected mode is active.
+- **Commencer l'activité** when progress equals `0%`;
+- **Poursuivre l'activité** when progress is greater than `0%`.
+
+A `teacher_assigned` card MUST:
+
+- use **Activité de révision** as its label;
+- display the informative banner **Assignée par ton enseignant** with a decorative star;
+- retain **Publiée récemment** only when the assigned activity is actually new;
+- remain visually prioritized over every other dashboard card.
+
+A `student_selected` card MUST:
+
+- use **Révision par notion** as its label;
+- display **Choisie par toi**;
+- omit the Teacher-assignment banner and **Publiée récemment**;
+- remain visibly distinct from the Teacher-assigned variant.
+
+The approved light appearance uses a parchment page and light central progress surfaces while the dominant activity, Student-selected review cards, Notion thumbnails, and Teacher Practice thumbnails use dark navy or slate surfaces. The approved dark appearance remains available. Color MUST NOT be the only indicator of origin, progress, selection, or status.
 
 ### 7.11.6 Intellectual Operations
 
@@ -3973,6 +4001,53 @@ The initial operation cards represent the approved registry:
 Each eligible card provides **Retravailler** and opens `P-09` with the selected target.
 
 The seven Intellectual Operations are the complete operation-indicator set for this dashboard version. `C1` and `C2` disciplinary competencies MUST NOT appear as additional progress cards or indicators.
+
+### 7.11.7 Contextual Notions and Historical Period
+
+The initial dashboard exposes the data-driven Notions **Acte d’union** and **Industrialisation**. Both are associated with the approved display period **1840–1896**, derived from typed Historical Period data rather than hard-coded interface text.
+
+The visible French title is **Acte d’union**. The stable technical slug remains `acte-union`.
+
+The principal activity card, **Réviser par notion** thumbnails, and eligible **Pratiques de l'enseignant** thumbnails MUST display the Historical Period supplied by data. A future Practice spanning multiple periods MAY provide an approved display label. When no period is available, the interface MUST omit it rather than invent one.
+
+Selecting a **Réviser par notion** thumbnail MUST navigate through a real link using `mode=notion-review`, update every contextual dashboard section, identify the selected Notion, and preserve reload and new-tab behavior. An eligible Teacher Practice MUST navigate using `mode=teacher-assigned`.
+
+The model MUST allow additional Notions, periods, activities, recommendations, operations, and Historical Knowledge to be added through data without changing dashboard components.
+
+### 7.11.8 Approved Acte d’union Historical Knowledge
+
+The initial approved ordered Historical Knowledge set for **Acte d’union** is:
+
+1. Rébellions de 1837-1838
+2. Contexte de l’Acte d’union
+3. Causes de l’Acte d’union
+4. Objectifs de l’Acte d’union
+5. Rapport Durham
+6. Acte d’union
+7. Création de la Province du Canada (union du Haut-Canada et du Bas-Canada)
+8. Populations du Bas-Canada et du Haut-Canada
+9. Représentation égale des deux Canadas
+10. Structure des institutions politiques
+11. L’anglais comme langue officielle
+12. Conséquences de l’Acte d’union
+
+Each entry MUST have a stable identifier, preserve this display order, and receive Student-specific status from progression data rather than from the canonical Historical Knowledge definition. No Industrialisation Historical Knowledge may be fabricated while its approved registry is unavailable; the dashboard MUST show a professional empty state.
+
+### 7.11.9 Recommendations and Approved Visual Baseline
+
+**Recommandations de Socrato** is contextual to the selected Notion. It MUST preserve an empty state when no Page Reference or resource is associated and MUST NOT invent a page or link. When a real recommendation exists, the approved resource action is displayed from data.
+
+The approved dashboard visual and behavioral baseline is frozen. It includes:
+
+- the Teacher-assignment banner and prioritized Teacher card;
+- the distinct Student-selected card;
+- aligned Operations and Historical Knowledge panels;
+- contextual internal Historical Knowledge scrolling on large screens;
+- dark activity and thumbnail surfaces in the approved light appearance;
+- the approved dark appearance;
+- keyboard-visible focus, textual statuses, and reduced-motion behavior.
+
+Purely visual changes to this approved baseline do not require a redundant ADR, but they MUST NOT be introduced without explicit product approval.
 
 ### 7.11.7 Historical Knowledge
 
@@ -10425,7 +10500,7 @@ Completion data MUST not be used as a substitute for Mastery State.
 
 Student progress on `P-08` is contextual to the current Practice or selected revision target.
 
-**Connaissances abordées dans cette notion** MUST show the Historical Knowledge relevant to the active Practice context rather than an unrelated global list.
+**CONNAISSANCES HISTORIQUES** MUST show the Historical Knowledge relevant to the active Practice or selected Notion context rather than an unrelated global list.
 
 **Mes opérations intellectuelles** MAY show:
 
@@ -11764,7 +11839,7 @@ A Notion contains:
 
 Student-facing interfaces SHOULD use Notion titles such as **Industrialisation** or **Gouvernement responsable**, not internal lesson numbers as the primary label.
 
-The first pedagogical registry MAY begin with the two Notions **Acte d’Union** and **Industrialisation**. This is an initial content scope, not a closed taxonomy: Notions and Historical Knowledge MUST remain data-driven, versioned, and addable through approved content workflows without code changes or schema redesign. This initial scope MUST NOT be interpreted as a definitive list of Historical Knowledge, and no such definitive list is established here.
+The first pedagogical registry MAY begin with the two Notions **Acte d’union** and **Industrialisation**, both displayed in the initial dashboard with Historical Period **1840–1896**. This is an initial content scope, not a closed taxonomy: Notions and Historical Knowledge MUST remain data-driven, versioned, and addable through approved content workflows without code changes or schema redesign. The approved initial **Acte d’union** Historical Knowledge set is defined in section 7.11.8; this does not establish a definitive list for other Notions.
 
 ## 16.7 Lesson
 
