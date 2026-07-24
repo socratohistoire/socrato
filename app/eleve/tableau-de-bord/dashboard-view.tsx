@@ -17,7 +17,7 @@ import {
 import { presentIntellectualOperations } from "@/lib/student-dashboard/operation-presentation";
 import { presentHistoricalKnowledge } from "@/lib/student-dashboard/knowledge-presentation";
 import {
-  getDashboardUrl,
+  getLearningSessionUrl,
   getNotionDashboardUrl,
   getSelectedNotionContext,
 } from "@/lib/student-dashboard/selection";
@@ -514,7 +514,7 @@ function TeacherPracticesSection({
           return practice.state === "active" && practice.notionId ? (
             <Link
               key={practice.id}
-              href={getDashboardUrl(practice.notionId, "teacher-assigned")}
+              href={getLearningSessionUrl(practice.id, practice.notionId, "teacher-assigned")}
               className="teacher-practice-card"
               aria-label={`${practice.title}${periodLabel ? `, ${periodLabel}` : ""}, ${progressPercent > 0 ? "Poursuivre" : "Commencer"}`}
             >

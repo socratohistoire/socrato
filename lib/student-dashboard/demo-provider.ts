@@ -5,7 +5,7 @@ import {
   ACTE_UNION_NOTION_ID,
 } from "./historical-knowledge-catalog.ts";
 import {
-  getDashboardUrl,
+  getLearningSessionUrl,
   resolveDashboardMode,
   resolveSelectedNotionId,
 } from "./selection.ts";
@@ -68,7 +68,7 @@ export function createDemoStudentDashboard(
         progressPercent: isNotionReview ? 0 : 35,
         state: isNotionReview ? "available" : "in_progress",
         isNew: isNotionReview ? false : true,
-        actionHref: getDashboardUrl(ACTE_UNION_NOTION_ID, selectedMode),
+        actionHref: getLearningSessionUrl("demo-activity-acte-union", ACTE_UNION_NOTION_ID, selectedMode),
         illustrationSrc: "/images/montrealfin1800.png",
         illustrationPosition: "72% center",
         origin: isNotionReview ? "student_selected" : "teacher_assigned",
@@ -100,7 +100,7 @@ export function createDemoStudentDashboard(
         progressPercent: isNotionReview ? 0 : 10,
         state: isNotionReview ? "available" : "in_progress",
         isNew: false,
-        actionHref: getDashboardUrl("industrialisation", selectedMode),
+        actionHref: getLearningSessionUrl("demo-activity-industrialisation", "industrialisation", selectedMode),
         illustrationSrc: "/images/montrealfin1800.png",
         illustrationPosition: "88% center",
         origin: isNotionReview ? "student_selected" : "teacher_assigned",

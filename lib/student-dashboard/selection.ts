@@ -50,6 +50,15 @@ export function getDashboardUrl(
   return `/eleve/tableau-de-bord?mode=${mode}&notion=${encodeURIComponent(notionId)}#tableau-notion`;
 }
 
+export function getLearningSessionUrl(
+  activityId: string,
+  notionId: string,
+  mode: DashboardMode,
+): string {
+  const params = new URLSearchParams({ notion: notionId, mode });
+  return `/eleve/activite/${encodeURIComponent(activityId)}?${params.toString()}`;
+}
+
 export function getNotionDashboardUrl(notionId: string): string {
   return getDashboardUrl(notionId, "notion-review");
 }
