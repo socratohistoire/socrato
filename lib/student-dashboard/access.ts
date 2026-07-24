@@ -6,8 +6,7 @@ export async function loadAuthorizedStudentDashboard(
   token: string | undefined,
   sessions: StudentSessionRepository,
   provider: StudentDashboardProvider,
-  requestedNotionId?: string,
-  requestedMode?: string,
+  requestedActivityId?: string,
 ): Promise<StudentDashboardData | null> {
   if (!token) {
     return null;
@@ -20,7 +19,6 @@ export async function loadAuthorizedStudentDashboard(
 
   return provider.getForAnonymousStudent(
     session.anonymousStudentId,
-    requestedNotionId,
-    requestedMode,
+    requestedActivityId,
   );
 }

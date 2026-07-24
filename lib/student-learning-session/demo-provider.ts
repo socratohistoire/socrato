@@ -17,17 +17,22 @@ export function createDemoStudentLearningSession(
   if (!DEMO_ACTIVITIES.has(activityId)) return null;
   const notionId = requestedNotionId === "industrialisation" ? requestedNotionId : "acte-union";
   const notionTitle = notionId === "industrialisation" ? "Industrialisation" : "Acte d’union";
+  const activityTitle = activityId === "demo-activity-acte-union"
+    ? "Révision avant l’évaluation 1"
+    : activityId === "demo-activity-industrialisation"
+      ? "Révision – Industrialisation"
+      : "Révision locale de démonstration";
 
   return {
     id: `local-session-${activityId}`,
     activityId,
-    activityTitle: "Révision locale de démonstration",
+    activityTitle,
     origin: requestedMode === "notion-review" ? "student_selected" : "teacher_assigned",
     notionId,
     notionTitle,
     historicalPeriod: { startYear: 1840, endYear: 1896 },
     currentQuestionIndex: 0,
-    dashboardHref: getDashboardUrl(notionId, requestedMode),
+    dashboardHref: getDashboardUrl(notionId, requestedMode, activityId),
     source: "local_demo",
     localDemoNotice: "Démonstration locale à valider — aucune réponse n’est enregistrée ni évaluée.",
     questions: [

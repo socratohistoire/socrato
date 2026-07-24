@@ -13,10 +13,10 @@ import "./dashboard.css";
 export default async function StudentDashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notion?: string; mode?: string }>;
+  searchParams: Promise<{ activity?: string }>;
 }) {
   const cookieStore = await cookies();
-  const { notion, mode } = await searchParams;
+  const { activity } = await searchParams;
   const token = cookieStore.get(STUDENT_SESSION_COOKIE)?.value;
   let data: StudentDashboardData | null;
 
@@ -25,8 +25,7 @@ export default async function StudentDashboardPage({
       token,
       getStudentAccessRuntime().sessions,
       new LocalDemoStudentDashboardProvider(),
-      notion,
-      mode,
+      activity,
     );
   } catch {
     redirect("/eleve");

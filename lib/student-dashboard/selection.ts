@@ -1,64 +1,35 @@
-import type {
-  DashboardMode,
-  StudentDashboardData,
-  StudentNotionDashboardContext,
-} from "./types.ts";
+import type { DashboardMode, StudentActivity, StudentDashboardData } from "./types.ts";
 
-export const DEFAULT_DASHBOARD_MODE: DashboardMode = "teacher-assigned";
-
-export function resolveDashboardMode(requestedMode?: string): DashboardMode {
-  return requestedMode === "notion-review" || requestedMode === "teacher-assigned"
-    ? requestedMode
-    : DEFAULT_DASHBOARD_MODE;
-}
-
-export function resolveSelectedNotionId(
-  data: Pick<StudentDashboardData, "defaultNotionId" | "notionContexts">,
-  requestedNotionId?: string,
+export function resolveSelectedActivityId(
+  data: Pick<StudentDashboardData, "defaultActivityId" | "activities">,
+  requestedActivityId?: string,
 ): string {
-  if (
-    requestedNotionId &&
-    data.notionContexts.some(({ notionId }) => notionId === requestedNotionId)
-  ) {
-    return requestedNotionId;
-  }
-
-  return data.defaultNotionId;
+  return requestedActivityId && data.activities.some(({ id }) => id === requestedActivityId)
+    ? requestedActivityId
+    : data.defaultActivityId;
 }
 
-export function getSelectedNotionContext(
-  data: StudentDashboardData,
-  notionId = data.selectedNotionId,
-): StudentNotionDashboardContext {
-  const context =
-    data.notionContexts.find((context) => context.notionId === notionId) ??
-    data.notionContexts.find(
-      (context) => context.notionId === data.defaultNotionId,
-    );
+export function getSelectedActivity(data: StudentDashboardData): StudentActivity {
+  const activity = data.activities.find(({ id }) => id === data.selectedActivityId)
+    ?? data.activities.find(({ id }) => id === data.defaultActivityId);
+  if (!activity) throw new Error("Le tableau de bord ne contient aucune activité par défaut.");
+  return activity;
+}
 
-  if (!context) {
-    throw new Error("Le tableau de bord ne contient aucune notion par défaut.");
-  }
-
-  return context;
+export function getActivityDashboardUrl(activityId: string): string {
+  return `/eleve/tableau-de-bord?activity=${encodeURIComponent(activityId)}#activite`;
 }
 
 export function getDashboardUrl(
   notionId: string,
   mode: DashboardMode,
+  activityId?: string,
 ): string {
-  return `/eleve/tableau-de-bord?mode=${mode}&notion=${encodeURIComponent(notionId)}#tableau-notion`;
+  if (activityId) return getActivityDashboardUrl(activityId);
+  return `/eleve/tableau-de-bord?mode=${mode}&notion=${encodeURIComponent(notionId)}#activite`;
 }
 
-export function getLearningSessionUrl(
-  activityId: string,
-  notionId: string,
-  mode: DashboardMode,
-): string {
+export function getLearningSessionUrl(activityId: string, notionId: string, mode: DashboardMode): string {
   const params = new URLSearchParams({ notion: notionId, mode });
   return `/eleve/activite/${encodeURIComponent(activityId)}?${params.toString()}`;
-}
-
-export function getNotionDashboardUrl(notionId: string): string {
-  return getDashboardUrl(notionId, "notion-review");
 }

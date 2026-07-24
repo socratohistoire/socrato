@@ -1,50 +1,34 @@
-import type {
-  NotebookRecommendation,
-  ProgressStatus,
-  StudentActivity,
-} from "./types.ts";
+import type { ActivityStatus, ActivityType, HistoricalKnowledge, IntellectualOperation, ProgressStatus, StudentActivity } from "./types.ts";
 
 export const DASHBOARD_LABELS = {
   title: "Mon tableau de bord",
-  activity: "Activité de révision",
   operations: "Mes opérations intellectuelles",
-  knowledge: "Connaissances historiques",
-  notions: "Réviser par notion",
-  teacherPractices: "Pratiques de l’enseignant",
-  recommendations: "Recommandations de Socrato",
+  knowledge: "Mes connaissances historiques",
+  activities: "Mes activités",
+  summary: "Bilan et recommandations de Socrato",
 } as const;
 
 export const PROGRESS_STATUS_LABELS: Record<ProgressStatus, string> = {
-  mastered: "Maîtrisée",
-  consolidate: "À consolider",
-  needs_work: "À travailler",
-  not_assessed: "Non travaillée",
+  mastered: "Maîtrisée", consolidate: "À consolider", needs_work: "À travailler", not_assessed: "Non travaillée",
 };
 
-export function getActivityTitle(activity: StudentActivity | null): string {
-  return activity?.title ?? "Aucune activité publiée";
-}
+export const ACTIVITY_STATUS_LABELS: Record<ActivityStatus, string> = {
+  not_started: "À commencer", in_progress: "En cours", completed: "Terminée",
+};
 
-export function hasNotebookResource(
-  recommendation: NotebookRecommendation | null,
-): boolean {
-  return Boolean(recommendation?.resourceHref);
-}
-
-export function getActivityCardLabel(activity: StudentActivity): string {
-  return activity.origin === "student_selected"
-    ? "Révision par notion"
-    : "Activité de révision";
-}
-
-export function getActivityOriginLabel(activity: StudentActivity): string {
-  return activity.origin === "student_selected"
-    ? "Choisie par toi"
-    : "Assignée par ton enseignant";
-}
+export const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
+  revision: "Activité de révision", enrichment: "Activité d’enrichissement",
+};
 
 export function getActivityActionLabel(activity: StudentActivity): string {
-  return activity.progressPercent === 0
-    ? "Commencer l’activité"
-    : "Poursuivre l’activité";
+  if (activity.activityStatus === "completed") return "Voir mon bilan";
+  return activity.activityStatus === "not_started" ? "Commencer l’activité" : "Poursuivre l’activité";
+}
+
+export function getWorkedOperations(items: IntellectualOperation[]): IntellectualOperation[] {
+  return items.filter(({ status }) => status !== "not_assessed");
+}
+
+export function getWorkedHistoricalKnowledge(items: HistoricalKnowledge[]): HistoricalKnowledge[] {
+  return items.filter(({ status }) => status !== "not_assessed");
 }

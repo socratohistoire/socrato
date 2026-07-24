@@ -1,171 +1,123 @@
 import type { StudentDashboardProvider } from "./provider.ts";
-import type { StudentDashboardData } from "./types.ts";
-import {
-  ACTE_UNION_HISTORICAL_KNOWLEDGE,
-  ACTE_UNION_NOTION_ID,
-} from "./historical-knowledge-catalog.ts";
-import {
-  getLearningSessionUrl,
-  resolveDashboardMode,
-  resolveSelectedNotionId,
-} from "./selection.ts";
+import type { ProgressStatus, StudentActivity, StudentDashboardData } from "./types.ts";
+import { ACTE_UNION_HISTORICAL_KNOWLEDGE, ACTE_UNION_NOTION_ID } from "./historical-knowledge-catalog.ts";
+import { getActivityDashboardUrl, getLearningSessionUrl, resolveSelectedActivityId } from "./selection.ts";
 
 export const DEMO_INTELLECTUAL_OPERATIONS = [
   { id: "establish_facts", label: "Établir des faits" },
-  {
-    id: "causes_and_consequences",
-    label: "Déterminer des causes et des conséquences",
-  },
-  {
-    id: "time_and_space",
-    label: "Situer dans le temps et dans l’espace",
-  },
+  { id: "causes_and_consequences", label: "Déterminer des causes et des conséquences" },
+  { id: "time_and_space", label: "Situer dans le temps et dans l’espace" },
   { id: "relationships_between_facts", label: "Mettre en relation des faits" },
-  {
-    id: "changes_and_continuities",
-    label: "Déterminer des changements et des continuités",
-  },
-  {
-    id: "differences_and_similarities",
-    label: "Déterminer des différences et des similitudes",
-  },
+  { id: "changes_and_continuities", label: "Déterminer des changements et des continuités" },
+  { id: "differences_and_similarities", label: "Déterminer des différences et des similitudes" },
   { id: "causal_connections", label: "Établir des liens de causalité" },
 ] as const;
 
-const DEMO_STATUSES = [
-  "mastered",
-  "consolidate",
-  "needs_work",
-  "not_assessed",
-] as const;
+const PERIOD = { startYear: 1840, endYear: 1896 } as const;
+const STATUSES: ProgressStatus[] = ["mastered", "consolidate", "needs_work", "not_assessed"];
 
-const INITIAL_HISTORICAL_PERIOD = {
-  startYear: 1840,
-  endYear: 1896,
-} as const;
-
-function createOperationStatuses(offset: number) {
+function operations(offset: number) {
   return DEMO_INTELLECTUAL_OPERATIONS.map((operation, index) => ({
     ...operation,
-    status: DEMO_STATUSES[(index + offset) % DEMO_STATUSES.length],
-    canReview: true,
+    status: STATUSES[(index + offset) % STATUSES.length],
   }));
 }
 
-export function createDemoStudentDashboard(
-  requestedNotionId?: string,
-  requestedMode?: string,
-): StudentDashboardData {
-  const selectedMode = resolveDashboardMode(requestedMode);
-  const isNotionReview = selectedMode === "notion-review";
-  const notionContexts: StudentDashboardData["notionContexts"] = [
-    {
-      notionId: ACTE_UNION_NOTION_ID,
-      activity: {
-        id: "demo-activity-acte-union",
-        label: "Activité de révision",
-        title: "Acte d’union",
-        progressPercent: isNotionReview ? 0 : 35,
-        state: isNotionReview ? "available" : "in_progress",
-        isNew: isNotionReview ? false : true,
-        actionHref: getLearningSessionUrl("demo-activity-acte-union", ACTE_UNION_NOTION_ID, selectedMode),
-        illustrationSrc: "/images/montrealfin1800.png",
-        illustrationPosition: "72% center",
-        origin: isNotionReview ? "student_selected" : "teacher_assigned",
-      },
-      notebookRecommendation: null,
-      recommendationEmptyMessage:
-        "Les références apparaîtront ici lorsqu’elles seront associées à l’activité.",
-      operations: createOperationStatuses(0),
-      historicalKnowledge: ACTE_UNION_HISTORICAL_KNOWLEDGE.map(
-        (knowledge, index) => {
-          // Démonstration visuelle uniquement. La maîtrise réelle proviendra plus
-          // tard des données de progression propres à la session de l’élève.
-          const status = DEMO_STATUSES[index % DEMO_STATUSES.length];
-          return {
-            id: knowledge.id,
-            label: knowledge.label,
-            status,
-            canReview: true,
-          };
-        },
-      ),
-    },
-    {
-      notionId: "industrialisation",
-      activity: {
-        id: "demo-activity-industrialisation",
-        label: "Activité de révision",
-        title: "Industrialisation",
-        progressPercent: isNotionReview ? 0 : 10,
-        state: isNotionReview ? "available" : "in_progress",
-        isNew: false,
-        actionHref: getLearningSessionUrl("demo-activity-industrialisation", "industrialisation", selectedMode),
-        illustrationSrc: "/images/montrealfin1800.png",
-        illustrationPosition: "88% center",
-        origin: isNotionReview ? "student_selected" : "teacher_assigned",
-      },
-      notebookRecommendation: null,
-      recommendationEmptyMessage:
-        "Les recommandations pour cette notion seront ajoutées ultérieurement.",
-      operations: createOperationStatuses(2),
-      historicalKnowledge: [],
-    },
-  ];
-
-  const base: StudentDashboardData = {
-    source: "local_demo",
-    defaultNotionId: ACTE_UNION_NOTION_ID,
-    selectedNotionId: ACTE_UNION_NOTION_ID,
-    selectedMode,
-    notionContexts,
-    notions: [
-      {
-        id: ACTE_UNION_NOTION_ID,
-        title: "Acte d’union",
-        description: "Notion disponible dans le référentiel initial.",
-        historicalPeriod: INITIAL_HISTORICAL_PERIOD,
-      },
-      {
-        id: "industrialisation",
-        title: "Industrialisation",
-        description: "Notion disponible dans le référentiel initial.",
-        historicalPeriod: INITIAL_HISTORICAL_PERIOD,
-      },
-    ],
-    teacherPractices: [
-      {
-        id: "demo-teacher-practice-1",
-        title: "Acte d’union",
-        state: "active",
-        notionId: ACTE_UNION_NOTION_ID,
-        illustrationSrc: "/images/montrealfin1800.png",
-        illustrationPosition: "76% 57%",
-        progressPercent: 35,
-      },
-    ],
-  };
-
-  return {
-    ...base,
-    selectedNotionId: resolveSelectedNotionId(base, requestedNotionId),
-  };
+function knowledge(ids: readonly string[], offset: number) {
+  return ids.map((id, index) => {
+    const canonical = ACTE_UNION_HISTORICAL_KNOWLEDGE.find((item) => item.id === id);
+    if (!canonical) throw new Error(`Connaissance historique non approuvée : ${id}`);
+    return { id: canonical.id, label: canonical.label, status: STATUSES[(index + offset) % STATUSES.length] };
+  });
 }
 
-export class LocalDemoStudentDashboardProvider
-  implements StudentDashboardProvider
-{
-  async getForAnonymousStudent(
-    _anonymousStudentId: string,
-    requestedNotionId?: string,
-    requestedMode?: string,
-  ): Promise<StudentDashboardData> {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error(
-        "The local demonstration dashboard provider is disabled in production.",
-      );
-    }
+function createActivities(): StudentActivity[] {
+  const assignedKnowledge = ["contexte-acte-union", "causes-acte-union", "rapport-durham", "consequences-acte-union"];
+  const completedKnowledge = ["rebellions-1837-1838", "objectifs-acte-union", "acte-union"];
+  return [
+    {
+      id: "demo-activity-acte-union",
+      activityTitle: "Révision avant l’évaluation 1",
+      activityType: "revision",
+      publicationDate: "16 mai 2025",
+      historicalPeriod: PERIOD,
+      notionIds: [ACTE_UNION_NOTION_ID, "industrialisation"],
+      historicalKnowledgeIds: assignedKnowledge,
+      durationMinutes: 25,
+      progressPercentage: 35,
+      activityStatus: "in_progress",
+      origin: "teacher_assigned",
+      isRecent: true,
+      actionHref: getLearningSessionUrl("demo-activity-acte-union", ACTE_UNION_NOTION_ID, "teacher-assigned"),
+      operations: operations(0),
+      historicalKnowledge: knowledge(assignedKnowledge, 0),
+      summary: { state: "pending", strengths: [], consolidationTargets: [], recommendation: null, consolidationActivity: null },
+    },
+    {
+      id: "demo-activity-industrialisation",
+      activityTitle: "Révision – Industrialisation",
+      activityType: "revision",
+      publicationDate: "5 mai 2025",
+      historicalPeriod: PERIOD,
+      notionIds: ["industrialisation"],
+      historicalKnowledgeIds: [],
+      durationMinutes: 20,
+      progressPercentage: 0,
+      activityStatus: "not_started",
+      origin: "student_selected",
+      isRecent: false,
+      actionHref: getLearningSessionUrl("demo-activity-industrialisation", "industrialisation", "notion-review"),
+      operations: DEMO_INTELLECTUAL_OPERATIONS.map((operation) => ({ ...operation, status: "not_assessed" as const })),
+      historicalKnowledge: [],
+      summary: { state: "pending", strengths: [], consolidationTargets: [], recommendation: null, consolidationActivity: null },
+    },
+    {
+      id: "demo-activity-completed",
+      activityTitle: "Activité locale terminée",
+      activityType: "enrichment",
+      publicationDate: "28 avril 2025",
+      historicalPeriod: PERIOD,
+      notionIds: [ACTE_UNION_NOTION_ID],
+      historicalKnowledgeIds: completedKnowledge,
+      durationMinutes: 15,
+      progressPercentage: 100,
+      activityStatus: "completed",
+      origin: "teacher_assigned",
+      isRecent: false,
+      actionHref: `${getActivityDashboardUrl("demo-activity-completed")}#bilan`,
+      operations: operations(1),
+      historicalKnowledge: knowledge(completedKnowledge, 1),
+      summary: {
+        state: "local_demo_structured",
+        strengths: ["Résultat local structuré à remplacer par le bilan confirmé."],
+        consolidationTargets: ["Cible locale de démonstration, sans analyse pédagogique."],
+        recommendation: "Recommandation locale à valider avant tout usage réel.",
+        consolidationActivity: "Activité locale non générée et non persistée.",
+      },
+    },
+  ];
+}
 
-    return createDemoStudentDashboard(requestedNotionId, requestedMode);
+export function createDemoStudentDashboard(requestedActivityId?: string): StudentDashboardData {
+  const activities = createActivities();
+  const base: StudentDashboardData = {
+    source: "local_demo",
+    defaultActivityId: activities[0].id,
+    selectedActivityId: activities[0].id,
+    activities,
+    notions: [
+      { id: ACTE_UNION_NOTION_ID, title: "Acte d’union", description: "Notion du référentiel initial.", historicalPeriod: PERIOD },
+      { id: "industrialisation", title: "Industrialisation", description: "Notion du référentiel initial.", historicalPeriod: PERIOD },
+    ],
+  };
+  return { ...base, selectedActivityId: resolveSelectedActivityId(base, requestedActivityId) };
+}
+
+export class LocalDemoStudentDashboardProvider implements StudentDashboardProvider {
+  async getForAnonymousStudent(_anonymousStudentId: string, requestedActivityId?: string) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("The local demonstration dashboard provider is disabled in production.");
+    }
+    return createDemoStudentDashboard(requestedActivityId);
   }
 }

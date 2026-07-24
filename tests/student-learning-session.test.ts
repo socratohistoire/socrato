@@ -45,7 +45,7 @@ test("affiche une séance avec session valide", async () => {
 
 test("conserve le retour au tableau de bord et le contexte dans les URL", () => {
   const data = createDemoStudentLearningSession(); assert.ok(data);
-  assert.match(data.dashboardHref, /notion=acte-union/);
+  assert.match(data.dashboardHref, /activity=demo-activity-acte-union/);
   assert.equal(getLearningSessionUrl(data.activityId, data.notionId, "teacher-assigned"), "/eleve/activite/demo-activity-acte-union?notion=acte-union&mode=teacher-assigned");
   assert.match(viewSource, /Retour au tableau de bord/);
 });
@@ -59,10 +59,10 @@ test("présente la notion, la période, le numéro et la progression", () => {
 
 test("une activité enseignante affiche son titre personnalisé et son contexte", () => {
   const data = createDemoStudentLearningSession(); assert.ok(data);
-  assert.equal(data.activityTitle, "Révision locale de démonstration");
+  assert.equal(data.activityTitle, "Révision avant l’évaluation 1");
   assert.equal(data.origin, "teacher_assigned");
   assert.deepEqual(getLearningSessionHeading(data), {
-    primaryTitle: "Révision locale de démonstration",
+    primaryTitle: "Révision avant l’évaluation 1",
     contextualNotion: "Acte d’union",
   });
 });
@@ -179,7 +179,7 @@ test("ne fabrique aucun document ni fait historique", () => {
 });
 
 test("relie les cartes d’activité du tableau de bord à la séance", () => {
-  assert.match(dashboardSource, /getLearningSessionUrl\(practice\.id/);
+  assert.match(dashboardSource, /href=\{activity\.actionHref\}/);
   assert.match(readFileSync("lib/student-dashboard/demo-provider.ts", "utf8"), /getLearningSessionUrl\("demo-activity-acte-union"/);
 });
 

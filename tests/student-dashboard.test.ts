@@ -1,770 +1,306 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
+import type { StudentSession, StudentSessionRepository } from "../lib/student-access/session.ts";
 import { loadAuthorizedStudentDashboard } from "../lib/student-dashboard/access.ts";
-import {
-  createDemoStudentDashboard,
-  DEMO_INTELLECTUAL_OPERATIONS,
-} from "../lib/student-dashboard/demo-provider.ts";
-import {
-  DASHBOARD_LABELS,
-  getActivityActionLabel,
-  getActivityCardLabel,
-  getActivityOriginLabel,
-  getActivityTitle,
-  hasNotebookResource,
-  PROGRESS_STATUS_LABELS,
-} from "../lib/student-dashboard/presentation.ts";
-import { presentIntellectualOperations } from "../lib/student-dashboard/operation-presentation.ts";
-import { presentHistoricalKnowledge } from "../lib/student-dashboard/knowledge-presentation.ts";
-import {
-  ACTE_UNION_HISTORICAL_KNOWLEDGE,
-  ACTE_UNION_NOTION_ID,
-  getHistoricalKnowledgeForNotion,
-  type HistoricalKnowledgeCatalog,
-} from "../lib/student-dashboard/historical-knowledge-catalog.ts";
-import type { StudentDashboardProvider } from "../lib/student-dashboard/provider.ts";
-import {
-  getKnowledgeScrollState,
-  getNextKnowledgeScrollTop,
-} from "../lib/student-dashboard/knowledge-scroll.ts";
+import { createDemoStudentDashboard, DEMO_INTELLECTUAL_OPERATIONS, LocalDemoStudentDashboardProvider } from "../lib/student-dashboard/demo-provider.ts";
+import { ACTE_UNION_HISTORICAL_KNOWLEDGE } from "../lib/student-dashboard/historical-knowledge-catalog.ts";
 import { getHistoricalPeriodLabel } from "../lib/student-dashboard/historical-period.ts";
-import {
-  getDashboardUrl,
-  getNotionDashboardUrl,
-  getSelectedNotionContext,
-  resolveDashboardMode,
-} from "../lib/student-dashboard/selection.ts";
+import { getKnowledgeScrollState, getNextKnowledgeScrollTop } from "../lib/student-dashboard/knowledge-scroll.ts";
+import { ACTIVITY_STATUS_LABELS, ACTIVITY_TYPE_LABELS, getActivityActionLabel, getWorkedHistoricalKnowledge, getWorkedOperations } from "../lib/student-dashboard/presentation.ts";
+import type { StudentDashboardProvider } from "../lib/student-dashboard/provider.ts";
+import { getActivityDashboardUrl, getLearningSessionUrl, getSelectedActivity } from "../lib/student-dashboard/selection.ts";
 import type { StudentDashboardData } from "../lib/student-dashboard/types.ts";
-import type {
-  StudentSession,
-  StudentSessionRepository,
-} from "../lib/student-access/session.ts";
+
+const viewSource = readFileSync("app/eleve/tableau-de-bord/dashboard-view.tsx", "utf8");
+const cssSource = readFileSync("app/eleve/tableau-de-bord/dashboard.css", "utf8");
+const pageSource = readFileSync("app/eleve/tableau-de-bord/page.tsx", "utf8");
+const providerSource = readFileSync("lib/student-dashboard/demo-provider.ts", "utf8");
+const knowledgeScrollSource = readFileSync("app/eleve/tableau-de-bord/knowledge-scroll-region.tsx", "utf8");
 
 class TestSessions implements StudentSessionRepository {
-  constructor(private readonly active: boolean) {}
-
-  async create(): Promise<StudentSession> {
-    throw new Error("Not used in dashboard tests.");
-  }
-
+  constructor(private active: boolean) {}
+  async create(): Promise<StudentSession> { throw new Error("Not used."); }
   async findActiveByToken(token: string): Promise<StudentSession | null> {
-    return this.active && token === "valid-session"
-      ? {
-          token,
-          anonymousStudentId: "anonymous-test-student",
-          credentialId: "credential-test",
-          expiresAt: new Date("2099-01-01T00:00:00.000Z"),
-        }
-      : null;
+    return this.active && token === "valid-session" ? { token, anonymousStudentId: "anonymous-test-student", credentialId: "credential-test", expiresAt: new Date("2099-01-01") } : null;
   }
 }
-
 class TestProvider implements StudentDashboardProvider {
-  constructor(private readonly data: StudentDashboardData) {}
-  async getForAnonymousStudent(): Promise<StudentDashboardData> {
-    return this.data;
-  }
+  constructor(private data: StudentDashboardData) {}
+  async getForAnonymousStudent(): Promise<StudentDashboardData> { return this.data; }
 }
 
-test("une session absente ou invalide exige la redirection", async () => {
+test("protège le tableau de bord avec la session élève", async () => {
   const provider = new TestProvider(createDemoStudentDashboard());
-  assert.equal(
-    await loadAuthorizedStudentDashboard(undefined, new TestSessions(true), provider),
-    null,
-  );
-  assert.equal(
-    await loadAuthorizedStudentDashboard("invalid", new TestSessions(false), provider),
-    null,
-  );
+  assert.equal(await loadAuthorizedStudentDashboard(undefined, new TestSessions(true), provider), null);
+  assert.equal(await loadAuthorizedStudentDashboard("invalid", new TestSessions(false), provider), null);
+  assert.ok(await loadAuthorizedStudentDashboard("valid-session", new TestSessions(true), provider));
+  assert.match(pageSource, /redirect\("\/eleve"\)/);
 });
 
-test("une session valide charge les données affichées du tableau de bord", async () => {
-  const data = await loadAuthorizedStudentDashboard(
-    "valid-session",
-    new TestSessions(true),
-    new TestProvider(createDemoStudentDashboard()),
-  );
-  assert.ok(data);
-  assert.equal(DASHBOARD_LABELS.title, "Mon tableau de bord");
-  assert.equal(data.source, "local_demo");
+test("affiche par défaut l’activité récente avec son titre personnalisé", () => {
+  const activity = getSelectedActivity(createDemoStudentDashboard());
+  assert.equal(activity.id, "demo-activity-acte-union");
+  assert.equal(activity.isRecent, true);
+  assert.equal(activity.activityTitle, "Révision avant l’évaluation 1");
+  assert.equal(activity.origin, "teacher_assigned");
+  assert.equal(activity.activityType, "revision");
 });
 
-test("expose exactement les sept opérations approuvées sans C1 ni C2", () => {
-  const operations = getSelectedNotionContext(createDemoStudentDashboard()).operations;
-  assert.equal(operations.length, 7);
-  assert.deepEqual(
-    operations.map(({ id, label }) => ({ id, label })),
-    [...DEMO_INTELLECTUAL_OPERATIONS],
-  );
-  assert.equal(operations.some(({ label }) => /\bC[12]\b/.test(label)), false);
+test("conserve tous les champs distincts de la carte principale", () => {
+  const activity = getSelectedActivity(createDemoStudentDashboard());
+  assert.equal(ACTIVITY_TYPE_LABELS[activity.activityType], "Activité de révision");
+  assert.equal(activity.publicationDate, "16 mai 2025");
+  assert.equal(getHistoricalPeriodLabel(activity.historicalPeriod), "1840–1896");
+  assert.equal(activity.durationMinutes, 25);
+  assert.equal(activity.historicalKnowledgeIds.length, 4);
+  assert.equal(activity.progressPercentage, 35);
+  assert.equal(activity.activityStatus, "in_progress");
 });
 
-test("présente un bouton Retravailler pour chacune des sept opérations", () => {
-  const presented = presentIntellectualOperations(
-    getSelectedNotionContext(createDemoStudentDashboard()).operations,
-  );
-  assert.equal(presented.length, 7);
-  assert.equal(
-    presented.filter(({ reviewLabel }) => reviewLabel === "Retravailler").length,
-    7,
-  );
+test("présente Commencer, Poursuivre et Voir mon bilan selon l’état", () => {
+  const activities = createDemoStudentDashboard().activities;
+  assert.equal(getActivityActionLabel(activities.find(({ activityStatus }) => activityStatus === "not_started")!), "Commencer l’activité");
+  assert.equal(getActivityActionLabel(activities.find(({ activityStatus }) => activityStatus === "in_progress")!), "Poursuivre l’activité");
+  assert.equal(getActivityActionLabel(activities.find(({ activityStatus }) => activityStatus === "completed")!), "Voir mon bilan");
+  assert.deepEqual(new Set(Object.values(ACTIVITY_STATUS_LABELS)), new Set(["À commencer", "En cours", "Terminée"]));
 });
 
-test("conserve le bouton pour une opération maîtrisée", () => {
-  const mastered = presentIntellectualOperations(
-    getSelectedNotionContext(createDemoStudentDashboard()).operations,
-  ).find(({ status }) => status === "mastered");
-  assert.ok(mastered);
-  assert.equal(mastered.reviewLabel, "Retravailler");
+test("remplace Nouvelle activité disponible une fois terminée", () => {
+  assert.match(viewSource, /!completed \? <div className="new-activity-heading"/);
+  assert.match(viewSource, /Bravo ! Tu as terminé cette activité de révision !/);
+  assert.match(viewSource, /completed \? "Bravo/);
 });
 
-test("conserve toujours le statut sous forme textuelle", () => {
-  const presented = presentIntellectualOperations(
-    getSelectedNotionContext(createDemoStudentDashboard()).operations,
-  );
-  assert.equal(presented.every(({ statusLabel }) => statusLabel.length > 0), true);
-  assert.deepEqual(
-    new Set(presented.map(({ statusLabel }) => statusLabel)),
-    new Set(["Maîtrisée", "À consolider", "À travailler", "Non travaillée"]),
-  );
+test("expose exactement les sept opérations officielles pour chaque activité", () => {
+  assert.equal(DEMO_INTELLECTUAL_OPERATIONS.length, 7);
+  assert.deepEqual(DEMO_INTELLECTUAL_OPERATIONS.map(({ label }) => label), [
+    "Établir des faits", "Déterminer des causes et des conséquences", "Situer dans le temps et dans l’espace", "Mettre en relation des faits", "Déterminer des changements et des continuités", "Déterminer des différences et des similitudes", "Établir des liens de causalité",
+  ]);
+  assert.equal(createDemoStudentDashboard().activities.every(({ operations }) => operations.length === 7), true);
 });
 
-test("rend disponibles les quatre statuts de progression", () => {
-  assert.deepEqual(new Set(Object.values(PROGRESS_STATUS_LABELS)), new Set([
-    "Maîtrisée",
-    "À consolider",
-    "À travailler",
-    "Non travaillée",
-  ]));
+test("utilise uniquement les connaissances du catalogue canonique", () => {
+  const canonical = new Set(ACTE_UNION_HISTORICAL_KNOWLEDGE.map(({ id }) => id));
+  for (const activity of createDemoStudentDashboard().activities) {
+    assert.equal(activity.historicalKnowledgeIds.every((id) => canonical.has(id as never)), true);
+    assert.equal(activity.historicalKnowledge.every(({ id }) => canonical.has(id as never)), true);
+  }
 });
 
-test("présente un bouton pour chaque connaissance, y compris maîtrisée", () => {
-  const presented = presentHistoricalKnowledge(
-    getSelectedNotionContext(createDemoStudentDashboard()).historicalKnowledge,
-  );
-  assert.equal(presented.length, 12);
-  assert.equal(
-    presented.every(({ reviewLabel }) => reviewLabel === "Retravailler"),
-    true,
-  );
-  assert.equal(
-    presented.find(({ status }) => status === "mastered")?.reviewLabel,
-    "Retravailler",
-  );
+test("présente un bilan explicatif avant la fin", () => {
+  const activity = getSelectedActivity(createDemoStudentDashboard());
+  assert.equal(activity.summary.state, "pending");
+  assert.deepEqual(activity.summary.strengths, []);
+  assert.match(viewSource, /Lorsque tu auras terminé cette activité, Socrato préparera un bilan personnalisé/);
 });
 
-test("conserve exactement les douze connaissances approuvées dans leur ordre", () => {
-  assert.deepEqual(
-    ACTE_UNION_HISTORICAL_KNOWLEDGE.map(({ label }) => label),
-    [
-      "Rébellions de 1837-1838",
-      "Contexte de l’Acte d’union",
-      "Causes de l’Acte d’union",
-      "Objectifs de l’Acte d’union",
-      "Rapport Durham",
-      "Acte d’union",
-      "Création de la Province du Canada (union du Haut-Canada et du Bas-Canada)",
-      "Populations du Bas-Canada et du Haut-Canada",
-      "Représentation égale des deux Canadas",
-      "Structure des institutions politiques",
-      "L’anglais comme langue officielle",
-      "Conséquences de l’Acte d’union",
-    ],
-  );
+test("présente un bilan local structuré et explicitement non réel après la fin", () => {
+  const completed = createDemoStudentDashboard().activities.find(({ activityStatus }) => activityStatus === "completed");
+  assert.ok(completed);
+  assert.equal(completed.summary.state, "local_demo_structured");
+  assert.ok(completed.summary.strengths.length > 0);
+  assert.match(completed.summary.strengths.join(" "), /local|remplacer/i);
+  assert.match(viewSource, /aucune analyse pédagogique réelle/);
 });
 
-test("utilise douze identifiants uniques rattachés à l’Acte d’union", () => {
-  assert.equal(ACTE_UNION_HISTORICAL_KNOWLEDGE.length, 12);
-  assert.equal(
-    new Set(ACTE_UNION_HISTORICAL_KNOWLEDGE.map(({ id }) => id)).size,
-    12,
-  );
-  assert.equal(
-    ACTE_UNION_HISTORICAL_KNOWLEDGE.every(
-      ({ notionId }) => notionId === ACTE_UNION_NOTION_ID,
-    ),
-    true,
-  );
+test("n’ajoute aucun appel IA, externe ou persistance", () => {
+  const combined = [viewSource, pageSource, providerSource].join("\n");
+  assert.doesNotMatch(combined, /fetch\(|openai|anthropic|generateText|streamText|chat\.completions|responses\.create|postgres|prisma/i);
 });
 
-test("ne contient plus les anciennes connaissances temporaires", () => {
-  assert.equal(
-    ACTE_UNION_HISTORICAL_KNOWLEDGE.some(({ label }) =>
-      label.startsWith("Connaissance de démonstration"),
-    ),
-    false,
-  );
+test("interdit explicitement le fournisseur local en production", async () => {
+  const previousNodeEnv = Object.getOwnPropertyDescriptor(process.env, "NODE_ENV");
+  Object.defineProperty(process.env, "NODE_ENV", { configurable: true, enumerable: true, value: "production", writable: true });
+  try {
+    await assert.rejects(
+      () => new LocalDemoStudentDashboardProvider().getForAnonymousStudent("anonymous-test-student"),
+      /disabled in production/,
+    );
+  } finally {
+    if (previousNodeEnv) Object.defineProperty(process.env, "NODE_ENV", previousNodeEnv);
+    else Reflect.deleteProperty(process.env, "NODE_ENV");
+  }
 });
 
-test("permet d’ajouter une autre notion par les seules données", () => {
-  const catalog: HistoricalKnowledgeCatalog = {
-    [ACTE_UNION_NOTION_ID]: ACTE_UNION_HISTORICAL_KNOWLEDGE,
-    "notion-future": [
-      {
-        id: "connaissance-future",
-        notionId: "notion-future",
-        label: "Connaissance future validée",
-      },
-    ],
-  };
-  assert.equal(getHistoricalKnowledgeForNotion(catalog, "notion-future").length, 1);
-  assert.equal(getHistoricalKnowledgeForNotion(catalog, "inconnue").length, 0);
+test("selectedActivityId actualise toutes les sections", () => {
+  const first = createDemoStudentDashboard("demo-activity-acte-union");
+  const second = createDemoStudentDashboard("demo-activity-industrialisation");
+  const completed = createDemoStudentDashboard("demo-activity-completed");
+  assert.equal(first.selectedActivityId, "demo-activity-acte-union");
+  assert.equal(second.selectedActivityId, "demo-activity-industrialisation");
+  assert.notEqual(getSelectedActivity(first).activityTitle, getSelectedActivity(second).activityTitle);
+  assert.notDeepEqual(getSelectedActivity(first).operations, getSelectedActivity(second).operations);
+  assert.notDeepEqual(getSelectedActivity(first).historicalKnowledge, getSelectedActivity(second).historicalKnowledge);
+  assert.notDeepEqual(getSelectedActivity(first).summary, getSelectedActivity(completed).summary);
 });
 
-test("décrit un état Cahier vide sans ressource ouvrable", () => {
-  const context = getSelectedNotionContext(createDemoStudentDashboard());
-  assert.equal(context.notebookRecommendation, null);
-  assert.equal(hasNotebookResource(context.notebookRecommendation), false);
+test("persiste uniquement l’identifiant d’activité dans l’URL", () => {
+  const url = getActivityDashboardUrl("demo-activity-industrialisation");
+  assert.equal(url, "/eleve/tableau-de-bord?activity=demo-activity-industrialisation#activite");
+  assert.doesNotMatch(url, /title|titre|Révision|code|student/);
+  assert.match(pageSource, /searchParams: Promise<\{ activity\?: string \}>/);
 });
 
-test("décrit proprement l’absence d’activité publiée", () => {
-  assert.equal(getActivityTitle(null), "Aucune activité publiée");
+test("replie un identifiant inconnu vers l’activité par défaut", () => {
+  const data = createDemoStudentDashboard("activité-inconnue");
+  assert.equal(data.selectedActivityId, data.defaultActivityId);
+  assert.equal(getSelectedActivity(data).id, data.defaultActivityId);
 });
 
-test("accepte une troisième notion par les seules données", () => {
-  const data = createDemoStudentDashboard();
-  data.notions.push({
-    id: "future-notion",
-    title: "Notion future validée",
-    description: "Entrée de test injectée par les données.",
-    historicalPeriod: { displayLabel: "Période future validée" },
-  });
-  assert.equal(data.notions.length, 3);
-  assert.equal(data.notions.at(-1)?.title, "Notion future validée");
+test("préserve les modes clair et sombre avec la palette approuvée", () => {
+  assert.match(cssSource, /--light-page:#f4efe6/);
+  assert.match(cssSource, /--light-surface:#fffdf8/);
+  assert.match(cssSource, /--light-text:#102c45/);
+  assert.match(cssSource, /\[data-theme="dark"\] \.student-dashboard/);
+  assert.match(viewSource, /<ThemeToggle/);
 });
 
-test("sélectionne l’Acte d’union par défaut avec ses douze connaissances", () => {
-  const data = createDemoStudentDashboard();
-  const context = getSelectedNotionContext(data);
-  assert.equal(data.selectedNotionId, ACTE_UNION_NOTION_ID);
-  assert.equal(context.notionId, ACTE_UNION_NOTION_ID);
-  assert.equal(context.historicalKnowledge.length, 12);
+test("rend la page responsive, zoomable et accessible", () => {
+  assert.match(cssSource, /overflow-x:hidden/);
+  assert.match(cssSource, /@media \(max-width:1050px\)/);
+  assert.match(cssSource, /@media \(max-width:720px\)/);
+  assert.match(cssSource, /min-height:44px/);
+  assert.match(cssSource, /prefers-reduced-motion:reduce/);
+  assert.match(viewSource, /aria-current=/);
+  assert.match(viewSource, /aria-label="Activité sélectionnée"/);
 });
 
-test("rend l’activité et la progression des opérations contextuelles", () => {
-  const data = createDemoStudentDashboard();
-  const acteUnion = getSelectedNotionContext(data, ACTE_UNION_NOTION_ID);
-  const industrialisation = getSelectedNotionContext(data, "industrialisation");
-
-  assert.notEqual(acteUnion.activity?.title, industrialisation.activity?.title);
-  assert.notDeepEqual(
-    acteUnion.operations.map(({ status }) => status),
-    industrialisation.operations.map(({ status }) => status),
-  );
+test("conserve une région compacte accessible pour les connaissances", () => {
+  assert.match(viewSource, /<KnowledgeScrollRegion total=\{workedItems\.length\}>/);
+  assert.match(cssSource, /\.results-panel \{[^}]*height:380px/);
+  assert.match(cssSource, /\.knowledge-list \{[^}]*height:100%[^}]*overflow-y:auto/);
 });
 
-test("conserve l’industrialisation sans connaissance historique inventée", () => {
-  const data = createDemoStudentDashboard("industrialisation");
-  const context = getSelectedNotionContext(data);
-  assert.equal(data.selectedNotionId, "industrialisation");
-  assert.equal(context.historicalKnowledge.length, 0);
-  assert.equal(context.notebookRecommendation, null);
-  assert.match(context.recommendationEmptyMessage, /ajoutées ultérieurement/);
+test("détecte le débordement et la fin de la liste des connaissances", () => {
+  assert.deepEqual(getKnowledgeScrollState(0, 294, 504), { hasOverflow: true, isAtEnd: false });
+  assert.deepEqual(getKnowledgeScrollState(210, 294, 504), { hasOverflow: true, isAtEnd: true });
+  assert.deepEqual(getKnowledgeScrollState(0, 294, 250), { hasOverflow: false, isAtEnd: true });
 });
 
-test("persiste la notion dans l’URL et la restaure au rechargement", () => {
-  assert.equal(
-    getNotionDashboardUrl("industrialisation"),
-    "/eleve/tableau-de-bord?mode=notion-review&notion=industrialisation#tableau-notion",
-  );
-  const reloaded = createDemoStudentDashboard("industrialisation", "notion-review");
-  assert.equal(reloaded.selectedNotionId, "industrialisation");
-  assert.equal(reloaded.selectedMode, "notion-review");
-  assert.equal(getSelectedNotionContext(reloaded).notionId, "industrialisation");
-});
-
-test("rend les deux notions disponibles comme de vrais liens Next.js", () => {
-  const source = readFileSync(
-    new URL(
-      "../app/eleve/tableau-de-bord/dashboard-view.tsx",
-      import.meta.url,
-    ),
-    "utf8",
-  );
-  assert.match(source, /<Link[\s\S]*?href=\{getNotionDashboardUrl\(notion\.id\)\}/);
-  assert.match(source, /aria-current=\{notion\.id === selectedNotionId \? "page"/);
-  assert.doesNotMatch(source, /<button[\s\S]*?Réviser cette notion/);
-  assert.doesNotMatch(source, /preventDefault|disabled=/);
-  assert.equal(
-    getNotionDashboardUrl(ACTE_UNION_NOTION_ID),
-    "/eleve/tableau-de-bord?mode=notion-review&notion=acte-union#tableau-notion",
-  );
-  assert.equal(
-    getNotionDashboardUrl("industrialisation"),
-    "/eleve/tableau-de-bord?mode=notion-review&notion=industrialisation#tableau-notion",
-  );
-});
-
-test("la navigation serveur produit les contenus propres à chaque URL", () => {
-  const acteUnion = createDemoStudentDashboard("acte-union");
-  const industrialisation = createDemoStudentDashboard("industrialisation");
-  const acteUnionContext = getSelectedNotionContext(acteUnion);
-  const industrialisationContext = getSelectedNotionContext(industrialisation);
-
-  assert.equal(acteUnionContext.activity?.title, "Acte d’union");
-  assert.equal(acteUnionContext.historicalKnowledge.length, 12);
-  assert.equal(industrialisationContext.activity?.title, "Industrialisation");
-  assert.equal(industrialisationContext.historicalKnowledge.length, 0);
-});
-
-test("distingue une activité enseignante d’une révision choisie", () => {
-  const teacherActivity = getSelectedNotionContext(
-    createDemoStudentDashboard("acte-union", "teacher-assigned"),
-  ).activity;
-  const selectedActivity = getSelectedNotionContext(
-    createDemoStudentDashboard("industrialisation", "notion-review"),
-  ).activity;
-
-  assert.ok(teacherActivity);
-  assert.ok(selectedActivity);
-  assert.equal(teacherActivity.origin, "teacher_assigned");
-  assert.equal(teacherActivity.title, "Acte d’union");
-  assert.equal(getActivityCardLabel(teacherActivity), "Activité de révision");
-  assert.equal(getActivityOriginLabel(teacherActivity), "Assignée par ton enseignant");
-  assert.equal(getActivityActionLabel(teacherActivity), "Poursuivre l’activité");
-  assert.equal(teacherActivity.isNew, true);
-
-  assert.equal(selectedActivity.origin, "student_selected");
-  assert.equal(selectedActivity.title, "Industrialisation");
-  assert.equal(selectedActivity.progressPercent, 0);
-  assert.equal(getActivityCardLabel(selectedActivity), "Révision par notion");
-  assert.equal(getActivityOriginLabel(selectedActivity), "Choisie par toi");
-  assert.equal(getActivityActionLabel(selectedActivity), "Commencer l’activité");
-  assert.equal(selectedActivity.isNew, false);
-});
-
-test("conserve le mode dans l’URL et replie un mode inconnu vers l’activité enseignante", () => {
-  assert.equal(
-    getDashboardUrl("acte-union", "teacher-assigned"),
-    "/eleve/tableau-de-bord?mode=teacher-assigned&notion=acte-union#tableau-notion",
-  );
-  assert.equal(resolveDashboardMode("mode-inconnu"), "teacher-assigned");
-  assert.equal(
-    createDemoStudentDashboard("acte-union", "mode-inconnu").selectedMode,
-    "teacher-assigned",
-  );
-});
-
-test("ne présente aucun texte local temporaire dans la carte d’activité", () => {
-  const source = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard-view.tsx", import.meta.url),
-    "utf8",
-  );
-  const activities = [
-    getSelectedNotionContext(createDemoStudentDashboard()).activity,
-    getSelectedNotionContext(
-      createDemoStudentDashboard("industrialisation", "notion-review"),
-    ).activity,
-  ];
-  assert.equal(activities.some((activity) => /démonstration locale/i.test(activity?.title ?? "")), false);
-  assert.doesNotMatch(source, /Poursuis ton activité là où tu l’as laissée/);
-});
-
-test("déclare deux variantes visuelles distinctes pour la carte principale", () => {
-  const css = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard.css", import.meta.url),
-    "utf8",
-  );
-  assert.match(css, /\.activity-card-teacher-assigned/);
-  assert.match(css, /\.activity-card-student-selected/);
-});
-
-test("place l’assignation enseignante une seule fois dans un bandeau accessible", () => {
-  const source = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard-view.tsx", import.meta.url),
-    "utf8",
-  );
-  assert.match(source, /teacher-assigned-banner[\s\S]*?role="note"/);
-  assert.match(source, /teacher-assigned-star[\s\S]*?★/);
-  const start = source.indexOf("function ActiveRevisionCard");
-  const end = source.indexOf("function NotebookCard");
-  const activityCard = source.slice(start, end);
-  assert.equal(activityCard.match(/Assignée par ton enseignant/g)?.length, 1);
-  assert.match(source, /activity && !isStudentSelected/);
-  assert.match(source, /activity && isStudentSelected/);
-});
-
-test("réserve la bordure et la lueur chaude à la grande carte enseignante", () => {
-  const css = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard.css", import.meta.url),
-    "utf8",
-  );
-  assert.match(
-    css,
-    /\.activity-card-teacher-assigned\s*\{[^}]*border:\s*3px solid #e0a23f[^}]*box-shadow:[^}]*rgba\(222,154,48/,
-  );
-  assert.match(css, /\.activity-card-teacher-assigned:hover, \.activity-card-teacher-assigned:focus-within/);
-  assert.doesNotMatch(
-    css,
-    /\.activity-card-student-selected\s*\{[^}]*rgba\(212,154,62/,
-  );
-});
-
-test("retombe sans erreur sur la notion par défaut pour un identifiant inconnu", () => {
-  const data = createDemoStudentDashboard("notion-inconnue");
-  assert.equal(data.selectedNotionId, ACTE_UNION_NOTION_ID);
-  assert.equal(getSelectedNotionContext(data).notionId, ACTE_UNION_NOTION_ID);
-});
-
-test("limite la liste des connaissances sur grand écran et la libère sur tablette", () => {
-  const css = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard.css", import.meta.url),
-    "utf8",
-  );
-  assert.match(css, /\.dashboard-progress-section\s*\{[^}]*--progress-panel-height:\s*360px/);
-  assert.match(css, /\.dashboard-progress-section > section\s*\{[^}]*height:\s*var\(--progress-panel-height\)/);
-  assert.match(css, /\.knowledge-scroll-shell\s*\{[^}]*flex:\s*1/);
-  assert.match(css, /\.knowledge-list\s*\{[\s\S]*?height:\s*100%/);
-  assert.match(css, /\.knowledge-list\s*\{[\s\S]*?overflow-y:\s*scroll/);
-  assert.match(
-    css,
-    /@media \(max-width:\s*1120px\)[\s\S]*?\.dashboard-progress-section > section\s*\{[^}]*height:\s*auto/,
-  );
-});
-
-test("affiche les titres de notion en majuscules sans modifier les données", () => {
-  const css = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard.css", import.meta.url),
-    "utf8",
-  );
-  const data = createDemoStudentDashboard();
-  assert.equal(getSelectedNotionContext(data).activity?.title, "Acte d’union");
-  assert.equal(
-    getSelectedNotionContext(
-      createDemoStudentDashboard("industrialisation", "notion-review"),
-    ).activity?.title,
-    "Industrialisation",
-  );
-  assert.match(css, /\.activity-copy h2\s*\{[^}]*font-weight:\s*800[^}]*text-transform:\s*uppercase/);
-});
-
-test("hiérarchise l’en-tête des connaissances sans préfixe de sélection", () => {
-  const source = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard-view.tsx", import.meta.url),
-    "utf8",
-  );
-  const start = source.indexOf("function KnowledgeCollection");
-  const end = source.indexOf("function KnowledgeStatusIcon");
-  const knowledgeSection = source.slice(start, end);
-  const headingPosition = knowledgeSection.indexOf("DASHBOARD_LABELS.knowledge");
-  const notionPosition = knowledgeSection.indexOf('className="knowledge-notion-title"');
-
-  assert.ok(headingPosition >= 0);
-  assert.ok(notionPosition > headingPosition);
-  assert.doesNotMatch(knowledgeSection, /Notion sélectionnée/);
-  assert.match(knowledgeSection, /knowledge-notion-title">\{context\}/);
-});
-
-test("utilise le même grand titre et le même trait décoratif dans les deux colonnes", () => {
-  const css = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard.css", import.meta.url),
-    "utf8",
-  );
-  assert.match(css, /\.section-heading h2\s*\{[^}]*font-size:\s*24px/);
-  assert.match(css, /\.section-heading > span\s*\{[^}]*background:\s*var\(--gold\)/);
-  assert.match(css, /#operations > \.section-heading h2, #connaissances > \.section-heading h2\s*\{[^}]*text-transform:\s*uppercase/);
-  assert.doesNotMatch(css, /\.knowledge-notion-title\s*\{[^}]*text-transform:\s*uppercase/);
-});
-
-test("retire le compte et l’instruction sous le nom de la notion", () => {
-  const source = readFileSync(
-    new URL(
-      "../app/eleve/tableau-de-bord/knowledge-scroll-region.tsx",
-      import.meta.url,
-    ),
-    "utf8",
-  );
-  assert.doesNotMatch(source, /knowledge-count|Fais défiler pour voir la suite/);
-  assert.doesNotMatch(source, /\{total\}.*connaissance/);
-  assert.match(source, /Voir les autres connaissances/);
-});
-
-test("agrandit le bandeau enseignant tout en conservant sa sémantique informative", () => {
-  const css = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard.css", import.meta.url),
-    "utf8",
-  );
-  const source = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard-view.tsx", import.meta.url),
-    "utf8",
-  );
-  assert.match(css, /\.teacher-assigned-banner\s*\{[^}]*border:\s*2px[^}]*padding:\s*9px 13px[^}]*font-size:\s*11px[^}]*font-weight:\s*850/);
-  assert.match(css, /\.teacher-assigned-star\s*\{[^}]*font-size:\s*17px/);
-  assert.match(source, /teacher-assigned-banner" role="note"/);
-  assert.doesNotMatch(source, /<button[^>]*teacher-assigned-banner/);
-});
-
-test("calcule dynamiquement le total des connaissances de la notion", () => {
-  const acteUnion = getSelectedNotionContext(createDemoStudentDashboard());
-  const industrialisation = getSelectedNotionContext(
-    createDemoStudentDashboard("industrialisation", "notion-review"),
-  );
-  assert.equal(acteUnion.historicalKnowledge.length, 12);
-  assert.equal(industrialisation.historicalKnowledge.length, 0);
-});
-
-test("détecte le débordement, la fin et le retour vers le haut", () => {
-  assert.deepEqual(getKnowledgeScrollState(0, 294, 504), {
-    hasOverflow: true,
-    isAtEnd: false,
-  });
-  assert.deepEqual(getKnowledgeScrollState(210, 294, 504), {
-    hasOverflow: true,
-    isAtEnd: true,
-  });
-  assert.deepEqual(getKnowledgeScrollState(80, 294, 504), {
-    hasOverflow: true,
-    isAtEnd: false,
-  });
-  assert.deepEqual(getKnowledgeScrollState(0, 294, 250), {
-    hasOverflow: false,
-    isAtEnd: true,
-  });
-});
-
-test("fait avancer la liste d’environ une hauteur sans dépasser la fin", () => {
+test("avance la liste sans dépasser sa fin", () => {
   assert.equal(getNextKnowledgeScrollTop(0, 294, 700), 258.72);
   assert.equal(getNextKnowledgeScrollTop(390, 294, 700), 406);
 });
 
-test("rend un véritable bouton clavier uniquement lorsqu’il reste du contenu", () => {
-  const source = readFileSync(
-    new URL(
-      "../app/eleve/tableau-de-bord/knowledge-scroll-region.tsx",
-      import.meta.url,
-    ),
-    "utf8",
-  );
-  assert.match(source, /<button[\s\S]*?type="button"[\s\S]*?aria-label="Voir les autres connaissances"/);
-  assert.match(source, />Voir les autres connaissances</);
-  assert.equal(source.match(/<path d="m7 (?:3|10) 5 5 5-5"/g)?.length, 2);
-  assert.match(source, /hasOverflow && !isAtEnd/);
-  assert.match(source, /Toutes les connaissances sont affichées/);
-  assert.match(source, /prefers-reduced-motion: reduce/);
-  assert.doesNotMatch(source, /preventDefault/);
+test("conserve un bouton de défilement utilisable au clavier", () => {
+  assert.match(knowledgeScrollSource, /<button[\s\S]*?type="button"[\s\S]*?aria-label="Voir les autres connaissances"/);
+  assert.match(knowledgeScrollSource, /hasOverflow && !isAtEnd/);
+  assert.match(knowledgeScrollSource, /Toutes les connaissances sont affichées/);
+  assert.match(knowledgeScrollSource, /prefers-reduced-motion: reduce/);
 });
 
-test("présente le contrôle comme une zone fondue sans bouton encadré", () => {
-  const css = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard.css", import.meta.url),
-    "utf8",
-  );
-  assert.match(
-    css,
-    /\.knowledge-scroll-more\s*\{[^}]*right:\s*11px[^}]*left:\s*0[^}]*border:\s*0[^}]*border-radius:\s*15px[^}]*background:\s*linear-gradient/,
-  );
-  assert.match(css, /\.knowledge-scroll-more:focus-visible/);
-  assert.match(css, /@media \(max-width:\s*1120px\)[\s\S]*?\.knowledge-scroll-more[^}]*display:\s*none/);
+test("compacte réellement la zone supérieure sans transformation globale", () => {
+  assert.match(cssSource, /\.welcome-panel \{[^}]*padding:6px 8px 8px/);
+  assert.match(cssSource, /\.welcome-copy \{[^}]*padding:16px 6px 0/);
+  assert.match(cssSource, /\.main-activity-card \{[^}]*padding:20px 26px 18px/);
+  assert.match(cssSource, /\.activity-progress \{[^}]*width:110px[^}]*height:110px/);
+  assert.match(cssSource, /\.main-activity-action \{[^}]*min-height:46px/);
+  assert.doesNotMatch(cssSource, /transform:scale\(/);
 });
 
-test("expose les titres structurants requis", () => {
-  assert.equal(DASHBOARD_LABELS.activity, "Activité de révision");
-  assert.equal(DASHBOARD_LABELS.notions, "Réviser par notion");
-  assert.equal(
-    DASHBOARD_LABELS.knowledge,
-    "Connaissances historiques",
-  );
-  assert.equal(DASHBOARD_LABELS.teacherPractices, "Pratiques de l’enseignant");
-  assert.equal(
-    DASHBOARD_LABELS.recommendations,
-    "Recommandations de Socrato",
-  );
-  assert.notEqual(DASHBOARD_LABELS.recommendations, "Cahier");
+test("prend en charge les titres personnalisés longs sur deux lignes", () => {
+  const activity = { ...getSelectedActivity(createDemoStudentDashboard()), activityTitle: "Révision préparatoire approfondie avant la première évaluation de la séquence" };
+  assert.ok(activity.activityTitle.length > 60);
+  assert.match(cssSource, /\.main-activity-card > h2 \{[^}]*-webkit-line-clamp:2/);
+  assert.match(viewSource, /\{activity\.activityTitle\}/);
 });
 
-test("utilise le titre corrigé au pluriel sans ancienne variante", () => {
-  const source = readFileSync(
-    new URL("../lib/student-dashboard/presentation.ts", import.meta.url),
-    "utf8",
-  );
-  assert.equal(DASHBOARD_LABELS.knowledge, "Connaissances historiques");
-  assert.doesNotMatch(source, /Connaissances abordées dans cette notion|Connaissance historique"/);
+test("applique un fond crème à l’avatar sombre sans modifier le mode clair", () => {
+  assert.match(cssSource, /\.welcome-portrait \{[^}]*background:var\(--navy\)/);
+  assert.match(cssSource, /\[data-theme="dark"\] \.welcome-portrait \{[^}]*background:#f3e6cf/);
+  assert.match(viewSource, /src="\/logos\/socrato-logo-blanc\.png"[^>]*className="welcome-portrait-light"/);
+  assert.match(viewSource, /src="\/logos\/socrato-logo-v2\.png"[^>]*className="welcome-portrait-dark"/);
+  assert.match(cssSource, /\.welcome-portrait-dark \{[^}]*display:none/);
+  assert.match(cssSource, /\[data-theme="dark"\] \.welcome-portrait-light \{[^}]*display:none/);
+  assert.match(cssSource, /\[data-theme="dark"\] \.welcome-portrait-dark \{[^}]*display:block/);
+  assert.doesNotMatch(cssSource, /\[data-theme="light"\] \.welcome-portrait/);
 });
 
-test("conserve le slug technique tout en appliquant la graphie Acte d’union", () => {
-  assert.equal(ACTE_UNION_NOTION_ID, "acte-union");
-  const visibleLabels = [
-    getSelectedNotionContext(createDemoStudentDashboard()).activity?.title ?? "",
-    ...ACTE_UNION_HISTORICAL_KNOWLEDGE.map(({ label }) => label),
-  ];
-  assert.equal(visibleLabels.some((label) => label.includes("Acte d’Union")), false);
-  assert.equal(visibleLabels.some((label) => label.includes("Acte d’union")), true);
+test("conserve les trois zones équilibrées de l’en-tête et son titre principal", () => {
+  assert.match(viewSource, /className="brand-lockup"/);
+  assert.match(viewSource, /className="hero-title-block"/);
+  assert.match(viewSource, /<ThemeToggle \/>/);
+  assert.match(viewSource, /<h1>\{DASHBOARD_LABELS\.title\}<\/h1>/);
+  assert.match(cssSource, /\.dashboard-hero \{[^}]*height:130px/);
+  assert.match(cssSource, /\.dashboard-body \{[^}]*padding:18px var\(--dashboard-gutter\) 26px/);
 });
 
-test("compacte les connaissances et garde les recommandations secondaires", () => {
-  const css = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard.css", import.meta.url),
-    "utf8",
-  );
-  assert.match(css, /\.knowledge-row\s*\{[^}]*min-height:\s*38px[^}]*gap:\s*8px[^}]*padding:\s*0/);
-  assert.match(css, /\.knowledge-review-button\s*\{[^}]*min-height:\s*32px/);
-  assert.match(css, /\.notebook-card\s*\{[^}]*border:\s*1px solid rgba\(190,151,87,.64\)/);
-  assert.match(css, /\.activity-card-teacher-assigned\s*\{[^}]*border:\s*3px solid/);
+test("aligne toutes les sections sur un conteneur horizontal responsive", () => {
+  assert.match(cssSource, /--dashboard-gutter:clamp\(16px,3\.2vw,56px\)/);
+  assert.match(cssSource, /\.student-dashboard,\.student-dashboard \* \{[^}]*box-sizing:border-box/);
+  assert.match(cssSource, /\.dashboard-hero-content \{[^}]*width:100%[^}]*max-width:1440px[^}]*padding:8px var\(--dashboard-gutter\)/);
+  assert.match(cssSource, /\.dashboard-body \{[^}]*width:100%[^}]*max-width:1440px[^}]*padding:18px var\(--dashboard-gutter\) 26px/);
+  assert.doesNotMatch(cssSource, /\.dashboard-body \{[^}]*width:min\(100% -/);
 });
 
-test("affiche l’en-tête illustré des recommandations sur deux lignes", () => {
-  const source = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard-view.tsx", import.meta.url),
-    "utf8",
-  );
-  const css = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard.css", import.meta.url),
-    "utf8",
-  );
-  assert.equal(DASHBOARD_LABELS.recommendations, "Recommandations de Socrato");
-  assert.match(source, /notebook-compass[\s\S]*?aria-hidden="true"[\s\S]*?<svg/);
-  assert.match(source, /<span>RECOMMANDATIONS<\/span>[\s\S]*?<span>DE SOCRATO<\/span>/);
-  assert.match(css, /\.notebook-kicker\s*\{[^}]*flex-direction:\s*column[^}]*font-size:\s*clamp\(16px,1\.55vw,21px\)/);
-});
-
-test("conserve l’état vide et son illustration décorative vectorielle", () => {
-  const source = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard-view.tsx", import.meta.url),
-    "utf8",
-  );
-  const css = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard.css", import.meta.url),
-    "utf8",
-  );
-  assert.match(source, /<h3>Aucune page recommandée<\/h3>[\s\S]*?<p>\{emptyMessage\}<\/p>[\s\S]*?<NotebookEmptyIllustration/);
-  assert.match(source, /function NotebookEmptyIllustration[\s\S]*?aria-hidden="true"/);
-  assert.match(source, /notebook-pages[\s\S]*?notebook-particles/);
-  assert.match(css, /\.notebook-card\s*\{[^}]*border-radius:\s*22px[^}]*radial-gradient/);
-  assert.match(css, /\.notebook-empty-illustration\s*\{[^}]*left:\s*50%[^}]*transform:\s*translateX\(-50%\)/);
-});
-
-test("centre le titre de page indépendamment des blocs latéraux", () => {
-  const source = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard-view.tsx", import.meta.url),
-    "utf8",
-  );
-  const css = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard.css", import.meta.url),
-    "utf8",
-  );
-  assert.match(source, /dashboard-hero-content/);
-  assert.match(css, /\.dashboard-hero-content\s*\{[^}]*position:\s*relative/);
-  assert.match(css, /\.hero-title-block\s*\{[^}]*position:\s*absolute[^}]*left:\s*50%[^}]*transform:\s*translateX\(-50%\)/);
-  assert.match(css, /@media \(max-width:\s*620px\)[\s\S]*?\.hero-title-block\s*\{[^}]*bottom:\s*14px[^}]*transform:\s*none/);
-});
-
-test("sépare les recommandations avec une ligne et un losange sans renforcer leur contour", () => {
-  const css = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard.css", import.meta.url),
-    "utf8",
-  );
-  assert.match(css, /\.notebook-divider\s*\{[^}]*height:\s*1px[^}]*linear-gradient/);
-  assert.match(css, /\.notebook-divider > span\s*\{[^}]*transform:\s*translate\(-50%,-50%\) rotate\(45deg\)/);
-  assert.match(css, /\.notebook-card\s*\{[^}]*border:\s*1px solid/);
-  assert.doesNotMatch(css, /\.activity-card-student-selected\s*\{[^}]*0 0 29px|\.notebook-card\s*\{[^}]*0 0 29px/);
-});
-
-test("calcule la période historique des deux notions depuis les données", () => {
-  const data = createDemoStudentDashboard();
-  assert.deepEqual(
-    data.notions.map(({ historicalPeriod }) =>
-      getHistoricalPeriodLabel(historicalPeriod),
-    ),
-    ["1840–1896", "1840–1896"],
-  );
-  assert.equal(
-    getHistoricalPeriodLabel({ displayLabel: "Périodes multiples validées" }),
-    "Périodes multiples validées",
-  );
-  assert.equal(getHistoricalPeriodLabel(), null);
-});
-
-test("affiche la période dans les trois familles de cartes sans date codée dans le JSX", () => {
-  const source = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard-view.tsx", import.meta.url),
-    "utf8",
-  );
-  assert.match(source, /className="activity-period">\{periodLabel\}/);
-  assert.match(source, /className="notion-card-period"[\s\S]*?getHistoricalPeriodLabel\(notion\.historicalPeriod\)/);
-  assert.match(source, /className="teacher-practice-period">\{periodLabel\}/);
-  assert.doesNotMatch(source, /1840[–-]1896|1840 à 1896/);
-});
-
-test("rend la pratique enseignante illustrée, prioritaire et navigable", () => {
-  const data = createDemoStudentDashboard();
-  const practice = data.teacherPractices[0];
-  const css = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard.css", import.meta.url),
-    "utf8",
-  );
-  assert.equal(practice.notionId, ACTE_UNION_NOTION_ID);
-  assert.equal(practice.title, "Acte d’union");
-  assert.equal(practice.progressPercent, 35);
-  assert.equal(
-    getDashboardUrl(practice.notionId!, "teacher-assigned"),
-    "/eleve/tableau-de-bord?mode=teacher-assigned&notion=acte-union#tableau-notion",
-  );
-  assert.match(css, /\.teacher-practice-image\s*\{[^}]*object-fit:\s*cover/);
-  assert.match(css, /\.teacher-practice-card\s*\{[^}]*min-height:\s*165px[^}]*border:\s*3px solid/);
-  assert.match(css, /\.teacher-practice-action\s*\{[^}]*margin-top:\s*auto/);
-});
-
-test("centralise la palette parchemin du mode clair", () => {
-  const css = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard.css", import.meta.url),
-    "utf8",
-  );
-  const expectedVariables = [
-    ["light-page", "#f4efe6"],
-    ["light-surface", "#fffdf8"],
-    ["light-surface-secondary", "#e8eef0"],
-    ["light-text", "#102c45"],
-    ["light-text-secondary", "#5d6973"],
-    ["light-gold", "#b8873b"],
-    ["light-border", "#c9b184"],
-    ["light-mastered", "#287a55"],
-    ["light-consolidate", "#a96100"],
-    ["light-work", "#b6403a"],
-    ["light-not-started", "#687581"],
-  ];
-  for (const [name, value] of expectedVariables) {
-    assert.match(css, new RegExp(`--${name}: ${value}`));
+test("réserve la typographie de marque au mot-symbole Socrato", () => {
+  assert.match(cssSource, /\.brand-name \{[^}]*font-family:var\(--font-cormorant\)/);
+  for (const selector of [
+    "hero-title-block h1",
+    "new-activity-heading h2",
+    "welcome-copy h2",
+    "activity-type",
+    "main-activity-card > h2",
+    "summary-heading h2",
+    "results-heading h2",
+    "activities-panel > h2",
+  ]) {
+    const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    assert.match(cssSource, new RegExp(`\\.${escapedSelector} \\{[^}]*font-family:var\\(--font-geist-sans\\)`));
   }
+  assert.doesNotMatch(cssSource, /\.(?:hero-title-block h1|new-activity-heading h2|welcome-copy h2|main-activity-card > h2|summary-heading h2|results-heading h2|activities-panel > h2) \{[^}]*text-transform:uppercase/);
 });
 
-test("applique la palette claire à toutes les sections sans altérer le bloc sombre", () => {
-  const css = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard.css", import.meta.url),
-    "utf8",
-  );
-  assert.match(css, /\[data-theme="light"\] \.dashboard-hero-overlay/);
-  assert.match(css, /\[data-theme="light"\] \.activity-card-teacher-assigned/);
-  assert.match(css, /\[data-theme="light"\] \.activity-card-student-selected/);
-  assert.match(css, /\[data-theme="light"\] \.notebook-card/);
-  assert.match(css, /\[data-theme="light"\] \.operation-status-mastered/);
-  assert.match(css, /\[data-theme="light"\] \.knowledge-scroll-more/);
-  assert.match(css, /\[data-theme="light"\] \.notion-card-overlay/);
-  assert.match(css, /\[data-theme="light"\] \.teacher-practice-overlay/);
-  assert.match(css, /\[data-theme="light"\] \.theme-option-light/);
-  assert.match(css, /\[data-theme="dark"\] \.student-dashboard\s*\{[\s\S]*?--page:\s*#071725[\s\S]*?--navy:\s*#061725/);
+test("filtre les opérations et connaissances non travaillées dans la présentation", () => {
+  const operations = getSelectedActivity(createDemoStudentDashboard()).operations;
+  const knowledge = getSelectedActivity(createDemoStudentDashboard()).historicalKnowledge;
+  assert.equal(operations.some(({ status }) => status === "not_assessed"), true);
+  assert.equal(knowledge.some(({ status }) => status === "not_assessed"), true);
+  assert.equal(getWorkedOperations(operations).some(({ status }) => status === "not_assessed"), false);
+  assert.equal(getWorkedHistoricalKnowledge(knowledge).some(({ status }) => status === "not_assessed"), false);
 });
 
-test("assombrit uniquement les cartes ciblées dans le mode clair", () => {
-  const css = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard.css", import.meta.url),
-    "utf8",
-  );
-  assert.match(css, /\[data-theme="light"\] \.activity-card-teacher-assigned\s*\{[^}]*linear-gradient\(145deg, #123451, #071d31\)/);
-  assert.match(css, /\[data-theme="light"\] \.activity-card-student-selected\s*\{[^}]*linear-gradient\(145deg, #29475c, #183549\)/);
-  assert.match(css, /\[data-theme="light"\] \.notion-card-overlay\s*\{[^}]*rgba\(7,29,49,.94\)/);
-  assert.match(css, /\[data-theme="light"\] \.teacher-practice-overlay\s*\{[^}]*rgba\(5,27,45,.96\)/);
-  assert.match(css, /\[data-theme="light"\] \.activity-card-teacher-assigned \.progress-ring-center\s*\{[^}]*color:\s*#fff8e9/);
-  assert.match(css, /\[data-theme="light"\] \.activity-card-student-selected \.primary-action\s*\{[^}]*background:\s*#e8eef0/);
+test("conserve visibles les trois statuts réellement travaillés", () => {
+  const statuses = new Set(getWorkedOperations(getSelectedActivity(createDemoStudentDashboard()).operations).map(({ status }) => status));
+  assert.deepEqual(statuses, new Set(["mastered", "consolidate", "needs_work"]));
 });
 
-test("préserve la hiérarchie claire entre activité, notions et recommandations", () => {
-  const css = readFileSync(
-    new URL("../app/eleve/tableau-de-bord/dashboard.css", import.meta.url),
-    "utf8",
-  );
-  assert.match(css, /\[data-theme="light"\] \.activity-card-teacher-assigned\s*\{[^}]*0 0 30px rgba\(184,135,59,.42\)/);
-  assert.match(css, /\[data-theme="light"\] \.activity-card-student-selected\s*\{[^}]*box-shadow:\s*0 13px 28px/);
-  assert.match(css, /\[data-theme="light"\] \.notebook-card\s*\{[^}]*var\(--light-surface\)[^}]*var\(--light-surface-secondary\)/);
-  assert.doesNotMatch(css, /\[data-theme="light"\] \.notebook-card\s*\{[^}]*0 0 30px/);
+test("affiche les deux états vides fixes lorsque rien n’est travaillé", () => {
+  const unstarted = getSelectedActivity(createDemoStudentDashboard("demo-activity-industrialisation"));
+  assert.equal(getWorkedOperations(unstarted.operations).length, 0);
+  assert.equal(getWorkedHistoricalKnowledge(unstarted.historicalKnowledge).length, 0);
+  assert.match(viewSource, /Tes résultats apparaîtront ici après le début de l’activité/);
+  assert.match(viewSource, /Tes connaissances travaillées apparaîtront ici au fil de l’activité/);
+});
+
+test("distingue le nombre ciblé des résultats effectivement affichés", () => {
+  const activity = getSelectedActivity(createDemoStudentDashboard());
+  assert.equal(activity.historicalKnowledgeIds.length, 4);
+  assert.equal(activity.historicalKnowledge.length, 4);
+  assert.equal(getWorkedHistoricalKnowledge(activity.historicalKnowledge).length, 3);
+  assert.match(viewSource, /activity\.historicalKnowledgeIds\.length/);
+});
+
+test("navigue vers la page 3 avec identifiant et contexte autorisé", () => {
+  const activity = getSelectedActivity(createDemoStudentDashboard());
+  assert.equal(activity.actionHref, getLearningSessionUrl(activity.id, "acte-union", "teacher-assigned"));
+  assert.match(activity.actionHref, /^\/eleve\/activite\/demo-activity-acte-union\?/);
+  assert.doesNotMatch(activity.actionHref, /Révision avant/);
+});
+
+test("le retour de la page 3 restaure l’activité sélectionnée", () => {
+  const sessionProvider = readFileSync("lib/student-learning-session/demo-provider.ts", "utf8");
+  assert.match(sessionProvider, /getDashboardUrl\(notionId, requestedMode, activityId\)/);
+  assert.equal(getActivityDashboardUrl("demo-activity-acte-union"), "/eleve/tableau-de-bord?activity=demo-activity-acte-union#activite");
+});
+
+test("conserve l’identité visuelle et la hiérarchie du modèle", () => {
+  assert.match(viewSource, /dashboard-hero/);
+  assert.match(viewSource, /Nouvelle activité disponible/);
+  assert.match(viewSource, /DASHBOARD_LABELS\.summary/);
+  assert.match(viewSource, /DASHBOARD_LABELS\.operations/);
+  assert.match(viewSource, /DASHBOARD_LABELS\.knowledge/);
+  assert.match(viewSource, /DASHBOARD_LABELS\.activities/);
+  assert.match(cssSource, /\.main-activity-card\.activity-teacher_assigned \{[^}]*border-width:3px[^}]*box-shadow:/);
 });
