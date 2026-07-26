@@ -6,6 +6,7 @@
 > **Author:** David Hinse  
 > **Last Updated:** July 2026  
 > **Normative Reference:** `Engineering-Handbook.md`
+> **Pedagogical Requirements:** [`Socrato-Pedagogical-Framework.md`](./Socrato-Pedagogical-Framework.md)
 
 ---
 
@@ -14,6 +15,8 @@
 ## Purpose
 
 The **Socrato Technical Specifications** are the authoritative implementation reference for the Socrato platform.
+
+The **Socrato Pedagogical Framework** is the normative companion for tutoring behavior, historical reasoning, feedback, hints, adaptation, progress, summaries, and pedagogical safety. Implementations governed by those concerns MUST satisfy both documents; the precedence rules below apply if an unresolved conflict is discovered.
 
 This document translates the permanent product, pedagogical, user experience, privacy, security, and engineering principles defined in the **Socrato Engineering Handbook** into concrete and testable implementation requirements.
 
@@ -42,10 +45,11 @@ The following order of precedence applies:
 
 1. the **Socrato Engineering Handbook**;
 2. the **Socrato Technical Specifications**;
-3. approved Architecture Decision Records;
-4. approved design artifacts and interface prototypes;
-5. implementation code and automated tests;
-6. informal notes, discussions, and temporary development decisions.
+3. the **Socrato Pedagogical Framework** for pedagogical behavior;
+4. approved Architecture Decision Records;
+5. approved design artifacts and interface prototypes;
+6. implementation code and automated tests;
+7. informal notes, discussions, and temporary development decisions.
 
 If an implementation requirement conflicts with the Engineering Handbook, the Handbook takes precedence and the conflicting specification must be revised before development continues.
 
@@ -1234,11 +1238,11 @@ The initial operation registry includes:
 | Canonical key | Approved French label |
 |---|---|
 | `establish_facts` | Établir des faits |
+| `time_and_space` | Situer dans le temps et dans l’espace |
 | `causes_and_consequences` | Déterminer des causes et des conséquences |
-| `time_and_space` | Situer dans le temps et l'espace |
-| `relationships_between_facts` | Mettre en relation des faits |
 | `changes_and_continuities` | Déterminer des changements et des continuités |
 | `differences_and_similarities` | Déterminer des différences et des similitudes |
+| `relationships_between_facts` | Mettre en relation des faits |
 | `causal_connections` | Établir des liens de causalité |
 
 The definitive curriculum mapping, wording, and assessment rules MUST be validated before these values become a production database enum or irreversible migration dependency.
@@ -3991,11 +3995,11 @@ The approved light appearance uses a parchment page and light central progress s
 The initial operation cards represent the approved registry:
 
 - Établir des faits;
+- Situer dans le temps et dans l’espace;
 - Déterminer des causes et des conséquences;
-- Situer dans le temps et l'espace;
-- Mettre en relation des faits;
 - Déterminer des changements et des continuités;
 - Déterminer des différences et des similitudes;
+- Mettre en relation des faits;
 - Établir des liens de causalité.
 
 Each eligible card provides **Retravailler** and opens `P-09` with the selected target.
@@ -9423,11 +9427,11 @@ Examples:
 | Operation | Tutoring focus |
 |---|---|
 | Établir des faits | Identify and state relevant facts supported by the approved question context or Historical Documents. |
+| Situer dans le temps et dans l’espace | Use chronology, sequence, territory, and spatial context. |
 | Déterminer des causes et des conséquences | Distinguish initiating conditions, causes, and effects. |
-| Situer dans le temps et l'espace | Use chronology, sequence, territory, and spatial context. |
-| Mettre en relation des faits | Identify an explicit relationship supported by evidence. |
 | Déterminer des changements et des continuités | Compare before and after while identifying what persists. |
 | Déterminer des différences et des similitudes | Apply consistent comparison criteria. |
+| Mettre en relation des faits | Identify an explicit relationship supported by evidence. |
 | Établir des liens de causalité | Explain how one fact contributes to another through a defensible connection. |
 
 The definitive pedagogical mapping MUST remain aligned with the approved Québec curriculum terminology.
@@ -11897,11 +11901,11 @@ The initial registry includes:
 | Canonical key | Approved French label |
 |---|---|
 | `establish_facts` | Établir des faits |
+| `time_and_space` | Situer dans le temps et dans l’espace |
 | `causes_and_consequences` | Déterminer des causes et des conséquences |
-| `time_and_space` | Situer dans le temps et l'espace |
-| `relationships_between_facts` | Mettre en relation des faits |
 | `changes_and_continuities` | Déterminer des changements et des continuités |
 | `differences_and_similarities` | Déterminer des différences et des similitudes |
+| `relationships_between_facts` | Mettre en relation des faits |
 | `causal_connections` | Établir des liens de causalité |
 
 The definitive terminology and mapping MUST be validated against the approved curriculum before production migration values are frozen.
