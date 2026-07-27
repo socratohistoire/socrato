@@ -54,6 +54,7 @@ export function createDemoStudentLearningSession(
         ] : [{ id: "establish_facts", label: "Établir des faits" }],
         historicalKnowledgeIds: hasActeUnionDocuments ? ["contexte-acte-union", "acte-union-1840", "populations-bas-haut-canada", "institutions-politiques", "consequences-acte-union"] : [],
         documentRelations: hasActeUnionDocuments ? ACTE_UNION_DOCUMENTS.map((document, index) => ({ documentId: document.id, displayOrder: index + 1 })) : [],
+        requiredDocumentIds: hasActeUnionDocuments ? ACTE_UNION_DOCUMENTS.slice(0, 3).map(({ id }) => id) : [],
         localHint: hasActeUnionDocuments ? "Indice local : compare d’abord les populations et le nombre de députés, puis repère le jugement exprimé par un acteur politique." : "Indice local : commence par nommer clairement ce que tu souhaites mieux comprendre.",
         initialMessages: [
           {

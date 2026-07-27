@@ -2,38 +2,113 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { ThemeToggle } from "../../tableau-de-bord/theme-toggle";
+import { createDemoPedagogicalDefinition, createPedagogicalSession, finalizePedagogicalSession, LOCAL_ANALYZER_NOTICE, LocalDeterministicResponseAnalyzer, MAX_EXPLICIT_HINT_LEVEL, MAX_PEDAGOGICAL_ATTEMPTS, requestNextHint, submitStudentResponse } from "@/lib/pedagogical-session-engine";
 import { getHistoricalPeriodLabel } from "@/lib/student-dashboard/historical-period";
-import { getCurrentLearningQuestion, getInitialQuestionDocument, getLearningSessionHeading, getLearningSessionProgress, getQuestionDocuments } from "@/lib/student-learning-session/presentation";
+import { getCurrentLearningQuestion, getInitialQuestionDocument, getLearningSessionHeading, getQuestionDocuments } from "@/lib/student-learning-session/presentation";
 import type { LearningSessionDocument, LearningSessionMessage, StudentLearningSessionData } from "@/lib/student-learning-session/types";
 
+function revealNewestConversationMessage(region: HTMLDivElement, message: HTMLElement) {
+  const regionTop = region.getBoundingClientRect().top;
+  const messageTop = message.getBoundingClientRect().top;
+  const targetTop = Math.max(0, region.scrollTop + messageTop - regionTop - 16);
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  region.scrollTo({ top: targetTop, behavior: reducedMotion ? "auto" : "smooth" });
+}
+
 export function StudentLearningSessionView({ data }: { data: StudentLearningSessionData }) {
-  const question = getCurrentLearningQuestion(data);
-  const progress = getLearningSessionProgress(data);
+  const engineDefinition = useMemo(() => createDemoPedagogicalDefinition(data), [data]);
+  const analyzer = useMemo(() => new LocalDeterministicResponseAnalyzer(), []);
+  const [engineState, setEngineState] = useState(() => createPedagogicalSession(engineDefinition));
+  const activeData = { ...data, currentQuestionIndex: engineState.currentQuestionIndex };
+  const question = getCurrentLearningQuestion(activeData);
+  const completedQuestions = engineState.questionStates.filter(({ status }) => status === "completed").length;
+  const progress = {
+    current: Math.min(engineState.currentQuestionIndex + 1, data.questions.length),
+    total: data.questions.length,
+    percent: Math.round((completedQuestions / data.questions.length) * 100),
+  };
   const heading = getLearningSessionHeading(data);
   const primaryOperation = question?.intellectualOperations.find(({ id }) => id === question.primaryOperationId);
-  const initialDocumentId = getInitialQuestionDocument(data)?.id ?? null;
-  const [messages, setMessages] = useState<LearningSessionMessage[]>(question?.initialMessages ?? []);
+  const initialDocumentId = getInitialQuestionDocument(activeData)?.id ?? null;
+  const [messages, setMessages] = useState<LearningSessionMessage[]>(data.questions[0]?.initialMessages ?? []);
   const [response, setResponse] = useState("");
-  const [hintVisible, setHintVisible] = useState(false);
+  const [currentHint, setCurrentHint] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const activeQuestionState = engineState.questionStates[engineState.currentQuestionIndex];
+  const maximumHelpReceived = activeQuestionState.hintLevel >= MAX_EXPLICIT_HINT_LEVEL;
+  const responseInputRef = useRef<HTMLTextAreaElement>(null);
+  const submissionLockRef = useRef(false);
+  const restoreResponseFocusRef = useRef(false);
+  const messagesRegionRef = useRef<HTMLDivElement>(null);
+  const newestMessageRef = useRef<HTMLElement>(null);
+  const renderedMessageCountRef = useRef(messages.length);
+
+  useEffect(() => {
+    if (messages.length <= renderedMessageCountRef.current) {
+      renderedMessageCountRef.current = messages.length;
+      return;
+    }
+    renderedMessageCountRef.current = messages.length;
+    const region = messagesRegionRef.current;
+    const newestMessage = newestMessageRef.current;
+    if (region && newestMessage) revealNewestConversationMessage(region, newestMessage);
+  }, [messages]);
+
+  useEffect(() => {
+    if (!submitting && restoreResponseFocusRef.current) {
+      restoreResponseFocusRef.current = false;
+      responseInputRef.current?.focus();
+    }
+  }, [submitting]);
 
   if (!question) return null;
 
+  async function sendLocalResponse() {
+    const content = response.trim();
+    if (!content || submitting || submissionLockRef.current || engineState.status === "completed" || activeQuestionState.attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS) return;
+    submissionLockRef.current = true;
+    restoreResponseFocusRef.current = true;
+    setSubmitting(true);
+    setMessages((current) => [...current, { id: `student-${current.length}`, author: "student", content }]);
+    setResponse("");
+    try {
+      const transition = await submitStudentResponse(engineDefinition, engineState, content, analyzer);
+      let nextState = transition.state;
+      if (transition.sessionCompleted) nextState = await finalizePedagogicalSession(nextState);
+      setEngineState(nextState);
+      if (transition.hint) setCurrentHint(transition.hint.text);
+      if (transition.feedback) {
+        const feedback = transition.feedback;
+        setMessages((current) => [...current, {
+          id: `socrato-${current.length}`,
+          author: "socrato",
+          content: feedback.studentFacingText,
+        }]);
+      }
+    } finally {
+      submissionLockRef.current = false;
+      setSubmitting(false);
+    }
+  }
+
   function submitLocalResponse(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const content = response.trim();
-    if (!content) return;
-    setMessages((current) => [
-      ...current,
-      { id: `student-${current.length}`, author: "student", content },
-      {
-        id: `system-${current.length}`,
-        author: "system",
-        content: "Réponse ajoutée localement. Elle n’a pas été évaluée et sera perdue au rechargement.",
-      },
-    ]);
-    setResponse("");
+    void sendLocalResponse();
+  }
+
+  function handleResponseKeyDown(event: ReactKeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing || event.keyCode === 229) return;
+    event.preventDefault();
+    void sendLocalResponse();
+  }
+
+  function obtainLocalHint() {
+    if (engineState.status === "completed") return;
+    const transition = requestNextHint(engineDefinition, engineState);
+    setEngineState(transition.state);
+    setCurrentHint(transition.hint?.text ?? null);
   }
 
   return (
@@ -54,7 +129,7 @@ export function StudentLearningSessionView({ data }: { data: StudentLearningSess
         </div>
         <div className="session-nav-row">
           <Link href={data.dashboardHref} className="session-back"><span aria-hidden="true">←</span> Retour au tableau de bord</Link>
-          <p className="session-demo-notice" role="note">{data.localDemoNotice}</p>
+          <p className="session-demo-notice" role="note">{LOCAL_ANALYZER_NOTICE}</p>
           <div className="session-progress" aria-label={`Question ${progress.current} sur ${progress.total}, progression ${progress.percent} %`}>
             <span>Question {progress.current} sur {progress.total}</span>
             <span className="session-progress-track" aria-hidden="true"><span style={{ width: `${progress.percent}%` }} /></span>
@@ -78,29 +153,29 @@ export function StudentLearningSessionView({ data }: { data: StudentLearningSess
               <div className="question-support-row">
                 <p>{question.instruction}</p>
                 <div className="question-card-actions">
-                  <button type="button" className="hint-button" aria-expanded={hintVisible} onClick={() => setHintVisible(true)}>
+                  <button type="button" className="hint-button" aria-expanded={Boolean(currentHint)} onClick={obtainLocalHint} disabled={engineState.status === "completed" || maximumHelpReceived}>
                     <svg className="hint-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                       <path d="M9 18h6M10 21h4M8.2 14.5A7 7 0 1 1 15.8 14.5c-.9.7-1.3 1.4-1.3 2.5h-5c0-1.1-.4-1.8-1.3-2.5Z" />
                       <path d="M12 5.5v3M8.8 8.1l2.1 2.1M15.2 8.1l-2.1 2.1" />
                     </svg>
-                    Obtenir un indice
+                    {maximumHelpReceived ? "Aide maximale reçue" : "Obtenir un indice"}
                   </button>
                 </div>
               </div>
-              {hintVisible ? <p className="local-hint" role="status">{question.localHint}</p> : null}
+              {currentHint ? <p className="local-hint" role="status">{currentHint}</p> : null}
             </div>
 
             <section className="conversation" aria-label="Conversation locale avec Socrato">
-            <div className="message-list" aria-live="polite" aria-relevant="additions">
-              {messages.map((message) => (
-                <article key={message.id} className={`message message-${message.author}`}>
+            <div ref={messagesRegionRef} className="message-list" aria-live="polite" aria-relevant="additions">
+              {messages.map((message, index) => (
+                <article ref={index === messages.length - 1 ? newestMessageRef : undefined} key={message.id} className={`message message-${message.author}`}>
                   <strong>{message.author === "student" ? "Toi" : message.author === "socrato" ? "Socrato" : "Démonstration locale"}</strong>
                   <p>{message.content}</p>
                 </article>
               ))}
             </div>
             <form className="response-composer" onSubmit={submitLocalResponse}>
-              <textarea id="student-response" aria-label="Réponse de l’élève" value={response} onChange={(event) => setResponse(event.target.value)} rows={3} placeholder="Écris ta réponse ici…" />
+              <textarea ref={responseInputRef} id="student-response" aria-label="Réponse de l’élève" value={response} onChange={(event) => setResponse(event.target.value)} onKeyDown={handleResponseKeyDown} rows={2} placeholder="Écris ta réponse ici…" disabled={submitting || engineState.status === "completed" || activeQuestionState.attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS} />
               <div className="response-actions">
                 <button type="button" className="voice-button" disabled>
                   <svg className="microphone-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -110,15 +185,24 @@ export function StudentLearningSessionView({ data }: { data: StudentLearningSess
                   <span className="voice-label">Dicter ma réponse</span>
                   <span className="voice-availability">Disponible bientôt</span>
                 </button>
-                <button type="submit" className="submit-button" disabled={!response.trim()}>Envoyer ma réponse <span aria-hidden="true">→</span></button>
+                <button type="submit" className="submit-button" disabled={!response.trim() || submitting || engineState.status === "completed" || activeQuestionState.attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS}>{submitting ? "Analyse locale…" : "Envoyer ma réponse"} <span aria-hidden="true">→</span></button>
               </div>
             </form>
+            {engineState.summary ? (
+              <section className="local-session-summary" aria-labelledby="local-summary-title">
+                <h3 id="local-summary-title">Bilan local de démonstration</h3>
+                <p>{engineState.summary.encouragement}</p>
+                <p>{engineState.summary.localDemoNotice}</p>
+                {engineState.summary.recommendation ? <p>{engineState.summary.recommendation.label}</p> : null}
+                <Link href={data.dashboardHref}>Retourner à l’activité sélectionnée</Link>
+              </section>
+            ) : null}
             </section>
           </div>
         </section>
 
         <div className="documents-heading"><h2 id="documents-title" className="column-title">Documents historiques</h2><span /></div>
-        <DocumentsPane documents={getQuestionDocuments(data)} initialDocumentId={initialDocumentId} />
+        <DocumentsPane key={question.id} documents={getQuestionDocuments(activeData)} initialDocumentId={initialDocumentId} />
       </div>
     </main>
   );

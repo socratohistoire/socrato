@@ -1,0 +1,64 @@
+import type { SummaryProducer } from "./ports.ts";
+import type {
+  PedagogicalResultEntry,
+  PedagogicalSessionState,
+  PedagogicalSummary,
+  QuestionResult,
+  ResultStatus,
+  WorkbookReference,
+} from "./types.ts";
+
+function strongestStatus(current: ResultStatus | undefined, candidate: ResultStatus): ResultStatus {
+  const rank: Record<ResultStatus, number> = { to_work_on: 0, to_consolidate: 1, mastered: 2 };
+  return !current || rank[candidate] > rank[current] ? candidate : current;
+}
+
+function aggregate(results: QuestionResult[], field: "demonstratedOperationIds" | "demonstratedKnowledgeIds"): PedagogicalResultEntry[] {
+  const statuses = new Map<string, ResultStatus>();
+  for (const result of results) {
+    for (const id of result[field]) statuses.set(id, strongestStatus(statuses.get(id), result.status));
+  }
+  return [...statuses].map(([id, status]) => ({ id, status }));
+}
+
+export function produceLocalStructuredSummary(
+  state: PedagogicalSessionState,
+  workbookReferences: WorkbookReference[],
+  completedAt = new Date().toISOString(),
+): PedagogicalSummary {
+  const results = state.questionStates.flatMap(({ result }) => result ? [result] : []);
+  const operationResults = aggregate(results, "demonstratedOperationIds");
+  const historicalKnowledgeResults = aggregate(results, "demonstratedKnowledgeIds");
+  const strengths = [...new Set(results.flatMap(({ observedStrengths }) => observedStrengths))];
+  const consolidationTargets = [...new Set(results.flatMap(({ consolidationTargets }) => consolidationTargets))];
+  const targetOperationIds = operationResults.filter(({ status }) => status !== "mastered").map(({ id }) => id);
+  const targetHistoricalKnowledgeIds = historicalKnowledgeResults.filter(({ status }) => status !== "mastered").map(({ id }) => id);
+  const recommendation = targetOperationIds.length || targetHistoricalKnowledgeIds.length ? {
+    kind: "optional_consolidation" as const,
+    targetOperationIds,
+    targetHistoricalKnowledgeIds,
+    label: "Activité locale facultative de consolidation à valider par l’enseignant.",
+  } : undefined;
+
+  return {
+    sessionId: state.sessionId,
+    activityId: state.activityId,
+    notionId: state.notionId,
+    encouragement: "Tu as terminé cette démonstration locale. Tes résultats doivent être validés avant tout usage pédagogique.",
+    strengths,
+    consolidationTargets,
+    operationResults,
+    historicalKnowledgeResults,
+    recommendation,
+    workbookReferences: workbookReferences.filter(({ approvedByTeacher, historicalKnowledgeIds }) =>
+      approvedByTeacher && historicalKnowledgeIds.some((id) => historicalKnowledgeResults.some((result) => result.id === id))),
+    localDemoNotice: "Bilan structuré de démonstration locale — aucun appel à l’IA et aucune persistance après redémarrage.",
+    completedAt,
+  };
+}
+
+export class LocalStructuredSummaryProducer implements SummaryProducer {
+  async produce(state: PedagogicalSessionState, workbookReferences: WorkbookReference[]) {
+    return produceLocalStructuredSummary(state, workbookReferences);
+  }
+}

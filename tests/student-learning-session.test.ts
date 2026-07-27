@@ -116,11 +116,26 @@ test("présente les contrôles de réponse et désactive la dictée", () => {
 });
 
 test("applique la lisibilité pédagogique à tous les messages", () => {
-  assert.match(cssSource, /\.message p \{[^}]*font-size:18px[^}]*line-height:1\.42/);
-  assert.match(cssSource, /\.question-card h3 \{[^}]*font-family:var\(--font-geist-sans\)[^}]*font-size:clamp\(21px,1\.65vw,24px\)[^}]*font-weight:650[^}]*line-height:1\.24/);
+  assert.match(cssSource, /\.message p \{[^}]*font-size:16px[^}]*font-weight:400[^}]*line-height:1\.5/);
+  assert.match(cssSource, /\.message strong \{[^}]*font-size:16px[^}]*font-weight:700[^}]*line-height:1\.3/);
+  assert.match(cssSource, /\.question-card h3 \{[^}]*margin:0[^}]*font-family:var\(--font-geist-sans\)[^}]*font-size:clamp\(22px,1\.5vw,23px\)[^}]*font-weight:700[^}]*line-height:1\.32/);
+  assert.match(cssSource, /@media \(max-width:620px\) \{ \.question-card \{ padding:12px 16px; \}\.question-card h3 \{ font-size:clamp\(20px,5\.2vw,22px\); line-height:1\.32; \} \}/);
   assert.match(cssSource, /@media \(max-width:620px\)[^{]*\{[^}]*\.session-header/);
-  assert.match(cssSource, /\.message p \{ font-size:17px; line-height:1\.42; \}/);
+  assert.match(cssSource, /\.message p \{ font-size:16px; line-height:1\.5; \}/);
   assert.match(cssSource, /textarea::placeholder/);
+});
+
+test("masque les compteurs techniques tout en conservant leur état dans le moteur", () => {
+  assert.doesNotMatch(viewSource, /engine-status|Tentative \$\{|indice \$\{|Question terminée · bilan local disponible/);
+  const engineTypes = readFileSync("lib/pedagogical-session-engine/types.ts", "utf8");
+  assert.match(engineTypes, /attemptNumber: number/);
+  assert.match(engineTypes, /hintLevel: HintLevel/);
+  assert.match(viewSource, /maximumHelpReceived \? "Aide maximale reçue" : "Obtenir un indice"/);
+});
+
+test("rend la zone de réponse compacte et défilable à partir de 52 px", () => {
+  assert.match(cssSource, /\.response-composer textarea \{[^}]*height:56px[^}]*min-height:52px[^}]*max-height:112px[^}]*overflow-y:auto[^}]*overflow-x:hidden[^}]*resize:none[^}]*padding:12px 16px[^}]*font-size:16px[^}]*line-height:1\.4/);
+  assert.match(cssSource, /@media \(max-width:620px\) \{ \.response-composer textarea \{ height:56px; min-height:52px; max-height:112px; \} \}/);
 });
 
 test("la conversation grandit naturellement puis fait défiler uniquement les messages", () => {
@@ -128,7 +143,10 @@ test("la conversation grandit naturellement puis fait défiler uniquement les me
   assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\)[\s\S]*\.message-list \{ min-height:0; max-height:none; flex:1; \}/);
   assert.match(cssSource, /\.message-list \{[^}]*overflow-y:auto[^}]*overflow-x:hidden/);
   assert.match(cssSource, /\.response-composer \{[^}]*flex:0 0 auto/);
-  assert.match(viewSource, /<section className="conversation"[\s\S]*<div className="message-list"[\s\S]*<form className="response-composer"/);
+  assert.match(viewSource, /<section className="conversation"[\s\S]*<div[^>]*className="message-list"[\s\S]*<form className="response-composer"/);
+  assert.match(cssSource, /\.question-card \{[^}]*padding:12px 20px/);
+  assert.doesNotMatch(cssSource, /\.question-card \{[^}]*min-height/);
+  assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\)[\s\S]*\.conversation \{ min-height:0; flex:1/);
 });
 
 test("égalise les colonnes dans un espace de travail piloté par le viewport", () => {
@@ -219,17 +237,78 @@ test("retire les grands cadres extérieurs et partage le style des titres", () =
   assert.match(cssSource, /\[data-theme="dark"\] \.operation-chip \{[^}]*border-color:#d3b176[^}]*background:#17344b[^}]*color:#fff5df/);
 });
 
-test("ajoute localement une réponse sans prétendre l’évaluer", () => {
+test("transmet localement la réponse au moteur sans prétendre à une véritable évaluation", () => {
   assert.match(viewSource, /setMessages/);
-  assert.match(viewSource, /Réponse ajoutée localement/);
-  assert.match(viewSource, /n’a pas été évaluée/);
-  assert.match(viewSource, /sera perdue au rechargement/);
+  assert.match(viewSource, /submitStudentResponse\(engineDefinition, engineState, content, analyzer\)/);
+  assert.match(viewSource, /LOCAL_ANALYZER_NOTICE/);
+  assert.match(readFileSync("lib/pedagogical-session-engine/local-analyzer.ts", "utf8"), /ne constitue pas une véritable évaluation pédagogique/);
+  assert.doesNotMatch(viewSource, /Démonstration locale : ta réponse n’est pas réellement évaluée|local-analysis-notice|setAnalysisNotice/);
+  assert.match(readFileSync("lib/pedagogical-session-engine/feedback.ts", "utf8"), /technicalNotice: "Démonstration locale : ta réponse n’est pas réellement évaluée\."/);
+  assert.doesNotMatch(viewSource, /author: "socrato"[\s\S]{0,180}technicalNotice/);
 });
 
-test("affiche un indice local borné", () => {
+test("envoie au clavier avec Entrée sans dupliquer la logique du formulaire", () => {
+  const keyboardHandler = viewSource.match(/function handleResponseKeyDown[\s\S]*?\n  \}/)?.[0] ?? "";
+  const sharedSender = viewSource.match(/async function sendLocalResponse[\s\S]*?\n  \}/)?.[0] ?? "";
+  assert.match(keyboardHandler, /event\.key !== "Enter" \|\| event\.shiftKey/);
+  assert.match(keyboardHandler, /event\.nativeEvent\.isComposing/);
+  assert.match(keyboardHandler, /event\.keyCode === 229/);
+  assert.match(keyboardHandler, /event\.preventDefault\(\)/);
+  assert.match(keyboardHandler, /void sendLocalResponse\(\)/);
+  assert.match(viewSource, /function submitLocalResponse[\s\S]*void sendLocalResponse\(\)/);
+  assert.equal(viewSource.match(/submitStudentResponse\(engineDefinition, engineState, content, analyzer\)/g)?.length, 1);
+  assert.match(sharedSender, /const content = response\.trim\(\)/);
+  assert.match(sharedSender, /!content \|\| submitting \|\| submissionLockRef\.current/);
+  assert.match(sharedSender, /engineState\.status === "completed"/);
+  assert.match(sharedSender, /activeQuestionState\.attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS/);
+});
+
+test("protège la composition, le double envoi et restaure le focus du champ", () => {
+  assert.match(viewSource, /const submissionLockRef = useRef\(false\)/);
+  assert.match(viewSource, /submissionLockRef\.current = true/);
+  assert.match(viewSource, /finally \{\s*submissionLockRef\.current = false;\s*setSubmitting\(false\)/);
+  assert.match(viewSource, /responseInputRef\.current\?\.focus\(\)/);
+  assert.match(viewSource, /<textarea ref=\{responseInputRef\}[\s\S]*?onKeyDown=\{handleResponseKeyDown\}/);
+  assert.match(viewSource, /id="student-response" aria-label="Réponse de l’élève"/);
+  assert.doesNotMatch(viewSource, /Entrée pour envoyer · Maj \+ Entrée pour aller à la ligne|student-response-help|response-keyboard-help/);
+  assert.doesNotMatch(cssSource, /response-keyboard-help|local-analysis-notice/);
+});
+
+test("fait défiler uniquement la conversation vers chaque nouveau message", () => {
+  assert.match(viewSource, /const messagesRegionRef = useRef<HTMLDivElement>\(null\)/);
+  assert.match(viewSource, /const newestMessageRef = useRef<HTMLElement>\(null\)/);
+  assert.match(viewSource, /useEffect\(\(\) => \{[\s\S]*messages\.length <= renderedMessageCountRef\.current[\s\S]*revealNewestConversationMessage\(region, newestMessage\)[\s\S]*\}, \[messages\]\)/);
+  assert.match(viewSource, /ref=\{messagesRegionRef\} className="message-list"/);
+  assert.match(viewSource, /ref=\{index === messages\.length - 1 \? newestMessageRef : undefined\}/);
+  const scrollHelper = viewSource.match(/function revealNewestConversationMessage[\s\S]*?\n\}/)?.[0] ?? "";
+  assert.match(scrollHelper, /region\.scrollTo/);
+  assert.match(scrollHelper, /prefers-reduced-motion: reduce/);
+  assert.doesNotMatch(scrollHelper, /window\.scrollTo|scrollIntoView/);
+  assert.match(cssSource, /\.message-list \{[^}]*overflow-y:auto[^}]*scroll-padding-block:16px[^}]*padding:16px 5px/);
+  assert.match(cssSource, /\.message \{[^}]*scroll-margin-block:16px/);
+});
+
+test("conserve le locuteur avec sa bulle sans avertissement visible dans la conversation", () => {
+  assert.match(viewSource, /<article[^>]*className=\{`message message-\$\{message\.author\}`\}>[\s\S]*<strong>\{message\.author === "student" \? "Toi" : message\.author === "socrato" \? "Socrato"/);
+  assert.doesNotMatch(viewSource, /analysisNotice|local-analysis-notice/);
+  assert.doesNotMatch(cssSource, /\.message \{[^}]*overflow:hidden/);
+  assert.match(cssSource, /\.message p \{[^}]*overflow-wrap:anywhere/);
+});
+
+test("un changement de document ne déclenche pas le défilement conversationnel", () => {
+  const selector = viewSource.match(/function selectDocument[\s\S]*?\n  \}/)?.[0] ?? "";
+  assert.doesNotMatch(selector, /revealNewestConversationMessage|messagesRegionRef|newestMessageRef/);
+  assert.match(selector, /setSelectedId\(documentId\)/);
+});
+
+test("demande au moteur un indice local borné", () => {
   const data = createDemoStudentLearningSession(); assert.ok(data);
   assert.match(getCurrentLearningQuestion(data)?.localHint ?? "", /^Indice local/);
-  assert.match(viewSource, /setHintVisible\(true\)/);
+  assert.match(viewSource, /requestNextHint\(engineDefinition, engineState\)/);
+  assert.match(viewSource, /setCurrentHint\(transition\.hint\?\.text/);
+  assert.match(viewSource, /maximumHelpReceived = activeQuestionState\.hintLevel >= MAX_EXPLICIT_HINT_LEVEL/);
+  assert.match(viewSource, /disabled=\{engineState\.status === "completed" \|\| maximumHelpReceived\}/);
+  assert.match(viewSource, /maximumHelpReceived \? "Aide maximale reçue" : "Obtenir un indice"/);
 });
 
 test("n’ajoute aucun appel IA ou externe", () => {
@@ -526,7 +605,7 @@ test("distingue la sélection légère du focus clavier des vignettes", () => {
 });
 
 test("allège seulement l’envoi désactivé et conserve strictement la dictée", () => {
-  assert.match(viewSource, /className="submit-button" disabled=\{!response\.trim\(\)\}/);
+  assert.match(viewSource, /className="submit-button" disabled=\{!response\.trim\(\) \|\| submitting \|\| engineState\.status === "completed" \|\| activeQuestionState\.attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS\}/);
   assert.match(cssSource, /\.submit-button:disabled \{[^}]*filter:saturate\(\.2\)[^}]*opacity:\.48[^}]*box-shadow:none/);
   assert.match(viewSource, /<button type="button" className="voice-button" disabled>[\s\S]*Dicter ma réponse[\s\S]*Disponible bientôt/);
   assert.match(cssSource, /\.voice-button \{ display:flex; align-items:center; justify-content:center; gap:8px; background:color-mix\(in srgb,var\(--surface\) 86%,var\(--page\)\); color:color-mix\(in srgb,var\(--ink\) 78%,var\(--muted\)\); opacity:1; cursor:not-allowed; \}/);

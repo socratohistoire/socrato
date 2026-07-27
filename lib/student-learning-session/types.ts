@@ -48,6 +48,7 @@ export type LearningSessionQuestion = {
   intellectualOperations: Array<{ id: string; label: string }>;
   historicalKnowledgeIds: string[];
   documentRelations: LearningSessionQuestionDocument[];
+  requiredDocumentIds?: string[];
   localHint: string;
   initialMessages: LearningSessionMessage[];
 };

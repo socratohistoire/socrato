@@ -127,6 +127,7 @@ Les résultats possibles sont **satisfaisante**, **partiellement satisfaisante**
 - `PED-RESP-010` — Les fautes, une syntaxe fragile, un vocabulaire limité ou une formulation atypique **NE DOIVENT JAMAIS** suffire à déclarer une réponse non exploitable.
 - `PED-RESP-011` — La qualité de la langue **NE DOIT PAS** être confondue avec la compréhension historique.
 - `PED-RESP-012` — Une faible confiance ou une ambiguïté importante **DOIT** déclencher le repli approuvé plutôt qu'une certitude fabriquée.
+- `PED-RESP-013` — Une classification **NE DOIT PAS** être fondée uniquement sur un nombre de mots; une réponse courte contenant une idée historique pertinente **DOIT** rester exploitable.
 
 ## 11. Adaptation au niveau de l’élève
 
@@ -139,6 +140,7 @@ Les résultats possibles sont **satisfaisante**, **partiellement satisfaisante**
 - `PED-ADAPT-007` — Socrato **NE DOIT PAS** abandonner l'accompagnement après une seule erreur.
 - `PED-ADAPT-008` — Une adaptation **NE DOIT PAS** inférer une incapacité durable à partir d'une réponse.
 - `PED-ADAPT-009` — L'enseignant **DOIT** conserver l'autorité sur les connaissances et objectifs assignés.
+- `PED-ADAPT-010` — Une maîtrise avancée **DOIT** exiger l'exactitude historique, la réalisation correcte de l'opération principale, une justification précise et l'utilisation pertinente des documents requis; l'orthographe et la qualité linguistique **NE DOIVENT PAS** entrer dans ce jugement.
 
 ## 12. Rétroaction socratique
 
@@ -155,12 +157,12 @@ Après chaque réponse exploitable, la rétroaction suit cet ordre : reconnaîtr
 
 ## 13. Progression des indices
 
-La progression conservatrice comprend : niveau 0, relance ciblée; niveau 1, reformulation de la consigne; niveau 2, orientation vers un document ou un élément à observer; niveau 3, indice conceptuel plus concret; niveau 4, structure ou amorce sans contenu historique complété.
+La progression explicite comprend : niveau 0, aucune aide explicite demandée; niveau 1, orientation vers un document, une donnée ou un passage précis sans interprétation; niveau 2, deuxième et dernier indice proposant une démarche, une structure ou une amorce sans réponse historique complétée. La reformulation normale de la consigne et la question de relance appartiennent à la rétroaction de Socrato et ne comptent pas comme des indices demandés.
 
 - `PED-HINT-001` — Le moteur pédagogique **DOIT** contrôler le niveau d'indice.
 - `PED-HINT-002` — L'IA **NE DOIT PAS** décider seule de faire progresser le niveau.
-- `PED-HINT-003` — Les indices **DOIVENT** respecter l'ordre conservateur 0 à 4.
-- `PED-HINT-004` — Le niveau 4 **NE DOIT PAS** contenir une réponse historique complétée.
+- `PED-HINT-003` — Les indices explicites **DOIVENT** progresser de façon monotone de 0 à 2, sans troisième indice ni diminution du niveau.
+- `PED-HINT-004` — Le niveau 2 **DOIT** proposer une démarche, une structure ou une amorce et **NE DOIT PAS** contenir une réponse historique complétée.
 - `PED-HINT-005` — Un indice **DOIT** être adapté au manque prioritaire et à l'opération principale.
 - `PED-HINT-006` — Une référence de page utilisée comme indice **DOIT** provenir de données approuvées.
 - `PED-HINT-007` — L'absence de référence approuvée **NE DOIT PAS** bloquer l'accompagnement.
@@ -213,6 +215,8 @@ Une référence approuvée contient au minimum `workbookId` ou un identifiant d'
 - `PED-PROG-012` — Une progression partielle **DOIT** être présentée comme telle et non comme une réussite.
 - `PED-PROG-013` — Les opérations et connaissances **DOIVENT** être classées uniquement lorsqu'elles ont réellement été travaillées.
 - `PED-PROG-014` — Une connaissance ou opération non travaillée **NE DOIT PAS** recevoir un résultat négatif implicite.
+- `PED-PROG-021` — Une question **DOIT** autoriser au maximum trois tentatives : la tentative initiale, une deuxième après relance guidée et une dernière après une aide plus concrète; la séance poursuit ensuite sans attribuer de maîtrise.
+- `PED-PROG-022` — Les seuls statuts de résultat conservés **DOIVENT** être `mastered`, `to_consolidate` et `to_work_on`; aucun statut **NE DOIT** être produit pour une connaissance ou une opération non travaillée.
 
 ## 18. Fin d’une question et passage à la suivante
 
@@ -282,7 +286,7 @@ La fiche de question contient la question, la réponse attendue et ses variantes
 | Opérations | opération principale; secondaires; document multi-opérations; registre exact | `PED-OPS-*` |
 | Réponses | nombreuses fautes mais pertinente; courte mais exploitable; confusion entre cause et conséquence; faits sans relation; document non utilisé; justification insuffisante | `PED-RESP-*` |
 | Non exploitable | texte aléatoire; hors sujet répété; contenu inapproprié; formulation atypique | `PED-NONEXP-*` |
-| Indices | niveaux 0 à 4; contrôle moteur; aucune réponse complétée | `PED-HINT-*` |
+| Indices | niveaux 0 à 2; deux demandes explicites au maximum; rétroactions non comptabilisées; aucune réponse complétée | `PED-HINT-*` |
 | Adaptation | difficulté; maîtrise avancée; objectif inchangé | `PED-ADAPT-*` |
 | Progression | maximum de tentatives; doublon; poursuite sans fausse maîtrise | `PED-PROG-*` |
 | Cahier | page disponible; page absente; mauvaise édition; aucune page inventée | `PED-WB-*` |
@@ -303,14 +307,14 @@ La fiche de question contient la question, la réponse attendue et ses variantes
 
 Les décisions suivantes sont reportées et ne doivent pas être résolues implicitement par le code :
 
-1. le nombre maximal exact de tentatives par type d'activité;
-2. les seuils détaillés séparant satisfaisante, partiellement satisfaisante et insuffisante;
-3. les critères précis permettant d'augmenter la complexité pour un élève en maîtrise avancée;
-4. les durées exactes de conservation des résultats structurés et traces minimales;
-5. les seuils et procédures opérationnelles du filtre exceptionnel de sécurité;
-6. les fournisseurs, modèles, paramètres et jeux d'évaluation autorisés;
-7. le format technique définitif des fiches de questions et sorties structurées de l'API;
-8. les éditions de cahiers prises en charge et leur processus d'approbation.
+1. les seuils détaillés séparant satisfaisante, partiellement satisfaisante et insuffisante;
+2. les durées exactes de conservation des résultats structurés et traces minimales;
+3. les seuils et procédures opérationnelles du filtre exceptionnel de sécurité;
+4. les fournisseurs, modèles, paramètres et jeux d'évaluation autorisés;
+5. le format technique définitif des fiches de questions et sorties structurées de l'API;
+6. les éditions de cahiers prises en charge et leur processus d'approbation.
+
+Les décisions relatives au maximum de trois tentatives, aux deux indices explicites maximum, à l'interprétation conservatrice des réponses courtes, aux critères de maîtrise avancée et aux trois statuts de résultat sont résolues par `PED-PROG-021`, `PED-HINT-001` à `PED-HINT-007`, `PED-RESP-013`, `PED-ADAPT-010` et `PED-PROG-022`.
 
 - `PED-TEST-009` — Une décision reportée qui conditionne la conformité **DOIT** être résolue et testée avant le déploiement concerné.
 - `PED-AI-015` — Une première version locale **PEUT** utiliser un moteur déterministe, mais **DOIT** respecter les mêmes contrats que la future intégration d'IA.
