@@ -9686,7 +9686,7 @@ The server validates threshold, session context, deduplication, and notification
 
 Voice transcription is a separate AI operation.
 
-Voice transcription uses `gpt-4o-mini-transcribe` under accepted `ADR-0022`, but remains disabled until contractual, regional, privacy, deletion, accessibility, and evaluation activation gates pass.
+Voice transcription targets Azure AI Speech — Speech to Text in real-time mode, locale `fr-CA`, region Canada Central, under amended `ADR-0022`. The provider remains behind an application-owned interchangeable port. Voice remains disabled until contractual, regional, privacy, deletion, accessibility, and representative Québec French evaluation activation gates pass.
 
 The workflow MUST:
 
@@ -43734,7 +43734,7 @@ Use an application model registry and do not expose model choice to ordinary use
 
 ### Resolution
 
-Use versioned registry `ai_route_2026_07_20_v1`. Route interactive tutoring and Practice generation to `gpt-5.6-terra`; summaries, Learning Evidence candidates, and simple structured extraction to `gpt-5.6-luna`; complex content review and bounded compatible fallback to `gpt-5.6-sol`; and first-pass safety classification to `omni-moderation-latest`. Use the Responses API with `store: false`, strict Structured Outputs for retained-state operations, server-owned temporary context, bounded retry and fallback, and no user-selectable models. Voice remains disabled pending the activation gates in accepted `ADR-0022`.
+Use versioned registry `ai_route_2026_07_20_v1`. Route interactive tutoring and Practice generation to `gpt-5.6-terra`; summaries, Learning Evidence candidates, and simple structured extraction to `gpt-5.6-luna`; complex content review and bounded compatible fallback to `gpt-5.6-sol`; and first-pass safety classification to `omni-moderation-latest`. Use the Responses API with `store: false`, strict Structured Outputs for retained-state operations, server-owned temporary context, bounded retry and fallback, and no user-selectable models. Voice targets Azure AI Speech separately and remains disabled pending the activation gates in amended `ADR-0022`.
 
 ---
 
@@ -44105,7 +44105,7 @@ What backup frequency, retention, restore-time objective, restore-point objectiv
 
 ### Resolution
 
-Use `gpt-4o-mini-transcribe` initially, subject to contractual, regional, privacy, and evaluation approval. Limit each recording to 120 seconds with a warning at 105 seconds and automatic stop at 120 seconds; cumulative recording is limited to 15 minutes per session. Use Québec French context, permit one active recording, show editable transcription before submission, delete audio immediately after transcription, never back up audio, and treat transcription as a temporary text response. Keyboard fallback is always available; background recording is prohibited. Voice remains disabled until provider verification and `ADR-0022` activation gates pass.
+Use Azure AI Speech — Speech to Text in real-time mode with locale `fr-CA` and the Canada Central region, behind the interchangeable `VoiceTranscriptionProvider` port, subject to contractual, regional, privacy, and representative Québec French evaluation approval. Batch transcription is prohibited for the Student conversation. Limit each recording to 120 seconds with a warning at 105 seconds and automatic stop at 120 seconds; cumulative recording is limited to 15 minutes per session. Permit one active recording, show editable transcription before submission, never save or back up audio, and treat transcription exactly like temporary keyboard-entered Student text. Delete the conversation and its transcribed text after successful personalized-summary production, retaining only the approved summary and structured progress data. Do not put audio or full transcription text in technical logs. Azure credentials remain server-side. Azure audio and transcription logging, speaker identification, voice personalization, biometric, emotion, behavioral, and model-training features must be disabled, with deployment evidence recorded because the application cannot independently prove every provider-side setting. Keyboard fallback is always available; automatic or background recording and automatic response submission are prohibited, and every microphone use requires an explicit Student action. These technical safeguards do not replace institutional authorization, applicable consent, establishment rules, provider agreements, or legal and privacy assessment for minors. Voice remains disabled until provider verification and `ADR-0022` activation gates pass.
 
 ### Historical Decision Question
 

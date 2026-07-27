@@ -36,9 +36,10 @@ As of 2026-07-20, the approved OpenAI family is:
 | `gpt-5.6-luna` | Cost-sensitive structured and high-volume operations |
 | `gpt-5.6-sol` | Exceptional complex review and controlled fallback |
 | `omni-moderation-latest` | First-pass text safety classification |
-| `gpt-4o-mini-transcribe` | Candidate transcription model; disabled pending `OD-024` |
 
 Model identifiers MUST be stored in configuration, not scattered through domain code. A model becoming available in the provider account does not make it approved for Socrato.
+
+Voice is outside this OpenAI model baseline. Azure AI Speech is the selected transcription provider under amended `ADR-0022`; its production activation gates remain closed.
 
 ## Decision
 
@@ -130,7 +131,7 @@ If both the moderation boundary and safety assessment route are unavailable when
 
 ### Voice Route
 
-Voice transcription remains disabled for production until `OD-024` and `ADR-0022` are resolved. `gpt-4o-mini-transcribe` is the initial candidate only; this ADR does not authorize audio collection, upload, storage, or production transcription.
+Azure AI Speech is selected behind the application-owned transcription adapter by amended `ADR-0022`, which resolves `OD-024`. Voice transcription remains disabled for production until every `ADR-0022` activation gate is verified. This ADR does not authorize audio collection, upload, storage, or production transcription.
 
 The text tutoring models in this registry do not receive raw audio.
 

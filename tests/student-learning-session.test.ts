@@ -104,15 +104,15 @@ test("utilise officiellement le cas sans document", () => {
   assert.match(viewSource, /Cette question ne nécessite aucun document historique/);
 });
 
-test("présente les contrôles de réponse et désactive la dictée", () => {
+test("présente les contrôles de réponse et la simulation locale de dictée", () => {
   assert.match(viewSource, /placeholder="Écris ta réponse ici…"/);
   assert.doesNotMatch(viewSource, /<label[^>]*>Écris ta réponse ici…<\/label>/);
   assert.match(viewSource, /aria-label="Réponse de l’élève"/);
   assert.match(viewSource, /Envoyer ma réponse/);
-  assert.match(viewSource, /className="voice-button" disabled/);
+  assert.match(viewSource, /className="composer-icon-button voice-button" onClick=\{handleVoicePrimaryAction\} disabled=\{voiceBusy \|\| voiceUnavailable\}/);
   assert.match(viewSource, /<svg className="microphone-icon"/);
   assert.doesNotMatch(viewSource, /♩/);
-  assert.match(viewSource, /Disponible bientôt/);
+  assert.match(viewSource, /title=\{voicePrimaryLabel\}/);
 });
 
 test("applique la lisibilité pédagogique à tous les messages", () => {
@@ -133,9 +133,11 @@ test("masque les compteurs techniques tout en conservant leur état dans le mote
   assert.match(viewSource, /maximumHelpReceived \? "Aide maximale reçue" : "Obtenir un indice"/);
 });
 
-test("rend la zone de réponse compacte et défilable à partir de 52 px", () => {
-  assert.match(cssSource, /\.response-composer textarea \{[^}]*height:56px[^}]*min-height:52px[^}]*max-height:112px[^}]*overflow-y:auto[^}]*overflow-x:hidden[^}]*resize:none[^}]*padding:12px 16px[^}]*font-size:16px[^}]*line-height:1\.4/);
-  assert.match(cssSource, /@media \(max-width:620px\) \{ \.response-composer textarea \{ height:56px; min-height:52px; max-height:112px; \} \}/);
+test("rend la zone de réponse compacte dans un encadré intégré", () => {
+  assert.match(cssSource, /\.response-composer textarea \{[^}]*height:48px[^}]*min-height:48px[^}]*max-height:112px[^}]*overflow-y:auto[^}]*overflow-x:hidden[^}]*resize:none[^}]*padding:12px 4px[^}]*font-size:16px[^}]*line-height:1\.4/);
+  assert.match(cssSource, /\.response-composer-shell \{[^}]*grid-template-columns:minmax\(0,1fr\) auto[^}]*border-radius:16px/);
+  assert.match(cssSource, /\.response-composer-shell:focus-within \{[^}]*border-color:var\(--gold\)[^}]*box-shadow:/);
+  assert.match(cssSource, /\.learning-session \.response-composer textarea:focus,\.learning-session \.response-composer textarea:focus-visible \{ border:0; outline:0; box-shadow:none; \}/);
 });
 
 test("la conversation grandit naturellement puis fait défiler uniquement les messages", () => {
@@ -604,11 +606,22 @@ test("distingue la sélection légère du focus clavier des vignettes", () => {
   assert.match(cssSource, /\.learning-session button:focus-visible[^}]*outline:3px solid/);
 });
 
-test("allège seulement l’envoi désactivé et conserve strictement la dictée", () => {
-  assert.match(viewSource, /className="submit-button" disabled=\{!response\.trim\(\) \|\| submitting \|\| engineState\.status === "completed" \|\| activeQuestionState\.attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS\}/);
-  assert.match(cssSource, /\.submit-button:disabled \{[^}]*filter:saturate\(\.2\)[^}]*opacity:\.48[^}]*box-shadow:none/);
-  assert.match(viewSource, /<button type="button" className="voice-button" disabled>[\s\S]*Dicter ma réponse[\s\S]*Disponible bientôt/);
-  assert.match(cssSource, /\.voice-button \{ display:flex; align-items:center; justify-content:center; gap:8px; background:color-mix\(in srgb,var\(--surface\) 86%,var\(--page\)\); color:color-mix\(in srgb,var\(--ink\) 78%,var\(--muted\)\); opacity:1; cursor:not-allowed; \}/);
+test("intègre la dictée et l’envoi iconographique dans un compositeur compact", () => {
+  assert.match(viewSource, /const sendUnavailable = !response\.trim\(\) \|\| responseUnavailable \|\| voiceBlocksSending/);
+  assert.match(viewSource, /if \(!content \|\| submitting \|\| submissionLockRef\.current \|\| voiceBlocksSending/);
+  assert.match(viewSource, /className="composer-icon-button submit-button" disabled=\{sendUnavailable\} aria-label="Envoyer ma réponse" title="Envoyer ma réponse"/);
+  assert.match(viewSource, /className="composer-icon-button voice-button" onClick=\{handleVoicePrimaryAction\}/);
+  assert.match(viewSource, /aria-label=\{voicePrimaryLabel\} title=\{voicePrimaryLabel\}/);
+  assert.doesNotMatch(viewSource, />Envoyer ma réponse</);
+  assert.doesNotMatch(viewSource, />Dicter ma réponse</);
+  assert.match(viewSource, /<span>Arrêter<\/span>/);
+  assert.match(viewSource, /Enregistrement en cours/);
+  assert.match(viewSource, /formatRecordingDuration\(voiceState\.elapsedSeconds\)/);
+  assert.match(viewSource, /className="voice-processing-state" role="status">\{voicePrimaryLabel\}/);
+  assert.match(viewSource, />Annuler<\/button>/);
+  assert.match(cssSource, /\.composer-icon-button \{[^}]*width:44px[^}]*height:44px/);
+  assert.match(cssSource, /\.voice-stop-button \{[^}]*min-height:44px[^}]*background:#b32636/);
+  assert.match(cssSource, /\.submit-button:disabled \{[^}]*cursor:not-allowed/);
   assert.match(cssSource, /\.microphone-icon \{ width:20px; height:20px; flex:0 0 auto; fill:none; stroke:currentColor; stroke-linecap:round; stroke-linejoin:round; stroke-width:1\.8; \}/);
 });
 

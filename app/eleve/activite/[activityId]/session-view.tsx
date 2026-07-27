@@ -8,6 +8,7 @@ import { createDemoPedagogicalDefinition, createPedagogicalSession, finalizePeda
 import { getHistoricalPeriodLabel } from "@/lib/student-dashboard/historical-period";
 import { getCurrentLearningQuestion, getInitialQuestionDocument, getLearningSessionHeading, getQuestionDocuments } from "@/lib/student-learning-session/presentation";
 import type { LearningSessionDocument, LearningSessionMessage, StudentLearningSessionData } from "@/lib/student-learning-session/types";
+import { appendVoiceTranscript, createBrowserVoiceAdapter, formatRecordingDuration, isLocalVoicePrototypeEnabled, LocalVoiceCaptureController, VOICE_MAX_SECONDS, type VoiceCaptureState } from "@/lib/student-voice-transcription";
 
 function revealNewestConversationMessage(region: HTMLDivElement, message: HTMLElement) {
   const regionTop = region.getBoundingClientRect().top;
@@ -44,6 +45,14 @@ export function StudentLearningSessionView({ data }: { data: StudentLearningSess
   const messagesRegionRef = useRef<HTMLDivElement>(null);
   const newestMessageRef = useRef<HTMLElement>(null);
   const renderedMessageCountRef = useRef(messages.length);
+  const voiceControllerRef = useRef<LocalVoiceCaptureController | null>(null);
+  const [voiceState, setVoiceState] = useState<VoiceCaptureState>({
+    status: isLocalVoicePrototypeEnabled() ? "idle" : "unsupported",
+    elapsedSeconds: 0,
+    remainingSeconds: VOICE_MAX_SECONDS,
+    warningReached: false,
+    message: isLocalVoicePrototypeEnabled() ? "Simulation locale prête." : "La dictée est désactivée dans cet environnement.",
+  });
 
   useEffect(() => {
     if (messages.length <= renderedMessageCountRef.current) {
@@ -63,11 +72,26 @@ export function StudentLearningSessionView({ data }: { data: StudentLearningSess
     }
   }, [submitting]);
 
+  useEffect(() => {
+    const controller = new LocalVoiceCaptureController(createBrowserVoiceAdapter(), {
+      onState: setVoiceState,
+      onSimulatedTranscript: (text) => {
+        setResponse((current) => appendVoiceTranscript(current, text));
+        requestAnimationFrame(() => responseInputRef.current?.focus());
+      },
+    });
+    voiceControllerRef.current = controller;
+    return () => {
+      controller.dispose();
+      voiceControllerRef.current = null;
+    };
+  }, []);
+
   if (!question) return null;
 
   async function sendLocalResponse() {
     const content = response.trim();
-    if (!content || submitting || submissionLockRef.current || engineState.status === "completed" || activeQuestionState.attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS) return;
+    if (!content || submitting || submissionLockRef.current || voiceBlocksSending || engineState.status === "completed" || activeQuestionState.attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS) return;
     submissionLockRef.current = true;
     restoreResponseFocusRef.current = true;
     setSubmitting(true);
@@ -110,6 +134,24 @@ export function StudentLearningSessionView({ data }: { data: StudentLearningSess
     setEngineState(transition.state);
     setCurrentHint(transition.hint?.text ?? null);
   }
+
+  function handleVoicePrimaryAction() {
+    const controller = voiceControllerRef.current;
+    if (!controller) return;
+    if (voiceState.status === "recording") controller.stop();
+    else void controller.start();
+  }
+
+  const voiceBusy = ["requesting_permission", "stopping", "transcribing"].includes(voiceState.status);
+  const voiceUnavailable = voiceState.status === "unsupported" || engineState.status === "completed";
+  const voicePrimaryLabel = voiceState.status === "requesting_permission" ? "Autorisation du microphone…"
+    : voiceState.status === "stopping" ? "Arrêt de la dictée…"
+    : voiceState.status === "transcribing" ? "Traitement de la dictée…"
+    : voiceState.status === "permission_denied" || voiceState.status === "error" ? "Réessayer"
+    : "Dicter ma réponse";
+  const voiceBlocksSending = voiceState.status === "recording" || voiceBusy;
+  const responseUnavailable = submitting || engineState.status === "completed" || activeQuestionState.attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS;
+  const sendUnavailable = !response.trim() || responseUnavailable || voiceBlocksSending;
 
   return (
     <main className="learning-session min-h-screen">
@@ -175,18 +217,42 @@ export function StudentLearningSessionView({ data }: { data: StudentLearningSess
               ))}
             </div>
             <form className="response-composer" onSubmit={submitLocalResponse}>
-              <textarea ref={responseInputRef} id="student-response" aria-label="Réponse de l’élève" value={response} onChange={(event) => setResponse(event.target.value)} onKeyDown={handleResponseKeyDown} rows={2} placeholder="Écris ta réponse ici…" disabled={submitting || engineState.status === "completed" || activeQuestionState.attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS} />
-              <div className="response-actions">
-                <button type="button" className="voice-button" disabled>
-                  <svg className="microphone-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <rect x="8" y="2.5" width="8" height="13" rx="4" />
-                    <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3.5M8.5 21.5h7" />
-                  </svg>
-                  <span className="voice-label">Dicter ma réponse</span>
-                  <span className="voice-availability">Disponible bientôt</span>
+              <div className="response-composer-shell">
+                <textarea ref={responseInputRef} id="student-response" aria-label="Réponse de l’élève" value={response} onChange={(event) => setResponse(event.target.value)} onKeyDown={handleResponseKeyDown} rows={2} placeholder="Écris ta réponse ici…" disabled={responseUnavailable} />
+                <div className="composer-toolbar">
+                <div className="voice-controls">
+                  {voiceState.status === "recording" ? (
+                    <>
+                      <span className="voice-recording-state" role="status">
+                        <span className="voice-recording-dot" aria-hidden="true" />
+                        <span>Enregistrement en cours</span>
+                        <time dateTime={`PT${voiceState.elapsedSeconds}S`}>{formatRecordingDuration(voiceState.elapsedSeconds)}</time>
+                      </span>
+                      <button type="button" className="voice-stop-button" onClick={handleVoicePrimaryAction} aria-pressed="true" aria-describedby="voice-status">
+                        <svg className="voice-stop-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="6" width="12" height="12" rx="1" /></svg>
+                        <span>Arrêter</span>
+                      </button>
+                    </>
+                  ) : voiceState.status === "stopping" || voiceState.status === "transcribing" ? (
+                    <span className="voice-processing-state" role="status">{voicePrimaryLabel}</span>
+                  ) : (
+                    <button type="button" className="composer-icon-button voice-button" onClick={handleVoicePrimaryAction} disabled={voiceBusy || voiceUnavailable} aria-label={voicePrimaryLabel} title={voicePrimaryLabel} aria-describedby="voice-status">
+                      <svg className="microphone-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <rect x="8" y="2.5" width="8" height="13" rx="4" />
+                        <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3.5M8.5 21.5h7" />
+                      </svg>
+                    </button>
+                  )}
+                  {voiceState.status === "recording" || voiceState.status === "requesting_permission" ? (
+                    <button type="button" className="voice-cancel" onClick={() => voiceControllerRef.current?.cancel()}>Annuler</button>
+                  ) : null}
+                </div>
+                <button type="submit" className="composer-icon-button submit-button" disabled={sendUnavailable} aria-label="Envoyer ma réponse" title="Envoyer ma réponse">
+                  <svg className="submit-arrow-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 19V5M6.5 10.5 12 5l5.5 5.5" /></svg>
                 </button>
-                <button type="submit" className="submit-button" disabled={!response.trim() || submitting || engineState.status === "completed" || activeQuestionState.attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS}>{submitting ? "Analyse locale…" : "Envoyer ma réponse"} <span aria-hidden="true">→</span></button>
+                </div>
               </div>
+              <p id="voice-status" className={`voice-status ${voiceState.status === "permission_denied" || voiceState.status === "error" || voiceState.status === "unsupported" ? "voice-status-visible" : ""}`} aria-live="polite" aria-atomic="true">{voiceState.message}</p>
             </form>
             {engineState.summary ? (
               <section className="local-session-summary" aria-labelledby="local-summary-title">
