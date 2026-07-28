@@ -1,25 +1,38 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+
+type Theme = "light" | "dark";
 
 export function ThemeToggle() {
+  const [theme, setTheme] = useState<Theme>("light");
+
   useEffect(() => {
-    const stored = window.localStorage.getItem("socrato-theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    document.documentElement.dataset.theme = stored ?? (prefersDark ? "dark" : "light");
+    let isCurrent = true;
+    const storedTheme = window.localStorage.getItem("socrato-theme");
+    const preferredTheme: Theme = storedTheme === "light" || storedTheme === "dark"
+      ? storedTheme
+      : window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    queueMicrotask(() => {
+      if (!isCurrent) return;
+      setTheme(preferredTheme);
+      document.documentElement.dataset.theme = preferredTheme;
+    });
+    return () => { isCurrent = false; };
   }, []);
 
-  function selectTheme(theme: "light" | "dark") {
-    document.documentElement.dataset.theme = theme;
-    window.localStorage.setItem("socrato-theme", theme);
+  function selectTheme(nextTheme: Theme) {
+    setTheme(nextTheme);
+    document.documentElement.dataset.theme = nextTheme;
+    window.localStorage.setItem("socrato-theme", nextTheme);
   }
 
   return (
     <div className="theme-switch" role="group" aria-label="Choisir le thème">
-      <button type="button" className="theme-option-light" onClick={() => selectTheme("light")}>
+      <button type="button" className="theme-option-light" aria-pressed={theme === "light"} onClick={() => selectTheme("light")}>
         ☀ Clair
       </button>
-      <button type="button" className="theme-option-dark" onClick={() => selectTheme("dark")}>
+      <button type="button" className="theme-option-dark" aria-pressed={theme === "dark"} onClick={() => selectTheme("dark")}>
         ☾ Sombre
       </button>
     </div>
