@@ -33,7 +33,7 @@ const LOCAL_GROUP_DETAIL: TeacherGroupDetailRecord = {
     { id: "group-demo-407", name: "Groupe fictif 407", studentCount: 26 },
   ],
   students: [
-    { id: "student-demo-a17", displayLabel: "Liam B. (fictif)", activityState: "completed", priority: "high", mainDifficulty: "Justifier une réponse avec les documents" },
+    { id: "student-demo-a17", displayLabel: "Liam B. (fictif)", activityState: "completed", priority: "high", mainDifficulty: "Justifier une réponse avec les documents", studentDetailHref: "/teacher/activities/activity-revision-01/groups/group-demo-401/students/student-demo-a17" },
     { id: "student-demo-b08", displayLabel: "Maya L. (fictive)", activityState: "completed", priority: "high", mainDifficulty: "Relier précisément les causes et les conséquences" },
     { id: "student-demo-d22", displayLabel: "Sofia P. (fictive)", activityState: "in_progress", priority: "high", mainDifficulty: "Sélectionner un fait historique pertinent" },
     { id: "student-demo-e14", displayLabel: "Émile R. (fictif)", activityState: "completed", priority: "normal", mainDifficulty: "Développer la justification historique" },

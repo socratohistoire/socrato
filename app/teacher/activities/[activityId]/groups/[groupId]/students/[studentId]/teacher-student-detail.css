@@ -1,0 +1,47 @@
+.teacher-student-detail-page{--student-green:#397357;--student-blue:#3d6688;--student-red:#992b40;--student-gold:#9a681d}
+.student-detail-main{grid-row:2;min-width:0;padding-bottom:48px;display:grid;align-content:start;gap:22px}
+.student-detail-first-row{display:grid;grid-template-columns:minmax(240px,3fr) minmax(0,7fr);align-items:stretch;gap:22px}
+.student-detail-first-row>.student-detail-card{padding-block:19px}
+.student-detail-second-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:22px}
+.student-detail-card{min-width:0;border:1px solid var(--teacher-analysis-card-border);border-radius:18px;padding:22px 24px;background:var(--teacher-card);box-shadow:var(--teacher-analysis-card-shadow)}
+.student-detail-card h2{margin:0;color:var(--teacher-text);font-size:1.15rem;font-weight:800;line-height:1.25}
+.student-overview-card{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:15px}
+.student-overview-card p{margin:0;color:var(--teacher-muted);font-size:.88rem}
+.student-overview-badges{display:flex;flex-wrap:wrap;gap:10px}
+.student-overview-state,.student-result-status{display:inline-flex;align-items:center;gap:7px;border:1px solid currentColor;border-radius:999px;white-space:nowrap}
+.student-overview-state{min-height:34px;padding:0 12px;font-size:.78rem;font-weight:750}
+.student-overview-state::before,.student-result-status>span{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.student-overview-state--completed{color:var(--student-green);background:color-mix(in srgb,#4e9a70 14%,var(--teacher-card))}
+.student-overview-state--priority{color:var(--student-red);background:color-mix(in srgb,#c94d62 14%,var(--teacher-card))}
+.student-socrato-card{display:grid;grid-template-columns:96px minmax(0,1fr);align-items:center;gap:26px;padding-inline:38px}
+.student-socrato-card img{box-sizing:border-box;border:1px solid var(--teacher-gold);border-radius:50%;padding:3px;background:#fff6e5}
+.student-socrato-card p{max-width:720px;margin:8px 0 0;color:var(--teacher-muted);font-size:.95rem;line-height:1.55}
+.student-pedagogical-card{display:flex;flex-direction:column}
+.student-pedagogical-card dl{margin:10px 0 20px}
+.student-pedagogical-item{padding:15px 0;border-bottom:1px solid var(--teacher-border)}
+.student-pedagogical-item dt{display:grid;grid-template-columns:36px minmax(0,1fr);align-items:center;gap:12px;font-size:.9rem;font-weight:800}
+.student-pedagogical-item dd{margin:5px 0 0 48px;color:var(--teacher-muted);font-size:.8rem;line-height:1.45}
+.student-pedagogical-icon{width:34px;height:34px;display:grid;place-items:center;border:1px solid currentColor;border-radius:50%;background:color-mix(in srgb,currentColor 9%,transparent)}
+.student-pedagogical-icon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.student-pedagogical-icon--strength{color:var(--student-green)}
+.student-pedagogical-icon--difficulty{color:var(--student-red)}
+.student-pedagogical-icon--path{color:var(--student-blue)}
+.student-pedagogical-item--strength dt{color:var(--student-green)}
+.student-pedagogical-item--difficulty dt{color:var(--student-red)}
+.student-pedagogical-item--path dt{color:var(--student-blue)}
+.student-consolidation-action{width:100%;min-height:52px;margin-top:auto;border:1px solid #f4cc72;border-radius:12px;padding:8px 16px;background:var(--teacher-theme-toggle-active-bg);color:var(--teacher-theme-toggle-active-text);font:inherit;font-size:.79rem;font-weight:800}
+.student-consolidation-action:disabled{opacity:.76;cursor:not-allowed}
+.student-worked-results{min-height:0;display:grid;grid-template-rows:auto auto;align-content:start;gap:19px}
+.student-worked-results .student-detail-card{padding-block:19px}
+.student-result-list{margin:10px 0 0;padding:0;list-style:none}
+.student-result-list li{min-width:0;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:10px 0;border-bottom:1px solid var(--teacher-border);color:var(--teacher-text);font-size:.84rem}
+.student-result-list li:last-child{border-bottom:0;padding-bottom:0}
+.student-result-status{flex:0 0 auto;min-height:30px;padding:0 10px;font-size:.7rem;font-weight:800}
+.student-result-status--mastered{color:var(--student-green);background:color-mix(in srgb,#4e9a70 13%,var(--teacher-card))}
+.student-result-status--consolidate{color:var(--student-gold);background:color-mix(in srgb,#d6a552 16%,var(--teacher-card))}
+.student-result-status--needs_work{color:var(--student-red);background:color-mix(in srgb,#c94d62 13%,var(--teacher-card))}
+.teacher-student-detail-page button:focus-visible,.teacher-student-detail-page a:focus-visible{outline:3px solid var(--teacher-gold);outline-offset:3px}
+[data-theme="dark"] .teacher-student-detail-page{--student-green:#77c99a;--student-blue:#8fc1ea;--student-red:#ff8296;--student-gold:#efbd59}
+@media (prefers-reduced-motion:reduce){.teacher-student-detail-page *{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+@media(max-width:1100px){.student-detail-first-row,.student-detail-second-row{grid-template-columns:1fr;align-items:start}.student-detail-first-row>.student-detail-card{padding-block:22px}.student-socrato-card{padding:24px}.student-pedagogical-card{order:1}.student-worked-results{order:2}}
+@media(max-width:620px){.student-detail-main{gap:16px}.student-detail-first-row,.student-detail-second-row,.student-worked-results{gap:16px}.student-detail-card{padding:18px}.student-socrato-card{grid-template-columns:58px minmax(0,1fr);gap:15px}.student-socrato-card img{width:58px;height:58px}.student-result-list li{align-items:flex-start;flex-direction:column;gap:7px}.student-overview-badges{flex-direction:column}}

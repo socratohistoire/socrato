@@ -265,7 +265,8 @@ test("présente les élèves sans route inventée vers un portrait", () => {
   const types = readFileSync("lib/teacher-dashboard/types.ts", "utf8");
   assert.match(types, /studentPortraitHref\?: string/);
   const localStudents = createLocalTeacherDashboardData().activities.flatMap((activity) => activity.highPriorityStudents);
-  assert.ok(localStudents.every(({ studentPortraitHref }) => studentPortraitHref === undefined));
+  assert.equal(localStudents.find(({ id, groupId }) => id === "student-demo-a17" && groupId === "group-demo-401")?.studentPortraitHref, "/teacher/activities/activity-revision-01/groups/group-demo-401/students/student-demo-a17");
+  assert.ok(localStudents.filter(({ id, groupId }) => id !== "student-demo-a17" || groupId !== "group-demo-401").every(({ studentPortraitHref }) => studentPortraitHref === undefined));
   assert.match(JSON.stringify(localStudents), /Liam B\. \(fictif\)/);
 });
 

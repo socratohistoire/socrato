@@ -69,7 +69,8 @@ test("présente les trois états et les deux priorités sans détail pédagogiqu
 
 test("n’active aucun faux lien vers un élève", async () => {
   const data = await localViewModel();
-  assert.ok(data.students.every(({ studentDetailHref }) => studentDetailHref === undefined));
+  assert.equal(data.students[0].studentDetailHref, "/teacher/activities/activity-revision-01/groups/group-demo-401/students/student-demo-a17");
+  assert.ok(data.students.slice(1).every(({ studentDetailHref }) => studentDetailHref === undefined));
   assert.match(viewSource, /if \(student\.studentDetailHref\) return <Link/);
   assert.match(viewSource, /disabled aria-disabled="true" aria-label=\{`\$\{label\} — Fonction à venir`\}/);
   assert.doesNotMatch(viewSource, /href="#"|\/students\/student-demo/);

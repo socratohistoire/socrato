@@ -34,7 +34,7 @@ export function createLocalTeacherDashboardData(): TeacherDashboardData {
         { id: "portrait-407", activityId: "activity-revision-01", name: "Groupe fictif 407", observation: "La compréhension générale est satisfaisante, mais plusieurs réponses manquent encore de justification historique.", suggestion: "Suggestion fictive : Renforcer la justification avec des faits historiques précis.", completedStudentCount: 22, targetedStudentCount: 26 },
       ],
       highPriorityStudents: [
-        { id: "student-demo-a17", displayLabel: "Liam B. (fictif)", groupId: "group-demo-401", groupLabel: "Groupe fictif 401", priority: "high" as const, highPriorityReason: "failed_assessment" as const, reasonLabel: "Maîtrise insuffisante des connaissances ciblées" },
+        { id: "student-demo-a17", displayLabel: "Liam B. (fictif)", groupId: "group-demo-401", groupLabel: "Groupe fictif 401", priority: "high" as const, highPriorityReason: "failed_assessment" as const, reasonLabel: "Maîtrise insuffisante des connaissances ciblées", studentPortraitHref: "/teacher/activities/activity-revision-01/groups/group-demo-401/students/student-demo-a17" },
         { id: "student-demo-b08", displayLabel: "Maya L. (fictive)", groupId: "group-demo-402", groupLabel: "Groupe fictif 402", priority: "high" as const, highPriorityReason: "near_failure" as const, reasonLabel: "Difficultés persistantes dans cette activité" },
         { id: "student-demo-d22", displayLabel: "Sofia P. (fictive)", groupId: "group-demo-404", groupLabel: "Groupe fictif 404", priority: "high" as const, highPriorityReason: "near_failure" as const, reasonLabel: "Accompagnement prioritaire recommandé" },
       ],
