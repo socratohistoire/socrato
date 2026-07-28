@@ -35,6 +35,12 @@ function StudentPortraitControl({ student }: { student: TeacherDashboardViewMode
   return <UnavailableAction className="priority-detail-action teacher-details-action" accessibleLabel={`${accessibleLabel} — Fonction à venir`}>Détails <span aria-hidden="true">→</span></UnavailableAction>;
 }
 
+function GroupPortraitControl({ group }: { group: TeacherDashboardViewModel["selectedActivity"]["groupPortraits"][number] }) {
+  const accessibleLabel = `Consulter le portrait détaillé de ${group.name}`;
+  if (group.groupDetailHref) return <Link className="portrait-detail-action teacher-details-action" href={group.groupDetailHref} aria-label={accessibleLabel}>Détails <span aria-hidden="true">→</span></Link>;
+  return <UnavailableAction className="portrait-detail-action teacher-details-action" accessibleLabel={`${accessibleLabel} — Fonction à venir`}>Détails <span aria-hidden="true">→</span></UnavailableAction>;
+}
+
 function activityTypeLabel(activityType: TeacherDashboardViewModel["selectedActivity"]["activityType"]) {
   return activityType === "revision" ? "Activité de révision" : "Activité d’enrichissement";
 }
@@ -178,7 +184,7 @@ export function TeacherDashboardView({ data }: { data: TeacherDashboardViewModel
                       <div className="participation-ring" style={{ "--participation": `${participationPercentage}%` } as React.CSSProperties}><strong>{group.targetedStudentCount === 0 ? "—" : `${participationPercentage} %`}</strong></div>
                       <span>{group.targetedStudentCount === 0 ? "Aucune donnée" : `${group.completedStudentCount} sur ${group.targetedStudentCount}`}</span>
                     </div>
-                    <UnavailableAction className="portrait-detail-action teacher-details-action" accessibleLabel={`Consulter le portrait détaillé de ${group.name} — Fonction à venir`}>Détails <span aria-hidden="true">→</span></UnavailableAction>
+                    <GroupPortraitControl group={group} />
                   </article>;
                 })}
               </div>

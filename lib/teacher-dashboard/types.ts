@@ -22,6 +22,7 @@ export type TeacherGroupBriefing = {
   suggestion: string;
   completedStudentCount: number;
   targetedStudentCount: number;
+  groupDetailHref?: string;
 };
 
 export type TeacherActivityResultAvailability = "available" | "partial" | "awaiting_results";

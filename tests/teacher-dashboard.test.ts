@@ -355,8 +355,10 @@ test("n’invente aucun seuil chiffré ni conversation dans les nouvelles donné
 
 test("présente le portrait pleine largeur en quatre colonnes", () => {
   assert.match(viewSource, /<span>Participation<\/span><span>Portrait détaillé<\/span>/);
-  assert.match(viewSource, /className="portrait-detail-action teacher-details-action"[^>]*>Détails <span aria-hidden="true">→<\/span><\/UnavailableAction>/);
-  assert.match(viewSource, /accessibleLabel=\{`Consulter le portrait détaillé de \$\{group\.name\} — Fonction à venir`\}/);
+  assert.match(viewSource, /if \(group\.groupDetailHref\) return <Link className="portrait-detail-action teacher-details-action" href=\{group\.groupDetailHref\}/);
+  assert.match(viewSource, /<UnavailableAction className="portrait-detail-action teacher-details-action" accessibleLabel=\{`\$\{accessibleLabel\} — Fonction à venir`\}/);
+  assert.equal(createLocalTeacherDashboardData().activities[0].groupPortraits[0].groupDetailHref, "/teacher/activities/activity-revision-01/groups/group-demo-401");
+  assert.ok(createLocalTeacherDashboardData().activities[0].groupPortraits.slice(1).every(({ groupDetailHref }) => groupDetailHref === undefined));
   assert.equal(new Set(createLocalTeacherDashboardData().activities[0].groupPortraits.map(({ id }) => id)).size, createLocalTeacherDashboardData().activities[0].groupPortraits.length);
   assert.match(cssSource, /\.teacher-main-grid\{display:grid;grid-template-columns:minmax\(0,2fr\) minmax\(0,3fr\)/);
   assert.match(cssSource, /\.briefing-columns,\.briefing-item\{[^}]*grid-template-columns:minmax\(140px,1\.6fr\) minmax\(130px,1\.45fr\) minmax\(80px,110px\) minmax\(80px,110px\)/);
@@ -381,7 +383,7 @@ test("présente une action de création verticale après la liste Groupes", () =
   assert.doesNotMatch(cssSource, /context-create-action|context-create-icon|context-create-arrow|teacher-create-area/);
   assert.doesNotMatch(viewSource, /hero-create-card|revision-visual|revision-copy|create-title|primary-action/);
   assert.doesNotMatch(cssSource, /hero-create-card|revision-(?:visual|copy|back-sheet|main-sheet|side-card|plus-badge)|primary-action/);
-  assert.doesNotMatch(viewSource, /href="#"|href="\/teacher\/.*activity/);
+  assert.doesNotMatch(viewSource, /href="#"/);
 });
 
 test("supprime le bouton Ajouter un groupe dans cette carte contextuelle", () => {

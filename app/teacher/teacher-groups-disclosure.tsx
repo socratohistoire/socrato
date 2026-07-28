@@ -4,7 +4,7 @@ import { useId, useState } from "react";
 import type { TeacherGroupOverview } from "@/lib/teacher-dashboard";
 import { ScrollRegion } from "./scroll-region";
 
-export function TeacherGroupsDisclosure({ groups }: { groups: readonly TeacherGroupOverview[] }) {
+export function TeacherGroupsDisclosure({ groups }: { groups: readonly Pick<TeacherGroupOverview, "id" | "name" | "studentCount">[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuId = useId();
 
