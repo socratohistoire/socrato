@@ -3577,12 +3577,11 @@ Legacy overview, activities, results, and settings tabs MUST NOT be included mer
 
 ### 7.7.5 Student Table
 
-The table includes:
+The table includes the following current columns. The **Code d’accès** column is deferred: it MUST NOT be added until `DC-031` is promoted and the approved recoverable encrypted representation is implemented.
 
 | Column | Purpose |
 |---|---|
 | Nom | Teacher-visible approved student display name. |
-| Code d'accès | Approved code-management display or action. |
 | Activité en cours | Current Practice or Learning Session context. |
 | Priorité | Approved teacher-attention state. |
 | Connaissances à retravailler | Concise targeted learning needs. |
@@ -3593,7 +3592,23 @@ Students MUST be sorted alphabetically according to the approved surname-based t
 
 The table MUST NOT contain a redundant separate surname/given-name column set when the approved design uses one **Nom** column.
 
-### 7.7.6 Add Student Flow
+### 7.7.6 Deferred Access-Code Reset
+
+After `DC-031` is formally promoted and the approved recoverable encrypted representation is implemented, the Group-detail page MAY include the **Code d’accès** column. Until both conditions are satisfied, the page MUST contain neither that column nor an inactive placeholder control and MUST NOT expose **Voir le code**.
+
+Because the current credential representation is only a non-reversible HMAC digest, the first approved action will be **Réinitialiser**, not reveal. The reset workflow MUST:
+
+- generate a new cryptographically random code server-side;
+- return its plaintext exactly once in the immediate authorized response;
+- persist only its approved HMAC lookup digest;
+- revoke the previous credential and every associated Student Session;
+- complete credential rotation and Session revocation transactionally and idempotently;
+- independently validate the active Teacher Session, Teacher access to the Group, and the Student's active membership in that Group;
+- exclude plaintext codes from initial HTML, URLs, logs, errors, audit payloads, analytics, caches, browser storage, and durable application storage.
+
+The workflow is blocked until production-capable server Teacher authentication, Teacher-to-Group authorization, Group-to-Student authorization, credential rotation, and Session revocation exist. `LOCAL_DEMO_TEACHER_ID` and `LOCAL_DEMO_CODE` MUST NOT satisfy or bypass these prerequisites.
+
+### 7.7.7 Add Student Flow
 
 The teacher MAY add one student or use the approved roster-import workflow.
 
@@ -3606,7 +3621,7 @@ Adding students MUST:
 - show a review step before committing bulk additions;
 - report duplicates and invalid lines without losing valid review data.
 
-### 7.7.7 Remove Student Flow
+### 7.7.8 Remove Student Flow
 
 Removing a student MUST:
 
@@ -3617,7 +3632,7 @@ Removing a student MUST:
 - preserve or process historical data according to retention policy;
 - avoid deleting records merely because the interface row disappears.
 
-### 7.7.8 Page States
+### 7.7.9 Page States
 
 The page MUST support:
 
@@ -3629,11 +3644,11 @@ The page MUST support:
 - unauthorized or missing Group;
 - recoverable roster mutation failure.
 
-### 7.7.9 Responsive Behavior
+### 7.7.10 Responsive Behavior
 
 On smaller screens, the student table SHOULD become student cards or a responsive data-list pattern. All columns MUST remain available without unreadably compressing text.
 
-### 7.7.10 Acceptance Criteria
+### 7.7.11 Acceptance Criteria
 
 - `PAGE-025` — Unauthorized Group identifiers reveal no Group or student information.
 - `PAGE-026` — Student ordering follows the approved surname-based rule.
@@ -5679,7 +5694,7 @@ The Group Details student table contains too much information to shrink into a n
 On compact screens, each student SHOULD be represented by a structured card or expandable row containing:
 
 - Nom;
-- Code d'accès management context;
+- Code d'accès management context only after `DC-031` is promoted and the approved recoverable encrypted representation is implemented;
 - Activité en cours;
 - Priorité;
 - Connaissances à retravailler;
@@ -7586,7 +7601,7 @@ Codes MAY be revealed later only through the masked, server-authorized, audited 
 
 ## 11.22 Group Details Student List
 
-The Student list on `P-04` uses the approved columns:
+The Student list on `P-04` uses the following current columns. The **Code d'accès** column remains deferred until `DC-031` is promoted and the approved recoverable encrypted representation is implemented.
 
 | Column | Requirement |
 |---|---|
@@ -7596,7 +7611,6 @@ The Student list on `P-04` uses the approved columns:
 | Voir tableau de progression | Link to the authorized Student Learning Portrait. |
 | Connaissances à retravailler | Concise approved targets. |
 | Opérations à retravailler | Concise approved targets. |
-| Code d'accès | Protected code-management display or action. |
 
 A generic **Actions** column SHOULD NOT be added when the approved explicit columns already provide the required actions.
 
@@ -44292,7 +44306,8 @@ A deferred capability:
 | Content, pedagogy, and AI | 9 |
 | Platform, integration, and delivery | 8 |
 | Direct-consumer and commercial | 5 |
-| **Total registry entries** | **30** |
+| Credential management | 1 |
+| **Total registry entries** | **31** |
 
 Some capabilities belong to more than one conceptual category; each appears only once in the canonical registry.
 
@@ -44332,6 +44347,7 @@ Some capabilities belong to more than one conceptual category; each appears only
 | `DC-028` | Arbitrary user-selected AI models | Not planned | Product, safety, compatibility, and cost decision |
 | `DC-029` | Commercial parent subscription and billing | Future commercial | Direct-consumer product approval |
 | `DC-030` | Cross-organization benchmarking | Not planned | Strong privacy, aggregation, legal, and ethical approval |
+| `DC-031` | Teacher-initiated Student Access Code reset | Production prerequisite | Server Teacher authentication, scoped authorization, transactional credential rotation, and Session revocation |
 
 ---
 
@@ -44364,6 +44380,14 @@ They are a separate product phase, not an initial authentication option.
 ### H.41.5 DC-006 through DC-008 — Enterprise Identity
 
 Multi-school management, SSO, and product-controlled MFA depend on institutional agreements and the Organization tenancy model.
+
+### H.41.6 DC-031 — Teacher-Initiated Student Access Code Reset
+
+The Group-detail page may eventually contain a **Code d’accès** column with a **Réinitialiser** action. It MUST NOT contain **Voir le code** while Socrato retains only the non-reversible HMAC lookup digest.
+
+Promotion requires server-authenticated Teacher identity, authorization from Teacher to Group and Group to Student Membership, cryptographically secure code generation, an atomic and idempotent rotation operation, immediate revocation of the old credential, and reliable revocation of every associated Student Session. The new plaintext code may appear only once in the immediate authorized response and MUST never be persisted, logged, placed in a URL, included in initial HTML, or retained after the reveal closes.
+
+`LOCAL_DEMO_TEACHER_ID` and `LOCAL_DEMO_CODE` are prohibited as production identity, authorization, reset, recovery, or redistribution mechanisms. No placeholder column or inactive production control may be added before promotion.
 
 ---
 
@@ -44720,7 +44744,7 @@ UI structure, shared components, non-sensitive route scaffolding, synthetic-data
 
 The initial Open Decision Registry contains 30 decisions identified as `OD-001` through `OD-030`.
 
-The initial Deferred Capability Registry contains 30 capabilities identified as `DC-001` through `DC-030`.
+The Deferred Capability Registry contains 31 capabilities identified as `DC-001` through `DC-031`.
 
 The first production release remains focused on the institutional Teacher-and-Student revision workflow for Québec Secondary IV History, beginning with the approved 1840–1896 pilot scope.
 

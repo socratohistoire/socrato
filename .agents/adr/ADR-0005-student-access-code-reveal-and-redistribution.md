@@ -15,6 +15,42 @@ At the same time, Student Access Codes are credentials. Persistent plaintext sto
 
 `ADR-0004` defines the `sac_v1` format and the non-reversible HMAC verification representation. This ADR decides whether a separate recoverable representation may exist for authorized Teacher redistribution.
 
+## Normative Phases — 2026-07-29
+
+This ADR remains **Accepted** for its target architecture. Requirements that depend on `DC-031` and the recoverable encrypted representation are conditional and MUST NOT be interpreted as active before `DC-031` is promoted.
+
+### Current Phase — HMAC Only
+
+The current Socrato implementation retains only the non-reversible HMAC lookup digest. It does not implement the separately encrypted recoverable representation described by this ADR. Consequently:
+
+- no existing code can be recovered;
+- the Group-detail workflow MUST NOT display a **Code d’accès** column, offer **Voir le code**, or claim that an existing code can be recovered;
+- an authorized Teacher MAY reset a code through the approved reset workflow;
+- a successful reset MUST generate an independent code and reveal it exactly once in the immediate confirmation screen;
+- the previous credential and every Student Session associated with it MUST be revoked immediately.
+
+Closing the one-time confirmation permanently removes the new plaintext code from the interface; the application cannot retrieve it again from the HMAC digest.
+
+Implementation remains blocked until Socrato has all of the following production-capable boundaries:
+
+- server-validated Teacher authentication;
+- server authorization from Teacher to Group and from Group to Student Membership;
+- transactionally atomic and idempotent credential rotation;
+- reliable revocation of Sessions by credential;
+- privacy-minimized audit evidence containing no code, digest, or sensitive payload.
+
+No plaintext code may be persisted. `LOCAL_DEMO_TEACHER_ID` and `LOCAL_DEMO_CODE` are development fixtures only and MUST NOT become production authentication, authorization, recovery, reset, or redistribution mechanisms.
+
+### Future Phase — After Promotion of DC-031
+
+After `DC-031` is promoted and the approved recoverable encrypted representation is implemented:
+
+- the recoverable encrypted representation defined by this ADR becomes applicable;
+- the Group roster MAY display a masked value in the **Code d’accès** column;
+- the controlled-reveal, server-authorization, and audit requirements defined below become applicable.
+
+None of these future capabilities is active in the current HMAC-only phase. The accepted target architecture is not permission to scaffold or expose **Voir le code** before promotion. The deferred capability is registered as `DC-031` in Appendix H of the Technical Specifications.
+
 ## Decision Drivers
 
 - realistic classroom redistribution and printing needs;
