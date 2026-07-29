@@ -97,8 +97,8 @@ test("rend le contrat principal accessible, thémable et responsive", () => {
   assert.match(cssSource, /\.priority-filter button\[aria-pressed="true"\]\{[^}]*background:color-mix\(in srgb,var\(--teacher-plum\) 22%,var\(--teacher-card\)\)[^}]*box-shadow:none/);
   assert.match(cssSource, /\.activity-state,\.student-priority\{[^}]*border:1px solid currentColor/);
   assert.match(cssSource, /\[data-theme="dark"\] \.teacher-group-detail-page \.activity-state--completed/);
-  assert.match(cssSource, /\.teacher-group-detail-page \.teacher-brand\{contain:none;padding-top:30px\}/);
-  assert.match(cssSource, /\.teacher-group-detail-page \.teacher-brand-lockup\{height:auto;min-height:0;gap:9px;padding-top:0\}/);
+  assert.match(cssSource, /\.teacher-group-detail-page \.teacher-brand\{contain:none;padding-top:24px\}/);
+  assert.match(cssSource, /\.teacher-group-detail-page \.teacher-brand-lockup\{height:auto;min-height:0;gap:3px;padding-top:0\}/);
   assert.match(cssSource, /\.teacher-group-detail-page \.teacher-brand-copy\{gap:3px\}/);
   assert.match(cssSource, /\.teacher-group-detail-page \.teacher-brand-symbol\{width:38px;height:38px;min-height:38px;max-height:38px;aspect-ratio:1;flex:0 0 38px\}/);
   assert.match(cssSource, /\.teacher-group-detail-page \.teacher-brand-symbol img,\.teacher-group-detail-page \.teacher-brand-symbol svg\{width:38px;height:38px\}/);

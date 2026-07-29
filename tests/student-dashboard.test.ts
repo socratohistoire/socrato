@@ -156,6 +156,12 @@ test("préserve les modes clair et sombre avec la palette approuvée", () => {
   assert.match(viewSource, /<ThemeToggle/);
 });
 
+test("renforce le contraste du bilan Socrato en thème clair", () => {
+  assert.match(cssSource, /\[data-theme="light"\] \.summary-panel \{[^}]*background:linear-gradient\(145deg,#173b57,#254b66\); color:#fffaf2/);
+  assert.match(cssSource, /\[data-theme="light"\] \.summary-item p \{ color:#f1f4f6; \}/);
+  assert.match(cssSource, /\[data-theme="light"\] \.summary-recommend \{ color:#e8b8ff; \}/);
+});
+
 test("rend la page responsive, zoomable et accessible", () => {
   assert.match(cssSource, /overflow-x:hidden/);
   assert.match(cssSource, /@media \(max-width:1050px\)/);
@@ -170,6 +176,10 @@ test("conserve une région compacte accessible pour les connaissances", () => {
   assert.match(viewSource, /<KnowledgeScrollRegion total=\{workedItems\.length\}>/);
   assert.match(cssSource, /\.results-panel \{[^}]*height:380px/);
   assert.match(cssSource, /\.knowledge-list \{[^}]*height:100%[^}]*overflow-y:auto/);
+});
+
+test("aligne les connaissances à la suite sans étirer les rangées", () => {
+  assert.match(cssSource, /\.knowledge-list \{[^}]*align-content:start; grid-auto-rows:max-content;/);
 });
 
 test("détecte le débordement et la fin de la liste des connaissances", () => {

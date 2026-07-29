@@ -1,6 +1,6 @@
 .teacher-group-detail-page{--group-detail-soft:color-mix(in srgb,var(--teacher-plum) 5%,var(--teacher-card));--group-detail-green:#397357;--group-detail-blue:#3d6688}
 .group-detail-content{min-height:100vh;row-gap:23px}
-.group-detail-topbar{grid-row:1;min-width:0;min-height:112px;display:grid;grid-template-columns:minmax(190px,1fr) minmax(280px,1.4fr) minmax(190px,1fr);align-items:start;padding:19px 0 16px;border-bottom:1px solid color-mix(in srgb,var(--teacher-gold) 45%,var(--teacher-border))}
+.group-detail-topbar{grid-row:1;min-width:0;min-height:112px;display:grid;grid-template-columns:minmax(190px,1fr) minmax(280px,1.4fr) minmax(190px,1fr);align-items:start;padding:19px 0 16px;border-bottom:1px solid color-mix(in srgb,var(--teacher-gold) 45%,var(--teacher-border));background-image:linear-gradient(color-mix(in srgb,var(--teacher-bg) 82%,transparent),color-mix(in srgb,var(--teacher-bg) 72%,transparent)),url('/images/montrealfin1800.png');background-size:auto,cover;background-position:center,center 48%;background-repeat:no-repeat}
 .group-detail-topbar>a{min-height:44px;display:inline-flex;align-items:center;color:var(--teacher-text);font-size:.82rem;font-weight:750;text-decoration:none}
 .group-detail-heading{min-width:0;text-align:center}
 .group-detail-heading h1{margin:0;color:var(--teacher-text);font-family:Georgia,serif;font-size:clamp(1.55rem,2vw,1.95rem);font-weight:800;line-height:1.12}
@@ -47,8 +47,8 @@
 .group-filter-empty{padding:42px 20px;text-align:center;color:var(--teacher-text)}
 .group-filter-empty p{margin:6px 0 0;color:var(--teacher-muted);font-size:.82rem}
 .teacher-group-detail-page button:focus-visible,.teacher-group-detail-page a:focus-visible,.teacher-group-detail-page select:focus-visible{outline:3px solid var(--teacher-gold);outline-offset:3px}
-.teacher-group-detail-page .teacher-brand{contain:none;padding-top:30px}
-.teacher-group-detail-page .teacher-brand-lockup{height:auto;min-height:0;gap:9px;padding-top:0}
+.teacher-group-detail-page .teacher-brand{contain:none;padding-top:24px}
+.teacher-group-detail-page .teacher-brand-lockup{height:auto;min-height:0;gap:3px;padding-top:0}
 .teacher-group-detail-page .teacher-brand-copy{gap:3px}
 .teacher-group-detail-page .teacher-brand-symbol{width:38px;height:38px;min-height:38px;max-height:38px;aspect-ratio:1;flex:0 0 38px}
 .teacher-group-detail-page .teacher-brand-symbol img,.teacher-group-detail-page .teacher-brand-symbol svg{width:38px;height:38px}
