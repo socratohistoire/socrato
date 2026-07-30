@@ -34,7 +34,8 @@ test("rend les trois cartes dans l’ordre et aucune étape numérotée", () => 
   const work = viewSource.indexOf("Que voulez-vous travailler ?");
   assert.ok(format < audience && audience < work);
   assert.doesNotMatch(viewSource, />Configuration<|>Questions<|>Expérience élève|>Publication</);
-  assert.match(viewSource, /Groupes[\s\S]*Espace enseignant[\s\S]*Créer une activité/);
+  assert.match(viewSource, /Espace enseignant[\s\S]*Créer une activité/);
+  assert.doesNotMatch(viewSource, /<Icon name="groups"\/>Groupes/);
 });
 
 test("sélectionne tous les groupes et Révision par défaut", async () => {
@@ -43,6 +44,13 @@ test("sélectionne tous les groupes et Révision par défaut", async () => {
   assert.match(viewSource, /workType: "revision"/);
   assert.equal(catalog.groups.length, 7);
   assert.ok(catalog.groups.every(({ name }) => /fictif/.test(name)));
+});
+
+test("laisse la durée et le nombre de questions sans limite par défaut", () => {
+  assert.match(viewSource, /durationMinutes: null/);
+  assert.match(viewSource, /questionCount: null/);
+  assert.match(viewSource, /<option value="">Aucune durée<\/option>/);
+  assert.match(viewSource, /<option value="">Aucun maximum<\/option>/);
 });
 
 test("expose les trois types de travail et les sept opérations canoniques", async () => {
@@ -55,7 +63,7 @@ test("expose les trois types de travail et les sept opérations canoniques", asy
 
 test("rend le sélecteur déroulant de notions disponible dans tous les modes", () => {
   assert.match(viewSource, /<details className="notion-picker">/);
-  assert.match(viewSource, /catalog\.notions\.map/);
+  assert.match(viewSource, /period\.notions\.map/);
   assert.match(viewSource, /config\.workType === "development" \? "radio" : "checkbox"/);
 });
 
@@ -64,6 +72,27 @@ test("expose dans l’ordre les 56 rubriques de connaissances du programme minis
   assert.equal(catalog.notions.length, 56);
   assert.deepEqual(catalog.notions.slice(0, 3).map(({ title }) => title), ["Acte d’Union", "Économie coloniale", "Gouvernement responsable"]);
   assert.deepEqual(catalog.notions.slice(-3).map(({ title }) => title), ["Dévitalisation de localités", "Relations internationales", "Ère de l’information"]);
+});
+
+test("regroupe les notions dans les quatre périodes officielles de quatrième secondaire", async () => {
+  const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
+  assert.deepEqual(
+    [...new Set(catalog.notions.map(({ periodLabel }) => periodLabel))],
+    [
+      "1840-1896 · La formation du régime fédéral canadien",
+      "1896-1945 · Les nationalismes et l’autonomie du Canada",
+      "1945-1980 · La modernisation du Québec et la Révolution tranquille",
+      "De 1980 à nos jours · Les choix de société dans le Québec contemporain",
+    ],
+  );
+  assert.deepEqual(
+    catalog.notions.reduce<Record<string, number>>((counts, notion) => ({ ...counts, [notion.periodId]: (counts[notion.periodId] ?? 0) + 1 }), {}),
+    { "1840-1896": 14, "1896-1945": 15, "1945-1980": 15, "1980-present": 12 },
+  );
+  assert.equal(catalog.notions.find(({ title }) => title === "Statut du Canada dans l’Empire britannique")?.periodId, "1896-1945");
+  assert.equal(catalog.notions.find(({ title }) => title === "Redéfinition du rôle de l’État")?.periodId, "1980-present");
+  assert.match(viewSource, /className="notion-period"/);
+  assert.match(cssSource, /\.creator-card:has\(\.notion-picker\[open\]\)\{z-index:12\}/);
 });
 
 test("applique les trois contrats de progression", () => {
@@ -134,14 +163,30 @@ test("reprend la palette partagée de l’espace enseignant", () => {
   assert.match(cssSource, /--creator-text:#2b2229;--creator-muted:#71656d;--creator-coral:#6f315f;--creator-gold:#b27a25/);
 });
 
+test("harmonise le titre avec celui du tableau de bord enseignant", () => {
+  assert.match(cssSource, /\.creator-header h1\{[^}]*font-family:Georgia,serif[^}]*font-size:clamp\(1\.55rem,1\.85vw,1\.75rem\)[^}]*font-weight:800[^}]*line-height:1\.05/);
+});
+
+test("renforce sobrement les boutons de groupes et de type de travail", () => {
+  assert.match(cssSource, /\.work-types button,\.choice-chips button,\.all-groups\{[^}]*background:linear-gradient[^}]*font-weight:650[^}]*box-shadow/);
+  assert.match(cssSource, /\.work-types button\[aria-pressed="true"\]\{[^}]*border-color:[^}]*background:linear-gradient[^}]*box-shadow/);
+  assert.match(cssSource, /\.choice-chips button\[aria-pressed="true"\],\.all-groups\[aria-pressed="true"\]\{[^}]*background:linear-gradient[^}]*box-shadow/);
+});
+
 test("clarifie l’aperçu, la validation et la progression des champs", () => {
   assert.match(viewSource, /config\.notionIds\.length > 0/);
   assert.match(viewSource, /Question proposée/);
-  assert.match(viewSource, /Brouillon/);
+  assert.match(viewSource, /Aperçu/);
   assert.match(viewSource, /Accompagnement Socrato/);
-  assert.match(viewSource, /Proposer une autre question/);
+  assert.match(viewSource, /↻ Changer/);
+  assert.match(viewSource, /Garder cette question/);
+  assert.match(viewSource, /Vérifier et publier/);
+  assert.match(viewSource, /Prêt à publier cette activité/);
+  assert.match(viewSource, /Génération automatique/);
+  assert.doesNotMatch(viewSource, /creator-footer-summary/);
   assert.match(viewSource, /creator-footer \$\{complete \? "is-ready" : "is-pending"\}/);
   assert.match(cssSource, /\.creator-footer\{position:static/);
+  assert.match(viewSource, /className="preview-actions"[\s\S]*<footer className=\{`creator-footer[\s\S]*<\/footer>\s*<\/section>/);
   assert.doesNotMatch(cssSource, /\.creator-footer\{position:sticky/);
 });
 

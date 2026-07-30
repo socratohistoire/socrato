@@ -74,7 +74,7 @@ export function TeacherDashboardView({ data }: { data: TeacherDashboardViewModel
   const teacherGreeting = formatTeacherGreeting(data.teacher.firstName);
   const isInitialWelcome = !data.hasCreatedActivity;
   const socratoMessage = isInitialWelcome
-    ? `${teacherGreeting} Bienvenue dans Socrato. Commençons par préparer une première activité adaptée à tes élèves. Clique sur « Créer une activité de révision » : je t’accompagnerai ensuite dans chacune des étapes.`
+    ? `${teacherGreeting} Bienvenue dans Socrato. Commençons par préparer une première activité adaptée à tes élèves. Clique sur « Créer une activité » : je t’accompagnerai ensuite dans chacune des étapes.`
     : composedPedagogicalSummary
       ? `${teacherGreeting} ${composedPedagogicalSummary}`
       : `${teacherGreeting} Socrato prépare sa synthèse à mesure que les élèves terminent l’activité.`;
@@ -86,9 +86,7 @@ export function TeacherDashboardView({ data }: { data: TeacherDashboardViewModel
     const timeoutId = window.setTimeout(() => setHighlightCreationAction(false), 2000);
     return () => window.clearTimeout(timeoutId);
   }, [highlightCreationAction]);
-  const activityPickerAccessibleLabel = activeActivity.activityType === "revision"
-    ? "Changer d’activité de révision"
-    : "Changer d’activité d’enrichissement";
+  const activityPickerAccessibleLabel = "Changer d’activité";
 
   return (
     <main className="teacher-dashboard">
@@ -106,12 +104,12 @@ export function TeacherDashboardView({ data }: { data: TeacherDashboardViewModel
         </Link>
         <nav aria-label="Navigation principale">
           <TeacherGroupsDisclosure groups={data.groups} />
-          <UnavailableAction className={`sidebar-create-action${highlightCreationAction ? " sidebar-create-action--welcome-attention" : ""}`} accessibleLabel="Créer une activité de révision — Fonction à venir">
+          <Link className={`sidebar-create-action${highlightCreationAction ? " sidebar-create-action--welcome-attention" : ""}`} href="/teacher/activities/new" aria-label="Créer une activité">
             <svg className="sidebar-create-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path d="M13 5h27l11 11v40H13z" /><path d="M40 5v12h11M21 27h21M21 35h17M21 43h13" /><circle cx="15" cy="48" r="10" /><path d="M15 42v12M9 48h12" /></svg>
-            <span>CRÉER UNE ACTIVITÉ<br />DE RÉVISION</span>
+            <span>Créer une activité</span>
             <span className="sidebar-create-divider" aria-hidden="true" />
             <span className="sidebar-create-arrow" aria-hidden="true">→</span>
-          </UnavailableAction>
+          </Link>
         </nav>
         <div className="teacher-profile"><span aria-hidden="true">{data.teacher.initials}</span><p><strong>{data.teacher.displayLabel}</strong><small>{data.teacher.roleLabel}</small></p></div>
       </aside>

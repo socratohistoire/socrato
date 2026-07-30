@@ -8,7 +8,6 @@ export function validateActivityConfiguration(config: ActivityConfiguration): Co
   if (!config.notionIds.length) errors.notions = "Sélectionnez au moins une notion.";
   if (config.workType === "development" && config.notionIds.length !== 1) errors.notions = "Une question à développement exige exactement une notion.";
   if (config.workType === "development" && !config.operationId) errors.operation = "Sélectionnez une opération intellectuelle.";
-  if (!config.questionValidated) errors.question = "Validez la question proposée avant de continuer.";
   return errors;
 }
 

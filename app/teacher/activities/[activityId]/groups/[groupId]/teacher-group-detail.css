@@ -1,11 +1,12 @@
 .teacher-group-detail-page{--group-detail-soft:color-mix(in srgb,var(--teacher-plum) 5%,var(--teacher-card));--group-detail-green:#397357;--group-detail-blue:#3d6688}
 .group-detail-content{min-height:100vh;row-gap:23px}
-.group-detail-topbar{grid-row:1;min-width:0;min-height:112px;display:grid;grid-template-columns:minmax(190px,1fr) minmax(280px,1.4fr) minmax(190px,1fr);align-items:start;padding:19px 0 16px;border-bottom:1px solid color-mix(in srgb,var(--teacher-gold) 45%,var(--teacher-border));background-image:linear-gradient(color-mix(in srgb,var(--teacher-bg) 82%,transparent),color-mix(in srgb,var(--teacher-bg) 72%,transparent)),url('/images/montrealfin1800.png');background-size:auto,cover;background-position:center,center 48%;background-repeat:no-repeat}
-.group-detail-topbar>a{min-height:44px;display:inline-flex;align-items:center;color:var(--teacher-text);font-size:.82rem;font-weight:750;text-decoration:none}
+.group-detail-topbar{grid-row:1;min-width:0;min-height:112px;display:grid;grid-template-columns:minmax(190px,1fr) minmax(280px,1.4fr) minmax(190px,1fr);align-items:start;margin:0 calc(-1 * clamp(18px,4vw,56px));padding:19px clamp(18px,4vw,56px) 16px;border-bottom:1px solid #d6a55266;color:#fffaf5;background-image:radial-gradient(ellipse at 50% 46%,transparent 28%,#15091385 100%),linear-gradient(90deg,#241020e0 0%,#3a1934ce 48%,#1d101bdb 100%),url('/images/montrealfin1800.png');background-size:auto,auto,cover;background-position:center,center,center 48%;background-repeat:no-repeat;box-shadow:0 8px 24px #00000042}
+.group-detail-topbar>a{min-height:44px;display:inline-flex;align-items:center;color:#fffaf5;font-size:.82rem;font-weight:750;text-decoration:none}
 .group-detail-heading{min-width:0;text-align:center}
-.group-detail-heading h1{margin:0;color:var(--teacher-text);font-family:Georgia,serif;font-size:clamp(1.55rem,2vw,1.95rem);font-weight:800;line-height:1.12}
-.group-detail-heading p{margin:5px 0 0;color:var(--teacher-muted);font-family:Arial,sans-serif;font-size:.86rem;font-weight:600;line-height:1.35}
+.group-detail-heading h1{margin:0;color:#fffaf5;font-family:Georgia,serif;font-size:clamp(1.55rem,2vw,1.95rem);font-weight:800;line-height:1.12;text-shadow:0 2px 12px #0008}
+.group-detail-heading p{margin:5px 0 0;color:#f0cce2;font-family:Arial,sans-serif;font-size:.86rem;font-weight:600;line-height:1.35;text-shadow:0 1px 8px #0009}
 .group-detail-topbar>.theme-switch{justify-self:end}
+.group-detail-topbar>.theme-switch{border-color:#d6a55270;background:#211b2073;color:#e8dce3}.group-detail-topbar>.theme-switch button{color:#e8dce3}.group-detail-topbar>.theme-switch button[aria-pressed="true"]{background:#d6a55229;color:#e2b765}
 .teacher-space-link{grid-template-columns:36px minmax(0,1fr) 18px}
 .teacher-space-link>span:last-child{text-align:center;color:var(--teacher-gold)}
 .group-detail-main{grid-row:2;min-width:0;padding-bottom:48px;display:grid;align-content:start;gap:22px}

@@ -59,6 +59,13 @@ const TITLES = [
   "Ère de l’information",
 ] as const;
 
+const PERIODS = [
+  { id: "1840-1896", label: "1840-1896 · La formation du régime fédéral canadien", start: 0, end: 14 },
+  { id: "1896-1945", label: "1896-1945 · Les nationalismes et l’autonomie du Canada", start: 14, end: 29 },
+  { id: "1945-1980", label: "1945-1980 · La modernisation du Québec et la Révolution tranquille", start: 29, end: 44 },
+  { id: "1980-present", label: "De 1980 à nos jours · Les choix de société dans le Québec contemporain", start: 44, end: TITLES.length },
+] as const;
+
 function notionId(title: string) {
   return title
     .normalize("NFD")
@@ -69,8 +76,14 @@ function notionId(title: string) {
     .toLowerCase();
 }
 
-export const SECONDARY_FOUR_NOTIONS: ActivityCreatorNotion[] = TITLES.map((title) => ({
-  id: title === "Acte d’Union" ? "acte-union" : notionId(title),
-  title,
-  hasApprovedDocuments: title === "Acte d’Union",
-}));
+export const SECONDARY_FOUR_NOTIONS: ActivityCreatorNotion[] = TITLES.map((title, index) => {
+  const period = PERIODS.find(({ start, end }) => index >= start && index < end);
+  if (!period) throw new Error(`Période historique manquante pour la notion ${title}.`);
+  return {
+    id: title === "Acte d’Union" ? "acte-union" : notionId(title),
+    title,
+    periodId: period.id,
+    periodLabel: period.label,
+    hasApprovedDocuments: title === "Acte d’Union",
+  };
+});

@@ -82,7 +82,7 @@ test("rend le contrat principal accessible, thémable et responsive", () => {
   assert.match(viewSource, /className="group-participation-summary"[^>]*>[\s\S]*data\.completedStudentCount[\s\S]*élèves sur[\s\S]*data\.targetedStudentCount[\s\S]*ont terminé/);
   assert.match(cssSource, /\.group-detail-topbar\{[^}]*grid-template-columns:minmax\(190px,1fr\) minmax\(280px,1\.4fr\) minmax\(190px,1fr\)/);
   assert.match(cssSource, /\.group-detail-content\{min-height:100vh;row-gap:23px\}/);
-  assert.match(cssSource, /\.group-detail-topbar\{[^}]*min-height:112px[^}]*padding:19px 0 16px/);
+  assert.match(cssSource, /\.group-detail-topbar\{[^}]*min-height:112px[^}]*margin:0 calc\(-1 \* clamp\(18px,4vw,56px\)\)[^}]*padding:19px clamp\(18px,4vw,56px\) 16px/);
   assert.match(cssSource, /\.group-detail-heading p\{margin:5px 0 0/);
   assert.match(cssSource, /\.group-detail-heading\{[^}]*text-align:center/);
   assert.match(cssSource, /\.group-detail-hero\{[^}]*grid-template-columns:minmax\(250px,\.85fr\) minmax\(360px,1\.5fr\)[^}]*padding:18px 24px/);

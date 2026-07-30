@@ -104,6 +104,20 @@ test("présente un bilan local structuré et explicitement non réel après la f
   assert.match(viewSource, /aucune analyse pédagogique réelle/);
 });
 
+test("intègre la progression d’une consolidation sans effacer le bilan précédent", () => {
+  const completed = createDemoStudentDashboard().activities.find(({ activityStatus }) => activityStatus === "completed");
+  assert.ok(completed?.summary.consolidationProgress);
+  assert.equal(completed.summary.consolidationProgress.previousLevel, "À consolider");
+  assert.equal(completed.summary.consolidationProgress.currentLevel, "En progression");
+  assert.equal(completed.summary.consolidationProgress.source, "teacher_assigned");
+  assert.equal(completed.operations.find(({ id }) => id === "establish_facts")?.status, "mastered");
+  assert.equal(completed.operations.find(({ id }) => id === "causes_and_consequences")?.status, "consolidate");
+  assert.equal(completed.historicalKnowledge[0].status, "mastered");
+  assert.match(viewSource, /Progression après consolidation/);
+  assert.match(viewSource, /Assignée par l’enseignant/);
+  assert.match(cssSource, /\.consolidation-progress\{[^}]*display:grid[^}]*border:1px solid/);
+});
+
 test("n’ajoute aucun appel IA, externe ou persistance", () => {
   const combined = [viewSource, pageSource, providerSource].join("\n");
   assert.doesNotMatch(combined, /fetch\(|openai|anthropic|generateText|streamText|chat\.completions|responses\.create|postgres|prisma/i);

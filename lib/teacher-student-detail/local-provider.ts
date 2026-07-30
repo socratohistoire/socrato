@@ -17,16 +17,24 @@ const LOCAL_STUDENT_DETAIL: TeacherStudentDetailRecord = {
   studentFirstName: "Liam",
   activityStateLabel: "Activité terminée",
   priorityLabel: "Priorité élevée",
-  socratoSummary: "Liam repère correctement les faits principaux. Il doit encore justifier ses réponses à l’aide d’éléments précis tirés des documents.",
+  socratoSummary: "La consolidation montre une progression. Liam repère maintenant les faits principaux avec plus de précision; la justification à l’aide des documents demeure à poursuivre.",
   pedagogicalSummary: {
     strength: "Repère correctement les faits historiques importants.",
     mainDifficulty: "Justifier une réponse à l’aide des documents.",
     consolidationPath: "Reprendre une courte activité guidée sur l’utilisation des preuves.",
   },
+  consolidationProgress: {
+    state: "improving",
+    source: "teacher_assigned",
+    completedAt: "28 avril 2025",
+    previousLevel: "À consolider",
+    currentLevel: "En progression",
+    observation: "L’établissement des faits s’est amélioré depuis le bilan initial. La mise en relation des faits exige encore un accompagnement.",
+  },
   operations: [
     { id: "establish_facts", label: "Établir des faits", status: "mastered" },
-    { id: "causes-and-consequences", label: "Déterminer des causes et des conséquences", status: "consolidate" },
-    { id: "relate_facts", label: "Mettre en relation des faits", status: "needs_work" },
+    { id: "causes-and-consequences", label: "Déterminer des causes et des conséquences", status: "mastered" },
+    { id: "relate_facts", label: "Mettre en relation des faits", status: "consolidate" },
   ],
   historicalKnowledge: [
     { id: "contexte-acte-union", label: "Contexte de l’Acte d’union", status: "mastered" },

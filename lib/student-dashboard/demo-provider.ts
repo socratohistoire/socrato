@@ -51,7 +51,7 @@ function createActivities(): StudentActivity[] {
       actionHref: getLearningSessionUrl("demo-activity-acte-union", ACTE_UNION_NOTION_ID, "teacher-assigned"),
       operations: operations(0),
       historicalKnowledge: knowledge(assignedKnowledge, 0),
-      summary: { state: "pending", strengths: [], consolidationTargets: [], recommendation: null, consolidationActivity: null },
+      summary: { state: "pending", strengths: [], consolidationTargets: [], recommendation: null, consolidationActivity: null, consolidationProgress: null },
     },
     {
       id: "demo-activity-industrialisation",
@@ -69,11 +69,11 @@ function createActivities(): StudentActivity[] {
       actionHref: getLearningSessionUrl("demo-activity-industrialisation", "industrialisation", "notion-review"),
       operations: DEMO_INTELLECTUAL_OPERATIONS.map((operation) => ({ ...operation, status: "not_assessed" as const })),
       historicalKnowledge: [],
-      summary: { state: "pending", strengths: [], consolidationTargets: [], recommendation: null, consolidationActivity: null },
+      summary: { state: "pending", strengths: [], consolidationTargets: [], recommendation: null, consolidationActivity: null, consolidationProgress: null },
     },
     {
       id: "demo-activity-completed",
-      activityTitle: "Activité locale terminée",
+      activityTitle: "Consolidation – Acte d’union",
       activityType: "enrichment",
       publicationDate: "28 avril 2025",
       historicalPeriod: PERIOD,
@@ -85,14 +85,29 @@ function createActivities(): StudentActivity[] {
       origin: "teacher_assigned",
       isRecent: false,
       actionHref: `${getActivityDashboardUrl("demo-activity-completed")}#bilan`,
-      operations: operations(1),
-      historicalKnowledge: knowledge(completedKnowledge, 1),
+      operations: operations(1).map((operation) => operation.id === "establish_facts"
+        ? { ...operation, status: "mastered" as const }
+        : operation.id === "causes_and_consequences"
+          ? { ...operation, status: "consolidate" as const }
+          : operation),
+      historicalKnowledge: knowledge(completedKnowledge, 1).map((item, index) => ({
+        ...item,
+        status: index === 0 ? "mastered" as const : "consolidate" as const,
+      })),
       summary: {
         state: "local_demo_structured",
         strengths: ["Résultat local structuré à remplacer par le bilan confirmé."],
         consolidationTargets: ["Cible locale de démonstration, sans analyse pédagogique."],
         recommendation: "Recommandation locale à valider avant tout usage réel.",
         consolidationActivity: "Activité locale non générée et non persistée.",
+        consolidationProgress: {
+          state: "improving",
+          source: "teacher_assigned",
+          completedAt: "28 avril 2025",
+          previousLevel: "À consolider",
+          currentLevel: "En progression",
+          observation: "Tu établis maintenant les faits avec plus de précision. Continue à justifier tes liens de cause à conséquence à l’aide des documents.",
+        },
       },
     },
   ];

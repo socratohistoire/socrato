@@ -15,6 +15,14 @@ export type ActivitySummary = {
   consolidationTargets: string[];
   recommendation: string | null;
   consolidationActivity: string | null;
+  consolidationProgress: {
+    state: "improving" | "consolidated" | "continue";
+    source: "socrato_proposed" | "teacher_assigned";
+    completedAt: string;
+    previousLevel: string;
+    currentLevel: string;
+    observation: string;
+  } | null;
 };
 
 export type StudentActivity = {
