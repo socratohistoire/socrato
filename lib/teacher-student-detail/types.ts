@@ -23,6 +23,14 @@ export type TeacherStudentDetailRecord = {
     mainDifficulty: string;
     consolidationPath: string;
   };
+  consolidationProgress: {
+    state: "improving" | "consolidated" | "continue";
+    source: "socrato_proposed" | "teacher_assigned";
+    completedAt: string;
+    previousLevel: string;
+    currentLevel: string;
+    observation: string;
+  };
   operations: readonly TeacherStudentWorkedResult[];
   historicalKnowledge: readonly TeacherStudentWorkedResult[];
   teacher: {

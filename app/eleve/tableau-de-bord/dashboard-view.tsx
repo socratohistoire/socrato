@@ -111,6 +111,8 @@ function MainActivityCard({ activity }: { activity: StudentActivity }) {
 
 function SummaryPanel({ activity }: { activity: StudentActivity }) {
   const complete = activity.summary.state === "local_demo_structured";
+  const consolidationProgress = activity.summary.consolidationProgress;
+  const consolidationSource = consolidationProgress?.source === "teacher_assigned" ? "Assignée par l’enseignant" : "Proposée par Socrato";
   const items = complete ? [
     { kind: "strength", title: "Tes points forts", text: activity.summary.strengths.join(" ") },
     { kind: "consolidate", title: "Les éléments à consolider", text: activity.summary.consolidationTargets.join(" ") },
@@ -123,6 +125,7 @@ function SummaryPanel({ activity }: { activity: StudentActivity }) {
   return (
     <section id="bilan" className="summary-panel" aria-labelledby="summary-title">
       <div className="summary-heading"><CompassIcon /><div><h2 id="summary-title">{DASHBOARD_LABELS.summary}</h2><p>{complete ? "Démonstration locale structurée — aucune analyse pédagogique réelle." : "Lorsque tu auras terminé cette activité, Socrato préparera un bilan personnalisé."}</p></div></div>
+      {consolidationProgress && <article className={`consolidation-progress consolidation-progress--${consolidationProgress.state}`} aria-labelledby="consolidation-progress-title"><div><span>Progression après consolidation</span><h3 id="consolidation-progress-title">{consolidationProgress.previousLevel} <span aria-hidden="true">→</span> {consolidationProgress.currentLevel}</h3><p>{consolidationProgress.observation}</p></div><dl><div><dt>Origine</dt><dd>{consolidationSource}</dd></div><div><dt>Terminée le</dt><dd>{consolidationProgress.completedAt}</dd></div></dl></article>}
       <div className="summary-grid">{items.map((item) => <article key={item.kind} className={`summary-item summary-${item.kind}`}><span aria-hidden="true">{item.kind === "strength" ? "✓" : item.kind === "consolidate" ? "◎" : "✎"}</span><div><h3>{item.title}</h3><p>{item.text}</p></div></article>)}</div>
     </section>
   );

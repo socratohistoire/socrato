@@ -4,7 +4,13 @@ export type WorkType = "revision" | "enrichment" | "development";
 export type ProgressionMode = "fixed" | "timed" | "timed-capped" | "incomplete";
 
 export type ActivityCreatorGroup = { id: string; name: string };
-export type ActivityCreatorNotion = { id: string; title: string; hasApprovedDocuments: boolean };
+export type ActivityCreatorNotion = {
+  id: string;
+  title: string;
+  periodId: "1840-1896" | "1896-1945" | "1945-1980" | "1980-present";
+  periodLabel: string;
+  hasApprovedDocuments: boolean;
+};
 export type IntellectualOperation = { id: string; label: string };
 
 export type ActivityCreatorCatalog = {

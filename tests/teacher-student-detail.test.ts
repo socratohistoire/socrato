@@ -39,9 +39,22 @@ test("fournit un bilan fictif synthétique et le retour contextuel", async () =>
   assert.equal(data.studentDisplayLabel, "Liam B. (fictif)");
   assert.equal(data.groupName, "Groupe fictif 401");
   assert.equal(data.activityTitle, "Révision avant l’évaluation 1");
-  assert.equal(data.socratoSummary, "Liam repère correctement les faits principaux. Il doit encore justifier ses réponses à l’aide d’éléments précis tirés des documents.");
+  assert.match(data.socratoSummary, /consolidation montre une progression/);
   assert.equal(data.groupReturnHref, "/teacher/activities/activity-revision-01/groups/group-demo-401");
   assert.equal(data.teacherReturnHref, "/teacher?activity=activity-revision-01");
+});
+
+test("conserve l’avant et affiche l’évolution après consolidation", async () => {
+  const data = await localViewModel();
+  assert.equal(data.consolidationProgress.previousLevel, "À consolider");
+  assert.equal(data.consolidationProgress.currentLevel, "En progression");
+  assert.equal(data.consolidationProgress.source, "teacher_assigned");
+  assert.equal(data.operations.find(({ id }) => id === "causes-and-consequences")?.status, "mastered");
+  assert.match(viewSource, /Évolution après consolidation/);
+  assert.match(viewSource, /Terminée le/);
+  assert.match(viewSource, /Point fort actuel/);
+  assert.match(viewSource, /Difficulté actuelle/);
+  assert.match(cssSource, /\.teacher-consolidation-progress\{[^}]*border:1px solid/);
 });
 
 test("raccorde uniquement les boutons Détails autorisés de Liam", () => {

@@ -201,6 +201,8 @@ test("place les deux en-têtes hors des cartes dans une grille alignée", () => 
   assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\)[\s\S]*\.session-layout \{[^}]*grid-template-rows:auto minmax\(0,1fr\)/);
   assert.match(cssSource, /\.question-heading \{[^}]*position:sticky[^}]*top:0[^}]*grid-column:1[^}]*grid-row:1/);
   assert.match(cssSource, /\.documents-heading \{[^}]*position:sticky[^}]*top:0[^}]*grid-column:2[^}]*grid-row:1/);
+  assert.match(cssSource, /\.question-heading \{[^}]*background:transparent/);
+  assert.match(cssSource, /\.documents-heading \{[^}]*background:transparent/);
   assert.match(cssSource, /@media \(max-width:1119px\)[^{]*\{[\s\S]*\.question-pane,\.documents-pane \{ height:auto; display:block; grid-row:auto; \}/);
 });
 

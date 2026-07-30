@@ -24,8 +24,8 @@ const QUESTION_COUNT_OPTIONS = Array.from({ length: 12 }, (_, index) => index + 
 
 const INITIAL_CONFIGURATION = (catalog: ActivityCreatorCatalog): ActivityConfiguration => ({
   title: "Révision avant l’évaluation",
-  durationMinutes: 25,
-  questionCount: 8,
+  durationMinutes: null,
+  questionCount: null,
   selectedGroupIds: catalog.groups.map(({ id }) => id),
   workType: "revision",
   notionIds: [catalog.notions[0].id],
@@ -60,18 +60,27 @@ export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreat
   const [previewVariant, setPreviewVariant] = useState(0);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [demoMessage, setDemoMessage] = useState("");
+  const [showPublishReview, setShowPublishReview] = useState(false);
   const preview = useMemo(() => createLocalActivityPreview(config, catalog, previewVariant), [config, catalog, previewVariant]);
   const progression = getProgressionCopy(config);
   const errors = validateActivityConfiguration(config);
   const complete = isActivityConfigurationComplete(config);
   const allGroupsSelected = config.selectedGroupIds.length === catalog.groups.length;
   const selectedNotions = catalog.notions.filter(({ id }) => config.notionIds.includes(id));
+  const selectedGroups = catalog.groups.filter(({ id }) => config.selectedGroupIds.includes(id));
+  const notionPeriods = Array.from(new Map(catalog.notions.map(({ periodId, periodLabel }) => [periodId, periodLabel]))).map(([id, label]) => ({
+    id,
+    label,
+    notions: catalog.notions.filter(({ periodId }) => periodId === id),
+  }));
   const notionSelectionSummary = selectedNotions.length === 0
     ? "Choisir une notion"
     : selectedNotions.length === 1
       ? selectedNotions[0].title
       : `${selectedNotions.length} notions sélectionnées`;
   const publishLabel = config.workType === "revision" ? "Publier l’activité de révision" : config.workType === "enrichment" ? "Publier l’activité d’enrichissement" : "Publier la question à développement";
+  const workTypeLabel = WORK_TYPES.find(({ id }) => id === config.workType)?.label;
+  const automaticQuestionCount = config.questionCount === null ? null : Math.max(0, config.questionCount - (config.questionValidated ? 1 : 0));
 
   function update(patch: Partial<ActivityConfiguration>) {
     setConfig((current) => ({ ...current, ...patch, questionValidated: patch.questionValidated ?? false }));
@@ -98,9 +107,8 @@ export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreat
         <strong>SOCRATO</strong><small>Espace enseignant</small>
       </Link>
       <nav aria-label="Navigation principale">
-        <Link href="/teacher"><Icon name="groups"/>Groupes</Link>
         <Link href="/teacher"><Icon name="school"/>Espace enseignant</Link>
-        <Link href="/teacher/activities/new" aria-current="page"><Icon name="edit"/>Créer une activité</Link>
+        <Link className="creator-create-link" href="/teacher/activities/new" aria-current="page"><span className="creator-create-icon"><Icon name="edit"/></span><span>Créer une activité</span><span className="creator-create-arrow" aria-hidden="true">→</span></Link>
       </nav>
     </aside>
 
@@ -132,7 +140,7 @@ export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreat
             <fieldset><legend>Type de travail</legend><div className="work-types">{WORK_TYPES.map((type) => <button key={type.id} type="button" aria-pressed={config.workType === type.id} onClick={() => selectWorkType(type.id)}>{type.label}</button>)}</div></fieldset>
             {config.workType === "development" && <p className="mode-help">Réponse développée d’environ 150 mots. Cette cible pédagogique est souple et ne bloque pas automatiquement la réponse.</p>}
             {config.workType === "enrichment" && <p className="mode-help">Approfondissement exigeant fondé uniquement sur les référentiels et documents approuvés.</p>}
-            <fieldset><legend>Notions {config.workType === "development" && <em>Une seule</em>}</legend><details className="notion-picker"><summary>{notionSelectionSummary}<span aria-hidden="true">⌄</span></summary><div className="notion-picker-options">{catalog.notions.map((notion) => <label key={notion.id}><input type={config.workType === "development" ? "radio" : "checkbox"} name={config.workType === "development" ? "development-notion" : undefined} checked={config.notionIds.includes(notion.id)} onChange={() => toggleNotion(notion.id)} /><span>{notion.title}</span></label>)}</div></details></fieldset>
+            <fieldset><legend>Notions {config.workType === "development" && <em>Une seule</em>}</legend><details className="notion-picker"><summary>{notionSelectionSummary}<span aria-hidden="true">⌄</span></summary><div className="notion-picker-options">{notionPeriods.map((period) => <section className="notion-period" key={period.id} aria-labelledby={`period-${period.id}`}><h3 id={`period-${period.id}`}>{period.label}</h3>{period.notions.map((notion) => <label key={notion.id}><input type={config.workType === "development" ? "radio" : "checkbox"} name={config.workType === "development" ? "development-notion" : undefined} checked={config.notionIds.includes(notion.id)} onChange={() => toggleNotion(notion.id)} /><span>{notion.title}</span></label>)}</section>)}</div></details></fieldset>
             {errors.notions && <p className="field-error" role="alert">{errors.notions}</p>}
             {config.notionIds.length > 0 ? <><label className="progressive-field">Opération {config.workType === "development" && <em>Requis</em>}<select value={config.operationId ?? (config.workType === "development" ? "" : "random")} onChange={(event) => update({ operationId: event.target.value === "random" || event.target.value === "" ? null : event.target.value })}>{config.workType === "development" ? <option value="" disabled>Choisir une opération</option> : <option value="random">Aléatoire</option>}{catalog.operations.map((operation) => <option key={operation.id} value={operation.id}>{operation.label}</option>)}</select></label>{errors.operation && <p className="field-error" role="alert">{errors.operation}</p>}</> : <p className="progressive-hint">Choisissez d’abord une notion pour préciser l’opération intellectuelle.</p>}
           </ConfigCard>
@@ -141,15 +149,31 @@ export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreat
         <section className="live-preview" aria-labelledby="preview-title">
           <header><h2 id="preview-title"><Icon name="eye"/>Aperçu en direct</h2><span className={complete ? "complete" : "incomplete"}>{complete ? "✓ Configuration complète" : "Configuration à compléter"}</span><span className="question-nav">{progression.navigation}</span></header>
           <div className="preview-paper">
-            <div className="preview-question"><div className="preview-section-heading"><span>Question proposée</span><span className={config.questionValidated ? "question-state validated" : "question-state draft"}>{config.questionValidated ? "✓ Validée" : "Brouillon"}</span></div><span className="operation-pill">{preview.operationLabel}</span><p className="preview-notion">{preview.notionTitle}</p><h3>{preview.question}</h3><p>{preview.instruction}</p><div className="socrato-guidance"><Image src="/logos/socrato-logo-v2.png" width={52} height={52} alt="" aria-hidden="true" unoptimized/><div><strong>Accompagnement Socrato</strong>{preview.guidance.map((line) => <p key={line}>{line}</p>)}</div></div></div>
+            <div className="preview-question"><div className="preview-section-heading"><span>Question proposée</span><span className={config.questionValidated ? "question-state validated" : "question-state draft"}>{config.questionValidated ? "✓ Gardée" : "Aperçu"}</span></div><span className="operation-pill">{preview.operationLabel}</span><p className="preview-notion">{preview.notionTitle}</p><h3>{preview.question}</h3><p>{preview.instruction}</p><div className="socrato-guidance"><Image src="/logos/socrato-logo-v2.png" width={52} height={52} alt="" aria-hidden="true" unoptimized/><div><strong>Accompagnement Socrato</strong>{preview.guidance.map((line) => <p key={line}>{line}</p>)}</div></div></div>
             <section className="preview-documents" aria-labelledby="documents-title"><h3 id="documents-title">Documents approuvés</h3>{preview.documents.length ? <div className="document-grid">{preview.documents.map((document, index) => <article key={document.id} className={index === 3 ? "featured-document" : ""}><small>Document {index + 1}</small><h4>{document.title}</h4>{documentBody(document)}<p>{document.sourceLabel}</p></article>)}</div> : <p className="no-documents">Aucun document historique approuvé n’est disponible pour cette notion. L’aperçu n’en invente aucun.</p>}</section>
           </div>
-          <div className="preview-actions"><button type="button" onClick={() => { setPreviewVariant((value) => value + 1); update({}); }}>↻ Proposer une autre question</button><button type="button" className="validate-question" aria-pressed={config.questionValidated} onClick={() => update({ questionValidated: true })}>✓ {config.questionValidated ? "Question validée" : "Valider cette question"}</button></div>
+          <div className="preview-actions"><button type="button" className="regenerate-question" onClick={() => { setPreviewVariant((value) => value + 1); update({ questionValidated: false }); }}>↻ Changer</button><button type="button" className="keep-question" aria-pressed={config.questionValidated} onClick={() => update({ questionValidated: true })}>✓ {config.questionValidated ? "Question gardée" : "Garder cette question"}</button></div>
+          <footer className={`creator-footer ${complete ? "is-ready" : "is-pending"}`}><button type="button" disabled aria-disabled="true" title="Fonction à venir">◉ Voir comme un élève <small>Fonction à venir</small></button><button type="button" className="publish-button" disabled={!complete} onClick={() => setShowPublishReview(true)}>Vérifier et publier →</button></footer>
         </section>
       </div>
 
-      <footer className={`creator-footer ${complete ? "is-ready" : "is-pending"}`}><p><span>{config.selectedGroupIds.length} groupes</span><span>{config.notionIds.length} notion{config.notionIds.length > 1 ? "s" : ""}</span><span>{progression.summary}</span></p><button type="button" disabled aria-disabled="true" title="Fonction à venir">◉ Voir comme un élève <small>Fonction à venir</small></button><button type="button" className="publish-button" disabled={!complete} onClick={() => setDemoMessage("Démonstration locale : aucune activité n’a été publiée.")}>{publishLabel} →</button></footer>
       <div className="creator-announcer" aria-live="polite">{demoMessage || (!complete ? Object.values(errors)[0] : "Configuration prête pour une démonstration locale.")}</div>
     </section>
+    {showPublishReview && <div className="publish-review-backdrop" role="presentation" onKeyDown={(event) => { if (event.key === "Escape") setShowPublishReview(false); }} onMouseDown={(event) => { if (event.target === event.currentTarget) setShowPublishReview(false); }}>
+      <section className="publish-review" role="dialog" aria-modal="true" aria-labelledby="publish-review-title">
+        <button type="button" className="publish-review-close" aria-label="Fermer le résumé" autoFocus onClick={() => setShowPublishReview(false)}>×</button>
+        <header><span>Dernière vérification</span><h2 id="publish-review-title">Prêt à publier cette activité ?</h2><p>Vérifiez les principaux paramètres avant de confirmer.</p></header>
+        <dl>
+          <div><dt>Activité</dt><dd>{config.title}</dd></div>
+          <div><dt>Type</dt><dd>{workTypeLabel}</dd></div>
+          <div><dt>Groupes</dt><dd>{selectedGroups.map(({ name }) => name).join(", ")}</dd></div>
+          <div><dt>Notions</dt><dd>{selectedNotions.map(({ title }) => title).join(", ")}</dd></div>
+          <div><dt>Format</dt><dd>{progression.summary}</dd></div>
+          <div><dt>Question aperçue</dt><dd>{config.questionValidated ? "Gardée dans l’activité" : "Non gardée"}</dd></div>
+          <div className="automatic-questions"><dt>Génération automatique</dt><dd>{automaticQuestionCount === null ? "Les questions seront générées selon la durée choisie." : `${automaticQuestionCount} question${automaticQuestionCount > 1 ? "s" : ""} seront générée${automaticQuestionCount > 1 ? "s" : ""} automatiquement selon cette configuration.`}</dd></div>
+        </dl>
+        <footer><button type="button" className="review-back" onClick={() => setShowPublishReview(false)}>Retour aux réglages</button><button type="button" className="confirm-publish" onClick={() => { setShowPublishReview(false); setDemoMessage("Démonstration locale : aucune activité n’a été publiée."); }}>{publishLabel} →</button></footer>
+      </section>
+    </div>}
   </main>;
 }

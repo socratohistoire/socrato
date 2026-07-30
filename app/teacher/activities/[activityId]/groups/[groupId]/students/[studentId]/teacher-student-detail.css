@@ -30,6 +30,7 @@
 .student-pedagogical-item--difficulty dt{color:var(--student-red)}
 .student-pedagogical-item--path dt{color:var(--student-blue)}
 .student-consolidation-action{width:100%;min-height:52px;margin-top:auto;border:1px solid #f4cc72;border-radius:12px;padding:8px 16px;background:var(--teacher-theme-toggle-active-bg);color:var(--teacher-theme-toggle-active-text);font:inherit;font-size:.79rem;font-weight:800}
+.teacher-consolidation-progress{margin-top:14px;border:1px solid color-mix(in srgb,var(--student-green) 68%,var(--teacher-border));border-radius:12px;padding:13px 14px;background:color-mix(in srgb,var(--student-green) 10%,var(--teacher-card))}.teacher-consolidation-progress>span{color:var(--student-green);font-size:.62rem;font-weight:850;text-transform:uppercase;letter-spacing:.05em}.teacher-consolidation-progress h3{margin-top:4px;font-size:1rem}.teacher-consolidation-progress h3 span{padding-inline:4px;color:var(--student-green)}.teacher-consolidation-progress p{margin:7px 0 0;color:var(--teacher-text);font-size:.76rem;line-height:1.45}.teacher-consolidation-progress small{display:block;margin-top:7px;color:var(--teacher-muted);font-size:.65rem}
 .student-consolidation-action:disabled{opacity:.76;cursor:not-allowed}
 .student-worked-results{min-height:0;display:grid;grid-template-rows:auto auto;align-content:start;gap:19px}
 .student-worked-results .student-detail-card{padding-block:19px}
