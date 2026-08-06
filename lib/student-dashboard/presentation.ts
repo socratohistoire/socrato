@@ -17,11 +17,11 @@ export const ACTIVITY_STATUS_LABELS: Record<ActivityStatus, string> = {
 };
 
 export const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
-  revision: "Activité de révision", enrichment: "Activité d’enrichissement",
+  revision: "Activité de révision", enrichment: "Activité d’enrichissement", development: "Question à développement",
 };
 
 export function getActivityActionLabel(activity: StudentActivity): string {
-  if (activity.activityStatus === "completed") return "Voir mon bilan";
+  if (activity.activityStatus === "completed") return "Consulter mon bilan";
   return activity.activityStatus === "not_started" ? "Commencer l’activité" : "Poursuivre l’activité";
 }
 

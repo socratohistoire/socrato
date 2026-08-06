@@ -16,7 +16,7 @@ export type TeacherStudentDetailRecord = {
   studentDisplayLabel: string;
   studentFirstName: string;
   activityStateLabel: "Activité terminée";
-  priorityLabel: "Priorité élevée";
+  priorityLabel: "Priorité élevée" | "Suivi normal";
   socratoSummary: string;
   pedagogicalSummary: {
     strength: string;

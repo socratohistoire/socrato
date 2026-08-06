@@ -1,7 +1,7 @@
 export type ProgressStatus = "mastered" | "consolidate" | "needs_work" | "not_assessed";
 export type ActivityOrigin = "teacher_assigned" | "student_selected";
 export type DashboardMode = "teacher-assigned" | "notion-review";
-export type ActivityType = "revision" | "enrichment";
+export type ActivityType = "revision" | "enrichment" | "development";
 export type ActivityStatus = "not_started" | "in_progress" | "completed";
 
 export type HistoricalPeriod = { startYear?: number; endYear?: number; displayLabel?: string };

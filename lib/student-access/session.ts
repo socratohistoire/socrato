@@ -11,4 +11,5 @@ export interface StudentSessionRepository {
     credentialId: string;
   }): Promise<StudentSession>;
   findActiveByToken(token: string): Promise<StudentSession | null>;
+  revokeByToken(token: string): Promise<void>;
 }

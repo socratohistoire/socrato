@@ -10,8 +10,8 @@ export function getProgressionMode(config: Pick<ActivityConfiguration, "duration
 export function getProgressionCopy(config: Pick<ActivityConfiguration, "durationMinutes" | "questionCount">) {
   const mode = getProgressionMode(config);
   if (mode === "fixed") return {
-    summary: `${config.questionCount} questions · parcours fixe`,
-    help: "Toutes les questions devront être réalisées.",
+    summary: `${config.questionCount} question${config.questionCount === 1 ? "" : "s"}`,
+    help: "",
     navigation: `Question 1 sur ${config.questionCount}`,
   };
   if (mode === "timed") return {
@@ -26,7 +26,7 @@ export function getProgressionCopy(config: Pick<ActivityConfiguration, "duration
   };
   return {
     summary: "Format à compléter",
-    help: "Choisissez une durée ou un nombre de questions.",
+    help: "Choisissez un nombre de questions entre 1 et 20.",
     navigation: "Aucune progression définie",
   };
 }

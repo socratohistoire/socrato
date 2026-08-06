@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 5766 3814" role="img" aria-labelledby="title description">
+  <title id="title">Frontières mises en évidence sur la carte de la Province du Canada vers 1842</title>
+  <description id="description">Adaptation de la carte de James Wyld. Une ligne violette suit la séparation entre le Canada-Ouest et le Canada-Est. Une ligne rouge suit la frontière entre la Province du Canada et les États-Unis.</description>
+  <defs>
+    <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#2b2028" flood-opacity="0.32"/></filter>
+    <style>
+      .boundary-halo { fill: none; stroke: #fffaf0; stroke-width: 30; stroke-opacity: .92; stroke-linecap: round; stroke-linejoin: round; }
+      .boundary { fill: none; stroke-width: 15; stroke-linecap: round; stroke-linejoin: round; }
+      .boundary-internal { stroke: #6f2d68; }
+      .boundary-international { stroke: #c33f36; }
+      .legend-title { font: 800 54px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #332831; }
+      .legend-text { font: 600 38px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #332831; }
+      .legend-note { font: 500 31px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #675b62; }
+    </style>
+  </defs>
+
+  <image x="0" y="0" width="5766" height="3814" xlink:href="province-canada-wyld-1842-original.jpg" preserveAspectRatio="none"/>
+
+  <!-- Séparation Canada-Ouest / Canada-Est : lac Témiscamingue, rivière des Outaouais et fleuve Saint-Laurent. -->
+  <path class="boundary-halo" d="M 1120 1505 C 1180 1540 1235 1570 1290 1605 C 1410 1680 1515 1755 1640 1840 C 1760 1935 1870 2010 1980 2075 C 2100 2140 2220 2200 2330 2165"/>
+  <path class="boundary boundary-internal" d="M 1120 1505 C 1180 1540 1235 1570 1290 1605 C 1410 1680 1515 1755 1640 1840 C 1760 1935 1870 2010 1980 2075 C 2100 2140 2220 2200 2330 2165"/>
+
+  <!-- Frontière entre la Province du Canada et les États-Unis, reprise sur la démarcation imprimée par Wyld. -->
+  <path class="boundary-halo" d="M 250 2250 C 275 2460 320 2720 400 2890 C 430 2970 420 3070 400 3150 C 600 3250 830 3240 1040 3170 C 1180 3125 1270 3070 1300 3010 C 1280 2940 1190 2890 1080 2840 C 1300 2800 1570 2770 1800 2700 C 2010 2640 2190 2560 2300 2480 C 2290 2380 2300 2260 2330 2165 C 2400 2195 2490 2220 2610 2235 C 2820 2250 3190 2245 3445 2240 C 3500 2185 3545 2115 3590 2040 C 3640 1955 3690 1875 3745 1800 C 3810 1710 3860 1645 3895 1560"/>
+  <path class="boundary boundary-international" d="M 250 2250 C 275 2460 320 2720 400 2890 C 430 2970 420 3070 400 3150 C 600 3250 830 3240 1040 3170 C 1180 3125 1270 3070 1300 3010 C 1280 2940 1190 2890 1080 2840 C 1300 2800 1570 2770 1800 2700 C 2010 2640 2190 2560 2300 2480 C 2290 2380 2300 2260 2330 2165 C 2400 2195 2490 2220 2610 2235 C 2820 2250 3190 2245 3445 2240 C 3500 2185 3545 2115 3590 2040 C 3640 1955 3690 1875 3745 1800 C 3810 1710 3860 1645 3895 1560"/>
+
+  <g transform="translate(4140 2940)" filter="url(#soft-shadow)">
+    <rect x="0" y="0" width="1380" height="590" rx="34" fill="#fffaf0" fill-opacity=".96" stroke="#6d5d62" stroke-width="5"/>
+    <text class="legend-title" x="70" y="95">Frontières mises en évidence</text>
+    <line x1="75" y1="175" x2="270" y2="175" class="boundary boundary-internal"/>
+    <text class="legend-text" x="315" y="188">Canada-Ouest / Canada-Est</text>
+    <line x1="75" y1="265" x2="270" y2="265" class="boundary boundary-international"/>
+    <text class="legend-text" x="315" y="278">Province du Canada / États-Unis</text>
+    <text class="legend-note" x="70" y="390">Carte originale : James Wyld, vers 1842.</text>
+    <text class="legend-note" x="70" y="445">Repères superposés par Socrato.</text>
+    <text class="legend-note" x="70" y="520">Adaptation pédagogique — statut : À valider.</text>
+  </g>
+</svg>

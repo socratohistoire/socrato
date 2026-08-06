@@ -2,30 +2,35 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createLocalActivityPreview,
+  getActivityQuestionSelection,
+  getActivityQuestionCategory,
+  getEligibleActivityQuestions,
   getProgressionCopy,
   isActivityConfigurationComplete,
   validateActivityConfiguration,
   type ActivityConfiguration,
   type ActivityCreatorCatalog,
+  type ActivityPreview,
   type WorkType,
 } from "@/lib/teacher-activity-creator";
+import { downloadActivityWord } from "@/lib/teacher-activity-creator/word-export";
+import { createLocalPublishedActivity } from "@/lib/local-published-activities";
+import { createTeacherActivityDraft } from "@/lib/teacher-activity-drafts";
+import { createConfiguredDataRepository } from "@/lib/data-repository";
 
 const WORK_TYPES: { id: WorkType; label: string }[] = [
   { id: "revision", label: "Révision" },
-  { id: "enrichment", label: "Enrichissement" },
   { id: "development", label: "Question à développement" },
 ];
 
-const DURATION_OPTIONS = [5, 10, 15, 20, 25, 30, 35, 40];
-const QUESTION_COUNT_OPTIONS = Array.from({ length: 12 }, (_, index) => index + 1);
-
+const QUESTION_COUNT_OPTIONS = Array.from({ length: 20 }, (_, index) => index + 1);
 const INITIAL_CONFIGURATION = (catalog: ActivityCreatorCatalog): ActivityConfiguration => ({
-  title: "Révision avant l’évaluation",
+  title: "",
   durationMinutes: null,
-  questionCount: null,
+  questionCount: 1,
   selectedGroupIds: catalog.groups.map(({ id }) => id),
   workType: "revision",
   notionIds: [catalog.notions[0].id],
@@ -45,6 +50,10 @@ function Icon({ name }: { name: "groups" | "school" | "edit" | "format" | "targe
   return <svg className="creator-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">{paths[name]}</svg>;
 }
 
+function WordIcon() {
+  return <svg className="word-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect x="3" y="5" width="17" height="22" rx="2"/><path d="M20 9h7v18H11"/><path d="m7 11 2.2 10 2.7-7 2.7 7 2.4-10"/></svg>;
+}
+
 function ConfigCard({ id, icon, title, children }: { id: string; icon: "format" | "groups" | "target"; title: string; children: React.ReactNode }) {
   return <section className="creator-card" aria-labelledby={id}><h2 id={id}><span><Icon name={icon}/></span>{title}</h2>{children}</section>;
 }
@@ -52,7 +61,34 @@ function ConfigCard({ id, icon, title, children }: { id: string; icon: "format" 
 function documentBody(document: ActivityCreatorCatalog["documents"][number]) {
   if (document.content.kind === "historical_image") return <Image src={document.content.localSrc} alt={document.content.alt} width={680} height={410} unoptimized />;
   if (document.content.kind === "population_table") return <table><thead><tr><th>Région</th><th>Population</th><th>Représentation</th></tr></thead><tbody>{document.content.rows.map((row) => <tr key={row.region}><td>{row.region}</td><td>{row.population}</td><td>{row.representatives}</td></tr>)}</tbody></table>;
+  if (document.content.kind === "comparison_table") return <table><thead><tr>{document.content.headers.map((header) => <th key={header}>{header}</th>)}</tr></thead><tbody>{document.content.rows.map((row) => <tr key={row.label}><td>{row.label}</td><td>{row.value}</td></tr>)}</tbody></table>;
+  if (document.content.kind === "historical_timeline") return <div className="teacher-timeline-preview">{document.content.entries.map((entry) => <article key={entry.date}><strong>{entry.date}</strong><Image src={entry.imageUrl} alt={entry.imageAlt} width={320} height={190} unoptimized /><small>{entry.phase}</small><span>{entry.title}</span></article>)}</div>;
+  if (document.content.kind === "political_structure_diagram") return <PoliticalStructureDiagram className="teacher-political-structure" />;
   return <blockquote>{document.content.excerpt}</blockquote>;
+}
+
+function PoliticalStructureDiagram({ className }: { className: string }) {
+  return <div className={className} role="img" aria-label="Schéma de la structure politique de l’Acte d’Union : la Couronne nomme le gouverneur; le gouverneur nomme les conseils; les électeurs élisent une Assemblée commune de 84 députés.">
+    <div className="ps-node ps-crown"><small>Autorité impériale</small><strong>Couronne et Parlement britannique</strong><span>Adoptent l’Acte d’Union</span></div><div className="ps-arrow">nomme ↓</div>
+    <div className="ps-node ps-governor"><small>Pouvoir exécutif</small><strong>Gouverneur général</strong><span>Nomme les conseils · sanctionne ou réserve les lois</span></div><div className="ps-arrow">nomme et consulte ↓</div>
+    <div className="ps-councils"><div className="ps-node"><small>Nommé</small><strong>Conseil exécutif</strong><span>Conseille et administre</span></div><div className="ps-node"><small>Nommé</small><strong>Conseil législatif</strong><span>Étudie et adopte les projets de loi</span></div></div>
+    <div className="ps-arrow">projets de loi ↕</div><div className="ps-node ps-assembly"><small>Élue</small><strong>Assemblée législative · 84 députés</strong><div><b>Canada-Ouest · 42</b><b>Canada-Est · 42</b></div></div><div className="ps-arrow">élisent ↑</div>
+    <div className="ps-node ps-voters"><strong>Électeurs admissibles</strong></div>
+  </div>;
+}
+
+function TeacherTimelineInteractionPreview({ timeline }: { timeline: NonNullable<ActivityPreview["timelineInteraction"]> }) {
+  return <section className="teacher-interaction-timeline" aria-label="Corrigé chronologique de référence">
+    <header><span>Aperçu de l’interaction</span><strong>Ordre chronologique attendu</strong></header>
+    <div className="teacher-interaction-timeline-track" aria-hidden="true" />
+    <div className="teacher-interaction-timeline-cards">{timeline.entries.map((entry, index) => <article key={entry.id}>
+      <div className="teacher-interaction-date"><span>{index + 1}</span><strong>{entry.date}</strong></div>
+      <Image src={entry.imageUrl} alt={entry.imageAlt} width={360} height={220} unoptimized />
+      <h4>{entry.title}</h4>
+      <p>{entry.description}</p>
+    </article>)}</div>
+    <p className="teacher-interaction-note">Dans la page de l’élève, ces cinq cartes apparaissent mélangées et doivent être replacées aux bonnes dates.</p>
+  </section>;
 }
 
 export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreatorCatalog }) {
@@ -61,7 +97,22 @@ export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreat
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [demoMessage, setDemoMessage] = useState("");
   const [showPublishReview, setShowPublishReview] = useState(false);
-  const preview = useMemo(() => createLocalActivityPreview(config, catalog, previewVariant), [config, catalog, previewVariant]);
+  const [downloadingWord, setDownloadingWord] = useState(false);
+  const [previouslyAssignedQuestionIds, setPreviouslyAssignedQuestionIds] = useState<string[]>([]);
+  const [questionOverrides, setQuestionOverrides] = useState<Record<number, string>>({});
+  const [draftReady, setDraftReady] = useState(false);
+  const [draftTouched, setDraftTouched] = useState(false);
+  const notionPickerRef = useRef<HTMLDetailsElement>(null);
+  const automaticActivityQuestions = useMemo(() => getActivityQuestionSelection(config, catalog, previouslyAssignedQuestionIds), [config, catalog, previouslyAssignedQuestionIds]);
+  const eligibleQuestions = useMemo(() => getEligibleActivityQuestions(config, catalog), [config, catalog]);
+  const activityQuestions = useMemo(() => automaticActivityQuestions.map((question, index) =>
+    eligibleQuestions.find(({ id }) => id === questionOverrides[index]) ?? question), [automaticActivityQuestions, eligibleQuestions, questionOverrides]);
+  const activityQuestionCount = activityQuestions.length;
+  const currentActivityQuestionIndex = activityQuestionCount > 0 ? previewVariant % activityQuestionCount : 0;
+  const currentActivityQuestion = activityQuestions[currentActivityQuestionIndex];
+  const currentEligibleVariant = currentActivityQuestion ? Math.max(0, eligibleQuestions.findIndex(({ id }) => id === currentActivityQuestion.id)) : 0;
+  const preview = useMemo(() => createLocalActivityPreview(config, catalog, currentEligibleVariant), [config, catalog, currentEligibleVariant]);
+  const currentQuestionNumber = activityQuestionCount > 0 ? currentActivityQuestionIndex + 1 : 0;
   const progression = getProgressionCopy(config);
   const errors = validateActivityConfiguration(config);
   const complete = isActivityConfigurationComplete(config);
@@ -80,15 +131,47 @@ export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreat
       : `${selectedNotions.length} notions sélectionnées`;
   const publishLabel = config.workType === "revision" ? "Publier l’activité de révision" : config.workType === "enrichment" ? "Publier l’activité d’enrichissement" : "Publier la question à développement";
   const workTypeLabel = WORK_TYPES.find(({ id }) => id === config.workType)?.label;
-  const automaticQuestionCount = config.questionCount === null ? null : Math.max(0, config.questionCount - (config.questionValidated ? 1 : 0));
+  const fullPreviewQuestionIds = activityQuestions.map(({ id }) => id).join(",");
+  const selectedNotionIds = config.notionIds.join(",");
+  const previewBaseQuery = `notion=${encodeURIComponent(config.notionIds[0] ?? "acte-union")}&notions=${encodeURIComponent(selectedNotionIds)}&title=${encodeURIComponent(config.title)}&workType=${encodeURIComponent(config.workType)}&operation=${encodeURIComponent(config.operationId ?? "")}`;
+  const singlePreviewHref = `/teacher/activities/new/student-preview?${previewBaseQuery}&questionIds=${encodeURIComponent(currentActivityQuestion?.id ?? "")}&questionNumber=${currentQuestionNumber}&embedded=1`;
+  const fullPreviewHref = `/teacher/activities/new/student-preview?${previewBaseQuery}&questionIds=${encodeURIComponent(fullPreviewQuestionIds)}`;
+
+  useEffect(() => {
+    function closeNotionPickerOnOutsideClick(event: PointerEvent) {
+      const picker = notionPickerRef.current;
+      if (picker?.open && event.target instanceof Node && !picker.contains(event.target)) picker.removeAttribute("open");
+    }
+    document.addEventListener("pointerdown", closeNotionPickerOnOutsideClick);
+    return () => document.removeEventListener("pointerdown", closeNotionPickerOnOutsideClick);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void createConfiguredDataRepository(window.localStorage).readActiveDraft(catalog).then((draft) => {
+      if (!active || !draft) return;
+      setConfig(draft.configuration); setQuestionOverrides(draft.questionOverrides); setPreviewVariant(draft.previewQuestionIndex); setDraftTouched(true);
+    }).catch(() => { if (active) setDemoMessage("Le brouillon n’a pas pu être chargé."); }).finally(() => { if (active) setDraftReady(true); });
+    return () => { active = false; };
+  }, [catalog]);
+
+  useEffect(() => {
+    if (!draftReady || !draftTouched) return;
+    void createConfiguredDataRepository(window.localStorage).saveDraft(createTeacherActivityDraft(config, questionOverrides, previewVariant)).catch(() => setDemoMessage("Le brouillon n’a pas pu être enregistré. Réessayez."));
+  }, [config, draftReady, draftTouched, previewVariant, questionOverrides]);
 
   function update(patch: Partial<ActivityConfiguration>) {
+    setDraftTouched(true);
     setConfig((current) => ({ ...current, ...patch, questionValidated: patch.questionValidated ?? false }));
+    if (patch.questionValidated === undefined) {
+      setQuestionOverrides({});
+      setPreviewVariant(0);
+    }
     setDemoMessage("");
   }
 
   function selectWorkType(workType: WorkType) {
-    update({ workType, operationId: null, notionIds: config.notionIds.slice(0, workType === "development" ? 1 : undefined) });
+    update({ workType, operationId: null });
   }
 
   function toggleGroup(groupId: string) {
@@ -96,8 +179,63 @@ export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreat
   }
 
   function toggleNotion(notionId: string) {
-    if (config.workType === "development") return update({ notionIds: [notionId] });
     update({ notionIds: config.notionIds.includes(notionId) ? config.notionIds.filter((id) => id !== notionId) : [...config.notionIds, notionId] });
+  }
+
+  function moveToQuestion(direction: -1 | 1) {
+    if (activityQuestionCount === 0) return;
+    setPreviewVariant((current) => Math.max(0, Math.min(activityQuestionCount - 1, current + direction)));
+    setDraftTouched(true);
+    setDemoMessage("");
+  }
+
+  function changeCurrentQuestion() {
+    if (!currentActivityQuestion || eligibleQuestions.length < 2) return;
+    const otherQuestions = activityQuestions.filter((_, index) => index !== currentActivityQuestionIndex);
+    const usedQuestionIds = new Set(otherQuestions.map(({ id }) => id));
+    const usedDocumentIds = new Set(otherQuestions.flatMap(({ historicalDocumentIds }) => historicalDocumentIds));
+    const currentEligibleIndex = eligibleQuestions.findIndex(({ id }) => id === currentActivityQuestion.id);
+    const orderedCandidates = [...eligibleQuestions.slice(currentEligibleIndex + 1), ...eligibleQuestions.slice(0, currentEligibleIndex + 1)]
+      .filter(({ id }) => id !== currentActivityQuestion.id && !usedQuestionIds.has(id));
+    const sameCategory = (candidate: (typeof eligibleQuestions)[number]) => getActivityQuestionCategory(candidate.format) === getActivityQuestionCategory(currentActivityQuestion.format);
+    const avoidsRepeatedDocuments = (candidate: (typeof eligibleQuestions)[number]) => candidate.historicalDocumentIds.every((id) => !usedDocumentIds.has(id));
+    const replacement = orderedCandidates.find((candidate) => sameCategory(candidate) && avoidsRepeatedDocuments(candidate))
+      ?? orderedCandidates.find(avoidsRepeatedDocuments)
+      ?? orderedCandidates.find(sameCategory)
+      ?? orderedCandidates[0];
+    if (!replacement) return;
+    setDraftTouched(true);
+    setQuestionOverrides((current) => ({ ...current, [currentActivityQuestionIndex]: replacement.id }));
+    setConfig((current) => ({ ...current, questionValidated: true }));
+    setDemoMessage(`Question ${currentActivityQuestionIndex + 1} remplacée. La séquence contient toujours ${activityQuestionCount} question${activityQuestionCount > 1 ? "s" : ""}.`);
+  }
+
+  async function downloadWord() {
+    setDownloadingWord(true);
+    try {
+      await downloadActivityWord(config, catalog, preview);
+      setDemoMessage("Le fichier Word de l’activité a été téléchargé.");
+    } finally {
+      setDownloadingWord(false);
+    }
+  }
+
+  async function confirmLocalPublication() {
+    const nextHistory = Array.from(new Set([...previouslyAssignedQuestionIds, ...activityQuestions.map(({ id }) => id)]));
+    setPreviouslyAssignedQuestionIds(nextHistory);
+    const publishedActivity = createLocalPublishedActivity({
+      title: config.title,
+      workType: config.workType,
+      targetedGroupIds: [...config.selectedGroupIds],
+      notionIds: [...config.notionIds],
+      operationId: config.operationId,
+      questionIds: activityQuestions.map(({ id }) => id),
+    });
+    const repository = createConfiguredDataRepository(window.localStorage);
+    await repository.savePublishedActivity(publishedActivity);
+    await repository.clearActiveDraft();
+    setShowPublishReview(false);
+    window.location.assign(`/teacher?activity=${encodeURIComponent(publishedActivity.id)}`);
   }
 
   return <main className="activity-creator" data-theme={theme}>
@@ -120,40 +258,41 @@ export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreat
       </header>
 
       <div className="creator-layout">
+        {!draftReady ? <p className="creator-draft-loading" role="status">Chargement du brouillon…</p> : null}
         <div className="creator-config" aria-label="Configuration de l’activité">
           <ConfigCard id="format-title" icon="format" title="Quel format ?">
-            <label>Titre de l’activité<input value={config.title} onChange={(event) => update({ title: event.target.value })} aria-invalid={Boolean(errors.title)} /></label>
-            <div className="format-grid">
-              <label>Durée<select value={config.durationMinutes ?? ""} onChange={(event) => update({ durationMinutes: event.target.value ? Number(event.target.value) : null })}><option value="">Aucune durée</option>{DURATION_OPTIONS.map((minutes) => <option key={minutes} value={minutes}>{minutes} minutes</option>)}</select></label>
-              <label>Nombre de questions<select value={config.questionCount ?? ""} onChange={(event) => update({ questionCount: event.target.value ? Number(event.target.value) : null })}><option value="">Aucun maximum</option>{QUESTION_COUNT_OPTIONS.map((count) => <option key={count} value={count}>{count} question{count > 1 ? "s" : ""}</option>)}</select></label>
-            </div>
-            <p className="dynamic-help" aria-live="polite"><strong>{progression.summary}</strong><span>{progression.help}</span></p>
+            <label className="format-section">Titre de l’activité<input value={config.title} placeholder="Inscrivez le titre de l’activité" onChange={(event) => update({ title: event.target.value })} aria-invalid={Boolean(errors.title)} /></label>
+            <label className="format-section">Nombre de questions<select value={config.questionCount ?? 1} onChange={(event) => update({ questionCount: Number(event.target.value) })}>{QUESTION_COUNT_OPTIONS.map((count) => <option key={count} value={count}>{count} question{count > 1 ? "s" : ""}</option>)}</select></label>
+            <fieldset className="format-section"><legend>Type de travail</legend><div className="work-types">{WORK_TYPES.map((type) => <button key={type.id} type="button" aria-pressed={config.workType === type.id} onClick={() => selectWorkType(type.id)}>{type.label}</button>)}</div></fieldset>
+            {config.workType === "development" && <p className="mode-help">Réponse développée d’environ 150 mots. Cette cible pédagogique est souple et ne bloque pas automatiquement la réponse.</p>}
             {errors.format && <p className="field-error" role="alert">{errors.format}</p>}
+          </ConfigCard>
+
+          <ConfigCard id="work-title" icon="target" title="Quelle notion et opération voulez-vous travailler ?">
+            <fieldset><legend>Notions</legend><details ref={notionPickerRef} className="notion-picker"><summary>{notionSelectionSummary}<span aria-hidden="true">⌄</span></summary><div className="notion-picker-options">{notionPeriods.map((period) => <section className="notion-period" key={period.id} aria-labelledby={`period-${period.id}`}><h3 id={`period-${period.id}`}>{period.label}</h3>{period.notions.map((notion) => <label key={notion.id}><input type="checkbox" checked={config.notionIds.includes(notion.id)} onChange={() => toggleNotion(notion.id)} /><span>{notion.title}</span></label>)}</section>)}</div></details></fieldset>
+            {errors.notions && <p className="field-error" role="alert">{errors.notions}</p>}
+            {config.notionIds.length > 0 ? <><label className="progressive-field">Opération<select value={config.operationId ?? "random"} onChange={(event) => update({ operationId: event.target.value === "random" ? null : event.target.value })}><option value="random">Aléatoire</option>{catalog.operations.map((operation) => <option key={operation.id} value={operation.id}>{operation.label}</option>)}</select></label>{errors.operation && <p className="field-error" role="alert">{errors.operation}</p>}</> : <p className="progressive-hint">Choisissez d’abord une notion pour préciser l’opération intellectuelle.</p>}
           </ConfigCard>
 
           <ConfigCard id="audience-title" icon="groups" title="À qui s’adresse l’activité ?">
             <fieldset><legend>Groupes fictifs</legend><button type="button" className="all-groups" aria-pressed={allGroupsSelected} onClick={() => update({ selectedGroupIds: allGroupsSelected ? [] : catalog.groups.map(({ id }) => id) })}>✓ Tous les groupes</button><div className="choice-chips">{catalog.groups.map((group) => <button key={group.id} type="button" aria-pressed={config.selectedGroupIds.includes(group.id)} onClick={() => toggleGroup(group.id)}>{config.selectedGroupIds.includes(group.id) ? "✓ " : "+ "}{group.name}</button>)}</div></fieldset>
             {errors.groups && <p className="field-error" role="alert">{errors.groups}</p>}
           </ConfigCard>
-
-          <ConfigCard id="work-title" icon="target" title="Que voulez-vous travailler ?">
-            <fieldset><legend>Type de travail</legend><div className="work-types">{WORK_TYPES.map((type) => <button key={type.id} type="button" aria-pressed={config.workType === type.id} onClick={() => selectWorkType(type.id)}>{type.label}</button>)}</div></fieldset>
-            {config.workType === "development" && <p className="mode-help">Réponse développée d’environ 150 mots. Cette cible pédagogique est souple et ne bloque pas automatiquement la réponse.</p>}
-            {config.workType === "enrichment" && <p className="mode-help">Approfondissement exigeant fondé uniquement sur les référentiels et documents approuvés.</p>}
-            <fieldset><legend>Notions {config.workType === "development" && <em>Une seule</em>}</legend><details className="notion-picker"><summary>{notionSelectionSummary}<span aria-hidden="true">⌄</span></summary><div className="notion-picker-options">{notionPeriods.map((period) => <section className="notion-period" key={period.id} aria-labelledby={`period-${period.id}`}><h3 id={`period-${period.id}`}>{period.label}</h3>{period.notions.map((notion) => <label key={notion.id}><input type={config.workType === "development" ? "radio" : "checkbox"} name={config.workType === "development" ? "development-notion" : undefined} checked={config.notionIds.includes(notion.id)} onChange={() => toggleNotion(notion.id)} /><span>{notion.title}</span></label>)}</section>)}</div></details></fieldset>
-            {errors.notions && <p className="field-error" role="alert">{errors.notions}</p>}
-            {config.notionIds.length > 0 ? <><label className="progressive-field">Opération {config.workType === "development" && <em>Requis</em>}<select value={config.operationId ?? (config.workType === "development" ? "" : "random")} onChange={(event) => update({ operationId: event.target.value === "random" || event.target.value === "" ? null : event.target.value })}>{config.workType === "development" ? <option value="" disabled>Choisir une opération</option> : <option value="random">Aléatoire</option>}{catalog.operations.map((operation) => <option key={operation.id} value={operation.id}>{operation.label}</option>)}</select></label>{errors.operation && <p className="field-error" role="alert">{errors.operation}</p>}</> : <p className="progressive-hint">Choisissez d’abord une notion pour préciser l’opération intellectuelle.</p>}
-          </ConfigCard>
         </div>
 
         <section className="live-preview" aria-labelledby="preview-title">
-          <header><h2 id="preview-title"><Icon name="eye"/>Aperçu en direct</h2><span className={complete ? "complete" : "incomplete"}>{complete ? "✓ Configuration complète" : "Configuration à compléter"}</span><span className="question-nav">{progression.navigation}</span></header>
-          <div className="preview-paper">
-            <div className="preview-question"><div className="preview-section-heading"><span>Question proposée</span><span className={config.questionValidated ? "question-state validated" : "question-state draft"}>{config.questionValidated ? "✓ Gardée" : "Aperçu"}</span></div><span className="operation-pill">{preview.operationLabel}</span><p className="preview-notion">{preview.notionTitle}</p><h3>{preview.question}</h3><p>{preview.instruction}</p><div className="socrato-guidance"><Image src="/logos/socrato-logo-v2.png" width={52} height={52} alt="" aria-hidden="true" unoptimized/><div><strong>Accompagnement Socrato</strong>{preview.guidance.map((line) => <p key={line}>{line}</p>)}</div></div></div>
-            <section className="preview-documents" aria-labelledby="documents-title"><h3 id="documents-title">Documents approuvés</h3>{preview.documents.length ? <div className="document-grid">{preview.documents.map((document, index) => <article key={document.id} className={index === 3 ? "featured-document" : ""}><small>Document {index + 1}</small><h4>{document.title}</h4>{documentBody(document)}<p>{document.sourceLabel}</p></article>)}</div> : <p className="no-documents">Aucun document historique approuvé n’est disponible pour cette notion. L’aperçu n’en invente aucun.</p>}</section>
-          </div>
-          <div className="preview-actions"><button type="button" className="regenerate-question" onClick={() => { setPreviewVariant((value) => value + 1); update({ questionValidated: false }); }}>↻ Changer</button><button type="button" className="keep-question" aria-pressed={config.questionValidated} onClick={() => update({ questionValidated: true })}>✓ {config.questionValidated ? "Question gardée" : "Garder cette question"}</button></div>
-          <footer className={`creator-footer ${complete ? "is-ready" : "is-pending"}`}><button type="button" disabled aria-disabled="true" title="Fonction à venir">◉ Voir comme un élève <small>Fonction à venir</small></button><button type="button" className="publish-button" disabled={!complete} onClick={() => setShowPublishReview(true)}>Vérifier et publier →</button></footer>
+          <header><h2 id="preview-title"><Icon name="eye"/>Aperçu en direct</h2><span className={complete ? "complete" : "incomplete"}>{complete ? "✓ Configuration complète" : "Configuration à compléter"}</span><span className="question-nav">{activityQuestionCount > 0 ? `${currentQuestionNumber} sur ${activityQuestionCount}` : "Aucune question disponible"}</span></header>
+          <section className="student-page-preview" aria-label="Aperçu identique à la séance d’apprentissage de l’élève">
+            {currentActivityQuestion ? <iframe key={`${currentActivityQuestion.id}-${config.workType}-${config.operationId ?? "random"}`} src={singlePreviewHref} title={`Aperçu élève de la question ${currentQuestionNumber}`} /> : <p className="student-page-preview__empty">Aucune question disponible pour cette sélection.</p>}
+          </section>
+          <footer className={`creator-footer ${complete ? "is-ready" : "is-pending"}`}>
+            <button type="button" className="word-download" aria-label={downloadingWord ? "Création du fichier Word" : "Télécharger le fichier Word"} title={downloadingWord ? "Création du fichier Word…" : "Télécharger le fichier Word"} disabled={!complete || downloadingWord} onClick={downloadWord}><WordIcon/><span className="sr-only">{downloadingWord ? "Création du fichier Word…" : "Télécharger le fichier Word"}</span></button>
+            <Link className="student-view-link" aria-disabled={activityQuestions.length === 0} href={activityQuestions.length > 0 ? fullPreviewHref : "#"} target="_blank">▶ Tester l’activité complète comme un élève</Link>
+            <button type="button" className="sequence-question-button" disabled={currentActivityQuestionIndex === 0} onClick={() => moveToQuestion(-1)}>← Question précédente</button>
+            <button type="button" className="change-question" onClick={changeCurrentQuestion}>Changer</button>
+            <button type="button" className="sequence-question-button" disabled={currentActivityQuestionIndex >= activityQuestionCount - 1} onClick={() => moveToQuestion(1)}>Question suivante →</button>
+            <button type="button" className="publish-button" onClick={() => setShowPublishReview(true)}>Publier →</button>
+          </footer>
         </section>
       </div>
 
@@ -162,17 +301,17 @@ export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreat
     {showPublishReview && <div className="publish-review-backdrop" role="presentation" onKeyDown={(event) => { if (event.key === "Escape") setShowPublishReview(false); }} onMouseDown={(event) => { if (event.target === event.currentTarget) setShowPublishReview(false); }}>
       <section className="publish-review" role="dialog" aria-modal="true" aria-labelledby="publish-review-title">
         <button type="button" className="publish-review-close" aria-label="Fermer le résumé" autoFocus onClick={() => setShowPublishReview(false)}>×</button>
-        <header><span>Dernière vérification</span><h2 id="publish-review-title">Prêt à publier cette activité ?</h2><p>Vérifiez les principaux paramètres avant de confirmer.</p></header>
+        <header><span>Confirmation</span><h2 id="publish-review-title">Publier cette activité ?</h2><p>Les paramètres ci-dessous seront utilisés pour créer et assigner l’activité.</p></header>
         <dl>
           <div><dt>Activité</dt><dd>{config.title}</dd></div>
           <div><dt>Type</dt><dd>{workTypeLabel}</dd></div>
           <div><dt>Groupes</dt><dd>{selectedGroups.map(({ name }) => name).join(", ")}</dd></div>
           <div><dt>Notions</dt><dd>{selectedNotions.map(({ title }) => title).join(", ")}</dd></div>
           <div><dt>Format</dt><dd>{progression.summary}</dd></div>
-          <div><dt>Question aperçue</dt><dd>{config.questionValidated ? "Gardée dans l’activité" : "Non gardée"}</dd></div>
-          <div className="automatic-questions"><dt>Génération automatique</dt><dd>{automaticQuestionCount === null ? "Les questions seront générées selon la durée choisie." : `${automaticQuestionCount} question${automaticQuestionCount > 1 ? "s" : ""} seront générée${automaticQuestionCount > 1 ? "s" : ""} automatiquement selon cette configuration.`}</dd></div>
+          <div><dt>Séquence à publier</dt><dd>{activityQuestionCount} question{activityQuestionCount > 1 ? "s" : ""}</dd></div>
+          <div className="automatic-questions"><dt>Composition</dt><dd>Les questions et les opérations laissées en mode aléatoire seront attribuées automatiquement au moment de la publication. Les remplacements faits avec « Changer » seront conservés.</dd></div>
         </dl>
-        <footer><button type="button" className="review-back" onClick={() => setShowPublishReview(false)}>Retour aux réglages</button><button type="button" className="confirm-publish" onClick={() => { setShowPublishReview(false); setDemoMessage("Démonstration locale : aucune activité n’a été publiée."); }}>{publishLabel} →</button></footer>
+        <footer><button type="button" className="review-back" onClick={() => setShowPublishReview(false)}>Retour aux réglages</button><button type="button" className="word-download" aria-label={downloadingWord ? "Création du fichier Word" : "Télécharger le fichier Word"} title={downloadingWord ? "Création du fichier Word…" : "Télécharger le fichier Word"} disabled={downloadingWord} onClick={downloadWord}><WordIcon/><span className="sr-only">{downloadingWord ? "Création du fichier Word…" : "Télécharger le fichier Word"}</span></button><button type="button" className="confirm-publish" onClick={confirmLocalPublication}>{publishLabel} →</button></footer>
       </section>
     </div>}
   </main>;

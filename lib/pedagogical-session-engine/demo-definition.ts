@@ -3,10 +3,10 @@ import type { ExplicitHintLevel, PedagogicalQuestionDefinition, PedagogicalSessi
 
 function hintSequence(question: LearningSessionQuestion): Record<ExplicitHintLevel, string> {
   return {
-    1: question.documentRelations.length
-      ? "Observe le document 1 et relève précisément les populations et le nombre de députés indiqués, sans encore tirer de conclusion."
-      : "Repère une connaissance précise liée à la question, sans encore tirer de conclusion.",
-    2: "Structure ta réponse ainsi : Je relève que… Ensuite, j’explique le lien en indiquant que… Appuie chaque étape sur les documents demandés sans compléter la conclusion à l’avance.",
+    1: question.localHint,
+    2: question.primaryOperationId === "causal_connections"
+      ? "Explique maintenant le lien entre les trois étapes : comment le refus britannique ferme-t-il la voie aux réformes et contribue-t-il à intensifier le mécontentement? N’en fais pas l’unique cause des Rébellions."
+      : "Structure ta réponse ainsi : Je relève que… Ensuite, j’explique le lien en indiquant que… Appuie chaque étape sur les documents demandés sans compléter la conclusion à l’avance.",
   };
 }
 

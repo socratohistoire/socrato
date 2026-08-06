@@ -47,7 +47,7 @@ test("compose la synthèse depuis les données et conserve le retour contextuel"
   assert.equal(data.socratoSummaryText, "Le groupe maîtrise généralement les connaissances ciblées. La justification à l’aide des documents demeure le principal défi.");
   assert.equal(data.returnHref, "/teacher?activity=activity-revision-01");
   assert.doesNotMatch(viewSource, /Le groupe maîtrise généralement|principal défi/);
-  assert.match(viewSource, /href=\{data\.returnHref\}>← Retour à l’espace enseignant/);
+  assert.match(viewSource, /href=\{displayData\.returnHref\}>← Retour à l’espace enseignant/);
 });
 
 test("combine les filtres de priorité et d’état avec un état vide", async () => {
@@ -77,9 +77,9 @@ test("n’active aucun faux lien vers un élève", async () => {
 });
 
 test("rend le contrat principal accessible, thémable et responsive", () => {
-  assert.match(viewSource, /<header className="group-detail-topbar"><Link[^>]*>← Retour à l’espace enseignant<\/Link><div className="group-detail-heading"><h1 id="group-detail-title">\{data\.groupName\}<\/h1><p>\{data\.activityTitle\}<\/p><\/div><ThemeToggle \/><\/header>/);
-  assert.doesNotMatch(viewSource, /<section className="group-detail-hero">[\s\S]*data\.groupName|<section className="group-detail-hero">[\s\S]*data\.activityTitle/);
-  assert.match(viewSource, /className="group-participation-summary"[^>]*>[\s\S]*data\.completedStudentCount[\s\S]*élèves sur[\s\S]*data\.targetedStudentCount[\s\S]*ont terminé/);
+  assert.match(viewSource, /<header className="group-detail-topbar"><Link[^>]*>← Retour à l’espace enseignant<\/Link><div className="group-detail-heading"><h1 id="group-detail-title">\{displayData\.groupName\}<\/h1><p>\{displayData\.activityTitle\}<\/p><\/div><ThemeToggle \/><\/header>/);
+  assert.doesNotMatch(viewSource, /<section className="group-detail-hero">[\s\S]*displayData\.groupName|<section className="group-detail-hero">[\s\S]*displayData\.activityTitle/);
+  assert.match(viewSource, /completedStudentLabel[\s\S]*className="group-participation-summary"[^>]*>[\s\S]*completedStudentLabel[\s\S]*sur[\s\S]*displayData\.targetedStudentCount[\s\S]*ont terminé/);
   assert.match(cssSource, /\.group-detail-topbar\{[^}]*grid-template-columns:minmax\(190px,1fr\) minmax\(280px,1\.4fr\) minmax\(190px,1fr\)/);
   assert.match(cssSource, /\.group-detail-content\{min-height:100vh;row-gap:23px\}/);
   assert.match(cssSource, /\.group-detail-topbar\{[^}]*min-height:112px[^}]*margin:0 calc\(-1 \* clamp\(18px,4vw,56px\)\)[^}]*padding:19px clamp\(18px,4vw,56px\) 16px/);
@@ -97,7 +97,7 @@ test("rend le contrat principal accessible, thémable et responsive", () => {
   assert.match(cssSource, /\.priority-filter button\[aria-pressed="true"\]\{[^}]*background:color-mix\(in srgb,var\(--teacher-plum\) 22%,var\(--teacher-card\)\)[^}]*box-shadow:none/);
   assert.match(cssSource, /\.activity-state,\.student-priority\{[^}]*border:1px solid currentColor/);
   assert.match(cssSource, /\[data-theme="dark"\] \.teacher-group-detail-page \.activity-state--completed/);
-  assert.match(cssSource, /\.teacher-group-detail-page \.teacher-brand\{contain:none;padding-top:24px\}/);
+  assert.match(cssSource, /\.teacher-group-detail-page \.teacher-brand\{contain:none;padding-top:0\}/);
   assert.match(cssSource, /\.teacher-group-detail-page \.teacher-brand-lockup\{height:auto;min-height:0;gap:3px;padding-top:0\}/);
   assert.match(cssSource, /\.teacher-group-detail-page \.teacher-brand-copy\{gap:3px\}/);
   assert.match(cssSource, /\.teacher-group-detail-page \.teacher-brand-symbol\{width:38px;height:38px;min-height:38px;max-height:38px;aspect-ratio:1;flex:0 0 38px\}/);

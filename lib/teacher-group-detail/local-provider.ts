@@ -1,6 +1,7 @@
 import { isAuthorizedLocalTeacherGroupContext } from "./access.ts";
 import type { TeacherGroupDetailProvider } from "./provider.ts";
 import type { TeacherGroupDetailRecord } from "./types.ts";
+import { createLocalTeacherDashboardData } from "../teacher-dashboard/local-provider.ts";
 
 export function isLocalTeacherGroupDetailEnabled(environment = process.env.NODE_ENV) {
   return environment !== "production";
@@ -50,6 +51,24 @@ export class LocalTeacherGroupDetailProvider implements TeacherGroupDetailProvid
       throw new Error("The local teacher group detail provider is disabled in production.");
     }
     if (!isAuthorizedLocalTeacherGroupContext(activityId, groupId)) return null;
+    if (/^activity-local-[0-9]+$/.test(activityId)) {
+      const dashboard = createLocalTeacherDashboardData();
+      const group = dashboard.groups.find(({ id }) => id === groupId);
+      if (!group) return null;
+      return {
+        source: "local_demo" as const,
+        activityId,
+        activityTitle: "Activité publiée localement",
+        groupId,
+        groupName: group.name,
+        completedStudentCount: 0,
+        targetedStudentCount: group.studentCount,
+        socratoSummary: { mastery: "Aucun bilan disponible.", mainChallenge: "En attente des résultats locaux." },
+        teacher: dashboard.teacher,
+        groups: dashboard.groups,
+        students: [],
+      };
+    }
     return LOCAL_GROUP_DETAIL;
   }
 }

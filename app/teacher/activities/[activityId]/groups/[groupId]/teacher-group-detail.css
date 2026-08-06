@@ -38,6 +38,7 @@
 .group-students-card tbody th{font-size:.84rem;font-weight:800}
 .activity-state,.student-priority{display:inline-flex;align-items:center;gap:6px;min-height:28px;border:1px solid currentColor;border-radius:999px;padding:0 9px;font-size:.7rem;font-weight:800;white-space:nowrap}
 .activity-state::before,.student-priority::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.student-progress-value{display:block;margin-top:5px;color:var(--teacher-muted);font-size:.68rem;font-weight:750}
 .activity-state--completed{color:#286646;background:color-mix(in srgb,#4e9a70 18%,var(--teacher-card));border-color:color-mix(in srgb,#286646 58%,var(--teacher-border))}
 .activity-state--in_progress{color:#285d88;background:color-mix(in srgb,#548bb8 18%,var(--teacher-card));border-color:color-mix(in srgb,#285d88 58%,var(--teacher-border))}
 .activity-state--not_started{color:#64555f;background:color-mix(in srgb,#8a7783 15%,var(--teacher-card));border-color:color-mix(in srgb,#64555f 52%,var(--teacher-border))}
@@ -48,7 +49,7 @@
 .group-filter-empty{padding:42px 20px;text-align:center;color:var(--teacher-text)}
 .group-filter-empty p{margin:6px 0 0;color:var(--teacher-muted);font-size:.82rem}
 .teacher-group-detail-page button:focus-visible,.teacher-group-detail-page a:focus-visible,.teacher-group-detail-page select:focus-visible{outline:3px solid var(--teacher-gold);outline-offset:3px}
-.teacher-group-detail-page .teacher-brand{contain:none;padding-top:24px}
+.teacher-group-detail-page .teacher-brand{contain:none;padding-top:0}
 .teacher-group-detail-page .teacher-brand-lockup{height:auto;min-height:0;gap:3px;padding-top:0}
 .teacher-group-detail-page .teacher-brand-copy{gap:3px}
 .teacher-group-detail-page .teacher-brand-symbol{width:38px;height:38px;min-height:38px;max-height:38px;aspect-ratio:1;flex:0 0 38px}

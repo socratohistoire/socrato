@@ -24,6 +24,7 @@ class TestSessions implements StudentSessionRepository {
   async findActiveByToken(token: string): Promise<StudentSession | null> {
     return this.active && token === "valid-session" ? { token, anonymousStudentId: "anonymous-test-student", credentialId: "credential-test", expiresAt: new Date("2099-01-01") } : null;
   }
+  async revokeByToken(): Promise<void> {}
 }
 class TestProvider implements StudentDashboardProvider {
   constructor(private data: StudentDashboardData) {}
@@ -40,9 +41,9 @@ test("protège le tableau de bord avec la session élève", async () => {
 
 test("affiche par défaut l’activité récente avec son titre personnalisé", () => {
   const activity = getSelectedActivity(createDemoStudentDashboard());
-  assert.equal(activity.id, "demo-activity-acte-union");
+  assert.equal(activity.id, "demo-teacher-practice-1");
   assert.equal(activity.isRecent, true);
-  assert.equal(activity.activityTitle, "Révision avant l’évaluation 1");
+  assert.equal(activity.activityTitle, "Test – Révision de l’Acte d’Union");
   assert.equal(activity.origin, "teacher_assigned");
   assert.equal(activity.activityType, "revision");
 });
@@ -50,24 +51,24 @@ test("affiche par défaut l’activité récente avec son titre personnalisé", 
 test("conserve tous les champs distincts de la carte principale", () => {
   const activity = getSelectedActivity(createDemoStudentDashboard());
   assert.equal(ACTIVITY_TYPE_LABELS[activity.activityType], "Activité de révision");
-  assert.equal(activity.publicationDate, "16 mai 2025");
+  assert.equal(activity.publicationDate, "4 août 2026");
   assert.equal(getHistoricalPeriodLabel(activity.historicalPeriod), "1840–1896");
   assert.equal(activity.durationMinutes, 25);
   assert.equal(activity.historicalKnowledgeIds.length, 4);
-  assert.equal(activity.progressPercentage, 35);
-  assert.equal(activity.activityStatus, "in_progress");
+  assert.equal(activity.progressPercentage, 0);
+  assert.equal(activity.activityStatus, "not_started");
 });
 
 test("présente Commencer, Poursuivre et Voir mon bilan selon l’état", () => {
   const activities = createDemoStudentDashboard().activities;
   assert.equal(getActivityActionLabel(activities.find(({ activityStatus }) => activityStatus === "not_started")!), "Commencer l’activité");
   assert.equal(getActivityActionLabel(activities.find(({ activityStatus }) => activityStatus === "in_progress")!), "Poursuivre l’activité");
-  assert.equal(getActivityActionLabel(activities.find(({ activityStatus }) => activityStatus === "completed")!), "Voir mon bilan");
+  assert.equal(getActivityActionLabel(activities.find(({ activityStatus }) => activityStatus === "completed")!), "Consulter mon bilan");
   assert.deepEqual(new Set(Object.values(ACTIVITY_STATUS_LABELS)), new Set(["À commencer", "En cours", "Terminée"]));
 });
 
 test("remplace Nouvelle activité disponible une fois terminée", () => {
-  assert.match(viewSource, /!completed \? <div className="new-activity-heading"/);
+  assert.match(viewSource, /completed \? "Activité terminée" : "Nouvelle activité disponible"/);
   assert.match(viewSource, /Bravo ! Tu as terminé cette activité de révision !/);
   assert.match(viewSource, /completed \? "Bravo/);
 });
@@ -75,7 +76,7 @@ test("remplace Nouvelle activité disponible une fois terminée", () => {
 test("expose exactement les sept opérations officielles pour chaque activité", () => {
   assert.equal(DEMO_INTELLECTUAL_OPERATIONS.length, 7);
   assert.deepEqual(DEMO_INTELLECTUAL_OPERATIONS.map(({ label }) => label), [
-    "Établir des faits", "Déterminer des causes et des conséquences", "Situer dans le temps et dans l’espace", "Mettre en relation des faits", "Déterminer des changements et des continuités", "Déterminer des différences et des similitudes", "Établir des liens de causalité",
+    "Situer dans le temps et dans l’espace", "Établir des faits", "Dégager des différences et des similitudes", "Déterminer des causes et des conséquences", "Déterminer des changements et des continuités", "Mettre en relation des faits", "Établir des liens de causalité",
   ]);
   assert.equal(createDemoStudentDashboard().activities.every(({ operations }) => operations.length === 7), true);
 });
@@ -95,13 +96,13 @@ test("présente un bilan explicatif avant la fin", () => {
   assert.match(viewSource, /Lorsque tu auras terminé cette activité, Socrato préparera un bilan personnalisé/);
 });
 
-test("présente un bilan local structuré et explicitement non réel après la fin", () => {
+test("présente un bilan structuré après la fin sans avertissement local dans l’interface", () => {
   const completed = createDemoStudentDashboard().activities.find(({ activityStatus }) => activityStatus === "completed");
   assert.ok(completed);
   assert.equal(completed.summary.state, "local_demo_structured");
   assert.ok(completed.summary.strengths.length > 0);
-  assert.match(completed.summary.strengths.join(" "), /local|remplacer/i);
-  assert.match(viewSource, /aucune analyse pédagogique réelle/);
+  assert.doesNotMatch(completed.summary.strengths.join(" "), /local|remplacer/i);
+  assert.doesNotMatch(viewSource, /aucune analyse pédagogique réelle/);
 });
 
 test("intègre la progression d’une consolidation sans effacer le bilan précédent", () => {
@@ -286,7 +287,7 @@ test("filtre les opérations et connaissances non travaillées dans la présenta
 });
 
 test("conserve visibles les trois statuts réellement travaillés", () => {
-  const statuses = new Set(getWorkedOperations(getSelectedActivity(createDemoStudentDashboard()).operations).map(({ status }) => status));
+  const statuses = new Set(getWorkedOperations(getSelectedActivity(createDemoStudentDashboard("demo-activity-acte-union")).operations).map(({ status }) => status));
   assert.deepEqual(statuses, new Set(["mastered", "consolidate", "needs_work"]));
 });
 
@@ -299,7 +300,7 @@ test("affiche les deux états vides fixes lorsque rien n’est travaillé", () =
 });
 
 test("distingue le nombre ciblé des résultats effectivement affichés", () => {
-  const activity = getSelectedActivity(createDemoStudentDashboard());
+  const activity = getSelectedActivity(createDemoStudentDashboard("demo-activity-acte-union"));
   assert.equal(activity.historicalKnowledgeIds.length, 4);
   assert.equal(activity.historicalKnowledge.length, 4);
   assert.equal(getWorkedHistoricalKnowledge(activity.historicalKnowledge).length, 3);
@@ -307,7 +308,7 @@ test("distingue le nombre ciblé des résultats effectivement affichés", () => 
 });
 
 test("navigue vers la page 3 avec identifiant et contexte autorisé", () => {
-  const activity = getSelectedActivity(createDemoStudentDashboard());
+  const activity = getSelectedActivity(createDemoStudentDashboard("demo-activity-acte-union"));
   assert.equal(activity.actionHref, getLearningSessionUrl(activity.id, "acte-union", "teacher-assigned"));
   assert.match(activity.actionHref, /^\/eleve\/activite\/demo-activity-acte-union\?/);
   assert.doesNotMatch(activity.actionHref, /Révision avant/);

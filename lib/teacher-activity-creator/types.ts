@@ -1,4 +1,5 @@
 import type { LearningSessionDocument } from "../student-learning-session/types.ts";
+import type { ApprovedQuestion } from "../pedagogical-reference/types.ts";
 
 export type WorkType = "revision" | "enrichment" | "development";
 export type ProgressionMode = "fixed" | "timed" | "timed-capped" | "incomplete";
@@ -19,6 +20,7 @@ export type ActivityCreatorCatalog = {
   notions: ActivityCreatorNotion[];
   operations: IntellectualOperation[];
   documents: LearningSessionDocument[];
+  questions: readonly ApprovedQuestion[];
 };
 
 export type ActivityConfiguration = {
@@ -35,10 +37,18 @@ export type ActivityConfiguration = {
 export type ConfigurationErrors = Partial<Record<"title" | "format" | "groups" | "notions" | "operation" | "question", string>>;
 
 export type ActivityPreview = {
+  questionId?: string;
+  format: ApprovedQuestion["format"];
+  answerOptions?: ApprovedQuestion["answerOptions"];
+  answerExplanation?: string;
+  operationId: string;
   operationLabel: string;
   notionTitle: string;
+  historicalKnowledgeIds: readonly string[];
   question: string;
   instruction: string;
   guidance: string[];
   documents: LearningSessionDocument[];
+  timelineInteraction?: ApprovedQuestion["timelineInteraction"];
+  associationInteraction?: ApprovedQuestion["associationInteraction"];
 };

@@ -9,6 +9,7 @@ export type TeacherGroupStudent = {
   activityState: TeacherGroupActivityState;
   priority: TeacherGroupStudentPriority;
   mainDifficulty: string;
+  progressPercentage?: number;
   studentDetailHref?: string;
 };
 

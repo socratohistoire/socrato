@@ -1,6 +1,6 @@
 .teacher-student-detail-page{--student-green:#397357;--student-blue:#3d6688;--student-red:#992b40;--student-gold:#9a681d}
 .student-detail-main{grid-row:2;min-width:0;padding-bottom:48px;display:grid;align-content:start;gap:22px}
-.student-detail-first-row{display:grid;grid-template-columns:minmax(240px,3fr) minmax(0,7fr);align-items:stretch;gap:22px}
+.student-detail-first-row{display:grid;grid-template-columns:minmax(0,7fr) minmax(240px,3fr);align-items:stretch;gap:22px}
 .student-detail-first-row>.student-detail-card{padding-block:19px}
 .student-detail-second-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:22px}
 .student-detail-card{min-width:0;border:1px solid var(--teacher-analysis-card-border);border-radius:18px;padding:22px 24px;background:var(--teacher-card);box-shadow:var(--teacher-analysis-card-shadow)}

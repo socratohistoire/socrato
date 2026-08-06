@@ -25,6 +25,7 @@ test("valide strictement les trois identifiants et protège la route côté serv
   assert.equal(isSafeTeacherStudentContextId("student-demo-a17"), true);
   assert.equal(isSafeTeacherStudentContextId("../student-demo-a17"), false);
   assert.equal(isAuthorizedLocalTeacherStudentContext("activity-revision-01", "group-demo-401", "student-demo-a17"), true);
+  assert.equal(isAuthorizedLocalTeacherStudentContext("activity-local-1785940200000", "group-demo-401", "local-anonymous-student-1"), true);
   assert.equal(isAuthorizedLocalTeacherStudentContext("activity-revision-01", "group-demo-401", "student-demo-unknown"), false);
 });
 
@@ -62,6 +63,7 @@ test("raccorde uniquement les boutons Détails autorisés de Liam", () => {
   assert.match(groupProviderSource, new RegExp(`student-demo-a17[^\\n]+${href.replaceAll("/", "\\/")}`));
   assert.match(dashboardProviderSource, new RegExp(`student-demo-a17[^\\n]+${href.replaceAll("/", "\\/")}`));
   assert.match(groupViewSource, /if \(student\.studentDetailHref\) return <Link/);
+  assert.match(groupViewSource, /className="sidebar-create-action" href="\/teacher\/activities\/new"/);
   assert.doesNotMatch(viewSource + groupProviderSource + dashboardProviderSource, /href="#"/);
 });
 
@@ -83,6 +85,7 @@ test("rend la hiérarchie, les actions et le contenu pédagogique attendus", () 
   assert.match(viewSource, /Bilan pédagogique/);
   assert.match(viewSource, /Opérations intellectuelles travaillées/);
   assert.match(viewSource, /Connaissances historiques travaillées/);
+  assert.ok(viewSource.indexOf("student-socrato-card") < viewSource.indexOf("student-overview-card"));
   assert.match(viewSource, /disabled aria-disabled="true" title="Fonction à venir">Créer une activité de consolidation/);
   assert.doesNotMatch(viewSource, /href="#"/);
 });
@@ -103,7 +106,7 @@ test("ajoute trois icônes SVG accessibles et renforce sobrement les titres", ()
 });
 
 test("équilibre les deux rangées sans hauteur fixe et compacte les listes", () => {
-  assert.match(cssSource, /\.student-detail-first-row\{display:grid;grid-template-columns:minmax\(240px,3fr\) minmax\(0,7fr\);align-items:stretch/);
+  assert.match(cssSource, /\.student-detail-first-row\{display:grid;grid-template-columns:minmax\(0,7fr\) minmax\(240px,3fr\);align-items:stretch/);
   assert.match(cssSource, /\.student-detail-second-row\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\);align-items:stretch/);
   assert.match(cssSource, /\.student-pedagogical-card\{display:flex;flex-direction:column\}/);
   assert.match(cssSource, /\.student-consolidation-action\{[^}]*margin-top:auto/);
@@ -118,11 +121,16 @@ test("reprend la barre latérale, les thèmes, le responsive et l’accessibilit
   assert.match(routeSource, /teacher-group-detail\.css/);
   assert.match(viewSource, /teacher-group-detail-page teacher-student-detail-page/);
   assert.match(viewSource, /socrato-logo-blanc-recadre\.png/);
+  assert.match(viewSource, /className="sidebar-create-action" href="\/teacher\/activities\/new" aria-label="Créer une activité"/);
+  assert.match(viewSource, /<span>Créer une activité<\/span>/);
+  assert.match(viewSource, /<nav aria-label="Navigation principale">[\s\S]*teacher-space-link[\s\S]*<TeacherGroupsDisclosure[\s\S]*sidebar-create-action[\s\S]*<\/nav>/);
   assert.match(viewSource, /<ThemeToggle \/>/);
   assert.match(viewSource, /aria-labelledby="student-detail-title"/);
   assert.match(viewSource, /aria-labelledby="student-operations-title"/);
   assert.match(cssSource, /\[data-theme="dark"\] \.teacher-student-detail-page/);
   assert.match(cssSource, /@media\(max-width:1100px\)/);
+  const dashboardCssSource = readFileSync("app/teacher/teacher-dashboard.css", "utf8");
+  assert.match(dashboardCssSource, /@media \(max-width:980px\)[\s\S]*\.teacher-sidebar\{[^}]*flex-direction:column[^}]*flex-wrap:nowrap[^}]*align-items:stretch/);
   assert.match(cssSource, /@media\(max-width:620px\)/);
   assert.match(cssSource, /@media \(prefers-reduced-motion:reduce\)/);
   assert.match(cssSource, /focus-visible/);

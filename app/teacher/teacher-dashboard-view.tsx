@@ -2,12 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ThemeToggle } from "../eleve/tableau-de-bord/theme-toggle";
 import { composeTeacherPedagogicalSummary, formatTeacherGreeting, LocalTeacherPedagogicalSummaryProvider, type TeacherDashboardViewModel } from "@/lib/teacher-dashboard";
 import { ScrollRegion } from "./scroll-region";
 import { TeacherGroupsDisclosure } from "./teacher-groups-disclosure";
 import { TypewriterMessage } from "./typewriter-message";
+import { createLocalTeacherActivitySummaries, type LocalActivityPublicationStatus, type LocalPublishedActivity } from "@/lib/local-published-activities";
+import type { StoredStudentActivityOutcomes } from "@/lib/student-activity-outcomes/browser-store";
+import type { TeacherActivityDraft } from "@/lib/teacher-activity-drafts";
+import type { StudentProgressContract } from "@/lib/student-progress";
+import { createConfiguredDataRepository } from "@/lib/data-repository";
 
 type SectionIconName = "portrait" | "support";
 
@@ -42,7 +47,7 @@ function GroupPortraitControl({ group }: { group: TeacherDashboardViewModel["sel
 }
 
 function activityTypeLabel(activityType: TeacherDashboardViewModel["selectedActivity"]["activityType"]) {
-  return activityType === "revision" ? "Activité de révision" : "Activité d’enrichissement";
+  return activityType === "revision" ? "Activité de révision" : activityType === "development" ? "Question à développement" : "Activité d’enrichissement";
 }
 
 function formatPublishedAt(value: string) {
@@ -60,6 +65,27 @@ const localPedagogicalSummaryProvider = new LocalTeacherPedagogicalSummaryProvid
 export function TeacherDashboardView({ data }: { data: TeacherDashboardViewModel }) {
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(() => data.selectedActivityId);
   const [highlightCreationAction, setHighlightCreationAction] = useState(false);
+  const [localActivities, setLocalActivities] = useState<LocalPublishedActivity[]>([]);
+  const [studentOutcomes, setStudentOutcomes] = useState<StoredStudentActivityOutcomes>({});
+  const [activityDraft, setActivityDraft] = useState<TeacherActivityDraft | null>(null);
+  const [studentProgress, setStudentProgress] = useState<Record<string, StudentProgressContract>>({});
+  const [dataError, setDataError] = useState("");
+  const [dataLoading, setDataLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    const repository = createConfiguredDataRepository(window.localStorage);
+    void Promise.all([repository.listPublishedActivities(), repository.listStudentOutcomes(), repository.readActiveDraftSummary(), repository.listStudentProgress()]).then(([storedActivities, outcomes, draft, progress]) => {
+      if (!active) return;
+      setLocalActivities(storedActivities); setStudentOutcomes(outcomes); setActivityDraft(draft); setStudentProgress(progress);
+      const requestedActivityId = new URL(window.location.href).searchParams.get("activity");
+      if (requestedActivityId && storedActivities.some(({ id }) => id === requestedActivityId)) setSelectedActivityId(requestedActivityId);
+    }).catch(() => { if (active) setDataError("Les données locales n’ont pas pu être chargées. Actualisez la page pour réessayer."); }).finally(() => { if (active) setDataLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  const localActivitySummaries = useMemo(() => createLocalTeacherActivitySummaries(localActivities, data.allGroups, studentOutcomes, studentProgress), [data.allGroups, localActivities, studentOutcomes, studentProgress]);
+  const activities = useMemo(() => [...localActivitySummaries, ...data.activities], [data.activities, localActivitySummaries]);
 
   useEffect(() => {
     if (!selectedActivityId) return;
@@ -68,7 +94,7 @@ export function TeacherDashboardView({ data }: { data: TeacherDashboardViewModel
     window.history.replaceState({}, "", `${url.pathname}${url.search}`);
   }, [selectedActivityId]);
 
-  const activeActivity = data.activities.find((activity) => activity.id === selectedActivityId) ?? data.selectedActivity;
+  const activeActivity = activities.find((activity) => activity.id === selectedActivityId) ?? data.selectedActivity;
   const pedagogicalSummary = data.hasCreatedActivity ? localPedagogicalSummaryProvider.createSummary({ activity: activeActivity }) : null;
   const composedPedagogicalSummary = pedagogicalSummary ? composeTeacherPedagogicalSummary(pedagogicalSummary) : null;
   const teacherGreeting = formatTeacherGreeting(data.teacher.firstName);
@@ -87,6 +113,18 @@ export function TeacherDashboardView({ data }: { data: TeacherDashboardViewModel
     return () => window.clearTimeout(timeoutId);
   }, [highlightCreationAction]);
   const activityPickerAccessibleLabel = "Changer d’activité";
+  const activitiesByPublication = useMemo(() => [...activities].sort((left, right) => right.publishedAt.localeCompare(left.publishedAt)), [activities]);
+
+  async function changeLocalActivityStatus(activityId: string, status: LocalActivityPublicationStatus) {
+    try { setLocalActivities(await createConfiguredDataRepository(window.localStorage).setPublishedActivityStatus(activityId, status)); }
+    catch { setDataError("La modification n’a pas pu être enregistrée. Réessayez."); }
+  }
+
+  async function deleteActivityDraft() {
+    if (!window.confirm("Supprimer ce brouillon d’activité? Cette action ne peut pas être annulée.")) return;
+    try { await createConfiguredDataRepository(window.localStorage).clearActiveDraft(); setActivityDraft(null); }
+    catch { setDataError("Le brouillon n’a pas pu être supprimé. Réessayez."); }
+  }
 
   return (
     <main className="teacher-dashboard">
@@ -129,7 +167,7 @@ export function TeacherDashboardView({ data }: { data: TeacherDashboardViewModel
                 <span className="activity-picker-control">
                   <select id="teacher-activity-picker" value="" onChange={(event) => setSelectedActivityId(event.target.value)} aria-label={activityPickerAccessibleLabel}>
                     <option value="" disabled>{activityPickerAccessibleLabel}</option>
-                    {data.activities.map((activity) => <option key={activity.id} value={activity.id}>{activity.customTitle} — {activityTypeLabel(activity.activityType)} · {formatPublishedAt(activity.publishedAt)}</option>)}
+                    {activities.map((activity) => <option key={activity.id} value={activity.id}>{activity.customTitle} — {activityTypeLabel(activity.activityType)} · {formatPublishedAt(activity.publishedAt)}</option>)}
                   </select>
                   <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="m2 4 4 4 4-4" /></svg>
                 </span>
@@ -141,6 +179,9 @@ export function TeacherDashboardView({ data }: { data: TeacherDashboardViewModel
           </div>
         </header>
 
+        <div className="teacher-dashboard-body">
+        {dataLoading ? <p className="teacher-data-loading" role="status">Chargement des activités et des progressions…</p> : null}
+        {dataError ? <p className="teacher-data-error" role="alert">{dataError}</p> : null}
         <div className="teacher-main-grid">
         <div className="teacher-left-stack">
         <section className="socrato-observation-card" aria-label="Accueil de Socrato">
@@ -190,6 +231,25 @@ export function TeacherDashboardView({ data }: { data: TeacherDashboardViewModel
             </> : <p className="empty-priority">Aucun portrait de groupe n’est encore disponible pour cette activité.</p>}
           </section>
 
+        </div>
+
+        {activityDraft ? <section className="teacher-card activity-draft-card" aria-labelledby="activity-draft-title">
+          <header><div><p>Brouillon enregistré automatiquement</p><h2 id="activity-draft-title">{activityDraft.configuration.title.trim() || "Activité sans titre"}</h2></div><span>Mis à jour le {formatPublishedAt(activityDraft.updatedAt)}</span></header>
+          <div className="activity-draft-details"><p><strong>{activityDraft.configuration.questionCount} question{activityDraft.configuration.questionCount !== 1 ? "s" : ""}</strong><span>{activityDraft.configuration.notionIds.length} notion{activityDraft.configuration.notionIds.length !== 1 ? "s" : ""}</span><span>{activityDraft.configuration.selectedGroupIds.length} groupe{activityDraft.configuration.selectedGroupIds.length !== 1 ? "s" : ""}</span></p><div><Link href="/teacher/activities/new">Continuer</Link><button type="button" onClick={deleteActivityDraft}>Supprimer</button></div></div>
+        </section> : null}
+
+        <section className="teacher-card all-activities-card" aria-labelledby="all-activities-title">
+          <header><div><p>Historique de publication</p><h2 id="all-activities-title">Toutes les activités</h2><span>De la plus récemment publiée à la plus ancienne.</span></div><strong>{activitiesByPublication.length} activité{activitiesByPublication.length > 1 ? "s" : ""}</strong></header>
+          <ol>{activitiesByPublication.map((activity) => {
+            const participationPercentage = percentOf(activity.completedStudentCount, activity.targetedStudentCount);
+            const startedStudentCount = activity.startedStudentCount ?? activity.completedStudentCount;
+            const notStartedStudentCount = Math.max(0, activity.targetedStudentCount - startedStudentCount);
+            const lifecycleLabel = activity.lifecycleStatus === "suspended" ? "Suspendue" : activity.lifecycleStatus === "archived" ? "Archivée" : null;
+            const resultLabel = lifecycleLabel ?? (activity.resultAvailability === "available" ? "Résultats disponibles" : activity.resultAvailability === "partial" ? "Résultats partiels" : activity.startedStudentCount ? `${activity.startedStudentCount} en cours` : "En attente de résultats");
+            const isLocalActivity = activity.id.startsWith("activity-local-");
+            return <li key={activity.id} className={activity.id === activeActivity.id ? "all-activities-item--active" : undefined}><div className="all-activities-row"><button type="button" className="activity-select" onClick={() => setSelectedActivityId(activity.id)} aria-current={activity.id === activeActivity.id ? "true" : undefined}><span className="all-activities-date"><time dateTime={activity.publishedAt}>{formatPublishedAt(activity.publishedAt)}</time><small>{activityTypeLabel(activity.activityType)}</small></span><span className="all-activities-name"><strong>{activity.customTitle}</strong><small>{activity.targetedGroupIds.length} groupe{activity.targetedGroupIds.length > 1 ? "s" : ""} visé{activity.targetedGroupIds.length > 1 ? "s" : ""}</small></span><span className="all-activities-participation"><strong>{activity.targetedStudentCount ? `${participationPercentage} %` : "—"}</strong><small>{startedStudentCount} commencé · {activity.completedStudentCount} terminé · {notStartedStudentCount} non commencé</small></span><span className={`all-activities-status all-activities-status--${activity.lifecycleStatus ?? activity.resultAvailability}`}>{resultLabel}</span><span className="all-activities-arrow" aria-hidden="true">→</span></button>{isLocalActivity ? <div className="local-activity-actions" aria-label={`Gestion de ${activity.customTitle}`}>{activity.lifecycleStatus !== "published" ? <button type="button" onClick={() => changeLocalActivityStatus(activity.id, "published")}>Réactiver l’activité</button> : <button type="button" onClick={() => changeLocalActivityStatus(activity.id, "suspended")}>Suspendre l’activité</button>}{activity.lifecycleStatus !== "archived" ? <button type="button" onClick={() => changeLocalActivityStatus(activity.id, "archived")}>Archiver</button> : null}</div> : null}</div></li>;
+          })}</ol>
+        </section>
         </div>
       </section>
     </main>

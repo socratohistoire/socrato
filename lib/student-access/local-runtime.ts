@@ -6,10 +6,11 @@ import type {
 } from "./repository.ts";
 import { InMemoryStudentAccessRateLimiter } from "./rate-limiter.ts";
 import type { StudentSession, StudentSessionRepository } from "./session.ts";
+import { LOCAL_STUDENT_ID } from "../academic-context/local-context.ts";
 
 const LOCAL_ONLY_LOOKUP_KEY = "socrato-local-development-only";
 const LOCAL_DEMO_CODE = "K7MPR4XT9QHC";
-const SESSION_LIFETIME_MS = 4 * 60 * 60 * 1000;
+const SESSION_LIFETIME_MS = 60 * 60 * 1000;
 
 class LocalAccessCodeRepository implements StudentAccessCodeRepository {
   private readonly credential: StudentAccessCredential;
@@ -17,7 +18,7 @@ class LocalAccessCodeRepository implements StudentAccessCodeRepository {
   constructor(lookup: HmacAccessCodeLookup) {
     this.credential = {
       credentialId: "local-credential-1",
-      anonymousStudentId: "local-anonymous-student-1",
+      anonymousStudentId: LOCAL_STUDENT_ID,
       lookupDigest: lookup.digest(LOCAL_DEMO_CODE),
       status: "active",
       expiresAt: new Date("2099-01-01T00:00:00.000Z"),
@@ -71,6 +72,10 @@ class LocalStudentSessionRepository implements StudentSessionRepository {
       return null;
     }
     return session;
+  }
+
+  async revokeByToken(token: string): Promise<void> {
+    this.sessions.delete(token);
   }
 }
 

@@ -1,7 +1,9 @@
 import type { TeacherDashboardProvider } from "./provider.ts";
 import type { TeacherDashboardData } from "./types.ts";
 
-export const LOCAL_DEMO_TEACHER_ID = "teacher-demo-local";
+import { LOCAL_TEACHER_ID } from "../academic-context/local-context.ts";
+
+export const LOCAL_DEMO_TEACHER_ID = LOCAL_TEACHER_ID;
 
 export function isLocalTeacherDashboardEnabled(environment = process.env.NODE_ENV) {
   return environment !== "production";

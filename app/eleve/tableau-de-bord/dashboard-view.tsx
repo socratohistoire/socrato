@@ -1,8 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import type { CSSProperties } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState, type CSSProperties } from "react";
+import { createConfiguredDataRepository } from "@/lib/data-repository";
 import { getHistoricalPeriodLabel } from "@/lib/student-dashboard/historical-period";
-import { getSelectedActivity, getActivityDashboardUrl } from "@/lib/student-dashboard/selection";
+import { getSelectedActivity, getActivityDashboardUrl, getLearningSessionUrl } from "@/lib/student-dashboard/selection";
 import {
   ACTIVITY_STATUS_LABELS,
   ACTIVITY_TYPE_LABELS,
@@ -15,23 +19,36 @@ import {
 import type { HistoricalKnowledge, IntellectualOperation, StudentActivity, StudentDashboardData } from "@/lib/student-dashboard/types";
 import { ThemeToggle } from "./theme-toggle";
 import { KnowledgeScrollRegion } from "./knowledge-scroll-region";
+import { StudentLogoutButton } from "../logout-button";
 
 export function StudentDashboardView({ data }: { data: StudentDashboardData }) {
-  const activity = getSelectedActivity(data);
+  const searchParams = useSearchParams();
+  const testMode = searchParams.get("test") === "1";
+  const [dashboardData, setDashboardData] = useState(data);
+  useEffect(() => {
+    let active = true;
+    const repository = createConfiguredDataRepository(window.localStorage);
+    void repository.loadStudentDashboard(data, searchParams.get("activity")).then((nextDashboardData) => {
+      if (!active) return;
+      setDashboardData(nextDashboardData);
+    });
+    return () => { active = false; };
+  }, [data, searchParams]);
+  const activity = getSelectedActivity(dashboardData);
   return (
     <main className="student-dashboard min-h-screen">
       <DashboardHero />
       <div className="dashboard-body">
         <section id="activite" className="activity-overview" aria-label="Activité sélectionnée">
-          <SocratoWelcome activity={activity} data={data} />
-          <MainActivityCard activity={activity} />
+          <SocratoWelcome activity={activity} data={dashboardData} />
+          <MainActivityCard activity={activity} testMode={testMode} />
         </section>
         <SummaryPanel activity={activity} />
         <section className="activity-results" aria-label="Résultats de cette activité">
           <OperationResults items={activity.operations} />
           <KnowledgeResults items={activity.historicalKnowledge} />
         </section>
-        <ActivityList activities={data.activities} selectedActivityId={data.selectedActivityId} />
+        <ActivityList activities={dashboardData.activities} selectedActivityId={dashboardData.selectedActivityId} />
         <p className="dashboard-note"><span aria-hidden="true">i</span> Les connaissances non travaillées n’ont pas encore été couvertes dans cette activité.</p>
       </div>
     </main>
@@ -44,11 +61,11 @@ function DashboardHero() {
       <div className="dashboard-hero-overlay" />
       <div className="dashboard-hero-content">
         <Link href="/" className="brand-lockup" aria-label="Accueil Socrato">
-          <Image src="/logos/socrato-logo-blanc.png" alt="Logo Socrato" width={76} height={76} priority unoptimized className="brand-mark" />
-          <span className="brand-copy"><span className="brand-name">SOCRATO</span><span className="brand-signature">TON TUTEUR INTELLIGENT EN HISTOIRE</span></span>
+          <Image src="/logos/socrato-logo-blanc-recadre.png" alt="Logo Socrato" width={38} height={38} priority unoptimized className="brand-mark" />
+          <span className="brand-copy"><span className="brand-name">SOCRATO</span><span className="brand-signature">ESPACE ÉLÈVE</span></span>
         </Link>
-        <div className="hero-title-block"><p>ESPACE ÉLÈVE</p><h1>{DASHBOARD_LABELS.title}</h1></div>
-        <ThemeToggle />
+        <div className="hero-title-block"><h1>{DASHBOARD_LABELS.title}</h1></div>
+        <div className="dashboard-header-actions"><ThemeToggle /><StudentLogoutButton /></div>
       </div>
     </header>
   );
@@ -59,16 +76,16 @@ function SocratoWelcome({ activity, data }: { activity: StudentActivity; data: S
   const notionTitles = activity.notionIds.map((id) => data.notions.find((notion) => notion.id === id)?.title).filter(Boolean);
   return (
     <aside className="welcome-panel" aria-labelledby="welcome-title">
-      {!completed ? <div className="new-activity-heading"><BookIcon /><h2 id="welcome-title">Nouvelle activité disponible</h2></div> : null}
+      <div className="new-activity-heading"><BookIcon /><h2 id="welcome-title">{completed ? "Activité terminée" : "Nouvelle activité disponible"}</h2></div>
       <div className="welcome-copy">
         <span className="welcome-portrait" aria-label="Portrait de Socrato" role="img">
           <Image src="/logos/socrato-logo-blanc.png" alt="" width={94} height={94} unoptimized className="welcome-portrait-light" />
           <Image src="/logos/socrato-logo-v2.png" alt="" width={94} height={94} unoptimized className="welcome-portrait-dark" />
         </span>
         <div>
-          <h2 id={completed ? "welcome-title" : undefined}>{completed ? "Bravo ! Tu as terminé cette activité de révision !" : "Bonjour !"}</h2>
+          <h2>{completed ? "Bravo ! Tu as terminé cette activité de révision !" : "Bonjour !"}</h2>
           {completed ? (
-            <p>Ton bilan local de démonstration est présenté ci-dessous. Il ne constitue pas une analyse pédagogique réelle.</p>
+            <p>Ton bilan personnalisé est présenté ci-dessous.</p>
           ) : (
             <>
               <p>Ton enseignant t’a préparé une activité de révision sur :</p>
@@ -83,8 +100,15 @@ function SocratoWelcome({ activity, data }: { activity: StudentActivity; data: S
   );
 }
 
-function MainActivityCard({ activity }: { activity: StudentActivity }) {
+function MainActivityCard({ activity, testMode }: { activity: StudentActivity; testMode: boolean }) {
   const period = getHistoricalPeriodLabel(activity.historicalPeriod);
+  async function restartActivity() {
+    const repository = createConfiguredDataRepository(window.localStorage);
+    await repository.clearStudentOutcome(activity.id);
+    await repository.clearStudentProgress(activity.id);
+    const mode = activity.origin === "teacher_assigned" ? "teacher-assigned" : "notion-review";
+    window.location.assign(getLearningSessionUrl(activity.id, activity.notionIds[0] ?? "acte-union", mode));
+  }
   return (
     <article className={`main-activity-card activity-${activity.origin}`}>
       <div className="activity-card-topline">
@@ -95,7 +119,7 @@ function MainActivityCard({ activity }: { activity: StudentActivity }) {
       {period ? <p className="main-activity-period">{period}</p> : null}
       <div className="activity-card-content">
         <div className="activity-details">
-          <div className="activity-facts"><span>◷ {activity.durationMinutes} minutes</span><span>▤ {activity.historicalKnowledgeIds.length} connaissances</span></div>
+          <div className="activity-facts">{activity.durationMinutes > 0 ? <span>◷ {activity.durationMinutes} minutes</span> : null}<span>▤ {activity.historicalKnowledgeIds.length} connaissances</span></div>
           {activity.historicalKnowledge.length > 0 ? (
             <ul className="targeted-knowledge">{activity.historicalKnowledge.map((item) => <li key={item.id}>{item.label}</li>)}</ul>
           ) : <p className="no-targeted-knowledge">Aucune connaissance historique approuvée n’est associée à cette activité.</p>}
@@ -104,7 +128,11 @@ function MainActivityCard({ activity }: { activity: StudentActivity }) {
           <div><strong>{activity.progressPercentage}%</strong><span>complété</span></div>
         </div>
       </div>
-      <Link href={activity.actionHref} className="main-activity-action">{getActivityActionLabel(activity)} <span aria-hidden="true">→</span></Link>
+      {activity.activityStatus === "completed"
+        ? testMode
+          ? <button type="button" className="main-activity-action" onClick={restartActivity}>Refaire cette activité <span aria-hidden="true">→</span></button>
+          : <button type="button" className="main-activity-action" disabled>Activité complétée</button>
+        : <Link href={activity.actionHref} className="main-activity-action">{getActivityActionLabel(activity)} <span aria-hidden="true">→</span></Link>}
     </article>
   );
 }
@@ -124,7 +152,7 @@ function SummaryPanel({ activity }: { activity: StudentActivity }) {
   ];
   return (
     <section id="bilan" className="summary-panel" aria-labelledby="summary-title">
-      <div className="summary-heading"><CompassIcon /><div><h2 id="summary-title">{DASHBOARD_LABELS.summary}</h2><p>{complete ? "Démonstration locale structurée — aucune analyse pédagogique réelle." : "Lorsque tu auras terminé cette activité, Socrato préparera un bilan personnalisé."}</p></div></div>
+      <div className="summary-heading"><CompassIcon /><div><h2 id="summary-title">{DASHBOARD_LABELS.summary}</h2><p>{complete ? "Voici les résultats enregistrés pour cette activité." : "Lorsque tu auras terminé cette activité, Socrato préparera un bilan personnalisé."}</p></div></div>
       {consolidationProgress && <article className={`consolidation-progress consolidation-progress--${consolidationProgress.state}`} aria-labelledby="consolidation-progress-title"><div><span>Progression après consolidation</span><h3 id="consolidation-progress-title">{consolidationProgress.previousLevel} <span aria-hidden="true">→</span> {consolidationProgress.currentLevel}</h3><p>{consolidationProgress.observation}</p></div><dl><div><dt>Origine</dt><dd>{consolidationSource}</dd></div><div><dt>Terminée le</dt><dd>{consolidationProgress.completedAt}</dd></div></dl></article>}
       <div className="summary-grid">{items.map((item) => <article key={item.kind} className={`summary-item summary-${item.kind}`}><span aria-hidden="true">{item.kind === "strength" ? "✓" : item.kind === "consolidate" ? "◎" : "✎"}</span><div><h3>{item.title}</h3><p>{item.text}</p></div></article>)}</div>
     </section>

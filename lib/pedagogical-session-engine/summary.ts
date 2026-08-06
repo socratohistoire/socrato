@@ -13,7 +13,7 @@ function strongestStatus(current: ResultStatus | undefined, candidate: ResultSta
   return !current || rank[candidate] > rank[current] ? candidate : current;
 }
 
-function aggregate(results: QuestionResult[], field: "demonstratedOperationIds" | "demonstratedKnowledgeIds"): PedagogicalResultEntry[] {
+function aggregate(results: QuestionResult[], field: "operationIds" | "historicalKnowledgeIds"): PedagogicalResultEntry[] {
   const statuses = new Map<string, ResultStatus>();
   for (const result of results) {
     for (const id of result[field]) statuses.set(id, strongestStatus(statuses.get(id), result.status));
@@ -27,8 +27,8 @@ export function produceLocalStructuredSummary(
   completedAt = new Date().toISOString(),
 ): PedagogicalSummary {
   const results = state.questionStates.flatMap(({ result }) => result ? [result] : []);
-  const operationResults = aggregate(results, "demonstratedOperationIds");
-  const historicalKnowledgeResults = aggregate(results, "demonstratedKnowledgeIds");
+  const operationResults = aggregate(results, "operationIds");
+  const historicalKnowledgeResults = aggregate(results, "historicalKnowledgeIds");
   const strengths = [...new Set(results.flatMap(({ observedStrengths }) => observedStrengths))];
   const consolidationTargets = [...new Set(results.flatMap(({ consolidationTargets }) => consolidationTargets))];
   const targetOperationIds = operationResults.filter(({ status }) => status !== "mastered").map(({ id }) => id);
@@ -37,14 +37,14 @@ export function produceLocalStructuredSummary(
     kind: "optional_consolidation" as const,
     targetOperationIds,
     targetHistoricalKnowledgeIds,
-    label: "Activité locale facultative de consolidation à valider par l’enseignant.",
+    label: "Reprends les éléments à consolider dans une courte activité ciblée.",
   } : undefined;
 
   return {
     sessionId: state.sessionId,
     activityId: state.activityId,
     notionId: state.notionId,
-    encouragement: "Tu as terminé cette démonstration locale. Tes résultats doivent être validés avant tout usage pédagogique.",
+    encouragement: "Bravo, tu as terminé l’activité. Voici le bilan de ton travail.",
     strengths,
     consolidationTargets,
     operationResults,
@@ -52,7 +52,7 @@ export function produceLocalStructuredSummary(
     recommendation,
     workbookReferences: workbookReferences.filter(({ approvedByTeacher, historicalKnowledgeIds }) =>
       approvedByTeacher && historicalKnowledgeIds.some((id) => historicalKnowledgeResults.some((result) => result.id === id))),
-    localDemoNotice: "Bilan structuré de démonstration locale — aucun appel à l’IA et aucune persistance après redémarrage.",
+    localDemoNotice: "",
     completedAt,
   };
 }

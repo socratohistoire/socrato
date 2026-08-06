@@ -1,7 +1,6 @@
 import type { ResponseAnalyzer } from "./ports.ts";
 import type { PedagogicalQuestionDefinition, StructuredResponseAnalysis, StudentResponse } from "./types.ts";
 
-export const LOCAL_ANALYZER_NOTICE = "Démonstration locale — cette analyse déterministe ne constitue pas une véritable évaluation pédagogique.";
 export const LOCAL_DEMO_INPUTS = {
   satisfactory: "[demo:satisfactory]",
   partial: "[demo:partial]",
@@ -38,7 +37,7 @@ function scenarioAnalysis(content: string, question: PedagogicalQuestionDefiniti
       historicalAccuracy: "demonstrated", documentUse: question.requiredDocumentIds.length ? "demonstrated" : "not_assessed",
       justificationQuality: "demonstrated", primaryOperationPerformance: "demonstrated",
       demonstratedKnowledgeIds: [...question.historicalKnowledgeIds], observedOperationIds: [...question.operationIds],
-      usedDocumentIds: [...question.requiredDocumentIds], observedStrengths: ["Scénario réservé : les critères structurés sont démontrés."],
+      usedDocumentIds: [...question.requiredDocumentIds], observedStrengths: ["Tu mobilises correctement les connaissances et la démarche demandées."],
       missingElements: [], nextAction: "complete_question", confidence: "high",
     };
   }
@@ -48,8 +47,8 @@ function scenarioAnalysis(content: string, question: PedagogicalQuestionDefiniti
       historicalAccuracy: "partial", documentUse: question.documentIds.length ? "partial" : "not_assessed",
       justificationQuality: "partial", primaryOperationPerformance: "partial",
       demonstratedKnowledgeIds: question.historicalKnowledgeIds.slice(0, 1), observedOperationIds: question.operationIds.slice(0, 1),
-      usedDocumentIds: question.documentIds.slice(0, 1), observedStrengths: ["Scénario réservé : un élément pertinent est présent."],
-      missingElements: ["Scénario réservé : la relation historique doit être précisée."], nextAction: "request_revision", confidence: "high",
+      usedDocumentIds: question.documentIds.slice(0, 1), observedStrengths: ["Tu as relevé un élément historique pertinent."],
+      missingElements: ["Précise la relation historique que tu proposes."], nextAction: "request_revision", confidence: "high",
     };
   }
   if (content === LOCAL_DEMO_INPUTS.insufficient) {
@@ -57,7 +56,7 @@ function scenarioAnalysis(content: string, question: PedagogicalQuestionDefiniti
       responseDisposition: "substantive", pedagogicalOutcome: "insufficient",
       historicalAccuracy: "not_demonstrated", documentUse: "not_demonstrated", justificationQuality: "not_demonstrated",
       primaryOperationPerformance: "not_demonstrated", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [],
-      observedStrengths: [], missingElements: ["Scénario réservé : commence par établir un fait précis."],
+      observedStrengths: [], missingElements: ["Commence par établir un fait historique précis."],
       nextAction: "offer_hint", confidence: "high",
     };
   }
@@ -90,7 +89,7 @@ export class LocalDeterministicResponseAnalyzer implements ResponseAnalyzer {
       observedOperationIds: [],
       usedDocumentIds: [],
       observedStrengths: [],
-      missingElements: ["L’analyse locale ne peut pas confirmer l’exactitude historique ni la qualité du raisonnement."],
+      missingElements: ["Ajoute un fait historique précis et explique clairement le lien avec ta réponse."],
       nextAction: "request_revision",
       confidence: "low",
     };

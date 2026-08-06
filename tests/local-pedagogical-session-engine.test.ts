@@ -140,14 +140,14 @@ test("les fautes et la syntaxe fragile ne rendent pas automatiquement la répons
   assert.equal((await analyzer.analyze(response, question)).responseDisposition, "substantive");
 });
 
-test("une réponse ordinaire reçoit une rétroaction unique et un avertissement technique séparé", async () => {
+test("une réponse ordinaire reçoit une rétroaction unique sans avertissement technique visible", async () => {
   const analyzer = new LocalDeterministicResponseAnalyzer("test");
   const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Le Canada-Est avait davantage d’habitants.", analyzer, fixedClock);
   const expected = "Ta réponse a bien été reçue. Pour poursuivre, ajoute un fait précis tiré des documents et explique le lien que tu établis.";
   assert.equal(transition.feedback?.studentFacingText, expected);
   assert.equal(transition.feedback?.studentFacingText.match(/Ta réponse a bien été reçue/g)?.length, 1);
   assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /ne peut pas confirmer son exactitude historique ni ton raisonnement|L’analyse locale ne peut pas confirmer/);
-  assert.equal(transition.feedback?.technicalNotice, "Démonstration locale : ta réponse n’est pas réellement évaluée.");
+  assert.equal(transition.feedback?.technicalNotice, undefined);
   assert.equal(transition.state.questionStates[0].lastAnalysis?.pedagogicalOutcome, "partially_satisfactory");
   assert.equal(transition.state.questionStates[0].lastAnalysis?.historicalAccuracy, "not_assessed");
   assert.equal(transition.state.questionStates[0].lastAnalysis?.primaryOperationPerformance, "not_assessed");
@@ -294,8 +294,8 @@ test("le bilan contient seulement les éléments réellement travaillés et une 
   let state = createPedagogicalSession(definition);
   for (let index = 0; index < 3; index += 1) state = (await submitStudentResponse(definition, state, "Réponse", analyzer, fixedClock)).state;
   const summary = produceLocalStructuredSummary(state, [], "2026-07-26T12:00:00.000Z");
-  assert.deepEqual(summary.historicalKnowledgeResults.map(({ id }) => id), ["population"]);
-  assert.deepEqual(summary.operationResults.map(({ id }) => id), ["establish_facts"]);
+  assert.deepEqual(summary.historicalKnowledgeResults.map(({ id }) => id), ["population", "representation"]);
+  assert.deepEqual(summary.operationResults.map(({ id }) => id), ["establish_facts", "causes-and-consequences", "relate_facts"]);
   assert.equal(summary.recommendation?.kind, "optional_consolidation");
   assert.doesNotMatch(JSON.stringify(summary), /not_assessed|Réponse/);
 });
@@ -322,7 +322,7 @@ test("finalise la séance avec un bilan structuré réutilisable", async () => {
   const finalized = await finalizePedagogicalSession(complete, undefined, new LocalWorkbookReferenceProvider([approvedReference]));
   assert.equal(finalized.summary?.sessionId, "session-1");
   assert.equal(finalized.summary?.workbookReferences.length, 1);
-  assert.match(finalized.summary?.localDemoNotice ?? "", /aucun appel à l’IA/);
+  assert.equal(finalized.summary?.localDemoNotice, "");
 });
 
 test("le dépôt temporaire perd ses données à la suppression et est interdit en production", async () => {

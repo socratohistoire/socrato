@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { isLocalActivityCreatorEnabled, LocalActivityCreatorProvider } from "@/lib/teacher-activity-creator";
 import { TeacherActivityCreatorView } from "./teacher-activity-creator-view";
 import "./teacher-activity-creator.css";
+import "./student-preview-frame.css";
 
 export const dynamic = "force-dynamic";
 
