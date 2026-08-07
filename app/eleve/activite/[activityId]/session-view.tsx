@@ -57,6 +57,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
   const maximumHelpReceived = activeQuestionState.hintLevel >= MAX_EXPLICIT_HINT_LEVEL;
   const responseInputRef = useRef<HTMLTextAreaElement>(null);
   const submissionLockRef = useRef(false);
+  const pendingSubmissionRef = useRef<{ id: string; questionId: string; questionIndex: number; content: string } | null>(null);
   const restoreResponseFocusRef = useRef(false);
   const messagesRegionRef = useRef<HTMLDivElement>(null);
   const newestMessageRef = useRef<HTMLElement>(null);
@@ -135,18 +136,35 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
   async function sendLocalResponse() {
     const content = response.trim();
     if (!content || submitting || submissionLockRef.current || voiceBlocksSending || engineState.status === "completed" || activeQuestionState.attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS) return;
+    const pendingSubmission = pendingSubmissionRef.current?.questionId === activeQuestionState.questionId
+      && pendingSubmissionRef.current.questionIndex === engineState.currentQuestionIndex
+      && pendingSubmissionRef.current.content === content
+      ? pendingSubmissionRef.current
+      : { id: crypto.randomUUID(), questionId: activeQuestionState.questionId, questionIndex: engineState.currentQuestionIndex, content };
+    pendingSubmissionRef.current = pendingSubmission;
+    const optimisticMessageId = `student-${pendingSubmission.id}`;
     submissionLockRef.current = true;
     restoreResponseFocusRef.current = true;
     setSubmitting(true);
-    setMessages((current) => [...current, { id: `student-${current.length}`, author: "student", content }]);
+    setMessages((current) => [...current, { id: optimisticMessageId, author: "student", content }]);
     setResponse("");
     try {
       const transition = await submitStudentResponse(engineDefinition, engineState, content, analyzer);
       let nextState = transition.state;
       if (transition.sessionCompleted) {
         nextState = await finalizePedagogicalSession(nextState);
-        if (persistProgress && nextState.summary) await persistCompletedSession(nextState);
       }
+      let progressAlreadySaved = false;
+      if (persistProgress && data.source === "server") {
+        const result = await saveStudentProgressToDatabase(createStudentProgressContract(nextState), {
+          submissionId: pendingSubmission.id,
+          expectedQuestionId: activeQuestionState.questionId,
+          expectedCurrentQuestionIndex: engineState.currentQuestionIndex,
+        });
+        if (!result.ok) throw new Error(result.error);
+        progressAlreadySaved = true;
+      }
+      if (transition.sessionCompleted && persistProgress && nextState.summary) await persistCompletedSession(nextState, progressAlreadySaved);
       if (nextState.currentQuestionIndex !== engineState.currentQuestionIndex) {
         setPendingNextState(nextState);
         setEngineState({ ...nextState, status: "active", currentQuestionIndex: engineState.currentQuestionIndex });
@@ -164,6 +182,12 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
         }]);
         if (transition.sessionCompleted) setFinalFeedbackDelivered(true);
       }
+      setPersistenceMessage("");
+      pendingSubmissionRef.current = null;
+    } catch (error) {
+      setMessages((current) => current.filter(({ id }) => id !== optimisticMessageId));
+      setResponse(content);
+      setPersistenceMessage(error instanceof Error ? error.message : "Ta réponse n’a pas pu être enregistrée. Réessaie.");
     } finally {
       submissionLockRef.current = false;
       setSubmitting(false);
@@ -245,12 +269,14 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
     setEngineState(nextState);
   }
 
-  async function persistCompletedSession(state: PedagogicalSessionState) {
+  async function persistCompletedSession(state: PedagogicalSessionState, progressAlreadySaved = false) {
     if (!state.summary) return;
     try {
       if (data.source === "server") {
-        const progressResult = await saveStudentProgressToDatabase(createStudentProgressContract(state));
-        if (!progressResult.ok) throw new Error(progressResult.error);
+        if (!progressAlreadySaved) {
+          const progressResult = await saveStudentProgressToDatabase(createStudentProgressContract(state));
+          if (!progressResult.ok) throw new Error(progressResult.error);
+        }
         const outcomeResult = await saveStudentOutcomeToDatabase(state.summary);
         if (!outcomeResult.ok) throw new Error(outcomeResult.error);
       } else {

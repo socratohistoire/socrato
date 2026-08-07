@@ -7,6 +7,7 @@ import { getStudentAccessRuntime, STUDENT_SESSION_COOKIE } from "@/lib/student-a
 import { getSocratoDatabase } from "@/lib/server/database";
 import type { PedagogicalSummary } from "@/lib/pedagogical-session-engine";
 import type { StudentProgressContract } from "@/lib/student-progress/types";
+import { validateStudentProgressTransition, type PersistedProgressSnapshot, type StudentProgressSubmissionGuard } from "@/lib/student-progress/server-transition";
 
 const STATES = new Set(["not_started", "in_progress", "completed"]);
 const RESULT_STATUSES = new Set(["mastered", "to_consolidate", "to_work_on"]);
@@ -32,8 +33,12 @@ function validProgress(value: unknown): value is StudentProgressContract {
     && validResults(item.operationResults) && validResults(item.historicalKnowledgeResults);
 }
 
-export async function saveStudentProgressToDatabase(progress: StudentProgressContract) {
+export async function saveStudentProgressToDatabase(progress: StudentProgressContract, guard?: StudentProgressSubmissionGuard) {
   if (!validProgress(progress)) return { ok: false as const, error: "La progression transmise est invalide." };
+  if (guard && (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(guard.submissionId)
+    || typeof guard.expectedQuestionId !== "string" || !Number.isInteger(guard.expectedCurrentQuestionIndex) || guard.expectedCurrentQuestionIndex < 0)) {
+    return { ok: false as const, error: "L’identifiant de soumission est invalide." };
+  }
   const token = (await cookies()).get(STUDENT_SESSION_COOKIE)?.value;
   const studentSession = token ? await getStudentAccessRuntime().sessions.findActiveByToken(token) : null;
   if (!studentSession) return { ok: false as const, error: "La session élève n’est plus valide." };
@@ -58,19 +63,61 @@ export async function saveStudentProgressToDatabase(progress: StudentProgressCon
   const allowedQuestionIds = new Set(scope.questionIds);
   if (progress.completedQuestionIds.some((id) => !allowedQuestionIds.has(id)) || progress.currentQuestionIndex < 0 || progress.currentQuestionIndex >= progress.totalQuestions) return { ok: false as const, error: "La progression contient une question non autorisée." };
   if (progress.state === "completed" && progress.completedQuestionIds.length !== progress.totalQuestions) return { ok: false as const, error: "L’activité ne peut pas être terminée avant toutes les questions." };
+  if (guard && scope.questionIds[guard.expectedCurrentQuestionIndex] !== guard.expectedQuestionId) return { ok: false as const, error: "Cette question n’est plus la question active." };
 
   try {
-    await sql.begin(async (tx) => {
+    const persistence = await sql.begin(async (tx) => {
       const existing = await tx<{ id: string; started_at: Date }[]>`
         select id, started_at from socrato.learning_sessions
         where activity_id = ${progress.activityId} and student_id = ${studentSession.anonymousStudentId} and group_id = ${scope.groupId}
-        order by started_at desc limit 1
+        order by started_at desc limit 1 for update
       `;
       const learningSessionId = existing[0]?.id ?? `learning-session-${randomUUID()}`;
       if (!existing[0]) await tx`
         insert into socrato.learning_sessions (id, activity_id, student_id, group_id)
         values (${learningSessionId}, ${progress.activityId}, ${studentSession.anonymousStudentId}, ${scope.groupId})
       `;
+
+      if (guard) {
+        const duplicate = await tx<{ activity_id: string; question_id: string; expected_question_index: number; resulting_question_index: number }[]>`
+          select activity_id, question_id, expected_question_index, resulting_question_index from socrato.student_progress_submissions
+          where id = ${guard.submissionId}::uuid and student_id = ${studentSession.anonymousStudentId}
+          limit 1
+        `;
+        if (duplicate[0]) {
+          const sameSubmission = duplicate[0].activity_id === progress.activityId
+            && duplicate[0].question_id === guard.expectedQuestionId
+            && duplicate[0].expected_question_index === guard.expectedCurrentQuestionIndex
+            && duplicate[0].resulting_question_index === progress.currentQuestionIndex;
+          return sameSubmission ? { duplicate: true as const } : { conflict: true as const };
+        }
+
+        const persistedRows = await tx<{
+          activity_id: string; notion_id: string; state: PersistedProgressSnapshot["state"];
+          current_question_index: number; total_questions: number; completed_question_ids: string[];
+        }[]>`
+          select activity_id, notion_id, state, current_question_index, total_questions, completed_question_ids
+          from socrato.student_progress where session_id = ${learningSessionId} for update
+        `;
+        const persisted = persistedRows[0] ? {
+          activityId: persistedRows[0].activity_id,
+          notionId: persistedRows[0].notion_id,
+          state: persistedRows[0].state,
+          currentQuestionIndex: persistedRows[0].current_question_index,
+          totalQuestions: persistedRows[0].total_questions,
+          completedQuestionIds: persistedRows[0].completed_question_ids,
+        } : {
+          activityId: progress.activityId,
+          notionId: progress.notionId,
+          state: "not_started" as const,
+          currentQuestionIndex: 0,
+          totalQuestions: progress.totalQuestions,
+          completedQuestionIds: [],
+        };
+        const transition = validateStudentProgressTransition(persisted, progress, guard);
+        if (!transition.ok) return { conflict: true as const };
+      }
+
       const completedAt = progress.state === "completed" ? new Date().toISOString() : null;
       await tx`
         insert into socrato.student_progress (
@@ -88,9 +135,19 @@ export async function saveStudentProgressToDatabase(progress: StudentProgressCon
           historical_knowledge_results = excluded.historical_knowledge_results, updated_at = excluded.updated_at,
           completed_at = excluded.completed_at
       `;
+      if (guard) await tx`
+        insert into socrato.student_progress_submissions (
+          id, session_id, student_id, activity_id, question_id, expected_question_index, resulting_question_index
+        ) values (
+          ${guard.submissionId}::uuid, ${learningSessionId}, ${studentSession.anonymousStudentId}, ${progress.activityId},
+          ${guard.expectedQuestionId}, ${guard.expectedCurrentQuestionIndex}, ${progress.currentQuestionIndex}
+        )
+      `;
       if (completedAt) await tx`update socrato.learning_sessions set completed_at = ${completedAt} where id = ${learningSessionId}`;
+      return { saved: true as const };
     });
-    return { ok: true as const };
+    if (persistence.conflict) return { ok: false as const, conflict: true as const, error: "La séance a changé dans un autre onglet. Recharge la page pour reprendre au bon endroit." };
+    return { ok: true as const, duplicate: Boolean(persistence.duplicate) };
   } catch {
     return { ok: false as const, error: "La progression n’a pas pu être enregistrée." };
   }
