@@ -86,6 +86,20 @@ export type PedagogicalQuestionDefinition = {
   documentIds: string[];
   requiredDocumentIds: string[];
   hintSequence: Record<ExplicitHintLevel, string>;
+  evaluationContext?: {
+    questionPrompt: string;
+    instruction: string;
+    notionTitle: string;
+    primaryOperationLabel: string;
+    successCriteria: string[];
+    approvedDocuments: Array<{
+      id: string;
+      title: string;
+      typeLabel: string;
+      attribution: string;
+      content: string;
+    }>;
+  };
 };
 
 export type PedagogicalSessionDefinition = {

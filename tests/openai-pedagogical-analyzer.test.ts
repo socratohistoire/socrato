@@ -6,6 +6,12 @@ const question = {
   id: "q-1", notionId: "acte-union", primaryOperationId: "causes_and_consequences",
   operationIds: ["causes_and_consequences"], historicalKnowledgeIds: ["knowledge-1"],
   documentIds: ["document-1"], requiredDocumentIds: ["document-1"], hintSequence: { 1: "Indice 1", 2: "Indice 2" },
+  evaluationContext: {
+    questionPrompt: "Explique une conséquence politique de l’Acte d’Union.", instruction: "Appuie-toi sur le document.",
+    notionTitle: "Acte d’union", primaryOperationLabel: "Déterminer des causes et des conséquences",
+    successCriteria: ["Identifie une conséquence et l’explique."],
+    approvedDocuments: [{ id: "document-1", title: "Acte d’Union", typeLabel: "Extrait", attribution: "Parlement britannique · 1840", content: "Les revenus sont réunis pour les besoins publics." }],
+  },
 } satisfies PedagogicalQuestionDefinition;
 
 const response = {
@@ -35,6 +41,9 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.equal(requestBody?.store, false);
   assert.equal(requestBody?.model, "test-model");
   assert.equal(JSON.stringify(requestBody).includes("session-secret"), false);
+  assert.match(String(requestBody?.input), /Explique une conséquence politique/);
+  assert.match(String(requestBody?.input), /Les revenus sont réunis/);
+  assert.match(String(requestBody?.instructions), /dossier pédagogique approuvé/);
 });
 
 test("refuse les identifiants inventés par le modèle", async () => {

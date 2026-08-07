@@ -68,6 +68,7 @@ function pedagogicalContext(response: StudentResponse, question: PedagogicalQues
       historicalKnowledgeIds: question.historicalKnowledgeIds,
       documentIds: question.documentIds,
       requiredDocumentIds: question.requiredDocumentIds,
+      evaluationContext: question.evaluationContext,
     },
     attemptNumber: response.attemptNumber,
     hintLevel: response.hintLevel,
@@ -95,7 +96,7 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
       body: JSON.stringify({
         model: this.model,
         store: false,
-        instructions: "Tu analyses une réponse d’élève en histoire du Québec et du Canada. Respecte strictement les identifiants fournis. N’invente aucun fait, document, connaissance ou opération. Évalue seulement ce qui est démontré dans la réponse. Une réponse non exploitable doit produire pedagogicalOutcome=non_exploitable et nextAction=handle_non_exploitable. N’inclus jamais la réponse de l’élève dans les observations textuelles.",
+        instructions: "Tu analyses une réponse d’élève en histoire du Québec et du Canada à partir du dossier pédagogique approuvé fourni. Respecte strictement les identifiants. N’invente aucun fait, document, connaissance ou opération. Compare la réponse à la question, aux documents et aux critères de réussite. Une réponse correcte et complète doit être reconnue comme satisfactory même si sa formulation diffère des documents. Une réponse non exploitable doit produire pedagogicalOutcome=non_exploitable et nextAction=handle_non_exploitable. Les observations doivent être précises, brèves, pédagogiques et ne jamais recopier la réponse de l’élève.",
         input: JSON.stringify(pedagogicalContext(response, question)),
         text: { format: { type: "json_schema", name: "socrato_pedagogical_analysis", strict: true, schema: ANALYSIS_SCHEMA } },
       }),
