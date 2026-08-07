@@ -17,6 +17,7 @@ type AssignedActivityRow = {
   completed_question_ids: string[] | null;
   operation_results: Array<{ id: string; status: "mastered" | "to_consolidate" | "to_work_on" }> | null;
   historical_knowledge_results: Array<{ id: string; status: "mastered" | "to_consolidate" | "to_work_on" }> | null;
+  question_runtime: Array<{ questionId: string; attemptNumber: number; hintLevel: 0 | 1 | 2; hintRequestCount: number; nonExploitableCount: number; status: "presented" | "awaiting_response" | "completed" }> | null;
   started_at: Date | null;
   updated_at: Date | null;
   completed_at: Date | null;
@@ -45,14 +46,14 @@ export class DatabaseStudentLearningSessionProvider implements StudentLearningSe
     const rows = await sql<AssignedActivityRow[]>`
       select a.title, a.notion_ids, a.question_ids, g.id as group_id, p.session_id, p.progress_state,
         p.current_question_index, p.total_questions, p.completed_question_ids, p.operation_results,
-        p.historical_knowledge_results, p.started_at, p.updated_at, p.completed_at
+        p.historical_knowledge_results, p.question_runtime, p.started_at, p.updated_at, p.completed_at
       from socrato.group_memberships gm
       join socrato.groups g on g.id = gm.group_id and g.archived_at is null
       join socrato.activity_group_assignments aga on aga.group_id = g.id
       join socrato.activities a on a.id = aga.activity_id and a.publication_status = ${"published"}
       left join lateral (
         select session_id, state as progress_state, current_question_index, total_questions,
-          completed_question_ids, operation_results, historical_knowledge_results, started_at, updated_at, completed_at
+          completed_question_ids, operation_results, historical_knowledge_results, question_runtime, started_at, updated_at, completed_at
         from socrato.student_progress
         where student_id = ${anonymousStudentId} and activity_id = a.id and group_id = g.id
         order by updated_at desc limit 1
@@ -68,7 +69,7 @@ export class DatabaseStudentLearningSessionProvider implements StudentLearningSe
     const notionId = requestedNotionId && activity.notion_ids.includes(requestedNotionId) ? requestedNotionId : activity.notion_ids[0] ?? "acte-union";
     const mode: DashboardMode = requestedMode === "notion-review" ? "notion-review" : "teacher-assigned";
     const progress = activity.session_id && activity.progress_state && activity.total_questions && activity.started_at && activity.updated_at ? {
-      schemaVersion: 1 as const,
+      schemaVersion: 2 as const,
       studentId: anonymousStudentId,
       groupId: activity.group_id,
       activityId,
@@ -78,6 +79,7 @@ export class DatabaseStudentLearningSessionProvider implements StudentLearningSe
       currentQuestionIndex: activity.current_question_index ?? 0,
       totalQuestions: activity.total_questions,
       completedQuestionIds: activity.completed_question_ids ?? [],
+      questionRuntime: Array.isArray(activity.question_runtime) ? activity.question_runtime : [],
       operationResults: resultEntries(activity.operation_results),
       historicalKnowledgeResults: resultEntries(activity.historical_knowledge_results),
       startedAt: activity.started_at.toISOString(),

@@ -27,10 +27,19 @@ function validProgress(value: unknown): value is StudentProgressContract {
   if (!value || typeof value !== "object") return false;
   const item = value as Record<string, unknown>;
   const validResults = (results: unknown) => Array.isArray(results) && results.every((result) => result && typeof result === "object" && typeof (result as Record<string, unknown>).id === "string" && RESULT_STATUSES.has(String((result as Record<string, unknown>).status)));
-  return item.schemaVersion === 1 && typeof item.activityId === "string" && typeof item.notionId === "string"
+  const validRuntime = (runtime: unknown) => Array.isArray(runtime) && runtime.every((entry) => {
+    if (!entry || typeof entry !== "object") return false;
+    const question = entry as Record<string, unknown>;
+    return typeof question.questionId === "string" && Number.isInteger(question.attemptNumber) && Number(question.attemptNumber) >= 0 && Number(question.attemptNumber) <= 3
+      && [0, 1, 2].includes(Number(question.hintLevel)) && Number.isInteger(question.hintRequestCount) && Number(question.hintRequestCount) >= 0
+      && Number.isInteger(question.nonExploitableCount) && Number(question.nonExploitableCount) >= 0
+      && ["presented", "awaiting_response", "completed"].includes(String(question.status));
+  });
+  return (item.schemaVersion === 1 || item.schemaVersion === 2) && typeof item.activityId === "string" && typeof item.notionId === "string"
     && STATES.has(String(item.state)) && Number.isInteger(item.currentQuestionIndex) && Number.isInteger(item.totalQuestions)
     && Array.isArray(item.completedQuestionIds) && item.completedQuestionIds.every((id) => typeof id === "string")
-    && validResults(item.operationResults) && validResults(item.historicalKnowledgeResults);
+    && validResults(item.operationResults) && validResults(item.historicalKnowledgeResults)
+    && (item.schemaVersion === 1 || validRuntime(item.questionRuntime));
 }
 
 export async function saveStudentProgressToDatabase(progress: StudentProgressContract, guard?: StudentProgressSubmissionGuard) {
@@ -63,6 +72,14 @@ export async function saveStudentProgressToDatabase(progress: StudentProgressCon
   const allowedQuestionIds = new Set(scope.questionIds);
   if (progress.completedQuestionIds.some((id) => !allowedQuestionIds.has(id)) || progress.currentQuestionIndex < 0 || progress.currentQuestionIndex >= progress.totalQuestions) return { ok: false as const, error: "La progression contient une question non autorisée." };
   if (progress.state === "completed" && progress.completedQuestionIds.length !== progress.totalQuestions) return { ok: false as const, error: "L’activité ne peut pas être terminée avant toutes les questions." };
+  if (progress.schemaVersion === 2) {
+    const runtimeIds = new Set(progress.questionRuntime.map(({ questionId }) => questionId));
+    const completedIds = new Set(progress.completedQuestionIds);
+    if (runtimeIds.size !== progress.questionRuntime.length || progress.questionRuntime.length !== progress.totalQuestions
+      || progress.questionRuntime.some(({ questionId, status }) => !allowedQuestionIds.has(questionId) || (status === "completed") !== completedIds.has(questionId))) {
+      return { ok: false as const, error: "L’état des questions contient une question non autorisée." };
+    }
+  }
   if (guard && scope.questionIds[guard.expectedCurrentQuestionIndex] !== guard.expectedQuestionId) return { ok: false as const, error: "Cette question n’est plus la question active." };
 
   try {
@@ -123,16 +140,17 @@ export async function saveStudentProgressToDatabase(progress: StudentProgressCon
         insert into socrato.student_progress (
           session_id, schema_version, activity_id, student_id, group_id, notion_id, state,
           current_question_index, total_questions, completed_question_ids, operation_results,
-          historical_knowledge_results, started_at, updated_at, completed_at
+          historical_knowledge_results, question_runtime, started_at, updated_at, completed_at
         ) values (
-          ${learningSessionId}, ${1}, ${progress.activityId}, ${studentSession.anonymousStudentId}, ${scope.groupId}, ${progress.notionId}, ${progress.state},
+          ${learningSessionId}, ${progress.schemaVersion}, ${progress.activityId}, ${studentSession.anonymousStudentId}, ${scope.groupId}, ${progress.notionId}, ${progress.state},
           ${progress.currentQuestionIndex}, ${progress.totalQuestions}, ${progress.completedQuestionIds}, ${tx.json(progress.operationResults)},
-          ${tx.json(progress.historicalKnowledgeResults)}, ${existing[0]?.started_at?.toISOString() ?? new Date().toISOString()}, ${new Date().toISOString()}, ${completedAt}
+          ${tx.json(progress.historicalKnowledgeResults)}, ${tx.json(progress.schemaVersion === 2 ? progress.questionRuntime : [])},
+          ${existing[0]?.started_at?.toISOString() ?? new Date().toISOString()}, ${new Date().toISOString()}, ${completedAt}
         )
         on conflict (session_id) do update set
-          state = excluded.state, current_question_index = excluded.current_question_index,
+          schema_version = excluded.schema_version, state = excluded.state, current_question_index = excluded.current_question_index,
           completed_question_ids = excluded.completed_question_ids, operation_results = excluded.operation_results,
-          historical_knowledge_results = excluded.historical_knowledge_results, updated_at = excluded.updated_at,
+          historical_knowledge_results = excluded.historical_knowledge_results, question_runtime = excluded.question_runtime, updated_at = excluded.updated_at,
           completed_at = excluded.completed_at
       `;
       if (guard) await tx`

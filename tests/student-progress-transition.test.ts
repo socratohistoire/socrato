@@ -20,7 +20,7 @@ function progress(overrides: Partial<StudentProgressContract> = {}): StudentProg
     totalQuestions: 3, completedQuestionIds: ["question-1"], operationResults: [], historicalKnowledgeResults: [],
     startedAt: "2026-08-07T16:00:00.000Z", updatedAt: "2026-08-07T16:05:00.000Z", completedAt: null,
     ...overrides,
-  };
+  } as StudentProgressContract;
 }
 
 test("accepte une tentative sur la question courante sans conserver la réponse brute", () => {
