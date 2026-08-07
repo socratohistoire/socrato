@@ -234,7 +234,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
   const useStackedDocuments = questionDocuments.length > 0 && !isInteractiveTimeline && !isInteractiveAssociation;
   const isShortAnswerWithoutDocuments = question.format === "short-answer" && questionDocuments.length === 0;
 
-  async function completeObjectiveQuestion(satisfactory: boolean) {
+  async function completeObjectiveQuestion(satisfactory: boolean, recordedAttemptNumber?: number) {
     const questionState = engineState.questionStates[engineState.currentQuestionIndex];
     if (!questionState || questionState.status === "completed") return;
     const completedAt = new Date().toISOString();
@@ -248,7 +248,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
       operationIds: [...questionState.operationIds],
       historicalKnowledgeIds: [...questionState.historicalKnowledgeIds],
       documentIds: [...questionState.documentIds],
-      attemptNumber: Math.max(1, questionState.attemptNumber),
+      attemptNumber: Math.max(1, questionState.attemptNumber, recordedAttemptNumber ?? 0),
       hintLevel: questionState.hintLevel,
       status,
       advancedMastery: satisfactory,
@@ -258,7 +258,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
       consolidationTargets: satisfactory ? [] : ["Revois les associations attendues avant de poursuivre."],
       completedAt,
     };
-    const questionStates = engineState.questionStates.with(engineState.currentQuestionIndex, { ...questionState, status: "completed" as const, result });
+    const questionStates = engineState.questionStates.with(engineState.currentQuestionIndex, { ...questionState, attemptNumber: result.attemptNumber, status: "completed" as const, result });
     const isLastQuestion = engineState.currentQuestionIndex === data.questions.length - 1;
     let nextState: PedagogicalSessionState = { ...engineState, status: isLastQuestion ? "completed" : "active", questionStates };
     if (isLastQuestion) {
@@ -267,6 +267,26 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
       setFinalFeedbackDelivered(true);
     }
     setEngineState(nextState);
+  }
+
+  function recordObjectiveAttempt(attemptNumber: number) {
+    setEngineState((current) => {
+      const currentQuestion = current.questionStates[current.currentQuestionIndex];
+      if (!currentQuestion || currentQuestion.status === "completed") return current;
+      return {
+        ...current,
+        questionStates: current.questionStates.with(current.currentQuestionIndex, {
+          ...currentQuestion,
+          attemptNumber: Math.max(currentQuestion.attemptNumber, attemptNumber),
+          status: "awaiting_response",
+        }),
+      };
+    });
+  }
+
+  function recordObjectiveHint() {
+    if (activeQuestionState.hintLevel >= MAX_EXPLICIT_HINT_LEVEL) return;
+    setEngineState(requestNextHint(engineDefinition, engineState).state);
   }
 
   async function persistCompletedSession(state: PedagogicalSessionState, progressAlreadySaved = false) {
@@ -372,9 +392,9 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
 
       <div className={`session-layout${isInteractiveTimeline || isInteractiveAssociation ? " session-layout--timeline" : ""}${isTimelineDevelopment ? " session-layout--timeline-development" : ""}${isMultipleChoice && questionDocuments.length > 0 ? " session-layout--choice-with-documents" : ""}${questionDocuments.length === 0 && (isMultipleChoice || question.type === "question_without_documents") ? " session-layout--choice-no-documents" : ""}${isShortAnswerWithoutDocuments ? " session-layout--short-answer-no-documents" : ""}`}>
         {isInteractiveTimeline && question.timelineInteraction ? (
-          <InteractiveTimelineQuestion key={question.id} question={question} onComplete={(satisfactory) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory); }} />
+          <InteractiveTimelineQuestion key={question.id} question={question} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
         ) : isInteractiveAssociation && question.associationInteraction ? (
-          <InteractiveAssociationQuestion key={question.id} question={question} onComplete={(satisfactory) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory); }} />
+          <InteractiveAssociationQuestion key={question.id} question={question} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
         ) : <>
         <div className="question-heading">
           <div className="question-heading-copy">
@@ -497,14 +517,23 @@ function SessionCompletionLink({ href, totalQuestions, encouragement, recommenda
   return <section className="local-session-summary" aria-label="Activité terminée"><h3><span aria-hidden="true">🌿</span> Ton bilan est prêt</h3><p>{encouragement ?? "Bravo, tu as terminé l’activité."}</p><p className="session-completion-count">Tu as terminé les {totalQuestions} question{totalQuestions > 1 ? "s" : ""} de cette activité.</p>{recommendation ? <p>{recommendation}</p> : null}<Link href={href}>Consulter mon bilan</Link></section>;
 }
 
-function InteractiveAssociationQuestion({ question, onComplete }: { question: LearningSessionQuestion; onComplete: (satisfactory: boolean) => void }) {
+type ObjectiveQuestionProps = {
+  question: LearningSessionQuestion;
+  initialAttempts: number;
+  initialHintLevel: number;
+  onAttempt: (attemptNumber: number) => void;
+  onHint: () => void;
+  onComplete: (satisfactory: boolean, attemptNumber: number) => void;
+};
+
+function InteractiveAssociationQuestion({ question, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete }: ObjectiveQuestionProps) {
   const interaction = question.associationInteraction as AssociationInteraction;
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState("Sélectionne une institution, puis choisis le rôle correspondant.");
-  const [attempts, setAttempts] = useState(0);
+  const [attempts, setAttempts] = useState(initialAttempts);
   const [completed, setCompleted] = useState(false);
-  const [showHint, setShowHint] = useState(false);
+  const [showHint, setShowHint] = useState(initialHintLevel > 0);
   const itemById = new Map(interaction.items.map((item) => [item.id, item]));
   const assignedItemIds = new Set(Object.values(assignments));
 
@@ -517,13 +546,13 @@ function InteractiveAssociationQuestion({ question, onComplete }: { question: Le
   function beginDrag(event: ReactDragEvent<HTMLElement>, itemId: string) { event.dataTransfer.setData("text/plain", itemId); setSelectedItemId(itemId); }
   function verify() {
     const correctCount = interaction.targets.filter((target) => assignments[target.id] === target.correctItemId).length;
-    const nextAttempt = attempts + 1; setAttempts(nextAttempt);
-    if (correctCount === interaction.targets.length) { setCompleted(true); setFeedback("Bravo! Les cinq institutions sont associées à leur rôle principal."); onComplete(true); return; }
-    if (nextAttempt >= 2) { setAssignments(Object.fromEntries(interaction.targets.map((target) => [target.id, target.correctItemId]))); setCompleted(true); setFeedback(`${correctCount} réponse${correctCount > 1 ? "s" : ""} sur 5 étaient correctes. Socrato affiche maintenant les associations attendues.`); onComplete(false); return; }
+    const nextAttempt = attempts + 1; setAttempts(nextAttempt); onAttempt(nextAttempt);
+    if (correctCount === interaction.targets.length) { setCompleted(true); setFeedback("Bravo! Les cinq institutions sont associées à leur rôle principal."); onComplete(true, nextAttempt); return; }
+    if (nextAttempt >= 2) { setAssignments(Object.fromEntries(interaction.targets.map((target) => [target.id, target.correctItemId]))); setCompleted(true); setFeedback(`${correctCount} réponse${correctCount > 1 ? "s" : ""} sur 5 étaient correctes. Socrato affiche maintenant les associations attendues.`); onComplete(false, nextAttempt); return; }
     setFeedback(`${correctCount} réponse${correctCount > 1 ? "s sont correctes" : " est correcte"} sur 5. Revois la distinction entre institutions élues, nommées et représentantes de la Couronne.`);
   }
   return <section className="association-question" aria-labelledby="association-question-title">
-    <header className="timeline-question__header"><div><p>Question {question.number} · Association interactive</p><h2 id="association-question-title">{question.prompt}</h2></div><button type="button" aria-expanded={showHint} onClick={() => setShowHint((value) => !value)}>Obtenir un indice</button></header>
+    <header className="timeline-question__header"><div><p>Question {question.number} · Association interactive</p><h2 id="association-question-title">{question.prompt}</h2></div><button type="button" aria-expanded={showHint} onClick={() => { if (!showHint) onHint(); setShowHint((value) => !value); }}>Obtenir un indice</button></header>
     {showHint ? <p className="timeline-question__hint" role="status">{question.localHint}</p> : null}
     <section className="association-pool" aria-labelledby="association-pool-title"><h3 id="association-pool-title">Institutions à associer</h3><div>{interaction.items.filter(({ id }) => !assignedItemIds.has(id)).map((item) => <button key={item.id} type="button" draggable={!completed} aria-pressed={selectedItemId === item.id} onDragStart={(event) => beginDrag(event, item.id)} onClick={() => setSelectedItemId(item.id)}>{item.label}</button>)}</div></section>
     <div className="association-targets">{interaction.targets.map((target, index) => { const item = itemById.get(assignments[target.id]); return <article key={target.id} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); assign(target.id, event.dataTransfer.getData("text/plain")); }}><span>{index + 1}</span><p>{target.description}</p>{item ? <button type="button" disabled={completed} onClick={() => setAssignments((current) => Object.fromEntries(Object.entries(current).filter(([key]) => key !== target.id)))}>{item.label}<small>{completed ? "" : "Retirer"}</small></button> : <button type="button" disabled={!selectedItemId || completed} onClick={() => assign(target.id)}>{selectedItemId ? "Associer ici" : "Choisis une institution"}</button>}</article>; })}</div>
@@ -535,7 +564,7 @@ function timelineImagePosition(entryId: string) {
   return entryId === "timeline-entry-2" || entryId === "timeline-entry-5" ? "center top" : "center center";
 }
 
-function InteractiveTimelineQuestion({ question, onComplete }: { question: LearningSessionQuestion; onComplete: (satisfactory: boolean) => void }) {
+function InteractiveTimelineQuestion({ question, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete }: ObjectiveQuestionProps) {
   const interaction = question.timelineInteraction as TimelineInteraction;
   const shuffledEntries = useMemo(() => {
     const order = [2, 4, 0, 3, 1];
@@ -543,9 +572,9 @@ function InteractiveTimelineQuestion({ question, onComplete }: { question: Learn
   }, [interaction.entries]);
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
-  const [attempts, setAttempts] = useState(0);
+  const [attempts, setAttempts] = useState(initialAttempts);
   const [feedback, setFeedback] = useState("Sélectionne une carte, puis choisis sa date.");
-  const [showHint, setShowHint] = useState(false);
+  const [showHint, setShowHint] = useState(initialHintLevel > 0);
   const [completed, setCompleted] = useState(false);
 
   const assignedEntryIds = new Set(Object.values(assignments));
@@ -586,24 +615,25 @@ function InteractiveTimelineQuestion({ question, onComplete }: { question: Learn
     const correctCount = interaction.dates.filter((date) => entryById.get(assignments[date])?.date === date).length;
     const nextAttempt = attempts + 1;
     setAttempts(nextAttempt);
+    onAttempt(nextAttempt);
     if (correctCount === interaction.dates.length) {
       setCompleted(true);
       setFeedback("Bravo! Les cinq événements sont placés dans le bon ordre chronologique.");
-      onComplete(true);
+      onComplete(true, nextAttempt);
       return;
     }
     if (nextAttempt >= 2) {
       setAssignments(Object.fromEntries(interaction.entries.map((entry) => [entry.date, entry.id])));
       setCompleted(true);
       setFeedback(`${correctCount} réponse${correctCount > 1 ? "s" : ""} sur 5 étaient correctes. Socrato affiche maintenant l’ordre attendu pour te permettre de le revoir.`);
-      onComplete(false);
+      onComplete(false, nextAttempt);
       return;
     }
     setFeedback(`${correctCount} réponse${correctCount > 1 ? "s sont correctes" : " est correcte"} sur 5. Revois surtout la différence entre l’adoption de la loi et sa mise en application.`);
   }
 
   return <section className="timeline-question" aria-labelledby="timeline-question-title">
-    <header className="timeline-question__header"><div><p>Question {question.number} · Document chronologique interactif</p><h2 id="timeline-question-title">{question.prompt}</h2><span>{question.instruction}</span></div><button type="button" aria-expanded={showHint} onClick={() => setShowHint((current) => !current)}>Obtenir un indice</button></header>
+    <header className="timeline-question__header"><div><p>Question {question.number} · Document chronologique interactif</p><h2 id="timeline-question-title">{question.prompt}</h2><span>{question.instruction}</span></div><button type="button" aria-expanded={showHint} onClick={() => { if (!showHint) onHint(); setShowHint((current) => !current); }}>Obtenir un indice</button></header>
     {showHint ? <p className="timeline-question__hint" role="status">{question.localHint}</p> : null}
     <div className="timeline-question__dates" aria-label="Dates de la ligne du temps">{interaction.dates.map((date) => {
       const entry = entryById.get(assignments[date]);
