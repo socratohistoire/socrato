@@ -1,6 +1,6 @@
 import type { PedagogicalSessionState, ResultStatus } from "../pedagogical-session-engine/types.ts";
 import type { StudentDashboardData } from "../student-dashboard/types.ts";
-import { LEGACY_STUDENT_PROGRESS_CONTRACT_VERSION, STUDENT_PROGRESS_CONTRACT_VERSION, type StudentProgressContract, type StudentQuestionRuntimeProgress } from "./types.ts";
+import { LEGACY_STUDENT_PROGRESS_CONTRACT_VERSION, STUDENT_PROGRESS_CONTRACT_VERSION, STUDENT_PROGRESS_CONVERSATION_VERSION, type StudentProgressContract, type StudentQuestionRuntimeProgress } from "./types.ts";
 import { LOCAL_STUDENT_GROUP_ID, LOCAL_STUDENT_ID } from "../academic-context/local-context.ts";
 
 export const STUDENT_PROGRESS_STORAGE_KEY = "socrato-student-progress-v1";
@@ -29,7 +29,7 @@ function isStudentProgressContract(value: unknown): value is StudentProgressCont
       && Number.isInteger(item.nonExploitableCount) && Number(item.nonExploitableCount) >= 0
       && ["presented", "awaiting_response", "completed"].includes(String(item.status));
   });
-  return (record.schemaVersion === LEGACY_STUDENT_PROGRESS_CONTRACT_VERSION || record.schemaVersion === STUDENT_PROGRESS_CONTRACT_VERSION)
+  return (record.schemaVersion === LEGACY_STUDENT_PROGRESS_CONTRACT_VERSION || record.schemaVersion === STUDENT_PROGRESS_CONTRACT_VERSION || record.schemaVersion === STUDENT_PROGRESS_CONVERSATION_VERSION)
     && ["studentId", "groupId", "activityId", "sessionId", "notionId", "startedAt", "updatedAt"].every((key) => typeof record[key] === "string")
     && PROGRESS_STATES.has(String(record.state))
     && Number.isInteger(record.currentQuestionIndex)
@@ -58,14 +58,14 @@ function resultEntries(entries: Array<{ id: string; status: ResultStatus }>) {
 export function createStudentProgressContract(
   state: PedagogicalSessionState,
   now = new Date(),
-): Extract<StudentProgressContract, { schemaVersion: typeof STUDENT_PROGRESS_CONTRACT_VERSION }> {
+): Extract<StudentProgressContract, { schemaVersion: typeof STUDENT_PROGRESS_CONVERSATION_VERSION }> {
   const completedQuestions = state.questionStates.filter(({ status, result }) => status === "completed" && result);
   const hasStarted = state.currentQuestionIndex > 0 || state.questionStates.some(({ attemptNumber, hintRequestCount, status }) => attemptNumber > 0 || hintRequestCount > 0 || status !== "presented");
   const operationResults = completedQuestions.flatMap(({ result }) => result!.operationIds.map((id) => ({ id, status: result!.status })));
   const historicalKnowledgeResults = completedQuestions.flatMap(({ result }) => result!.historicalKnowledgeIds.map((id) => ({ id, status: result!.status })));
   const timestamp = now.toISOString();
   return {
-    schemaVersion: STUDENT_PROGRESS_CONTRACT_VERSION,
+    schemaVersion: STUDENT_PROGRESS_CONVERSATION_VERSION,
     studentId: LOCAL_DEMO_STUDENT_ID,
     groupId: LOCAL_DEMO_GROUP_ID,
     activityId: state.activityId,
@@ -75,8 +75,8 @@ export function createStudentProgressContract(
     currentQuestionIndex: state.currentQuestionIndex,
     totalQuestions: state.questionStates.length,
     completedQuestionIds: completedQuestions.map(({ questionId }) => questionId),
-    questionRuntime: state.questionStates.map(({ questionId, attemptNumber, hintLevel, hintRequestCount, nonExploitableCount, status }) => ({
-      questionId, attemptNumber, hintLevel, hintRequestCount, nonExploitableCount, status,
+    questionRuntime: state.questionStates.map(({ questionId, attemptNumber, hintLevel, hintRequestCount, nonExploitableCount, status, lastAnalysis }) => ({
+      questionId, attemptNumber, hintLevel, hintRequestCount, nonExploitableCount, status, ...(lastAnalysis ? { lastAnalysis } : {}),
     })),
     operationResults: state.summary?.operationResults ?? resultEntries(operationResults),
     historicalKnowledgeResults: state.summary?.historicalKnowledgeResults ?? resultEntries(historicalKnowledgeResults),
@@ -132,7 +132,7 @@ export function restoreStudentProgress(state: PedagogicalSessionState, progress:
   const completedIds = new Set(progress.completedQuestionIds);
   const operationStatuses = new Map(progress.operationResults.map(({ id, status }) => [id, status]));
   const knowledgeStatuses = new Map(progress.historicalKnowledgeResults.map(({ id, status }) => [id, status]));
-  const runtimeByQuestion = new Map((progress.schemaVersion === STUDENT_PROGRESS_CONTRACT_VERSION ? progress.questionRuntime : []).map((runtime) => [runtime.questionId, runtime]));
+  const runtimeByQuestion = new Map((progress.schemaVersion === STUDENT_PROGRESS_CONTRACT_VERSION || progress.schemaVersion === STUDENT_PROGRESS_CONVERSATION_VERSION ? progress.questionRuntime : []).map((runtime) => [runtime.questionId, runtime]));
   const questionStates = state.questionStates.map((question) => {
     const runtime = runtimeByQuestion.get(question.questionId);
     const restoredQuestion = runtime ? {
@@ -142,6 +142,7 @@ export function restoreStudentProgress(state: PedagogicalSessionState, progress:
       hintRequestCount: runtime.hintRequestCount,
       nonExploitableCount: runtime.nonExploitableCount,
       status: runtime.status,
+      ...(runtime.lastAnalysis ? { lastAnalysis: runtime.lastAnalysis } : {}),
     } : question;
     if (!completedIds.has(question.questionId)) return restoredQuestion;
     const status = operationStatuses.get(question.primaryOperationId)

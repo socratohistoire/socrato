@@ -24,7 +24,7 @@ function session(questionState = question()): PedagogicalSessionState {
 
 test("creates a minimal versioned record without raw student answers", () => {
   const progress = createStudentProgressContract(session(), new Date("2026-08-05T12:00:00.000Z"));
-  assert.equal(progress.schemaVersion, 2);
+  assert.equal(progress.schemaVersion, 3);
   assert.equal(progress.state, "not_started");
   assert.equal(progress.studentId, "local-anonymous-student-1");
   const serialized = JSON.stringify(progress);
@@ -47,6 +47,19 @@ test("restores attempts and hints without restoring any answer text", () => {
   assert.equal(restored.questionStates[0].hintRequestCount, 2);
   assert.equal(restored.questionStates[0].nonExploitableCount, 1);
   assert.equal(JSON.stringify(progress).includes("content"), false);
+});
+
+test("restores the latest structured analysis without storing the raw answer", () => {
+  const lastAnalysis = {
+    responseDisposition: "substantive" as const, pedagogicalOutcome: "partially_satisfactory" as const,
+    historicalAccuracy: "partial" as const, documentUse: "not_demonstrated" as const, justificationQuality: "partial" as const,
+    primaryOperationPerformance: "partial" as const, demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [],
+    observedStrengths: ["Une idée pertinente."], missingElements: ["Une preuve documentaire."], nextAction: "request_revision" as const, confidence: "high" as const,
+  };
+  const progress = createStudentProgressContract(session(question({ attemptNumber: 1, status: "awaiting_response", lastAnalysis })));
+  const restored = restoreStudentProgress(session(), progress);
+  assert.deepEqual(restored.questionStates[0].lastAnalysis, lastAnalysis);
+  assert.equal(JSON.stringify(progress).includes("réponse brute"), false);
 });
 
 test("keeps version 1 progress readable without inventing runtime state", () => {
