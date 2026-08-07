@@ -1,9 +1,9 @@
 # Socrato Pedagogical Framework
 
-> **Version:** 0.1.0
+> **Version:** 0.2.0
 > **Status:** Draft — Implementation reference
 > **Project:** Socrato
-> **Last updated:** July 2026
+> **Last updated:** August 2026
 > **Companion specification:** [`Technical-Specifications.md`](./Technical-Specifications.md)
 
 ---
@@ -98,6 +98,33 @@ Interpréter un document historique, justifier avec des preuves historiques, mob
 - `PED-OPS-011` — Une question **PEUT** déclarer les capacités transversales nécessaires à sa réussite.
 - `PED-OPS-012` — L'analyse **SHOULD** rendre compte d'une capacité transversale seulement lorsqu'elle est observable dans la réponse.
 - `PED-OPS-013` — Les capacités transversales **NE DOIVENT PAS** créer de nouveaux indicateurs de progression concurrents au registre officiel.
+
+## 8 bis. Typologie de la banque de questions
+
+La banque de questions doit soutenir une progression allant de l'acquisition de connaissances historiques précises jusqu'au raisonnement historique développé. Une catégorie décrit la forme et l'intention pédagogique d'une question; elle ne remplace ni les connaissances ciblées, ni l'opération intellectuelle principale, ni le contrat de réponse.
+
+Les catégories canoniques initiales sont :
+
+1. **Choix de réponses — connaissance historique spécifique** : reconnaître, distinguer ou sélectionner un fait, un acteur, un concept, une mesure ou une conséquence précise;
+2. **Choix de réponses — repérage chronologique** : ordonner, dater ou situer des faits, des notions ou des repères dans le temps;
+3. **Réponse courte — connaissance et explication** : définir, identifier ou expliquer brièvement une réalité historique, par exemple « Qu'est-ce que l'Acte d'Union? »;
+4. **Opération intellectuelle fondée sur des documents** : accomplir une opération officielle en mobilisant un ou plusieurs documents historiques approuvés;
+5. **Caractériser une période historique** : produire un portrait cohérent d'une période en mobilisant plusieurs faits, repères, acteurs, territoires et relations pertinents;
+6. **Question à développement d'environ 150 mots** : construire une réponse organisée qui mobilise une opération intellectuelle, des connaissances et, lorsque requis, des documents historiques.
+
+- `PED-QTYPE-001` — Toute question **DOIT** déclarer exactement une catégorie canonique et une opération intellectuelle principale compatible.
+- `PED-QTYPE-002` — Une question à choix de réponses **DOIT** être reliée à des connaissances ou repères approuvés et **NE DOIT PAS** reposer sur un piège de formulation.
+- `PED-QTYPE-003` — Les choix incorrects **DOIVENT** être historiquement plausibles pour diagnostiquer une confusion précise, sans introduire comme vrais des faits inventés.
+- `PED-QTYPE-004` — Une question de repérage chronologique **DOIT** identifier les repères approuvés qui fondent la bonne réponse.
+- `PED-QTYPE-005` — Une réponse courte **DOIT** posséder un contrat structuré indiquant les éléments essentiels, les variantes acceptables et les confusions prévisibles; elle **NE DOIT PAS** être jugée uniquement selon sa longueur.
+- `PED-QTYPE-006` — Une question fondée sur des documents **DOIT** déclarer le rôle de chaque document comme obligatoire, complémentaire ou contextuel.
+- `PED-QTYPE-007` — La compétence « caractériser une période de l'histoire du Québec et du Canada » **DOIT** demeurer distincte du registre des sept opérations intellectuelles, tout en déclarant les opérations et capacités mobilisées par chaque question.
+- `PED-QTYPE-008` — Une question visant à caractériser une période **DOIT** mobiliser un ensemble pertinent de connaissances et **NE DOIT PAS** être réduite au rappel d'un seul fait isolé.
+- `PED-QTYPE-009` — La cible d'environ 150 mots **DOIT** demeurer une indication pédagogique souple et **NE DOIT PAS** devenir un seuil automatique de réussite ou de rejet.
+- `PED-QTYPE-010` — Pour chaque notion, la banque **DEVRAIT** viser au moins une question à développement pour chaque opération intellectuelle réellement compatible avec la notion et ses documents approuvés.
+- `PED-QTYPE-011` — Une matrice de couverture **DOIT** permettre de repérer, par notion, les catégories, connaissances et opérations couvertes, manquantes ou non pertinentes.
+- `PED-QTYPE-012` — La couverture **NE DOIT PAS** forcer artificiellement une opération incompatible avec les connaissances ou les documents disponibles.
+- `PED-QTYPE-013` — Les questions propres à une notion **DOIVENT** pouvoir être complétées par des questions transversales reliant plusieurs notions ou périodes dans la banque générale.
 
 ## 9. Déroulement canonique d’une question
 

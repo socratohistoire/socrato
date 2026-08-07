@@ -36,6 +36,7 @@ export function createTeacherDashboardViewModel(data: TeacherDashboardData): Tea
     activities: data.activities,
     selectedActivityId: selectedActivity.id,
     selectedActivity,
+    allGroups: data.groups,
     groupBriefings: selectedGroupBriefings,
     groups: data.groups.filter((group) => selectedActivity.targetedGroupIds.includes(group.id)),
     highPriorityStudents: selectedHighPriorityStudents,

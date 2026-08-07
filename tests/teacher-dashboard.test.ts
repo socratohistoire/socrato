@@ -8,6 +8,8 @@ import {
   createTeacherDashboardViewModel,
   composeTeacherPedagogicalSummary,
   formatTeacherGreeting,
+  formatGlobalCompletionMessage,
+  getGroupsEligibleForSynthesis,
   isLocalTeacherDashboardEnabled,
   LocalTeacherMessageViewStore,
   LocalTeacherPedagogicalSummaryProvider,
@@ -15,6 +17,7 @@ import {
   validateTeacherPedagogicalSummary,
 } from "../lib/teacher-dashboard/index.ts";
 import type { TeacherSupportCandidate } from "../lib/teacher-dashboard/index.ts";
+import { createActivitySummaryMessageKey } from "../lib/teacher-dashboard/message-view-store.ts";
 
 const viewSource = readFileSync("app/teacher/teacher-dashboard-view.tsx", "utf8");
 const pageSource = readFileSync("app/teacher/page.tsx", "utf8");
@@ -75,6 +78,8 @@ test("présente une synthèse Socrato personnelle, validée et déterministe à 
   assert.doesNotMatch(message, /résultats disponibles|suffisamment établie|résultats admissibles|conseil|recommand/i);
   assert.match(cssSource, /\.socrato-observation-card\{[^}]*box-sizing:border-box[^}]*width:100%[^}]*border:[^}]*box-shadow:/);
   assert.match(cssSource, /\.socrato-spoken-row\{[^}]*grid-template-columns:80px minmax\(0,1fr\)[^}]*align-items:start[^}]*gap:16px/);
+  assert.match(cssSource, /\.socrato-advice-message\{[^}]*text-align:left/);
+  assert.doesNotMatch(cssSource, /\.socrato-advice-message\{[^}]*text-align:justify/);
   assert.match(cssSource, /\.socrato-observation-avatar\{[^}]*width:80px[^}]*height:80px[^}]*object-fit:contain[^}]*border:1px solid var\(--teacher-gold\)[^}]*border-radius:50%[^}]*background:#fff6e5[^}]*box-shadow:/);
   assert.match(cssSource, /@media\(max-width:620px\)[\s\S]*\.socrato-observation-avatar\{width:64px;height:64px\}/);
   assert.match(cssSource, /@media\(max-width:1100px\)\{[\s\S]*\.teacher-main-grid\{grid-template-columns:minmax\(0,1fr\);align-items:start\}/);
@@ -107,16 +112,24 @@ test("anime seulement la première consultation d’un message Socrato opaque", 
   store.markSeen("teacher-welcome-v1");
   assert.equal(store.hasSeen("teacher-welcome-v1"), true);
   assert.deepEqual(JSON.parse([...values.values()][0]), ["teacher-welcome-v1"]);
+  store.markSeen("teacher-configuration-complete-v1");
+  assert.equal(store.hasSeen("teacher-configuration-complete-v1"), true);
   store.markSeen("activity-summary-activity-revision-01-v1");
   assert.equal(store.hasSeen("activity-summary-activity-revision-01-v1"), true);
   assert.equal(store.hasSeen("activity-summary-activity-revision-01-v2"), false);
+  const timestampedKey = createActivitySummaryMessageKey("activity-local-1", "local-published-2026-08-06T18:30:00.000Z");
+  store.markSeen(timestampedKey);
+  assert.equal(store.hasSeen(timestampedKey), true);
+  assert.equal(createActivitySummaryMessageKey("activity-local-1", "local-suspended-2026-08-06T18:31:00.000Z") === timestampedKey, false);
   const localData = createLocalTeacherDashboardData();
   assert.ok(localData.hasCreatedActivity);
   assert.equal(createTeacherDashboardViewModel({ ...localData, hasCreatedActivity: false }).hasCreatedActivity, false);
-  assert.match(viewSource, /!data\.hasCreatedActivity/);
-  assert.match(viewSource, /data\.hasCreatedActivity \? localPedagogicalSummaryProvider\.createSummary\(\{ activity: activeActivity \}\) : null/);
+  assert.match(viewSource, /!hasCreatedActivity/);
+  assert.match(viewSource, /hasCreatedActivity \? localPedagogicalSummaryProvider\.createSummary\(\{ activity: activeActivity \}\) : null/);
   assert.match(viewSource, /teacher-welcome-v1/);
-  assert.match(viewSource, /`activity-summary-\$\{activeActivity\.id\}-\$\{activeActivity\.summaryVersion\}`/);
+  assert.match(viewSource, /createActivitySummaryMessageKey\(activeActivity\.id, `\$\{activeActivity\.summaryVersion\}-\$\{synthesisThresholdVersion\}-manual-\$\{manualSummaryVersion\}`\)/);
+  assert.match(viewSource, /formatGlobalCompletionMessage\(activeActivity\)/);
+  assert.match(viewSource, /lifecycleStatus === "suspended"[\s\S]*lifecycleStatus === "archived"/);
   assert.match(viewSource, /Bienvenue dans Socrato\.[\s\S]*Créer une activité/);
   assert.match(viewSource, /onFirstViewComplete=\{isInitialWelcome \? handleWelcomeMessageComplete : undefined\}/);
   const typewriterSource = readFileSync("app/teacher/typewriter-message.tsx", "utf8");
@@ -129,6 +142,22 @@ test("anime seulement la première consultation d’un message Socrato opaque", 
   assert.doesNotMatch(typewriterSource, /localStorage[^\n]*(?:text|message)|setItem\([^,]+,\s*text/);
   assert.match(cssSource, /sidebar-create-welcome-attention 2s ease-out 1/);
   assert.match(cssSource, /@media \(prefers-reduced-motion:reduce\)[\s\S]*\.socrato-typewriter-cursor\{display:none\}/);
+});
+
+test("attend que chaque groupe atteigne 75 % avant de rendre une synthèse admissible", () => {
+  const activity = {
+    ...createLocalTeacherDashboardData().activities[0],
+    completedStudentCount: 40,
+    targetedStudentCount: 60,
+    groupPortraits: [
+      { id: "g1", activityId: "a1", name: "Groupe 1", observation: "", suggestion: "", completedStudentCount: 15, targetedStudentCount: 20 },
+      { id: "g2", activityId: "a1", name: "Groupe 2", observation: "", suggestion: "", completedStudentCount: 14, targetedStudentCount: 20 },
+      { id: "g3", activityId: "a1", name: "Groupe 3", observation: "", suggestion: "", completedStudentCount: 20, targetedStudentCount: 20 },
+    ],
+  };
+  assert.deepEqual(getGroupsEligibleForSynthesis(activity).map(({ id }) => id), ["g1", "g3"]);
+  assert.equal(formatGlobalCompletionMessage(activity), "Bonjour, pour l’instant, 40 élèves sur 60 ont terminé l’activité.");
+  assert.match(viewSource, /hasGeneratedSynthesis \? <button[^>]*socrato-summary-refresh[\s\S]*Actualiser la synthèse/);
 });
 
 test("renforce les deux titres informatifs", () => {
@@ -150,7 +179,7 @@ test("structure le portrait avec observation, suggestion et défilement interne"
   assert.match(viewSource, /className="participation-ring"/);
   assert.doesNotMatch(viewSource, /briefing-observation"><h3>\{group\.name\}<\/h3><strong>Observation/);
   assert.doesNotMatch(viewSource, /briefing-suggestion"><strong>Suggestion de Socrato/);
-  assert.match(viewSource, /className=\{`portrait-scroll\$\{activeActivity\.groupPortraits\.length > 7 \? " portrait-scroll--overflowing" : ""\}`\} label="Portrait des groupes, faire défiler pour voir les autres groupes" hint="Faire défiler pour voir les autres groupes ↓" hintInsideViewport showHintControl=\{activeActivity\.groupPortraits\.length > 7\}/);
+  assert.match(viewSource, /className=\{`portrait-scroll\$\{displayedGroupPortraits\.length > 7 \? " portrait-scroll--overflowing" : ""\}`\} label="Portrait des groupes, faire défiler pour voir les autres groupes" hint="Faire défiler pour voir les autres groupes ↓" hintInsideViewport showHintControl=\{displayedGroupPortraits\.length > 7\}/);
   const portraitHeaderIndex = viewSource.indexOf('className="briefing-columns"');
   const portraitScrollIndex = viewSource.indexOf('<ScrollRegion className={`portrait-scroll');
   const portraitListIndex = viewSource.indexOf('className="briefing-list"');
@@ -227,8 +256,8 @@ test("active le défilement du portrait seulement à partir du huitième groupe"
   assert.equal(sevenGroups.length, 7);
   assert.equal(sevenGroups.length > 7, false);
   assert.equal(eightGroups.length > 7, true);
-  assert.match(viewSource, /activeActivity\.groupPortraits\.length > 7 \? " portrait-scroll--overflowing" : ""/);
-  assert.match(viewSource, /showHintControl=\{activeActivity\.groupPortraits\.length > 7\}/);
+  assert.match(viewSource, /displayedGroupPortraits\.length > 7 \? " portrait-scroll--overflowing" : ""/);
+  assert.match(viewSource, /showHintControl=\{displayedGroupPortraits\.length > 7\}/);
   assert.match(cssSource, /\.teacher-main-grid>\.portrait-card \.portrait-scroll \.scroll-region-viewport\{[^}]*overflow-y:visible\}/);
   assert.match(cssSource, /\.teacher-main-grid>\.portrait-card \.portrait-scroll--overflowing \.scroll-region-viewport\{max-height:620px;overflow-y:auto\}/);
 });
@@ -239,8 +268,8 @@ test("garde jusqu’à trois élèves en hauteur naturelle et borne le quatrièm
 
   for (const count of [1, 2, 3]) assert.equal(students.slice(0, count).length > 3, false);
   assert.equal(fourStudents.length > 3, true);
-  assert.match(viewSource, /data\.highPriorityStudents\.length > 3 \? " support-scroll--overflowing" : ""/);
-  assert.match(viewSource, /showHintControl=\{data\.highPriorityStudents\.length > 3\}/);
+  assert.match(viewSource, /displayedPriorityStudents\.length > 3 \? " support-scroll--overflowing" : ""/);
+  assert.match(viewSource, /showHintControl=\{displayedPriorityStudents\.length > 3\}/);
   assert.match(cssSource, /\.support-scroll \.scroll-region-viewport\{max-height:none;overflow-y:visible/);
   assert.match(cssSource, /\.support-scroll--overflowing \.scroll-region-viewport\{max-height:390px;overflow-y:auto\}/);
 });
@@ -256,7 +285,7 @@ test("présente les élèves sans route inventée vers un portrait", () => {
   assert.match(viewSource, /if \(student\.studentPortraitHref\) \{[\s\S]*<Link className="priority-detail-action teacher-details-action" href=\{student\.studentPortraitHref\} aria-label=\{accessibleLabel\}>Détails/);
   assert.match(viewSource, /<UnavailableAction className="priority-detail-action teacher-details-action" accessibleLabel=\{`\$\{accessibleLabel\} — Fonction à venir`\}>Détails/);
   assert.match(viewSource, /const accessibleLabel = `Voir le portrait de \$\{student\.displayLabel\.replace/);
-  assert.match(viewSource, /data\.highPriorityStudents\.map\(\(student\) => <li key=\{student\.id\}>/);
+  assert.match(viewSource, /displayedPriorityStudents\.map\(\(student\) => <li key=\{student\.id\}>/);
   assert.match(cssSource, /\.priority-list\{[^}]*grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(cssSource, /\.priority-actions\{width:96px;display:flex;flex-direction:column;align-items:stretch;gap:9px\}/);
   assert.match(cssSource, /\.priority-detail-action\{width:100%\}/);
@@ -271,7 +300,7 @@ test("présente les élèves sans route inventée vers un portrait", () => {
 });
 
 test("attire une seule fois l’attention sur une carte prioritaire non vide", () => {
-  assert.match(viewSource, /className=\{`teacher-card support-card\$\{data\.highPriorityStudents\.length \? " priority-card--attention" : ""\}`\}/);
+  assert.match(viewSource, /className=\{`teacher-card support-card\$\{displayedPriorityStudents\.length \? " priority-card--attention" : ""\}`\}/);
   assert.match(cssSource, /\.priority-card--attention\{animation:priority-attention-pulse 1\.8s ease-out 1\}/);
   assert.match(cssSource, /@keyframes priority-attention-pulse\{[^}]*0%,45%,100%[^}]*box-shadow:var\(--teacher-analysis-card-shadow\)/);
   assert.match(cssSource, /20%,68%\{[^}]*border-color:color-mix\(in srgb,var\(--teacher-red\)/);
@@ -294,11 +323,11 @@ test("démontre les deux listes défilables avec des données fictives autorisé
   assert.ok(highPriority.length >= 3);
   assert.ok(data.supportCandidates.every(({ priority }) => priority === "high"));
   assert.ok(data.supportCandidates.every(({ highPriorityReason }) => highPriorityReason === "failed_assessment" || highPriorityReason === "near_failure"));
-  assert.match(viewSource, /className=\{`support-scroll\$\{data\.highPriorityStudents\.length > 3 \? " support-scroll--overflowing" : ""\}`\} label="Élèves prioritaires, faire défiler pour voir les autres élèves" hint="Faire défiler pour voir les autres élèves ↓" hintInsideViewport showHintControl=\{data\.highPriorityStudents\.length > 3\}/);
+  assert.match(viewSource, /className=\{`support-scroll\$\{displayedPriorityStudents\.length > 3 \? " support-scroll--overflowing" : ""\}`\} label="Élèves prioritaires, faire défiler pour voir les autres élèves" hint="Faire défiler pour voir les autres élèves ↓" hintInsideViewport showHintControl=\{displayedPriorityStudents\.length > 3\}/);
   const supportHeaderIndex = viewSource.indexOf('className="scroll-card-header"><CardTitle className="analysis-section-title" icon="support"');
   const supportViewportIndex = viewSource.indexOf('<ScrollRegion className={`support-scroll');
   assert.ok(supportHeaderIndex < supportViewportIndex);
-  assert.match(viewSource, /data\.highPriorityStudents\.map\(\(student\) => <li key=\{student\.id\}>/);
+  assert.match(viewSource, /displayedPriorityStudents\.map\(\(student\) => <li key=\{student\.id\}>/);
   assert.match(cssSource, /\.support-scroll \.scroll-region-viewport\{max-height:none;overflow-y:visible;scrollbar-width:thin;scrollbar-color:var\(--teacher-red\)/);
   assert.match(cssSource, /\.support-scroll--overflowing \.scroll-region-viewport\{max-height:390px;overflow-y:auto\}/);
   assert.match(cssSource, /\.teacher-main-grid\{[^}]*min-height:0/);
@@ -376,7 +405,7 @@ test("présente une action de création compacte après la liste Groupes", () =>
   assert.match(cssSource, /\.teacher-sidebar \.sidebar-create-action\{[^}]*width:100%[^}]*height:54px[^}]*min-height:54px[^}]*flex:0 0 auto[^}]*align-self:stretch[^}]*display:grid[^}]*grid-template-columns:36px minmax\(0,1fr\) 18px[^}]*border:2px solid var\(--teacher-gold\)[^}]*border-radius:16px[^}]*linear-gradient[^}]*box-shadow:/);
   assert.match(cssSource, /\.sidebar-create-icon\{[^}]*width:34px[^}]*height:34px/);
   assert.match(cssSource, /\.sidebar-create-arrow\{[^}]*width:18px[^}]*height:18px[^}]*border-radius:50%/);
-  assert.equal((viewSource.match(/href="\/teacher\/activities\/new"/g) ?? []).length, 1);
+  assert.equal((viewSource.match(/href="\/teacher\/activities\/new"/g) ?? []).length, 2);
   const groupsIndex = viewSource.indexOf("<TeacherGroupsDisclosure");
   const createIndex = viewSource.indexOf("sidebar-create-action");
   assert.ok(groupsIndex < createIndex);
@@ -397,17 +426,18 @@ test("présente la navigation minimale sans inventer de destinations", () => {
   assert.doesNotMatch(viewSource, /sidebar-home-link|aria-current="page"|>Accueil<|sidebar-active-mark/);
   assert.doesNotMatch(cssSource, /sidebar-home-link|sidebar-active-mark/);
   assert.match(viewSource, /<nav aria-label="Navigation principale">\s*<TeacherGroupsDisclosure/);
-  assert.match(viewSource, /<TeacherGroupsDisclosure groups=\{data\.groups\} \/>/);
+  assert.match(viewSource, /<TeacherGroupsDisclosure groups=\{sidebarGroups\} \/>/);
   assert.match(viewSource, /<span>Créer une activité<\/span>/);
   assert.match(viewSource, /disabled aria-disabled="true"[^>]*title="Fonction à venir"/);
   assert.doesNotMatch(viewSource, /href="\/teacher\/(groups|practices)/);
 });
 
 test("ouvre et ferme le sous-menu Groupes avec une divulgation accessible", () => {
-  assert.match(groupsMenuSource, /useState\(false\)/);
+  assert.match(groupsMenuSource, /useState\(\(\) => typeof window !== "undefined" && window\.sessionStorage\.getItem\(GROUPS_MENU_STORAGE_KEY\) === "1"\)/);
   assert.match(groupsMenuSource, /aria-expanded=\{isOpen\}/);
   assert.match(groupsMenuSource, /aria-controls=\{menuId\}/);
-  assert.match(groupsMenuSource, /onClick=\{\(\) => setIsOpen\(\(open\) => !open\)\}/);
+  assert.match(groupsMenuSource, /onClick=\{toggleMenu\}/);
+  assert.match(groupsMenuSource, /sessionStorage\.setItem\(GROUPS_MENU_STORAGE_KEY/);
   assert.match(groupsMenuSource, /\{isOpen && <div id=\{menuId\}/);
   assert.match(groupsMenuSource, /className="sidebar-nav-tile groups-disclosure"/);
   assert.match(groupsMenuSource, /className="sidebar-nav-icon"[\s\S]*<svg viewBox="0 0 24 24" focusable="false">/);
@@ -431,12 +461,13 @@ test("alimente la liste latérale depuis le fournisseur et borne les longues lis
   assert.match(groupsMenuSource, /Détails du groupe — Fonction à venir/);
 });
 
-test("ne crée aucune navigation de groupe ou d’élève dans le sous-menu", () => {
-  assert.doesNotMatch(groupsMenuSource, /<Link|href=|\/eleve|student-dashboard/);
+test("crée une navigation accessible uniquement pour les groupes réels", () => {
+  assert.match(groupsMenuSource, /group\.detailsHref \? <Link className="sidebar-group-entry" href=\{group\.detailsHref\}/);
+  assert.doesNotMatch(groupsMenuSource, /\/eleve|student-dashboard/);
   assert.match(groupsMenuSource, /<ul className="sidebar-groups-list">/);
   assert.match(groupsMenuSource, /tabIndex=\{0\} aria-label=\{`\$\{group\.name\}[\s\S]*Fonction à venir/);
   assert.match(cssSource, /\.teacher-sidebar \.sidebar-nav-tile\{[^}]*width:100%[^}]*min-height:54px[^}]*grid-template-columns:36px minmax\(0,1fr\) 18px[^}]*border-radius:16px/);
-  assert.match(cssSource, /\.sidebar-groups-list li:focus-visible\{outline:2px solid #d6a552/);
+  assert.match(cssSource, /\.sidebar-group-entry:focus-visible\{outline:2px solid #d6a552/);
   assert.match(cssSource, /\.teacher-sidebar \.sidebar-nav-tile\{[^}]*width:100%/);
   assert.match(cssSource, /\.teacher-sidebar \.sidebar-create-action\{width:100%/);
   assert.match(cssSource, /@media \(max-width:980px\)[\s\S]*\.teacher-sidebar nav\{[^}]*width:100%[^}]*display:flex[^}]*margin-left:0/);
@@ -470,7 +501,7 @@ test("exclut les priorités moyennes et les élèves seulement à surveiller", (
 });
 
 test("préserve l’état vide professionnel", () => {
-  assert.match(viewSource, /Aucun élève en priorité élevée pour cette activité/);
+  assert.match(viewSource, /Aucun élève prioritaire pour le moment/);
   const empty = createTeacherDashboardViewModel({ ...createLocalTeacherDashboardData(), activities: [{ ...createLocalTeacherDashboardData().activities[0], highPriorityStudents: [] }], selectedActivityId: createLocalTeacherDashboardData().activities[0].id });
   assert.deepEqual(empty.highPriorityStudents, []);
 });
@@ -489,14 +520,21 @@ test("le fournisseur local est interchangeable et interdit en production", async
   assert.match(pageSource, /if \(!isLocalTeacherDashboardEnabled\(\)\) notFound\(\)/);
 });
 
-test("n’ajoute aucun appel IA, externe ou stockage persistant", () => {
+test("n’ajoute aucun appel IA externe et sépare les sources locale et serveur", () => {
   const sources = [
     "lib/teacher-dashboard/local-provider.ts",
     "lib/teacher-dashboard/presentation.ts",
     "app/teacher/page.tsx",
     "app/teacher/teacher-dashboard-view.tsx",
   ].map((path) => readFileSync(path, "utf8")).join("\n");
-  assert.doesNotMatch(sources, /fetch\(|https?:|OpenAI|SpeechSDK|localStorage|sessionStorage|indexedDB|console\./);
+  assert.doesNotMatch(sources, /fetch\(|https?:|OpenAI|SpeechSDK|sessionStorage|indexedDB|console\./);
+  assert.match(viewSource, /repository\.listPublishedActivities\(\)/);
+  assert.match(viewSource, /repository\.listStudentOutcomes\(\)/);
+  assert.match(viewSource, /relevantLocalActivities = useMemo/);
+  assert.match(viewSource, /activity\.targetedGroupIds\.some\(\(id\) => storedGroupIds\.has\(id\)\)/);
+  assert.match(viewSource, /createLocalTeacherActivitySummaries\(relevantLocalActivities, usesStoredTeacherWorkspace \? storedGroupOverviews : data\.allGroups/);
+  assert.match(viewSource, /usesStoredTeacherWorkspace \? storedTeacherActivities : \[\.\.\.localActivitySummaries, \.\.\.data\.activities\]/);
+  assert.match(viewSource, /if \(dataLoading \|\| !selectedActivityId\) return/);
 });
 
 test("le modèle enseignant ne contient aucune conversation complète", () => {
@@ -513,7 +551,7 @@ test("utilise une palette enseignante sémantique distincte en clair et sombre",
   assert.match(cssSource, /--teacher-bg:#211b20/);
   assert.match(cssSource, /--teacher-sidebar:#241020/);
   assert.doesNotMatch(cssSource, /--teacher-bg:#001|--teacher-sidebar:#001/);
-  assert.equal((viewSource.match(/className="teacher-card /g) ?? []).length, 1);
+  assert.equal((viewSource.match(/className="teacher-card /g) ?? []).length, 3);
   assert.match(viewSource, /className=\{`teacher-card support-card/);
   assert.match(cssSource, /--teacher-analysis-card-border:#b9a79f/);
   assert.match(cssSource, /--teacher-analysis-card-shadow:0 8px 28px #39182f0a,inset 0 0 0 1px #6f315f0a/);
@@ -522,7 +560,7 @@ test("utilise une palette enseignante sémantique distincte en clair et sombre",
 });
 
 test("préserve les cibles, le focus et une hiérarchie accessible", () => {
-  assert.match(viewSource, /<h1 className="teacher-activity-title" id="teacher-dashboard-title">\{activeActivity\.customTitle\}<\/h1>/);
+  assert.match(viewSource, /<h1 className="teacher-activity-title" id="teacher-dashboard-title">\{showConfigurationWelcome \? "Aucune activité en cours" : activeActivity\.customTitle\}<\/h1>/);
   assert.match(viewSource, /aria-labelledby="global-portrait-title"/);
   assert.match(viewSource, /aria-labelledby="support-title"/);
   assert.doesNotMatch(viewSource, /aria-labelledby="groups-title"/);
@@ -596,14 +634,14 @@ test("centre un en-tête contextuel compact et responsive", () => {
   assert.match(cssSource, /\.teacher-dashboard\{[^}]*--teacher-shell-row-gap:30px[^}]*grid-template-columns:250px minmax\(0,1fr\)[^}]*grid-template-rows:auto minmax\(0,1fr\)[^}]*row-gap:var\(--teacher-shell-row-gap\)/);
   assert.match(cssSource, /\.teacher-sidebar\{grid-column:1;grid-row:1\/3[^}]*padding:0 20px 28px[^}]*display:grid[^}]*grid-template-rows:subgrid/);
   assert.match(viewSource, /className="teacher-brand-lockup"[\s\S]*className="teacher-brand-symbol"[\s\S]*className="socrato-brand-logo"[^>]*src="\/logos\/socrato-logo-blanc-recadre\.png"[^>]*width=\{486\}[^>]*height=\{696\}[^>]*alt="Logo Socrato"[\s\S]*className="teacher-brand-name">SOCRATO[\s\S]*className="teacher-brand-subtitle">Espace enseignant/);
-  assert.match(cssSource, /\.teacher-brand\{grid-column:1;grid-row:1;min-width:0;min-height:0;contain:size[^}]*align-items:flex-start[^}]*justify-content:center[^}]*text-align:center\}/);
-  assert.match(cssSource, /\.teacher-brand-lockup\{min-width:0;height:auto;min-height:0;align-items:center;justify-content:flex-start;align-content:initial;gap:3px;padding-top:24px\}/);
+  assert.match(cssSource, /\.teacher-brand\{grid-column:1;grid-row:1;min-width:0;min-height:0;contain:none[^}]*align-items:center[^}]*justify-content:center[^}]*text-align:left\}/);
+  assert.match(cssSource, /\.teacher-brand-lockup\{min-width:0;height:auto;min-height:0;flex-direction:row;align-items:center;justify-content:flex-start;align-content:initial;gap:8px;padding-top:0\}/);
   assert.match(cssSource, /\.teacher-brand-symbol,\.teacher-brand-copy\{flex:0 0 auto;margin:0\}/);
-  assert.match(cssSource, /\.teacher-brand-copy\{align-items:center;gap:3px\}/);
+  assert.match(cssSource, /\.teacher-brand-copy\{align-items:flex-start;gap:3px\}/);
   assert.match(cssSource, /\.teacher-brand strong\{font-size:19px;font-weight:700[^}]*letter-spacing:\.035em[^}]*white-space:nowrap\}/);
   assert.match(cssSource, /\.teacher-brand small\{font-size:12px;font-weight:400[^}]*white-space:nowrap\}/);
   assert.match(cssSource, /\.teacher-brand-symbol\{width:38px;height:38px;min-height:38px;max-height:38px;aspect-ratio:1;display:grid;place-items:center;margin:0;padding:0;overflow:hidden;flex:0 0 38px\}/);
-  assert.match(cssSource, /\.teacher-brand-symbol img,\.teacher-brand-symbol svg\{display:block;width:100%;height:100%;object-fit:contain;margin:0\}/);
+  assert.match(cssSource, /\.teacher-brand-symbol img,\.teacher-brand-symbol svg\{display:block;width:38px;height:38px;object-fit:contain;margin:0\}/);
   assert.match(cssSource, /\.teacher-brand-name\{margin:0;line-height:1\}/);
   assert.match(cssSource, /\.teacher-brand-subtitle\{margin:0;line-height:1\.2\}/);
   assert.match(cssSource, /@media\(max-width:1100px\)[\s\S]*\.teacher-brand-symbol\{width:38px;height:38px;min-height:38px;max-height:38px;flex-basis:38px\}/);
@@ -613,12 +651,12 @@ test("centre un en-tête contextuel compact et responsive", () => {
   assert.match(cssSource, /\.teacher-sidebar nav \.teacher-groups-menu\{width:100%;min-width:0\}/);
   assert.match(cssSource, /\.teacher-sidebar nav \.groups-disclosure>span:nth-child\(2\),\.teacher-sidebar nav \.sidebar-create-action>span:first-of-type\{white-space:nowrap\}/);
   assert.match(cssSource, /\.teacher-content\{grid-column:2;grid-row:1\/3[^}]*display:grid[^}]*grid-template-rows:subgrid/);
-  assert.match(cssSource, /\.teacher-main-grid\{[^}]*grid-row:2/);
+  assert.match(cssSource, /\.teacher-dashboard-body\{grid-row:2;min-width:0;display:grid;gap:28px;padding-bottom:48px\}/);
   assert.match(viewSource, /className="socrato-observation-card" aria-label="Accueil de Socrato"/);
   assert.match(viewSource, /<span>Créer une activité<\/span>/);
   assert.match(groupsMenuSource, /<span>Groupes<\/span>/);
   assert.doesNotMatch(cssSource, /\.teacher-sidebar nav\{[^}]*(?:position:absolute|translateY|margin:-|(?:width|inline-size):(?:fit-content|min-content|max-content)|align-self:(?:start|center|end))/);
-  assert.match(cssSource, /@media \(max-width:980px\)[\s\S]*\.teacher-sidebar\{grid-column:1;grid-row:auto[^}]*display:flex[^}]*flex-direction:row/);
+  assert.match(cssSource, /@media \(max-width:980px\)[\s\S]*\.teacher-sidebar\{grid-column:1;grid-row:auto[^}]*display:flex[^}]*flex-direction:column[^}]*flex-wrap:nowrap[^}]*align-items:stretch/);
   assert.match(cssSource, /@media \(max-width:980px\)[\s\S]*\.teacher-content\{grid-column:1;grid-row:auto[^}]*display:block/);
   assert.match(cssSource, /\.teacher-context-main\{grid-column:1;grid-row:1[^}]*padding-inline:115px/);
   assert.match(cssSource, /\.teacher-theme-area\{grid-column:1;grid-row:1[^}]*justify-self:end/);
@@ -653,7 +691,7 @@ test("présente un tableau de bord contextuel par activité sélectionnée", () 
   assert.doesNotMatch(viewSource, /Changer d’activité de révision/);
   assert.doesNotMatch(viewSource, /Changer d’activité d’enrichissement/);
   assert.match(viewSource, /<option value="" disabled>\{activityPickerAccessibleLabel\}<\/option>/);
-  assert.match(viewSource, /data\.activities\.map\(\(activity\) => <option key=\{activity\.id\} value=\{activity\.id\}>\{activity\.customTitle\}/);
+  assert.match(viewSource, /activities\.map\(\(activity\) => <option key=\{activity\.id\} value=\{activity\.id\}>\{activity\.customTitle\}/);
   assert.match(viewSource, /<select id="teacher-activity-picker" value="" onChange=\{\(event\) => setSelectedActivityId\(event\.target\.value\)\}/);
   assert.doesNotMatch(viewSource, /<select id="teacher-activity-picker" value=\{selectedActivityId/);
   assert.match(viewSource, /title="Portrait des groupes"/);
@@ -665,14 +703,43 @@ test("présente un tableau de bord contextuel par activité sélectionnée", () 
   assert.doesNotMatch(viewSource, /Ajouter un groupe/);
   assert.match(viewSource, /className="teacher-context-header"/);
   assert.match(viewSource, /window\.history\.replaceState/);
-  assert.match(viewSource, /data\.activities\.find\(\(activity\) => activity\.id === selectedActivityId\) \?\? data\.selectedActivity/);
-  assert.match(pageSource, /\(await searchParams\)\.activity/);
+  assert.match(viewSource, /activities\.find\(\(activity\) => activity\.id === selectedActivityId\) \?\? activities\[0\] \?\? data\.selectedActivity/);
+  assert.match(pageSource, /const requestedActivity = resolvedSearchParams\.activity/);
   assert.match(pageSource, /selectedActivityId: selectedActivityId \?\? data\.selectedActivityId/);
   const unknownActivity = createTeacherDashboardViewModel({ ...createLocalTeacherDashboardData(), selectedActivityId: "unknown" });
   assert.notEqual(unknownActivity.selectedActivity.id, "unknown");
   assert.match(viewSource, /<ThemeToggle \/>/);
   assert.doesNotMatch(viewSource, /className="theme-switch"/);
   assert.match(viewSource, /className="activity-picker"/);
+});
+
+test("présente toutes les activités de la plus récente à la plus ancienne", () => {
+  assert.match(viewSource, /id="all-activities-title">Toutes les activités/);
+  assert.match(viewSource, /activitiesByPublication/);
+  assert.match(viewSource, /right\.publishedAt\.localeCompare\(left\.publishedAt\)/);
+  assert.match(viewSource, /setSelectedActivityId\(activity\.id\)/);
+  assert.match(viewSource, /Résultats disponibles/);
+  assert.match(viewSource, /Résultats partiels/);
+  assert.match(viewSource, /En attente de résultats/);
+  assert.match(cssSource, /\.all-activities-card li button\{[^}]*grid-template-columns/);
+  assert.match(viewSource, /Suspendre l’activité/);
+  assert.match(viewSource, /Réactiver l’activité/);
+  assert.match(viewSource, />Archiver<\/button>/);
+  assert.match(viewSource, /\.setPublishedActivityStatus\(activityId, status\)/);
+  assert.match(cssSource, /\.all-activities-status--suspended/);
+  assert.match(cssSource, /\.all-activities-status--archived/);
+  assert.match(cssSource, /@media\(max-width:620px\)[\s\S]*\.all-activities-card li button\{grid-template-columns:1fr auto/);
+});
+
+test("présente le brouillon avec les actions continuer et supprimer", () => {
+  assert.match(viewSource, /repository\.readActiveDraftSummary\(\)/);
+  assert.match(viewSource, /className="teacher-card activity-draft-card"/);
+  assert.match(viewSource, /href="\/teacher\/activities\/new">Continuer/);
+  assert.match(viewSource, /window\.confirm\("Supprimer ce brouillon d’activité\?/);
+  assert.match(viewSource, /\.clearActiveDraft\(\)/);
+  assert.match(viewSource, /setActivityDraft\(null\)/);
+  assert.match(cssSource, /\.activity-draft-card/);
+  assert.match(cssSource, /@media\(max-width:620px\)[\s\S]*\.activity-draft-details/);
 });
 
 test("prépare les futurs champs de groupe sans surcharger l’aperçu", () => {

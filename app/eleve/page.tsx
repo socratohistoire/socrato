@@ -31,7 +31,7 @@ export default function StudentAccessPage() {
                 SOCRATO
               </div>
               <div className="mt-1.5 hidden text-[0.58rem] tracking-[0.11em] text-slate-600 sm:block sm:text-[0.62rem]">
-                TON TUTEUR INTELLIGENT EN HISTOIRE
+                TON TUTEUR PÉDAGOGIQUE EN HISTOIRE
               </div>
             </div>
           </Link>

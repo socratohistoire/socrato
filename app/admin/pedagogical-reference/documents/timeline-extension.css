@@ -1,0 +1,11 @@
+.student-timeline {
+  grid-template-columns: repeat(5, minmax(205px, 1fr));
+  min-width: 1080px;
+}
+
+@media (max-width: 600px) {
+  .student-timeline {
+    grid-template-columns: repeat(5, 215px);
+    min-width: 1075px;
+  }
+}

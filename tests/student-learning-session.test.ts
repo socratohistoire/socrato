@@ -22,6 +22,7 @@ class TestSessions implements StudentSessionRepository {
       token, anonymousStudentId: "anonymous-test-student", credentialId: "credential-test", expiresAt: new Date("2099-01-01T00:00:00.000Z"),
     } : null;
   }
+  async revokeByToken(): Promise<void> {}
 }
 
 class TestProvider implements StudentLearningSessionProvider {
@@ -92,8 +93,8 @@ test("l’URL de séance ne transporte aucun titre libre", () => {
 test("affiche les opérations intellectuelles de la question", () => {
   const data = createDemoStudentLearningSession(); assert.ok(data);
   const question = getCurrentLearningQuestion(data); assert.ok(question);
-  assert.deepEqual(question.intellectualOperations.map(({ label }) => label), ["Établir des faits", "Mettre en relation des faits", "Déterminer des causes et des conséquences"]);
-  assert.equal(question.primaryOperationId, "causes-and-consequences");
+  assert.deepEqual(question.intellectualOperations.map(({ label }) => label), ["Établir des liens de causalité"]);
+  assert.equal(question.primaryOperationId, "causal_connections");
   assert.equal(question.intellectualOperations.filter(({ id }) => id === question.primaryOperationId).length, 1);
 });
 
@@ -145,7 +146,7 @@ test("la conversation grandit naturellement puis fait défiler uniquement les me
   assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\)[\s\S]*\.message-list \{ min-height:0; max-height:none; flex:1; \}/);
   assert.match(cssSource, /\.message-list \{[^}]*overflow-y:auto[^}]*overflow-x:hidden/);
   assert.match(cssSource, /\.response-composer \{[^}]*flex:0 0 auto/);
-  assert.match(viewSource, /<section className="conversation"[\s\S]*<div[^>]*className="message-list"[\s\S]*<form className="response-composer"/);
+  assert.match(viewSource, /<section className=\{`conversation\$\{[\s\S]*<div[^>]*className="message-list"[\s\S]*<form className="response-composer"/);
   assert.match(cssSource, /\.question-card \{[^}]*padding:12px 20px/);
   assert.doesNotMatch(cssSource, /\.question-card \{[^}]*min-height/);
   assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\)[\s\S]*\.conversation \{ min-height:0; flex:1/);
@@ -171,14 +172,32 @@ test("retrouve une hauteur naturelle et une seule colonne sous 1120 px", () => {
   assert.match(cssSource, /@media \(max-width:1119px\)[\s\S]*\.document-system-card \{ height:auto; display:block; overflow:visible; \}/);
 });
 
-test("place l’indice après la question et la consigne sans positionnement absolu", () => {
-  assert.match(viewSource, /<h3 id="question-title">\{question\.prompt\}<\/h3>\s*<div className="question-support-row">\s*<p>\{question\.instruction\}<\/p>\s*<div className="question-card-actions">[\s\S]*className="hint-button"/);
-  assert.match(cssSource, /\.question-support-row \{[^}]*grid-template-columns:minmax\(0,1fr\) auto/);
+test("intègre l’indice à droite de la dernière ligne de la question", () => {
+  assert.match(viewSource, /<h3 id="question-title">\{question\.prompt\}\{!isMultipleChoice \? <span className="question-inline-hint">[\s\S]*className="hint-button hint-button-compact"/);
+  assert.match(viewSource, /<div className="multiple-choice-actions">[\s\S]*Obtenir un indice[\s\S]*Vérifier ma réponse/);
+  assert.doesNotMatch(viewSource, /<p>\{question\.instruction\}<\/p>/);
+  assert.match(cssSource, /\.question-support-row \{[^}]*display:flex[^}]*justify-content:flex-end/);
+  assert.match(cssSource, /\.question-card-heading-row \{[^}]*display:block/);
+  assert.match(cssSource, /\.question-inline-hint \{[^}]*float:right[^}]*margin:4px 0 0 14px/);
+  assert.match(cssSource, /\.hint-button\.hint-button-compact \{[^}]*min-height:30px[^}]*font-size:9px/);
   assert.match(cssSource, /\.hint-button \{[^}]*display:inline-flex[^}]*margin-left:auto/);
   assert.doesNotMatch(cssSource, /\.hint-button \{[^}]*position:absolute/);
   assert.match(cssSource, /\.question-card-actions \{[^}]*display:flex[^}]*justify-content:flex-end/);
   assert.match(cssSource, /\.hint-button \{[^}]*min-height:44px/);
   assert.match(viewSource, /<svg className="hint-icon"[^>]*aria-hidden="true"/);
+});
+
+test("empile à 75 % la question, la ligne du temps et la conversation", () => {
+  assert.match(viewSource, /questionDocuments\.some\(\(\{ id \}\) => id === "AU-D-002"\)/);
+  assert.match(viewSource, /isTimelineDevelopment \? " session-layout--timeline-development"/);
+  assert.match(cssSource, /\.session-layout--timeline-development \.question-heading,\.session-layout--timeline-development \.question-card,[^}]*\.conversation \{ width:75%; \}/);
+  assert.match(cssSource, /\.session-layout--timeline-development \.question-pane,\.session-layout--timeline-development \.question-module \{ display:contents; \}/);
+  assert.match(cssSource, /\.session-layout--timeline-development \.question-card \{[^}]*grid-row:2/);
+  assert.match(cssSource, /\.session-layout--timeline-development \.documents-pane \{[^}]*grid-row:4/);
+  assert.match(cssSource, /\.session-layout--timeline-development \.conversation \{[^}]*grid-row:5/);
+  assert.match(viewSource, /timelineConversationExpanded \? " is-expanded"/);
+  assert.match(viewSource, /Afficher la conversation/);
+  assert.match(cssSource, /\.conversation--timeline-dock\{[^}]*position:sticky!important[^}]*bottom:12px!important/);
 });
 
 test("affiche uniquement l’opération principale explicitement définie près de QUESTION 1", () => {
@@ -190,14 +209,13 @@ test("affiche uniquement l’opération principale explicitement définie près 
 });
 
 test("place les deux en-têtes hors des cartes dans une grille alignée", () => {
-  assert.match(viewSource, /<div className="session-layout">\s*<div className="question-heading">[\s\S]*?<section className="question-pane" aria-labelledby="question-section-title">\s*<div className="question-module">\s*<div className="question-card">/);
-  assert.match(viewSource, /<div className="documents-heading"><h2 id="documents-title"[\s\S]*<DocumentsPane/);
+  assert.match(viewSource, /<div className=\{`session-layout\$\{isInteractiveTimeline \|\| isInteractiveAssociation \? " session-layout--timeline" : ""\}[\s\S]*session-layout--choice-no-documents/);
+  assert.match(viewSource, /<div className="question-heading">[\s\S]*?<section className="question-pane" aria-labelledby="question-section-title">\s*<div className="question-module">\s*<div className=\{`question-card\$\{isShortAnswerWithoutDocuments/);
+  assert.match(viewSource, /<div className="documents-heading">[\s\S]*?<h2 id="documents-title"[\s\S]*?<DocumentsPane/);
+  assert.doesNotMatch(viewSource, /className="session-progress"/);
   assert.match(viewSource, /<aside className="documents-pane" aria-labelledby="documents-title">\s*<div className="documents-module">/);
-  const questionCardSource = viewSource.match(/<div className="question-card">([\s\S]*?)<\/div>\s*<section className="conversation"/)?.[1] ?? "";
-  assert.doesNotMatch(questionCardSource, /question-number|operation-chip/);
-  assert.match(questionCardSource, /<h3 id="question-title">\{question\.prompt\}<\/h3>/);
-  assert.match(questionCardSource, /\{question\.instruction\}/);
-  assert.match(questionCardSource, /className="hint-button"/);
+  assert.match(viewSource, /<div className=\{`question-card\$\{isShortAnswerWithoutDocuments[\s\S]*<div className="question-card-heading-row">[\s\S]*<h3 id="question-title">\{question\.prompt\}\{!isMultipleChoice \? <span className="question-inline-hint">/);
+  assert.match(viewSource, /className="question-inline-hint">[\s\S]*className="hint-button hint-button-compact"/);
   assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\)[\s\S]*\.session-layout \{[^}]*grid-template-rows:auto minmax\(0,1fr\)/);
   assert.match(cssSource, /\.question-heading \{[^}]*position:sticky[^}]*top:0[^}]*grid-column:1[^}]*grid-row:1/);
   assert.match(cssSource, /\.documents-heading \{[^}]*position:sticky[^}]*top:0[^}]*grid-column:2[^}]*grid-row:1/);
@@ -231,7 +249,7 @@ test("encadre uniquement la conversation avec la palette adaptée au thème", ()
 
 test("retire les grands cadres extérieurs et partage le style des titres", () => {
   assert.match(viewSource, /className="column-title question-number"/);
-  assert.match(viewSource, /className="column-title">Documents historiques/);
+  assert.match(viewSource, /className="column-title">Documents historiques<\/h2>/);
   assert.match(cssSource, /\.column-title \{[^}]*font-size:clamp\(1\.25rem,1\.6vw,1\.6rem\)[^}]*font-weight:700[^}]*line-height:1\.15/);
   assert.match(cssSource, /\.question-number \{[^}]*padding:0[^}]*border:0[^}]*border-radius:0[^}]*background:transparent[^}]*box-shadow:none/);
   const moduleRule = cssSource.match(/\.question-module, \.documents-module \{([^}]*)\}/)?.[1] ?? "";
@@ -241,13 +259,12 @@ test("retire les grands cadres extérieurs et partage le style des titres", () =
   assert.match(cssSource, /\[data-theme="dark"\] \.operation-chip \{[^}]*border-color:#d3b176[^}]*background:#17344b[^}]*color:#fff5df/);
 });
 
-test("transmet localement la réponse au moteur sans prétendre à une véritable évaluation", () => {
+test("transmet la réponse au moteur sans afficher d’avertissement technique local", () => {
   assert.match(viewSource, /setMessages/);
   assert.match(viewSource, /submitStudentResponse\(engineDefinition, engineState, content, analyzer\)/);
-  assert.match(viewSource, /LOCAL_ANALYZER_NOTICE/);
-  assert.match(readFileSync("lib/pedagogical-session-engine/local-analyzer.ts", "utf8"), /ne constitue pas une véritable évaluation pédagogique/);
+  assert.doesNotMatch(viewSource, /LOCAL_ANALYZER_NOTICE|session-demo-notice/);
   assert.doesNotMatch(viewSource, /Démonstration locale : ta réponse n’est pas réellement évaluée|local-analysis-notice|setAnalysisNotice/);
-  assert.match(readFileSync("lib/pedagogical-session-engine/feedback.ts", "utf8"), /technicalNotice: "Démonstration locale : ta réponse n’est pas réellement évaluée\."/);
+  assert.doesNotMatch(readFileSync("lib/pedagogical-session-engine/feedback.ts", "utf8"), /technicalNotice:/);
   assert.doesNotMatch(viewSource, /author: "socrato"[\s\S]{0,180}technicalNotice/);
 });
 
@@ -293,7 +310,7 @@ test("fait défiler uniquement la conversation vers chaque nouveau message", () 
 });
 
 test("conserve le locuteur avec sa bulle sans avertissement visible dans la conversation", () => {
-  assert.match(viewSource, /<article[^>]*className=\{`message message-\$\{message\.author\}`\}>[\s\S]*<strong>\{message\.author === "student" \? "Toi" : message\.author === "socrato" \? "Socrato"/);
+  assert.match(viewSource, /<article[^>]*className=\{`message message-\$\{message\.author\}`\}>[\s\S]*<strong>\{message\.author === "student" \? "Toi" : "Socrato"/);
   assert.doesNotMatch(viewSource, /analysisNotice|local-analysis-notice/);
   assert.doesNotMatch(cssSource, /\.message \{[^}]*overflow:hidden/);
   assert.match(cssSource, /\.message p \{[^}]*overflow-wrap:anywhere/);
@@ -307,7 +324,7 @@ test("un changement de document ne déclenche pas le défilement conversationnel
 
 test("demande au moteur un indice local borné", () => {
   const data = createDemoStudentLearningSession(); assert.ok(data);
-  assert.match(getCurrentLearningQuestion(data)?.localHint ?? "", /^Indice local/);
+  assert.ok((getCurrentLearningQuestion(data)?.localHint ?? "").length > 0);
   assert.match(viewSource, /requestNextHint\(engineDefinition, engineState\)/);
   assert.match(viewSource, /setCurrentHint\(transition\.hint\?\.text/);
   assert.match(viewSource, /maximumHelpReceived = activeQuestionState\.hintLevel >= MAX_EXPLICIT_HINT_LEVEL/);
@@ -320,80 +337,70 @@ test("n’ajoute aucun appel IA ou externe", () => {
   assert.doesNotMatch(combined, /fetch\(|openai|anthropic|generateText|streamText|chat\.completions|responses\.create/i);
 });
 
-test("conserve la question fondée sur 1, 2 et 3 avec quatre documents ordonnés uniques", () => {
+test("transpose la question approuvée avec ses trois documents ordonnés uniques", () => {
   const data = createDemoStudentLearningSession(); assert.ok(data);
   const question = getCurrentLearningQuestion(data); assert.ok(question);
   assert.equal(question.type, "question_with_documents");
-  assert.equal(question.prompt, "À l’aide des documents 1, 2 et 3, explique pourquoi la représentation égale du Canada-Est et du Canada-Ouest pouvait désavantager le Canada-Est au moment de l’Acte d’union.");
-  assert.equal(question.instruction, "Appuie ta réponse sur un élément précis du tableau et sur les propos d’au moins un des deux acteurs politiques.");
+  assert.equal(question.prompt, "À l’aide des documents sur les 92 Résolutions et les résolutions Russell, explique pourquoi la réponse britannique contribue au déclenchement des Rébellions de 1837-1838.");
+  assert.equal(question.instruction, "Appuie ta réponse sur une revendication des 92 Résolutions, sur la réponse formulée dans les résolutions Russell et sur l’indice de radicalisation présenté dans La Minerve.");
   const documents = getQuestionDocuments(data);
-  assert.equal(documents.length, 4);
-  assert.deepEqual(documents.map(({ displayOrder }) => displayOrder), [1, 2, 3, 4]);
-  assert.equal(new Set(documents.map(({ id }) => id)).size, 4);
-  assert.deepEqual(documents.map(({ title }) => title), ["Population des deux Canadas au moment de l’Acte d’union", "Le comte de Gosford critique la représentation égale", "La Fontaine dénonce les conditions de l’Union", "Vue intérieure du Parlement"]);
+  assert.equal(documents.length, 3);
+  assert.deepEqual(documents.map(({ displayOrder }) => displayOrder), [1, 2, 3]);
+  assert.equal(new Set(documents.map(({ id }) => id)).size, 3);
+  assert.deepEqual(documents.map(({ id }) => id), ["PAT-T-002", "PAT-T-003", "PAT-T-006"]);
+});
+
+test("isole le prototype de ligne du temps sans modifier la question textuelle", () => {
+  const data = createDemoStudentLearningSession("demo-activity-timeline", "acte-union", "teacher-assigned"); assert.ok(data);
+  const question = getCurrentLearningQuestion(data); assert.ok(question);
+  assert.equal(question.type, "interactive_timeline");
+  assert.equal(question.timelineInteraction?.entries.length, 5);
+  assert.deepEqual(question.timelineInteraction?.dates, ["1837-1838", "1839", "1840", "1841", "1848"]);
+  assert.equal(question.documentRelations.length, 0);
+  assert.equal(data.documentCatalog.length, 0);
+  assert.match(viewSource, /InteractiveTimelineQuestion/);
+  assert.match(viewSource, /Vérifier mes réponses/);
+  assert.match(viewSource, /Placer ici sous/);
 });
 
 test("conserve tous les rattachements pédagogiques plusieurs-à-plusieurs", () => {
   const data = createDemoStudentLearningSession(); assert.ok(data);
   const question = getCurrentLearningQuestion(data); assert.ok(question);
   assert.equal(question.historicalKnowledgeIds.length, 5);
-  assert.equal(question.intellectualOperations.length, 3);
-  assert.equal(question.documentRelations.length, 4);
+  assert.equal(question.intellectualOperations.length, 1);
+  assert.equal(question.documentRelations.length, 3);
   for (const document of data.documentCatalog) {
-    assert.ok(document.historicalKnowledgeIds.length >= 3);
-    assert.ok(document.intellectualOperationIds.length >= 2);
+    assert.ok(document.historicalKnowledgeIds.length >= 1);
+    assert.ok(document.intellectualOperationIds.length >= 1);
   }
 });
 
-test("conserve les données, sources et notes éditoriales approuvées", () => {
+test("conserve les sources et notes éditoriales des deux textes approuvés", () => {
   const data = createDemoStudentLearningSession(); assert.ok(data);
   const documents = getQuestionDocuments(data);
-  assert.deepEqual(documents[0].content, {
-    kind: "population_table",
-    rows: [
-      { region: "Canada-Est", population: "environ 700 000 à 800 000 habitants", representatives: "42 députés" },
-      { region: "Canada-Ouest", population: "environ 200 000 à 300 000 habitants", representatives: "42 députés" },
-    ],
-  });
-  assert.match(documents[1].editorialNote ?? "", /Traduction française et découpage adaptés/);
-  assert.match(documents[2].editorialNote ?? "", /Extrait abrégé/);
-  assert.deepEqual(documents[1].sourceUrls, ["https://api.parliament.uk/historic-hansard/lords/1840/jun/30/government-of-canada"]);
-  assert.equal(documents[2].sourceUrls.length, 2);
+  assert.equal(documents[0].content.kind, "historical_excerpt");
+  assert.equal(documents[1].content.kind, "historical_excerpt");
+  assert.match(documents[0].editorialNote ?? "", /français modernisé/);
+  assert.match(documents[1].editorialNote ?? "", /traduction-adaptation française/);
+  assert.ok(documents.every(({ sourceUrls }) => sourceUrls.length > 0));
 });
 
-test("limite le tableau statistique aux données brutes approuvées", () => {
+test("ne réintroduit pas le tableau statistique de l’ancienne question", () => {
   const data = createDemoStudentLearningSession(); assert.ok(data);
-  const document = getQuestionDocuments(data)[0];
-  assert.equal(document.content.kind, "population_table");
-  if (document.content.kind !== "population_table") return;
-  assert.deepEqual(document.content.rows, [
-    { region: "Canada-Est", population: "environ 700 000 à 800 000 habitants", representatives: "42 députés" },
-    { region: "Canada-Ouest", population: "environ 200 000 à 300 000 habitants", representatives: "42 députés" },
-  ]);
+  assert.ok(getQuestionDocuments(data).every(({ content }) => content.kind === "historical_excerpt"));
   const combinedSource = [viewSource, readFileSync("lib/student-learning-session/document-catalog.ts", "utf8")].join("\n");
   assert.doesNotMatch(combinedSource, /Malgré une population beaucoup plus importante au Canada-Est/);
   assert.doesNotMatch(viewSource, /document-conclusion|content\.conclusion/);
 });
 
-test("intègre localement l’aquarelle comme document 4 sans modifier la question", () => {
+test("utilise le premier texte approuvé comme document initial", () => {
   const data = createDemoStudentLearningSession(); assert.ok(data);
   const question = getCurrentLearningQuestion(data); assert.ok(question);
-  const document = getQuestionDocuments(data)[3];
-  assert.equal(question.prompt, "À l’aide des documents 1, 2 et 3, explique pourquoi la représentation égale du Canada-Est et du Canada-Ouest pouvait désavantager le Canada-Est au moment de l’Acte d’union.");
-  assert.equal(document.displayOrder, 4);
-  assert.equal(document.typeLabel, "Aquarelle historique");
-  assert.equal(document.authorLabel, "James Duncan");
-  assert.equal(document.dateLabel, "Vers 1848");
-  assert.equal(document.institutionLabel, "Musée des beaux-arts du Canada");
-  assert.equal(document.rightsLabel, "Domaine public");
-  assert.deepEqual(document.sourceUrls, ["https://commons.wikimedia.org/wiki/File:Parlement_Canada_Montr%C3%A9al_int%C3%A9rieur.jpg"]);
-  assert.equal(document.content.kind, "historical_image");
-  if (document.content.kind !== "historical_image") return;
-  assert.equal(document.content.localSrc, "/documents/acte-union/parlement-canada-montreal-interieur.jpg");
-  assert.equal(document.content.description, "Intérieur du Parlement de la province du Canada installé au marché Sainte-Anne, à Montréal.");
-  const imageBytes = readFileSync("public/documents/acte-union/parlement-canada-montreal-interieur.jpg");
-  assert.deepEqual([...imageBytes.subarray(0, 3)], [0xff, 0xd8, 0xff]);
-  assert.doesNotMatch(viewSource, /upload\.wikimedia\.org/);
+  const document = getQuestionDocuments(data)[0];
+  assert.equal(question.prompt, "À l’aide des documents sur les 92 Résolutions et les résolutions Russell, explique pourquoi la réponse britannique contribue au déclenchement des Rébellions de 1837-1838.");
+  assert.equal(document.displayOrder, 1);
+  assert.equal(document.id, "PAT-T-002");
+  assert.equal(question.featuredDocumentId, document.id);
 });
 
 test("rend le document 4 dans la navigation, l’agrandissement et les détails", () => {
@@ -414,7 +421,7 @@ test("affiche une miniature locale uniquement pour les documents réellement ill
   assert.match(cssSource, /\.historical-document-image \{[^}]*object-fit:contain/);
   const data = createDemoStudentLearningSession(); assert.ok(data);
   const documents = getQuestionDocuments(data);
-  assert.equal(documents.filter(({ content }) => content.kind === "historical_image").length, 1);
+  assert.equal(documents.filter(({ content }) => content.kind === "historical_image").length, 0);
   assert.equal(documents.filter(({ content }) => content.kind !== "historical_image" && "localSrc" in content).length, 0);
   assert.doesNotMatch(viewSource, /https?:\/\/upload\.wikimedia\.org/);
 });
@@ -427,7 +434,7 @@ test("entoure uniquement les extraits historiques de guillemets français", () =
   assert.match(viewSource, /document\.content\.kind === "population_table" \? \([\s\S]*?<table>[\s\S]*?<\/table>[\s\S]*?\) : document\.content\.kind === "historical_image" \?[\s\S]*?: <blockquote>« \{document\.content\.excerpt\} »<\/blockquote>/);
   const data = createDemoStudentLearningSession(); assert.ok(data);
   const excerpts = getQuestionDocuments(data).filter(({ content }) => content.kind === "historical_excerpt");
-  assert.deepEqual(excerpts.map(({ authorLabel, dateLabel }) => [authorLabel, dateLabel]), [["Earl of Gosford", "30 juin 1840"], ["Louis-Hippolyte La Fontaine", "25 août 1840"]]);
+  assert.deepEqual(excerpts.map(({ id }) => id), ["PAT-T-002", "PAT-T-003", "PAT-T-006"]);
 });
 
 test("permet sélection clavier et vue agrandie accessible avec retour du focus", () => {
@@ -449,32 +456,32 @@ test("suit les documents consultés et conserve clairement la sélection", () =>
   assert.match(cssSource, /\.document-thumbnails button\[aria-pressed="true"\]/);
 });
 
-test("résout explicitement le document 4 comme document initial consulté", () => {
+test("résout explicitement le premier document approuvé comme document initial consulté", () => {
   const data = createDemoStudentLearningSession(); assert.ok(data);
   const question = getCurrentLearningQuestion(data); assert.ok(question);
-  assert.equal(question.featuredDocumentId, "duncan-parliament-interior");
+  assert.equal(question.featuredDocumentId, "PAT-T-002");
   assert.ok(question.documentRelations.some(({ documentId }) => documentId === question.featuredDocumentId));
-  assert.equal(getInitialQuestionDocument(data)?.id, "duncan-parliament-interior");
-  assert.deepEqual(getQuestionDocuments(data).map(({ displayOrder }) => displayOrder), [1, 2, 3, 4]);
+  assert.equal(getInitialQuestionDocument(data)?.id, "PAT-T-002");
+  assert.deepEqual(getQuestionDocuments(data).map(({ displayOrder }) => displayOrder), [1, 2, 3]);
   assert.match(viewSource, /useState\(initialDocumentId\)/);
   assert.match(viewSource, /consultedIds\.size === 1 \? "consulté"/);
   assert.doesNotMatch(viewSource, /Document suivant|Document précédent|selectedIndex/);
-  assert.equal(getQuestionDocuments(data)[getQuestionDocuments(data).length - 2].displayOrder, 3);
+  assert.equal(getQuestionDocuments(data).at(-1)?.displayOrder, 3);
 });
 
 test("applique les replis typés du document initial sans numéro ni titre comme autorité", () => {
   const base = createDemoStudentLearningSession(); assert.ok(base);
-  const image = base.documentCatalog.find(({ content }) => content.kind === "historical_image"); assert.ok(image);
-  const anotherImage = { ...image, id: "another-stable-image" };
+  const firstDocument = base.documentCatalog[0]; assert.ok(firstDocument);
+  const anotherDocument = { ...firstDocument, id: "another-stable-document" };
   const withAnotherFeatured: StudentLearningSessionData = {
     ...base,
-    documentCatalog: [...base.documentCatalog, anotherImage],
-    questions: [{ ...base.questions[0], featuredDocumentId: anotherImage.id, documentRelations: [...base.questions[0].documentRelations, { documentId: anotherImage.id, displayOrder: 5 }] }],
+    documentCatalog: [...base.documentCatalog, anotherDocument],
+    questions: [{ ...base.questions[0], featuredDocumentId: anotherDocument.id, documentRelations: [...base.questions[0].documentRelations, { documentId: anotherDocument.id, displayOrder: 5 }] }],
   };
-  assert.equal(getInitialQuestionDocument(withAnotherFeatured)?.id, anotherImage.id);
+  assert.equal(getInitialQuestionDocument(withAnotherFeatured)?.id, anotherDocument.id);
 
   const withoutFeatured: StudentLearningSessionData = { ...base, questions: [{ ...base.questions[0], featuredDocumentId: undefined }] };
-  assert.equal(getInitialQuestionDocument(withoutFeatured)?.id, image.id);
+  assert.equal(getInitialQuestionDocument(withoutFeatured)?.id, firstDocument.id);
 
   const textDocuments = base.documentCatalog.filter(({ content }) => content.kind !== "historical_image");
   const withoutImage: StudentLearningSessionData = {
@@ -511,10 +518,17 @@ test("neutralise les titres visibles et les noms accessibles des documents", () 
 
 test("présente les types neutres dans les vignettes", () => {
   const data = createDemoStudentLearningSession(); assert.ok(data);
-  assert.deepEqual(getQuestionDocuments(data).slice(1).map(({ typeLabel }) => typeLabel), ["Extrait d’un débat parlementaire", "Extrait d’une adresse politique", "Aquarelle historique"]);
-  assert.match(viewSource, /return document\.content\.kind === "population_table" \? "Tableau statistique" : document\.typeLabel/);
+  assert.deepEqual(getQuestionDocuments(data).map(({ typeLabel }) => typeLabel), ["Extrait d’un texte parlementaire", "Extrait d’un texte parlementaire", "Extrait d’un article de journal"]);
+  assert.match(viewSource, /document\.content\.kind === "population_table" \|\| document\.content\.kind === "comparison_table" \? "Tableau statistique" : document\.typeLabel/);
   assert.match(viewSource, /<strong>Document \{document\.displayOrder\}<\/strong>[\s\S]*<span>\{getNeutralDocumentType\(document\)\}<\/span>/);
   assert.doesNotMatch(viewSource, /<span>\{document\.authorLabel\}<\/span>/);
+});
+
+test("rend le schéma politique visuel plutôt qu’un tableau statistique", () => {
+  assert.match(viewSource, /document\.content\.kind === "political_structure_diagram"/);
+  assert.match(viewSource, /className="student-political-structure"/);
+  assert.match(viewSource, /Assemblée législative · 84 députés/);
+  assert.match(cssSource, /\.student-political-structure\{[^}]*display:grid/);
 });
 
 test("réunit le numéro et le type neutre dans l’en-tête de chaque document", () => {
@@ -528,15 +542,33 @@ test("réunit le numéro et le type neutre dans l’en-tête de chaque document"
 
 test("compacte uniquement la hiérarchie typographique documentaire", () => {
   assert.match(cssSource, /\.column-title \{[^}]*font-size:clamp\(1\.25rem,1\.6vw,1\.6rem\)[^}]*font-weight:700[^}]*line-height:1\.15/);
-  assert.match(cssSource, /\.documents-heading > span,\.question-heading-accent \{[^}]*width:28px[^}]*height:1px[^}]*margin-top:4px/);
+  assert.match(cssSource, /\.documents-heading-copy > span,\.question-heading-accent \{[^}]*width:28px[^}]*height:1px[^}]*margin-top:4px/);
   assert.match(cssSource, /\.document-preview \{[^}]*margin-top:10px/);
   assert.match(cssSource, /\.document-thumbnails button strong \{[^}]*font-size:\.82rem[^}]*line-height:1\.15/);
   assert.match(cssSource, /\.document-thumbnails button span \{[^}]*overflow:hidden[^}]*font-size:\.75rem[^}]*line-height:1\.15[^}]*-webkit-line-clamp:2/);
   assert.match(cssSource, /\.document-thumbnail-image \{[^}]*height:58px/);
 });
 
+test("affiche les choix A à D et remplace la réponse libre pour une question à choix", () => {
+  assert.match(viewSource, /question\?\.type === "multiple_choice"/);
+  assert.match(viewSource, /className="multiple-choice-options" role="radiogroup"/);
+  assert.match(viewSource, /question\.answerOptions\.map/);
+  assert.match(viewSource, /Vérifier ma réponse/);
+  assert.match(viewSource, /className="multiple-choice-check"/);
+  assert.match(cssSource, /\.multiple-choice-options button \{/);
+  assert.match(viewSource, /isMultipleChoice && questionDocuments\.length === 0 \? null : <div className="documents-heading-copy">/);
+  assert.match(viewSource, /<strong>Socrato<\/strong><p>J’attends ta réponse…<\/p>/);
+  assert.match(viewSource, /questionDocuments\.length === 0 \? renderMultipleChoiceResponse\(true\)/);
+  assert.match(viewSource, /\{questionDocuments\.length === 0 \? null : <>/);
+  assert.match(cssSource, /\.multiple-choice-socrato-panel \{/);
+  assert.match(viewSource, /session-layout--choice-no-documents/);
+  assert.match(cssSource, /\.learning-session \.session-layout--choice-no-documents\{[^}]*max-width:1600px[^}]*grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)/);
+  assert.match(cssSource, /\.learning-session \.session-layout--choice-no-documents \.question-pane\{[^}]*grid-column:1[^}]*width:100%/);
+  assert.match(cssSource, /\.learning-session \.session-layout--choice-no-documents \.documents-heading,[^}]*\.documents-pane\{display:none\}/);
+});
+
 test("regroupe actions, navigation et quatre vignettes dans l’encadré documentaire local", () => {
-  assert.match(viewSource, /<div className="document-system-card">[\s\S]*<DocumentContent document=\{selected\} onExpand=[\s\S]*<div className="document-separator"[\s\S]*<div className="document-navigation"[\s\S]*<div className="document-thumbnails"/);
+  assert.match(viewSource, /<div className=\{`document-system-card\$\{stacked[\s\S]*<DocumentContent document=\{selected\} onExpand=[\s\S]*<div className="document-separator"[\s\S]*<div className="document-navigation"[\s\S]*<div className="document-thumbnails"/);
   assert.match(viewSource, /<div className="document-actions">[\s\S]*className="expand-document"[\s\S]*Agrandir[\s\S]*<details className="document-details">\s*<summary>Détails<\/summary>/);
   assert.match(cssSource, /\.document-actions \{[^}]*width:100%[^}]*display:flex[^}]*flex-wrap:wrap[^}]*justify-content:flex-start[^}]*align-items:center/);
   assert.match(cssSource, /\.document-system-card \{[^}]*border:1px solid[^}]*border-radius:14px/);
@@ -545,9 +577,23 @@ test("regroupe actions, navigation et quatre vignettes dans l’encadré documen
   assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\)[\s\S]*\.message-list \{ min-height:0; max-height:none; flex:1; \}/);
 });
 
+test("empile tous les documents associés sans vignettes et adapte leur répartition", () => {
+  assert.match(viewSource, /const useStackedDocuments = questionDocuments\.length > 0 && !isInteractiveTimeline && !isInteractiveAssociation/);
+  assert.match(viewSource, /stacked=\{useStackedDocuments\}/);
+  assert.match(viewSource, /stacked \? <div ref=\{stackedListRef\} className="stacked-document-list" style=\{\{ gridTemplateRows: `repeat\(\$\{documents\.length\}, minmax\(0, 1fr\)\)` \}\}>\{documents\.map/);
+  assert.match(viewSource, /<DocumentContent document=\{document\} compact onExpand=/);
+  assert.match(cssSource, /\.stacked-document-list\{[^}]*display:grid/);
+  assert.match(cssSource, /\.document-content-compact blockquote\{[^}]*-webkit-line-clamp:4/);
+  assert.match(viewSource, /compactTextLength <= 300 \? " document-content-compact--short"/);
+  assert.match(viewSource, /compactTextLength <= 430 \? " document-content-compact--medium"/);
+  assert.match(cssSource, /\.document-content-compact--short blockquote\{[^}]*font-size:clamp\(\.88rem/);
+  assert.match(cssSource, /\.document-content-compact--medium blockquote\{[^}]*font-size:clamp\(\.78rem/);
+  assert.match(cssSource, /\.document-content-compact blockquote\{[^}]*-webkit-line-clamp:unset/);
+});
+
 test("affiche une identification sobre et place les métadonnées sous Détails", () => {
-  assert.match(viewSource, /Comte de Gosford · 30 juin 1840/);
-  assert.match(viewSource, /Louis-Hippolyte La Fontaine · 25 août 1840/);
+  assert.match(viewSource, /document\.authorLabel \?\? document\.institutionLabel \?\? document\.sourceLabel/);
+  assert.match(viewSource, /document\.dateLabel/);
   assert.match(viewSource, /Données démographiques utilisées dans le débat sur l’Union · 1840/);
   assert.match(viewSource, /<details className="document-details">\s*<summary>Détails<\/summary>/);
   assert.doesNotMatch(viewSource, /<details className="document-details"[^>]*\sopen(?:=|\s|>)/);

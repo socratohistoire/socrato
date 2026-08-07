@@ -46,6 +46,8 @@ class TestSessionRepository implements StudentSessionRepository {
   async findActiveByToken(): Promise<StudentSession | null> {
     return null;
   }
+
+  async revokeByToken(): Promise<void> {}
 }
 
 function credential(

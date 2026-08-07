@@ -35,12 +35,11 @@ export function createPedagogicalFeedback(
     return {
       assessment,
       studentFacingText: assessment,
-      technicalNotice: "Démonstration locale : ta réponse n’est pas réellement évaluée.",
       relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-006", "PED-AI-009"],
     };
   }
   if (analysis.pedagogicalOutcome === "satisfactory") {
-    const assessment = "Ta réponse satisfait les critères structurés de cette démonstration.";
+    const assessment = "Ta réponse satisfait les critères de cette question.";
     return { acknowledgement, assessment, studentFacingText: joinParts([acknowledgement, assessment]), relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-011"] };
   }
   const assessment = analysis.pedagogicalOutcome === "partially_satisfactory"

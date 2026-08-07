@@ -87,7 +87,7 @@ export function neutralAnalysis(): StructuredResponseAnalysis {
     observedOperationIds: [],
     usedDocumentIds: [],
     observedStrengths: [],
-    missingElements: ["L’analyse locale n’a pas pu être validée."],
+    missingElements: ["Reformule ta réponse avec un fait historique précis."],
     nextAction: "handle_non_exploitable",
     confidence: "low",
   };

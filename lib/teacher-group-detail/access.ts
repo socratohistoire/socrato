@@ -1,5 +1,4 @@
-const LOCAL_TEACHER_ACTIVITY_IDS = new Set(["activity-revision-01"]);
-const LOCAL_TEACHER_GROUP_IDS = new Set(["group-demo-401"]);
+import { LOCAL_ACADEMIC_CONTEXT, LOCAL_STUDENT_GROUP_ID, LOCAL_TEACHER_ID, teacherOwnsAssignment, teacherOwnsGroup } from "../academic-context/index.ts";
 
 export function isSafeTeacherContextId(value: string) {
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) && value.length <= 80;
@@ -8,6 +7,7 @@ export function isSafeTeacherContextId(value: string) {
 export function isAuthorizedLocalTeacherGroupContext(activityId: string, groupId: string) {
   return isSafeTeacherContextId(activityId)
     && isSafeTeacherContextId(groupId)
-    && LOCAL_TEACHER_ACTIVITY_IDS.has(activityId)
-    && LOCAL_TEACHER_GROUP_IDS.has(groupId);
+    && groupId === LOCAL_STUDENT_GROUP_ID
+    && teacherOwnsGroup(LOCAL_ACADEMIC_CONTEXT, LOCAL_TEACHER_ID, groupId)
+    && (teacherOwnsAssignment(LOCAL_ACADEMIC_CONTEXT, LOCAL_TEACHER_ID, activityId) || /^activity-local-[0-9]+$/.test(activityId));
 }

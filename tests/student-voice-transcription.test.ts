@@ -178,10 +178,10 @@ test("le prototype échoue fermé en production", async () => {
 test("la Page 3 insère la simulation sans soumission automatique et conserve le clavier", () => {
   const view = readFileSync("app/eleve/activite/[activityId]/session-view.tsx", "utf8");
   assert.match(view, /setResponse\(\(current\) => appendVoiceTranscript\(current, text\)\)/);
-  assert.match(view, /Simulation locale/);
+  assert.match(view, /Dictée prête/);
   assert.match(view, /onKeyDown=\{handleResponseKeyDown\}/);
   assert.match(view, /requestAnimationFrame\(\(\) => responseInputRef\.current\?\.focus\(\)\)/);
-  const voiceCallback = view.match(/onSimulatedTranscript:[\s\S]*?\n    \},/)?.[0] ?? "";
+  const voiceCallback = view.match(/onSimulatedTranscript:[\s\S]*?requestAnimationFrame\(\(\) => responseInputRef\.current\?\.focus\(\)\);\n      \}/)?.[0] ?? "";
   assert.doesNotMatch(voiceCallback, /sendLocalResponse|submitStudentResponse/);
 });
 

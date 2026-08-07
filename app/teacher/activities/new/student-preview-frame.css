@@ -1,0 +1,4 @@
+.student-page-preview { min-height:0; overflow:hidden; border:1px solid var(--creator-preview-border); border-radius:12px; background:#171316; }
+.student-page-preview iframe { display:block; width:100%; height:100%; min-height:0; border:0; pointer-events:none; background:#211b20; }
+.student-page-preview__empty { min-height:240px; display:grid; place-items:center; padding:24px; color:var(--creator-muted); text-align:center; }
+@media(max-width:780px){.student-page-preview iframe{height:520px}}

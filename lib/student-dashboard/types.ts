@@ -1,7 +1,7 @@
 export type ProgressStatus = "mastered" | "consolidate" | "needs_work" | "not_assessed";
 export type ActivityOrigin = "teacher_assigned" | "student_selected";
 export type DashboardMode = "teacher-assigned" | "notion-review";
-export type ActivityType = "revision" | "enrichment";
+export type ActivityType = "revision" | "enrichment" | "development";
 export type ActivityStatus = "not_started" | "in_progress" | "completed";
 
 export type HistoricalPeriod = { startYear?: number; endYear?: number; displayLabel?: string };
@@ -10,7 +10,7 @@ export type IntellectualOperation = { id: string; label: string; status: Progres
 export type HistoricalKnowledge = { id: string; label: string; status: ProgressStatus };
 
 export type ActivitySummary = {
-  state: "pending" | "local_demo_structured";
+  state: "pending" | "local_demo_structured" | "server_structured";
   strengths: string[];
   consolidationTargets: string[];
   recommendation: string | null;
@@ -49,5 +49,5 @@ export type StudentDashboardData = {
   selectedActivityId: string;
   activities: StudentActivity[];
   notions: Notion[];
-  source: "local_demo";
+  source: "local_demo" | "server";
 };

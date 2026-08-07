@@ -32,7 +32,7 @@ const cormorantGaramond = Cormorant_Garamond({
 
 export const metadata: Metadata = {
   title: "Socrato",
-  description: "Ton tuteur intelligent en histoire",
+  description: "Ton tuteur pédagogique en histoire",
 };
 
 export default function RootLayout({

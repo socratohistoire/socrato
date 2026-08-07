@@ -13,6 +13,18 @@ import {
 
 export type StudentAccessFormState = { message: string };
 
+export async function leaveStudentSpace(): Promise<void> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(STUDENT_SESSION_COOKIE)?.value;
+
+  if (token) {
+    await getStudentAccessRuntime().sessions.revokeByToken(token);
+  }
+
+  cookieStore.delete(STUDENT_SESSION_COOKIE);
+  redirect("/eleve");
+}
+
 export async function enterStudentSpace(
   _previousState: StudentAccessFormState,
   formData: FormData,

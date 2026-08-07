@@ -1,4 +1,4 @@
-export type TeacherDashboardSource = "local_demo";
+export type TeacherDashboardSource = "local_demo" | "stored_teacher_workspace";
 
 export type HighPriorityReason = "failed_assessment" | "near_failure";
 export type TeacherPriorityLevel = "high" | "medium" | "none";
@@ -36,13 +36,15 @@ export type TeacherSocratoObservationSignals = {
 export type TeacherActivitySummary = {
   id: string;
   summaryVersion: string;
-  activityType: "revision" | "enrichment";
+  activityType: "revision" | "enrichment" | "development";
   customTitle: string;
   publishedAt: string;
   targetedGroupIds: readonly string[];
   completedStudentCount: number;
+  startedStudentCount?: number;
   targetedStudentCount: number;
   resultAvailability: TeacherActivityResultAvailability;
+  lifecycleStatus?: "published" | "suspended" | "archived";
   socratoObservation?: TeacherSocratoObservationSignals;
   groupPortraits: readonly TeacherGroupBriefing[];
   highPriorityStudents: readonly TeacherSupportCandidate[];
@@ -81,6 +83,7 @@ export type TeacherDashboardData = {
 
 export type TeacherDashboardViewModel = Omit<TeacherDashboardData, "supportCandidates" | "groupBriefings"> & {
   selectedActivity: TeacherActivitySummary;
+  allGroups: readonly TeacherGroupOverview[];
   groupBriefings: readonly TeacherGroupBriefing[];
   highPriorityStudents: readonly (TeacherSupportCandidate & {
     priority: "high";

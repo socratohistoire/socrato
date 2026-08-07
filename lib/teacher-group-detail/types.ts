@@ -9,11 +9,12 @@ export type TeacherGroupStudent = {
   activityState: TeacherGroupActivityState;
   priority: TeacherGroupStudentPriority;
   mainDifficulty: string;
+  progressPercentage?: number;
   studentDetailHref?: string;
 };
 
 export type TeacherGroupDetailRecord = {
-  source: "local_demo";
+  source: "local_demo" | "server";
   activityId: string;
   activityTitle: string;
   groupId: string;

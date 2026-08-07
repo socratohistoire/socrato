@@ -1,6 +1,8 @@
 import { isAuthorizedLocalTeacherStudentContext } from "./access.ts";
 import type { TeacherStudentDetailProvider } from "./provider.ts";
 import type { TeacherStudentDetailRecord } from "./types.ts";
+import { createLocalTeacherDashboardData } from "../teacher-dashboard/local-provider.ts";
+import { LOCAL_STUDENT_ID } from "../academic-context/local-context.ts";
 
 export function isLocalTeacherStudentDetailEnabled(environment = process.env.NODE_ENV) {
   return environment !== "production";
@@ -59,6 +61,26 @@ export class LocalTeacherStudentDetailProvider implements TeacherStudentDetailPr
   async getStudentDetail(activityId: string, groupId: string, studentId: string) {
     if (!isLocalTeacherStudentDetailEnabled(this.environment)) throw new Error("The local teacher student detail provider is disabled in production.");
     if (!isAuthorizedLocalTeacherStudentContext(activityId, groupId, studentId)) return null;
+    if (/^activity-local-[0-9]+$/.test(activityId) && studentId === LOCAL_STUDENT_ID) {
+      const dashboard = createLocalTeacherDashboardData();
+      const group = dashboard.groups.find(({ id }) => id === groupId);
+      if (!group) return null;
+      return {
+        ...LOCAL_STUDENT_DETAIL,
+        activityId,
+        activityTitle: "Activité publiée localement",
+        groupId,
+        groupName: group.name,
+        studentId,
+        studentDisplayLabel: "Élève local (fictif)",
+        studentFirstName: "Élève",
+        priorityLabel: "Suivi normal" as const,
+        teacher: dashboard.teacher,
+        groups: dashboard.groups,
+        operations: [],
+        historicalKnowledge: [],
+      };
+    }
     return LOCAL_STUDENT_DETAIL;
   }
 }
