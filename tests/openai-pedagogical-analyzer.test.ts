@@ -44,6 +44,11 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.input), /Explique une conséquence politique/);
   assert.match(String(requestBody?.input), /Les revenus sont réunis/);
   assert.match(String(requestBody?.instructions), /dossier pédagogique approuvé/);
+  assert.match(String(requestBody?.instructions), /toute affirmation historique compréhensible/);
+  assert.match(String(requestBody?.instructions), /même si elle est très courte, incomplète/);
+  assert.match(String(requestBody?.instructions), /substantive ne doit jamais produire pedagogicalOutcome=non_exploitable/);
+  assert.match(String(requestBody?.instructions), /Les Britanniques refusent les demandes des Patriotes/);
+  assert.match(String(requestBody?.instructions), /correctement une revendication, son refus et la conséquence/);
 });
 
 test("refuse les identifiants inventés par le modèle", async () => {
