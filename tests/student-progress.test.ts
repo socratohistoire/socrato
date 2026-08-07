@@ -24,7 +24,7 @@ function session(questionState = question()): PedagogicalSessionState {
 
 test("creates a minimal versioned record without raw student answers", () => {
   const progress = createStudentProgressContract(session(), new Date("2026-08-05T12:00:00.000Z"));
-  assert.equal(progress.schemaVersion, 1);
+  assert.equal(progress.schemaVersion, 2);
   assert.equal(progress.state, "not_started");
   assert.equal(progress.studentId, "local-anonymous-student-1");
   const serialized = JSON.stringify(progress);
@@ -32,7 +32,30 @@ test("creates a minimal versioned record without raw student answers", () => {
 });
 
 test("marks progress in progress at the first attempt", () => {
-  assert.equal(createStudentProgressContract(session(question({ attemptNumber: 1, status: "awaiting_response" }))).state, "in_progress");
+  const progress = createStudentProgressContract(session(question({ attemptNumber: 1, hintLevel: 1, hintRequestCount: 1, status: "awaiting_response" })));
+  assert.equal(progress.state, "in_progress");
+  assert.deepEqual(progress.questionRuntime[0], {
+    questionId: "question-1", attemptNumber: 1, hintLevel: 1, hintRequestCount: 1, nonExploitableCount: 0, status: "awaiting_response",
+  });
+});
+
+test("restores attempts and hints without restoring any answer text", () => {
+  const progress = createStudentProgressContract(session(question({ attemptNumber: 2, hintLevel: 2, hintRequestCount: 2, nonExploitableCount: 1, status: "awaiting_response" })));
+  const restored = restoreStudentProgress(session(), progress);
+  assert.equal(restored.questionStates[0].attemptNumber, 2);
+  assert.equal(restored.questionStates[0].hintLevel, 2);
+  assert.equal(restored.questionStates[0].hintRequestCount, 2);
+  assert.equal(restored.questionStates[0].nonExploitableCount, 1);
+  assert.equal(JSON.stringify(progress).includes("content"), false);
+});
+
+test("keeps version 1 progress readable without inventing runtime state", () => {
+  const current = createStudentProgressContract(session(question({ attemptNumber: 2, hintLevel: 1, hintRequestCount: 1 })));
+  const legacy = Object.fromEntries(Object.entries(current).filter(([key]) => key !== "questionRuntime")) as unknown as import("../lib/student-progress/types.ts").StudentProgressContract;
+  Object.assign(legacy, { schemaVersion: 1 });
+  const restored = restoreStudentProgress(session(), legacy);
+  assert.equal(restored.questionStates[0].attemptNumber, 0);
+  assert.equal(restored.questionStates[0].hintLevel, 0);
 });
 
 test("stores only structured completed-question results", () => {

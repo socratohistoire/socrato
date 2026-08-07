@@ -1,6 +1,6 @@
 import type { PedagogicalSessionState, ResultStatus } from "../pedagogical-session-engine/types.ts";
 import type { StudentDashboardData } from "../student-dashboard/types.ts";
-import { STUDENT_PROGRESS_CONTRACT_VERSION, type StudentProgressContract } from "./types.ts";
+import { LEGACY_STUDENT_PROGRESS_CONTRACT_VERSION, STUDENT_PROGRESS_CONTRACT_VERSION, type StudentProgressContract, type StudentQuestionRuntimeProgress } from "./types.ts";
 import { LOCAL_STUDENT_GROUP_ID, LOCAL_STUDENT_ID } from "../academic-context/local-context.ts";
 
 export const STUDENT_PROGRESS_STORAGE_KEY = "socrato-student-progress-v1";
@@ -21,7 +21,15 @@ function isResultEntry(value: unknown): value is StudentProgressContract["operat
 function isStudentProgressContract(value: unknown): value is StudentProgressContract {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
-  return record.schemaVersion === STUDENT_PROGRESS_CONTRACT_VERSION
+  const validRuntime = (runtime: unknown): runtime is StudentQuestionRuntimeProgress[] => Array.isArray(runtime) && runtime.every((entry) => {
+    if (!entry || typeof entry !== "object") return false;
+    const item = entry as Record<string, unknown>;
+    return typeof item.questionId === "string" && Number.isInteger(item.attemptNumber) && Number(item.attemptNumber) >= 0 && Number(item.attemptNumber) <= 3
+      && [0, 1, 2].includes(Number(item.hintLevel)) && Number.isInteger(item.hintRequestCount) && Number(item.hintRequestCount) >= 0
+      && Number.isInteger(item.nonExploitableCount) && Number(item.nonExploitableCount) >= 0
+      && ["presented", "awaiting_response", "completed"].includes(String(item.status));
+  });
+  return (record.schemaVersion === LEGACY_STUDENT_PROGRESS_CONTRACT_VERSION || record.schemaVersion === STUDENT_PROGRESS_CONTRACT_VERSION)
     && ["studentId", "groupId", "activityId", "sessionId", "notionId", "startedAt", "updatedAt"].every((key) => typeof record[key] === "string")
     && PROGRESS_STATES.has(String(record.state))
     && Number.isInteger(record.currentQuestionIndex)
@@ -32,7 +40,8 @@ function isStudentProgressContract(value: unknown): value is StudentProgressCont
     && record.operationResults.every(isResultEntry)
     && Array.isArray(record.historicalKnowledgeResults)
     && record.historicalKnowledgeResults.every(isResultEntry)
-    && (record.completedAt === null || typeof record.completedAt === "string");
+    && (record.completedAt === null || typeof record.completedAt === "string")
+    && (record.schemaVersion === LEGACY_STUDENT_PROGRESS_CONTRACT_VERSION || validRuntime(record.questionRuntime));
 }
 
 function strongestStatus(left: ResultStatus | undefined, right: ResultStatus): ResultStatus {
@@ -46,7 +55,10 @@ function resultEntries(entries: Array<{ id: string; status: ResultStatus }>) {
   return [...statuses].map(([id, status]) => ({ id, status }));
 }
 
-export function createStudentProgressContract(state: PedagogicalSessionState, now = new Date()): StudentProgressContract {
+export function createStudentProgressContract(
+  state: PedagogicalSessionState,
+  now = new Date(),
+): Extract<StudentProgressContract, { schemaVersion: typeof STUDENT_PROGRESS_CONTRACT_VERSION }> {
   const completedQuestions = state.questionStates.filter(({ status, result }) => status === "completed" && result);
   const hasStarted = state.currentQuestionIndex > 0 || state.questionStates.some(({ attemptNumber, hintRequestCount, status }) => attemptNumber > 0 || hintRequestCount > 0 || status !== "presented");
   const operationResults = completedQuestions.flatMap(({ result }) => result!.operationIds.map((id) => ({ id, status: result!.status })));
@@ -63,6 +75,9 @@ export function createStudentProgressContract(state: PedagogicalSessionState, no
     currentQuestionIndex: state.currentQuestionIndex,
     totalQuestions: state.questionStates.length,
     completedQuestionIds: completedQuestions.map(({ questionId }) => questionId),
+    questionRuntime: state.questionStates.map(({ questionId, attemptNumber, hintLevel, hintRequestCount, nonExploitableCount, status }) => ({
+      questionId, attemptNumber, hintLevel, hintRequestCount, nonExploitableCount, status,
+    })),
     operationResults: state.summary?.operationResults ?? resultEntries(operationResults),
     historicalKnowledgeResults: state.summary?.historicalKnowledgeResults ?? resultEntries(historicalKnowledgeResults),
     startedAt: timestamp,
@@ -117,13 +132,23 @@ export function restoreStudentProgress(state: PedagogicalSessionState, progress:
   const completedIds = new Set(progress.completedQuestionIds);
   const operationStatuses = new Map(progress.operationResults.map(({ id, status }) => [id, status]));
   const knowledgeStatuses = new Map(progress.historicalKnowledgeResults.map(({ id, status }) => [id, status]));
+  const runtimeByQuestion = new Map((progress.schemaVersion === STUDENT_PROGRESS_CONTRACT_VERSION ? progress.questionRuntime : []).map((runtime) => [runtime.questionId, runtime]));
   const questionStates = state.questionStates.map((question) => {
-    if (!completedIds.has(question.questionId)) return question;
+    const runtime = runtimeByQuestion.get(question.questionId);
+    const restoredQuestion = runtime ? {
+      ...question,
+      attemptNumber: runtime.attemptNumber,
+      hintLevel: runtime.hintLevel,
+      hintRequestCount: runtime.hintRequestCount,
+      nonExploitableCount: runtime.nonExploitableCount,
+      status: runtime.status,
+    } : question;
+    if (!completedIds.has(question.questionId)) return restoredQuestion;
     const status = operationStatuses.get(question.primaryOperationId)
       ?? question.historicalKnowledgeIds.map((id) => knowledgeStatuses.get(id)).find(Boolean)
       ?? "to_consolidate";
     return {
-      ...question,
+      ...restoredQuestion,
       status: "completed" as const,
       result: {
         sessionId: state.sessionId, activityId: state.activityId, questionId: question.questionId, notionId: question.notionId,
