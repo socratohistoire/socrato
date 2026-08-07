@@ -9,7 +9,7 @@ import { saveStudentOutcomeToDatabase, saveStudentProgressToDatabase } from "../
 import { analyzeAuthorizedStudentResponse } from "../analysis-actions";
 import { createStudentProgressContract, restoreStudentProgress } from "@/lib/student-progress";
 import { createConfiguredDataRepository } from "@/lib/data-repository";
-import { createDemoPedagogicalDefinition, createPedagogicalSession, finalizePedagogicalSession, LocalDeterministicResponseAnalyzer, MAX_EXPLICIT_HINT_LEVEL, MAX_PEDAGOGICAL_ATTEMPTS, requestNextHint, submitStudentResponse, type PedagogicalSessionState, type ResponseAnalyzer } from "@/lib/pedagogical-session-engine";
+import { createDemoPedagogicalDefinition, createPedagogicalFeedback, createPedagogicalSession, finalizePedagogicalSession, LocalDeterministicResponseAnalyzer, MAX_EXPLICIT_HINT_LEVEL, MAX_PEDAGOGICAL_ATTEMPTS, requestNextHint, submitStudentResponse, type PedagogicalSessionState, type ResponseAnalyzer } from "@/lib/pedagogical-session-engine";
 import { getHistoricalPeriodLabel } from "@/lib/student-dashboard/historical-period";
 import { getCurrentLearningQuestion, getInitialQuestionDocument, getLearningSessionHeading, getQuestionDocuments } from "@/lib/student-learning-session/presentation";
 import type { LearningSessionDocument, LearningSessionMessage, LearningSessionQuestion, StudentLearningSessionData } from "@/lib/student-learning-session/types";
@@ -25,6 +25,7 @@ function revealNewestConversationMessage(region: HTMLDivElement, message: HTMLEl
 
 export function StudentLearningSessionView({ data, teacherPreview = false, persistProgress = true }: { data: StudentLearningSessionData; teacherPreview?: boolean; persistProgress?: boolean }) {
   const engineDefinition = useMemo(() => createDemoPedagogicalDefinition(data), [data]);
+  const initialEngineState = useMemo(() => restoreStudentProgress(createPedagogicalSession(engineDefinition), data.progress), [data.progress, engineDefinition]);
   const analyzer = useMemo<ResponseAnalyzer>(() => data.source === "server" ? {
     async analyze(response) {
       const result = await analyzeAuthorizedStudentResponse({
@@ -38,7 +39,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
       return result.analysis;
     },
   } : new LocalDeterministicResponseAnalyzer(), [data.source]);
-  const [engineState, setEngineState] = useState(() => restoreStudentProgress(createPedagogicalSession(engineDefinition), data.progress));
+  const [engineState, setEngineState] = useState(initialEngineState);
   const [progressReady, setProgressReady] = useState(!persistProgress || data.source === "server");
   const [persistenceMessage, setPersistenceMessage] = useState("");
   const activeData = { ...data, currentQuestionIndex: engineState.currentQuestionIndex };
@@ -62,7 +63,19 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
   const heading = getLearningSessionHeading(data);
   const primaryOperation = question?.intellectualOperations.find(({ id }) => id === question.primaryOperationId);
   const initialDocumentId = getInitialQuestionDocument(activeData)?.id ?? null;
-  const [messages, setMessages] = useState<LearningSessionMessage[]>(data.questions[engineState.currentQuestionIndex]?.initialMessages ?? []);
+  const [messages, setMessages] = useState<LearningSessionMessage[]>(() => {
+    const index = initialEngineState.currentQuestionIndex;
+    const initial = data.questions[index]?.initialMessages ?? [];
+    const runtime = initialEngineState.questionStates[index];
+    const definition = engineDefinition.questions[index];
+    if (!runtime?.lastAnalysis || !definition) return initial;
+    const feedback = createPedagogicalFeedback(runtime.lastAnalysis, definition, runtime.nonExploitableCount);
+    return [
+      ...initial,
+      { id: `student-restored-${runtime.questionId}`, author: "student", content: "Ta réponse précédente a été enregistrée." },
+      { id: `socrato-restored-${runtime.questionId}`, author: "socrato", content: feedback.studentFacingText },
+    ];
+  });
   const [response, setResponse] = useState("");
   const [currentHint, setCurrentHint] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);

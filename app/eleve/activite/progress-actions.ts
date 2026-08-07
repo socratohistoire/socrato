@@ -35,7 +35,7 @@ function validProgress(value: unknown): value is StudentProgressContract {
       && Number.isInteger(question.nonExploitableCount) && Number(question.nonExploitableCount) >= 0
       && ["presented", "awaiting_response", "completed"].includes(String(question.status));
   });
-  return (item.schemaVersion === 1 || item.schemaVersion === 2) && typeof item.activityId === "string" && typeof item.notionId === "string"
+  return (item.schemaVersion === 1 || item.schemaVersion === 2 || item.schemaVersion === 3) && typeof item.activityId === "string" && typeof item.notionId === "string"
     && STATES.has(String(item.state)) && Number.isInteger(item.currentQuestionIndex) && Number.isInteger(item.totalQuestions)
     && Array.isArray(item.completedQuestionIds) && item.completedQuestionIds.every((id) => typeof id === "string")
     && validResults(item.operationResults) && validResults(item.historicalKnowledgeResults)
@@ -72,7 +72,7 @@ export async function saveStudentProgressToDatabase(progress: StudentProgressCon
   const allowedQuestionIds = new Set(scope.questionIds);
   if (progress.completedQuestionIds.some((id) => !allowedQuestionIds.has(id)) || progress.currentQuestionIndex < 0 || progress.currentQuestionIndex >= progress.totalQuestions) return { ok: false as const, error: "La progression contient une question non autorisée." };
   if (progress.state === "completed" && progress.completedQuestionIds.length !== progress.totalQuestions) return { ok: false as const, error: "L’activité ne peut pas être terminée avant toutes les questions." };
-  if (progress.schemaVersion === 2) {
+  if (progress.schemaVersion === 2 || progress.schemaVersion === 3) {
     const runtimeIds = new Set(progress.questionRuntime.map(({ questionId }) => questionId));
     const completedIds = new Set(progress.completedQuestionIds);
     if (runtimeIds.size !== progress.questionRuntime.length || progress.questionRuntime.length !== progress.totalQuestions
@@ -144,7 +144,7 @@ export async function saveStudentProgressToDatabase(progress: StudentProgressCon
         ) values (
           ${learningSessionId}, ${progress.schemaVersion}, ${progress.activityId}, ${studentSession.anonymousStudentId}, ${scope.groupId}, ${progress.notionId}, ${progress.state},
           ${progress.currentQuestionIndex}, ${progress.totalQuestions}, ${progress.completedQuestionIds}, ${tx.json(progress.operationResults)},
-          ${tx.json(progress.historicalKnowledgeResults)}, ${tx.json(progress.schemaVersion === 2 ? progress.questionRuntime : [])},
+          ${tx.json(progress.historicalKnowledgeResults)}, ${tx.json(progress.schemaVersion === 2 || progress.schemaVersion === 3 ? progress.questionRuntime : [])},
           ${existing[0]?.started_at?.toISOString() ?? new Date().toISOString()}, ${new Date().toISOString()}, ${completedAt}
         )
         on conflict (session_id) do update set

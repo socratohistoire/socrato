@@ -17,7 +17,7 @@ type AssignedActivityRow = {
   completed_question_ids: string[] | null;
   operation_results: Array<{ id: string; status: "mastered" | "to_consolidate" | "to_work_on" }> | null;
   historical_knowledge_results: Array<{ id: string; status: "mastered" | "to_consolidate" | "to_work_on" }> | null;
-  question_runtime: Array<{ questionId: string; attemptNumber: number; hintLevel: 0 | 1 | 2; hintRequestCount: number; nonExploitableCount: number; status: "presented" | "awaiting_response" | "completed" }> | null;
+  question_runtime: import("../student-progress/types.ts").StudentQuestionRuntimeProgress[] | null;
   started_at: Date | null;
   updated_at: Date | null;
   completed_at: Date | null;
@@ -69,7 +69,7 @@ export class DatabaseStudentLearningSessionProvider implements StudentLearningSe
     const notionId = requestedNotionId && activity.notion_ids.includes(requestedNotionId) ? requestedNotionId : activity.notion_ids[0] ?? "acte-union";
     const mode: DashboardMode = requestedMode === "notion-review" ? "notion-review" : "teacher-assigned";
     const progress = activity.session_id && activity.progress_state && activity.total_questions && activity.started_at && activity.updated_at ? {
-      schemaVersion: 2 as const,
+      schemaVersion: 3 as const,
       studentId: anonymousStudentId,
       groupId: activity.group_id,
       activityId,
