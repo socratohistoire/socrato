@@ -6,9 +6,10 @@ import { DragEvent as ReactDragEvent, FormEvent, KeyboardEvent as ReactKeyboardE
 import { ThemeToggle } from "../../tableau-de-bord/theme-toggle";
 import { StudentLogoutButton } from "../../logout-button";
 import { saveStudentOutcomeToDatabase, saveStudentProgressToDatabase } from "../progress-actions";
+import { analyzeAuthorizedStudentResponse } from "../analysis-actions";
 import { createStudentProgressContract, restoreStudentProgress } from "@/lib/student-progress";
 import { createConfiguredDataRepository } from "@/lib/data-repository";
-import { createDemoPedagogicalDefinition, createPedagogicalSession, finalizePedagogicalSession, LocalDeterministicResponseAnalyzer, MAX_EXPLICIT_HINT_LEVEL, MAX_PEDAGOGICAL_ATTEMPTS, requestNextHint, submitStudentResponse, type PedagogicalSessionState } from "@/lib/pedagogical-session-engine";
+import { createDemoPedagogicalDefinition, createPedagogicalSession, finalizePedagogicalSession, LocalDeterministicResponseAnalyzer, MAX_EXPLICIT_HINT_LEVEL, MAX_PEDAGOGICAL_ATTEMPTS, requestNextHint, submitStudentResponse, type PedagogicalSessionState, type ResponseAnalyzer } from "@/lib/pedagogical-session-engine";
 import { getHistoricalPeriodLabel } from "@/lib/student-dashboard/historical-period";
 import { getCurrentLearningQuestion, getInitialQuestionDocument, getLearningSessionHeading, getQuestionDocuments } from "@/lib/student-learning-session/presentation";
 import type { LearningSessionDocument, LearningSessionMessage, LearningSessionQuestion, StudentLearningSessionData } from "@/lib/student-learning-session/types";
@@ -24,7 +25,19 @@ function revealNewestConversationMessage(region: HTMLDivElement, message: HTMLEl
 
 export function StudentLearningSessionView({ data, teacherPreview = false, persistProgress = true }: { data: StudentLearningSessionData; teacherPreview?: boolean; persistProgress?: boolean }) {
   const engineDefinition = useMemo(() => createDemoPedagogicalDefinition(data), [data]);
-  const analyzer = useMemo(() => new LocalDeterministicResponseAnalyzer(), []);
+  const analyzer = useMemo<ResponseAnalyzer>(() => data.source === "server" ? {
+    async analyze(response) {
+      const result = await analyzeAuthorizedStudentResponse({
+        activityId: response.activityId,
+        questionId: response.questionId,
+        attemptNumber: response.attemptNumber,
+        hintLevel: response.hintLevel,
+        content: response.content,
+      });
+      if (!result.ok) throw new Error(result.error);
+      return result.analysis;
+    },
+  } : new LocalDeterministicResponseAnalyzer(), [data.source]);
   const [engineState, setEngineState] = useState(() => restoreStudentProgress(createPedagogicalSession(engineDefinition), data.progress));
   const [progressReady, setProgressReady] = useState(!persistProgress || data.source === "server");
   const [persistenceMessage, setPersistenceMessage] = useState("");
