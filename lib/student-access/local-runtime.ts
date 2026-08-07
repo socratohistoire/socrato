@@ -1,5 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import { HmacAccessCodeLookup } from "./lookup.ts";
+import { HmacAccessCodeLookup, type AccessCodeLookup } from "./lookup.ts";
 import type {
   StudentAccessCodeRepository,
   StudentAccessCredential,
@@ -7,6 +7,7 @@ import type {
 import { InMemoryStudentAccessRateLimiter } from "./rate-limiter.ts";
 import type { StudentSession, StudentSessionRepository } from "./session.ts";
 import { LOCAL_STUDENT_ID } from "../academic-context/local-context.ts";
+import { createDatabaseStudentAccessRuntime } from "./database-runtime.ts";
 
 const LOCAL_ONLY_LOOKUP_KEY = "socrato-local-development-only";
 const LOCAL_DEMO_CODE = "K7MPR4XT9QHC";
@@ -82,7 +83,7 @@ class LocalStudentSessionRepository implements StudentSessionRepository {
 export const STUDENT_SESSION_COOKIE = "socrato_student_session";
 
 export type StudentAccessRuntime = {
-  lookup: HmacAccessCodeLookup;
+  lookup: AccessCodeLookup;
   codes: StudentAccessCodeRepository;
   sessions: StudentSessionRepository;
   rateLimiter: InMemoryStudentAccessRateLimiter;
@@ -106,6 +107,7 @@ function createLocalRuntime(): StudentAccessRuntime {
 
 const runtimeGlobal = globalThis as typeof globalThis & {
   __socratoStudentAccessRuntime?: StudentAccessRuntime;
+  __socratoStudentAccessRuntimeMode?: "local" | "database";
 };
 
 export function getStudentAccessRuntime(): StudentAccessRuntime {
@@ -115,6 +117,10 @@ export function getStudentAccessRuntime(): StudentAccessRuntime {
     );
   }
 
-  runtimeGlobal.__socratoStudentAccessRuntime ??= createLocalRuntime();
+  const mode = process.env.DATABASE_URL ? "database" : "local";
+  if (!runtimeGlobal.__socratoStudentAccessRuntime || runtimeGlobal.__socratoStudentAccessRuntimeMode !== mode) {
+    runtimeGlobal.__socratoStudentAccessRuntime = mode === "database" ? createDatabaseStudentAccessRuntime() : createLocalRuntime();
+    runtimeGlobal.__socratoStudentAccessRuntimeMode = mode;
+  }
   return runtimeGlobal.__socratoStudentAccessRuntime;
 }

@@ -14,7 +14,7 @@ export type TeacherGroupStudent = {
 };
 
 export type TeacherGroupDetailRecord = {
-  source: "local_demo";
+  source: "local_demo" | "server";
   activityId: string;
   activityTitle: string;
   groupId: string;

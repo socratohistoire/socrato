@@ -27,6 +27,13 @@ export function StudentDashboardView({ data }: { data: StudentDashboardData }) {
   const [dashboardData, setDashboardData] = useState(data);
   useEffect(() => {
     let active = true;
+    if (data.source === "server") {
+      void Promise.resolve().then(() => {
+        if (!active) return;
+        setDashboardData(data);
+      });
+      return () => { active = false; };
+    }
     const repository = createConfiguredDataRepository(window.localStorage);
     void repository.loadStudentDashboard(data, searchParams.get("activity")).then((nextDashboardData) => {
       if (!active) return;
@@ -34,6 +41,7 @@ export function StudentDashboardView({ data }: { data: StudentDashboardData }) {
     });
     return () => { active = false; };
   }, [data, searchParams]);
+  if (!dashboardData.activities.length) return <main className="student-dashboard min-h-screen"><DashboardHero /><div className="dashboard-body"><section className="student-empty-dashboard"><Image src="/logos/socrato-logo-v2.png" width={86} height={86} alt="Portrait de Socrato" unoptimized /><h2>Aucune activité pour le moment</h2><p>Ton enseignant n’a pas encore assigné d’activité à ton groupe. Tu pourras revenir ici avec le même code lorsqu’une activité sera disponible.</p></section></div></main>;
   const activity = getSelectedActivity(dashboardData);
   return (
     <main className="student-dashboard min-h-screen">
@@ -138,7 +146,7 @@ function MainActivityCard({ activity, testMode }: { activity: StudentActivity; t
 }
 
 function SummaryPanel({ activity }: { activity: StudentActivity }) {
-  const complete = activity.summary.state === "local_demo_structured";
+  const complete = activity.summary.state !== "pending";
   const consolidationProgress = activity.summary.consolidationProgress;
   const consolidationSource = consolidationProgress?.source === "teacher_assigned" ? "Assignée par l’enseignant" : "Proposée par Socrato";
   const items = complete ? [

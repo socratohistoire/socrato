@@ -5,8 +5,16 @@ export interface TeacherMessageViewStore {
 
 export const TEACHER_MESSAGE_STORAGE_KEY = "socrato-teacher-viewed-message-keys-v1";
 
+function opaqueMessageKeyPart(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+export function createActivitySummaryMessageKey(activityId: string, summaryVersion: string) {
+  return `activity-summary-${opaqueMessageKeyPart(activityId)}-${opaqueMessageKeyPart(summaryVersion)}`;
+}
+
 function isOpaqueTeacherMessageKey(value: unknown): value is string {
-  return typeof value === "string" && /^(?:teacher-welcome-v1|activity-summary-[a-z0-9-]+-[a-z0-9-]+)$/.test(value);
+  return typeof value === "string" && /^(?:teacher-welcome-v1|teacher-configuration-complete-v1|activity-summary-[a-z0-9-]+-[a-z0-9-]+)$/.test(value);
 }
 
 export class LocalTeacherMessageViewStore implements TeacherMessageViewStore {

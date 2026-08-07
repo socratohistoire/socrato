@@ -7,6 +7,8 @@ const routeSource = readFileSync("app/teacher/activities/[activityId]/groups/[gr
 const viewSource = readFileSync("app/teacher/activities/[activityId]/groups/[groupId]/teacher-group-detail-view.tsx", "utf8");
 const cssSource = readFileSync("app/teacher/activities/[activityId]/groups/[groupId]/teacher-group-detail.css", "utf8");
 const providerSource = readFileSync("lib/teacher-group-detail/local-provider.ts", "utf8");
+const storedStudentRouteSource = readFileSync("app/teacher/groups/[groupId]/students/[studentId]/page.tsx", "utf8");
+const storedGroupsServerSource = readFileSync("lib/server/teacher-groups.ts", "utf8");
 
 async function localViewModel() {
   const record = await new LocalTeacherGroupDetailProvider("test").getGroupDetail("activity-revision-01", "group-demo-401");
@@ -74,6 +76,20 @@ test("n’active aucun faux lien vers un élève", async () => {
   assert.match(viewSource, /if \(student\.studentDetailHref\) return <Link/);
   assert.match(viewSource, /disabled aria-disabled="true" aria-label=\{`\$\{label\} — Fonction à venir`\}/);
   assert.doesNotMatch(viewSource, /href="#"|\/students\/student-demo/);
+});
+
+test("relie les vrais élèves à une fiche individuelle protégée", () => {
+  assert.match(storedGroupsServerSource, /studentDetailHref: `\/teacher\/groups\/\$\{encodeURIComponent\(groupId\)\}\/students\/\$\{encodeURIComponent\(student\.id\)\}`/);
+  assert.match(viewSource, /className="group-student-name" href=\{student\.studentDetailHref\}/);
+  assert.match(storedStudentRouteSource, /requireTeacherActor\(\)/);
+  assert.match(storedStudentRouteSource, /getStoredTeacherStudentDetail\(teacher, groupId, studentId\)/);
+  assert.match(storedGroupsServerSource, /g\.teacher_id = \$\{teacher\.id\}/);
+  assert.match(storedGroupsServerSource, /s\.id = \$\{studentId\} and g\.id = \$\{groupId\}/);
+  assert.match(storedStudentRouteSource, /Aucun résultat individuel n’est disponible pour le moment/);
+});
+
+test("ne mélange jamais les résultats du navigateur avec une activité persistée au serveur", () => {
+  assert.match(viewSource, /data\.source === "server" \|\| !\/\^activity-local-/);
 });
 
 test("rend le contrat principal accessible, thémable et responsive", () => {

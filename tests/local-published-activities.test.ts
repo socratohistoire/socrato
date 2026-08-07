@@ -131,6 +131,26 @@ test("fait remonter un bilan structuré au tableau de bord enseignant sans répo
   assert.doesNotMatch(JSON.stringify(summary), /réponse textuelle|conversation|transcript/i);
 });
 
+test("présente les vrais groupes assignés pendant l’attente des premiers résultats", () => {
+  const activity = createLocalPublishedActivity({
+    title: "Mini-test réel",
+    workType: "revision",
+    targetedGroupIds: ["group-real-1", "group-real-2"],
+    notionIds: ["acte-union"],
+    operationId: null,
+    questionIds: ["question:acte-union:001"],
+  }, new Date("2026-08-06T18:00:00.000Z"));
+  const summary = createLocalTeacherActivitySummaries([activity], [
+    { id: "group-real-1", name: "Histoire A", studentCount: 31 },
+    { id: "group-real-2", name: "Histoire B", studentCount: 30 },
+  ], {})[0];
+
+  assert.deepEqual(summary.groupPortraits.map(({ name }) => name), ["Histoire A", "Histoire B"]);
+  assert.equal(summary.targetedStudentCount, 61);
+  assert.ok(summary.groupPortraits.every(({ observation }) => /Aucun résultat/.test(observation)));
+  assert.ok(summary.groupPortraits.every(({ groupDetailHref }) => groupDetailHref?.startsWith("/teacher/groups/group-real-")));
+});
+
 test("fait remonter une progression en cours sans inventer de bilan", async () => {
   const activity = createLocalPublishedActivity({ title: "Activité en cours", workType: "revision", targetedGroupIds: ["group-demo-401"], notionIds: ["acte-union"], operationId: null, questionIds: ["q1", "q2", "q3", "q4"] }, new Date("2026-08-05T14:30:00.000Z"));
   const progress: StudentProgressContract = {

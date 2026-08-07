@@ -1,4 +1,5 @@
 import type { HistoricalPeriod } from "../student-dashboard/types.ts";
+import type { StudentProgressContract } from "../student-progress/types.ts";
 
 export type LearningSessionDocumentContent =
   | {
@@ -94,9 +95,10 @@ export type StudentLearningSessionData = {
   notionTitle: string;
   historicalPeriod: HistoricalPeriod;
   currentQuestionIndex: number;
+  progress?: StudentProgressContract;
   questions: LearningSessionQuestion[];
   documentCatalog: LearningSessionDocument[];
   dashboardHref: string;
-  source: "local_demo";
+  source: "local_demo" | "server";
   localDemoNotice: string;
 };

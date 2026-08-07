@@ -60,6 +60,15 @@ test("sélectionne tous les groupes et Révision par défaut", async () => {
   assert.ok(catalog.groups.every(({ name }) => /fictif/.test(name)));
 });
 
+test("remplace les groupes de démonstration par les groupes enregistrés de l’enseignant", () => {
+  assert.match(routeSource, /requireTeacherActor\(\)/);
+  assert.match(routeSource, /listStoredTeacherGroups\(teacher\.id\)/);
+  assert.match(routeSource, /groups: storedGroups\.map/);
+  assert.match(viewSource, /availableGroupIds = new Set\(catalog\.groups\.map/);
+  assert.match(viewSource, /selectedGroupIds\.filter\(\(id\) => availableGroupIds\.has\(id\)\)/);
+  assert.match(viewSource, /selectedGroupIds\.length > 0 \? selectedGroupIds : catalog\.groups\.map/);
+});
+
 test("propose uniquement un nombre de questions de 1 à 20", () => {
   assert.match(viewSource, /durationMinutes: null/);
   assert.match(viewSource, /questionCount: 1/);
@@ -415,7 +424,9 @@ test("ajoute le bandeau historique à l’en-tête enseignant", () => {
 
 test("ne conserve aucune progression élève pendant un aperçu enseignant", () => {
   assert.match(studentPreviewSource, /persistProgress=\{published === "1"\}/);
-  assert.match(sessionViewSource, /if \(persistProgress && progressReady\) void createConfiguredDataRepository\(window\.localStorage\)\.saveStudentProgress/);
+  assert.match(sessionViewSource, /if \(!persistProgress \|\| !progressReady\) return/);
+  assert.match(sessionViewSource, /if \(!persistProgress \|\| data\.source === "server"\) return/);
+  assert.match(sessionViewSource, /createConfiguredDataRepository\(window\.localStorage\)\.saveStudentProgress\(progressContract\)/);
   assert.match(sessionViewSource, /persistProgress && nextState\.summary/);
 });
 

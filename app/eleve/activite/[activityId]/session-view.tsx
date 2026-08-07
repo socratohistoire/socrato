@@ -5,6 +5,7 @@ import Link from "next/link";
 import { DragEvent as ReactDragEvent, FormEvent, KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { ThemeToggle } from "../../tableau-de-bord/theme-toggle";
 import { StudentLogoutButton } from "../../logout-button";
+import { saveStudentOutcomeToDatabase, saveStudentProgressToDatabase } from "../progress-actions";
 import { createStudentProgressContract, restoreStudentProgress } from "@/lib/student-progress";
 import { createConfiguredDataRepository } from "@/lib/data-repository";
 import { createDemoPedagogicalDefinition, createPedagogicalSession, finalizePedagogicalSession, LocalDeterministicResponseAnalyzer, MAX_EXPLICIT_HINT_LEVEL, MAX_PEDAGOGICAL_ATTEMPTS, requestNextHint, submitStudentResponse, type PedagogicalSessionState } from "@/lib/pedagogical-session-engine";
@@ -24,8 +25,8 @@ function revealNewestConversationMessage(region: HTMLDivElement, message: HTMLEl
 export function StudentLearningSessionView({ data, teacherPreview = false, persistProgress = true }: { data: StudentLearningSessionData; teacherPreview?: boolean; persistProgress?: boolean }) {
   const engineDefinition = useMemo(() => createDemoPedagogicalDefinition(data), [data]);
   const analyzer = useMemo(() => new LocalDeterministicResponseAnalyzer(), []);
-  const [engineState, setEngineState] = useState(() => createPedagogicalSession(engineDefinition));
-  const [progressReady, setProgressReady] = useState(!persistProgress);
+  const [engineState, setEngineState] = useState(() => restoreStudentProgress(createPedagogicalSession(engineDefinition), data.progress));
+  const [progressReady, setProgressReady] = useState(!persistProgress || data.source === "server");
   const [persistenceMessage, setPersistenceMessage] = useState("");
   const activeData = { ...data, currentQuestionIndex: engineState.currentQuestionIndex };
   const question = getCurrentLearningQuestion(activeData);
@@ -39,7 +40,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
   const [pendingNextState, setPendingNextState] = useState<PedagogicalSessionState | null>(null);
   const [finalFeedbackDelivered, setFinalFeedbackDelivered] = useState(false);
   const completedQuestions = engineState.questionStates.filter(({ status }) => status === "completed").length;
-  const progressCompletedQuestions = Math.min(data.questions.length, Math.max(completedQuestions, engineState.currentQuestionIndex) + (timelineCompleted ? 1 : 0));
+  const progressCompletedQuestions = Math.min(data.questions.length, Math.max(completedQuestions, engineState.currentQuestionIndex + (timelineCompleted ? 1 : 0)));
   const progress = {
     current: Math.min(engineState.currentQuestionIndex + 1, data.questions.length),
     total: data.questions.length,
@@ -48,7 +49,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
   const heading = getLearningSessionHeading(data);
   const primaryOperation = question?.intellectualOperations.find(({ id }) => id === question.primaryOperationId);
   const initialDocumentId = getInitialQuestionDocument(activeData)?.id ?? null;
-  const [messages, setMessages] = useState<LearningSessionMessage[]>(data.questions[0]?.initialMessages ?? []);
+  const [messages, setMessages] = useState<LearningSessionMessage[]>(data.questions[engineState.currentQuestionIndex]?.initialMessages ?? []);
   const [response, setResponse] = useState("");
   const [currentHint, setCurrentHint] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -70,7 +71,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
   });
 
   useEffect(() => {
-    if (!persistProgress) return;
+    if (!persistProgress || data.source === "server") return;
     let active = true;
     void createConfiguredDataRepository(window.localStorage).listStudentProgress().then((records) => {
       if (!active) return;
@@ -81,11 +82,20 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
       });
     }).catch(() => { if (active) setPersistenceMessage("Ta progression n’a pas pu être chargée. Tu peux continuer et réessayer plus tard."); }).finally(() => { if (active) setProgressReady(true); });
     return () => { active = false; };
-  }, [data.questions, persistProgress]);
+  }, [data.questions, data.source, persistProgress]);
 
   useEffect(() => {
-    if (persistProgress && progressReady) void createConfiguredDataRepository(window.localStorage).saveStudentProgress(createStudentProgressContract(engineState)).catch(() => setPersistenceMessage("Ta progression n’a pas pu être enregistrée. Vérifie ta connexion, puis réessaie."));
-  }, [engineState, persistProgress, progressReady]);
+    if (!persistProgress || !progressReady) return;
+    const progressContract = createStudentProgressContract(engineState);
+    void (async () => {
+      if (data.source === "server") {
+        const result = await saveStudentProgressToDatabase(progressContract);
+        if (!result.ok) throw new Error(result.error);
+      } else {
+        await createConfiguredDataRepository(window.localStorage).saveStudentProgress(progressContract);
+      }
+    })().catch(() => setPersistenceMessage("Ta progression n’a pas pu être enregistrée. Vérifie ta connexion, puis réessaie."));
+  }, [data.source, engineState, persistProgress, progressReady]);
 
   useEffect(() => {
     if (messages.length <= renderedMessageCountRef.current) {
@@ -135,7 +145,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
       let nextState = transition.state;
       if (transition.sessionCompleted) {
         nextState = await finalizePedagogicalSession(nextState);
-        if (persistProgress && nextState.summary) await createConfiguredDataRepository(window.localStorage).saveStudentOutcome(nextState.summary).catch(() => setPersistenceMessage("Ton bilan n’a pas pu être enregistré. Réessaie avant de quitter."));
+        if (persistProgress && nextState.summary) await persistCompletedSession(nextState);
       }
       if (nextState.currentQuestionIndex !== engineState.currentQuestionIndex) {
         setPendingNextState(nextState);
@@ -229,10 +239,26 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
     let nextState: PedagogicalSessionState = { ...engineState, status: isLastQuestion ? "completed" : "active", questionStates };
     if (isLastQuestion) {
       nextState = await finalizePedagogicalSession(nextState);
-      if (persistProgress && nextState.summary) void createConfiguredDataRepository(window.localStorage).saveStudentOutcome(nextState.summary).catch(() => setPersistenceMessage("Ton bilan n’a pas pu être enregistré. Réessaie avant de quitter."));
+      if (persistProgress && nextState.summary) await persistCompletedSession(nextState);
       setFinalFeedbackDelivered(true);
     }
     setEngineState(nextState);
+  }
+
+  async function persistCompletedSession(state: PedagogicalSessionState) {
+    if (!state.summary) return;
+    try {
+      if (data.source === "server") {
+        const progressResult = await saveStudentProgressToDatabase(createStudentProgressContract(state));
+        if (!progressResult.ok) throw new Error(progressResult.error);
+        const outcomeResult = await saveStudentOutcomeToDatabase(state.summary);
+        if (!outcomeResult.ok) throw new Error(outcomeResult.error);
+      } else {
+        await createConfiguredDataRepository(window.localStorage).saveStudentOutcome(state.summary);
+      }
+    } catch {
+      setPersistenceMessage("Ton bilan n’a pas pu être enregistré. Réessaie avant de quitter.");
+    }
   }
 
   function moveToQuestion(direction: -1 | 1) {

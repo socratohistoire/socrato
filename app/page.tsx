@@ -117,7 +117,7 @@ export default function Home() {
           <div className="h-px flex-1 bg-slate-300/90" />
 
           <a
-            href="/enseignant"
+            href="/teacher"
             className="group flex shrink-0 flex-col items-center gap-1 text-sm text-slate-600 transition hover:text-[#0d2945]"
           >
             <svg

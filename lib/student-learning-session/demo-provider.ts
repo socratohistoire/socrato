@@ -22,9 +22,9 @@ const PUBLISHED_TEST_QUESTION_IDS = [
   "question:acte-union:short-answer-007",
 ] as const;
 
-function createPublishedTestActivity() {
+export function createCatalogLearningSessionQuestions(questionIds: readonly string[]) {
   const catalog = [...ACTE_UNION_CAUSAL_PILOT_DOCUMENTS, ...ACTE_UNION_DOCUMENTS];
-  const questions: LearningSessionQuestion[] = PUBLISHED_TEST_QUESTION_IDS.map((id, index) => {
+  const questions: LearningSessionQuestion[] = questionIds.map((id, index) => {
     const question = PEDAGOGICAL_QUESTION_CATALOG.find((candidate) => candidate.id === id);
     if (!question) throw new Error(`Question de test introuvable : ${id}`);
     const documents = catalog.filter((document) => question.historicalDocumentIds.includes(document.id));
@@ -78,7 +78,7 @@ export function createDemoStudentLearningSession(
   const timelineQuestion = ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION;
 
   if (activityId === "demo-teacher-practice-1") {
-    const published = createPublishedTestActivity();
+    const published = createCatalogLearningSessionQuestions(PUBLISHED_TEST_QUESTION_IDS);
     return {
       id: `local-session-${activityId}`,
       activityId,

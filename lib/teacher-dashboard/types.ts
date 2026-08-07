@@ -1,4 +1,4 @@
-export type TeacherDashboardSource = "local_demo";
+export type TeacherDashboardSource = "local_demo" | "stored_teacher_workspace";
 
 export type HighPriorityReason = "failed_assessment" | "near_failure";
 export type TeacherPriorityLevel = "high" | "medium" | "none";

@@ -1,4 +1,4 @@
-import { createHmac } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 
 export interface AccessCodeLookup {
   digest(normalizedCode: string): string;
@@ -13,5 +13,11 @@ export class HmacAccessCodeLookup implements AccessCodeLookup {
 
   digest(normalizedCode: string): string {
     return createHmac("sha256", this.key).update(normalizedCode).digest("hex");
+  }
+}
+
+export class Sha256AccessCodeLookup implements AccessCodeLookup {
+  digest(normalizedCode: string): string {
+    return createHash("sha256").update(normalizedCode).digest("hex");
   }
 }

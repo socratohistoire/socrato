@@ -48,7 +48,10 @@ export class HttpSocratoDataRepository implements SocratoDataRepository {
   listPublishedActivities() { return this.request<Awaited<ReturnType<SocratoDataRepository["listPublishedActivities"]>>>(SOCRATO_API_ROUTES.teacherActivities); }
   async savePublishedActivity(activity: Parameters<SocratoDataRepository["savePublishedActivity"]>[0]) { await this.request(SOCRATO_API_ROUTES.teacherActivities, { method: "POST", body: JSON.stringify(activity) }); }
   setPublishedActivityStatus(activityId: string, status: Parameters<SocratoDataRepository["setPublishedActivityStatus"]>[1]) { return this.request<Awaited<ReturnType<SocratoDataRepository["setPublishedActivityStatus"]>>>(activityStatusRoute(activityId), { method: "PATCH", body: JSON.stringify({ publicationStatus: status }) }); }
-  readActiveDraft(_catalog: ActivityCreatorCatalog) { return this.request<Awaited<ReturnType<SocratoDataRepository["readActiveDraft"]>>>(SOCRATO_API_ROUTES.activeTeacherDraft); }
+  readActiveDraft(catalog: ActivityCreatorCatalog) {
+    void catalog;
+    return this.request<Awaited<ReturnType<SocratoDataRepository["readActiveDraft"]>>>(SOCRATO_API_ROUTES.activeTeacherDraft);
+  }
   readActiveDraftSummary() { return this.request<Awaited<ReturnType<SocratoDataRepository["readActiveDraftSummary"]>>>(SOCRATO_API_ROUTES.activeTeacherDraft); }
   async saveDraft(draft: Parameters<SocratoDataRepository["saveDraft"]>[0]) { await this.request(SOCRATO_API_ROUTES.activeTeacherDraft, { method: "PUT", body: JSON.stringify(draft) }); }
   async clearActiveDraft() { await this.request(SOCRATO_API_ROUTES.activeTeacherDraft, { method: "DELETE" }); }

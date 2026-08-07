@@ -18,6 +18,6 @@ export function createTeacherGroupDetailViewModel(record: TeacherGroupDetailReco
     ...record,
     participationPercentage,
     socratoSummaryText: `${record.socratoSummary.mastery} ${record.socratoSummary.mainChallenge}`,
-    returnHref: `/teacher?activity=${encodeURIComponent(record.activityId)}`,
+    returnHref: record.activityId === "no-activity" ? "/teacher?welcome=1" : `/teacher?activity=${encodeURIComponent(record.activityId)}`,
   };
 }

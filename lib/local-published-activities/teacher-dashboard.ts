@@ -4,31 +4,38 @@ import { LOCAL_DEMO_STUDENT_GROUP_ID } from "./student-dashboard.ts";
 import type { LocalPublishedActivity } from "./store.ts";
 import type { StudentProgressContract } from "../student-progress/types.ts";
 
-function localGroupPortrait(activity: LocalPublishedActivity, outcome: PedagogicalSummary | undefined, progress: StudentProgressContract | undefined, groups: readonly TeacherGroupOverview[]) {
-  if ((!outcome && !progress) || !activity.targetedGroupIds.includes(LOCAL_DEMO_STUDENT_GROUP_ID)) return [];
-  const group = groups.find(({ id }) => id === LOCAL_DEMO_STUDENT_GROUP_ID);
-  if (!group) return [];
+type ActivitySummaryGroup = Pick<TeacherGroupOverview, "id" | "name" | "studentCount">;
+
+function localGroupPortrait(activity: LocalPublishedActivity, outcome: PedagogicalSummary | undefined, progress: StudentProgressContract | undefined, groups: readonly ActivitySummaryGroup[]) {
+  const targetedGroups = groups.filter(({ id }) => activity.targetedGroupIds.includes(id));
+  if (targetedGroups.length === 0) return [];
   const hasConsolidation = outcome?.operationResults.some(({ status }) => status !== "mastered")
     || outcome?.historicalKnowledgeResults.some(({ status }) => status !== "mastered");
   const completed = Boolean(outcome) || progress?.state === "completed";
-  return [{
+  return targetedGroups.map((group) => ({
     id: `portrait-${activity.id}-${group.id}`,
     activityId: activity.id,
     name: group.name,
-    observation: completed && hasConsolidation
+    observation: !outcome && !progress
+      ? "Aucun résultat disponible pour le moment."
+      : completed && hasConsolidation
       ? "Un premier bilan est disponible. Certaines démarches ou connaissances restent à consolider."
       : completed ? "Un premier bilan est disponible et montre une bonne maîtrise des éléments travaillés."
       : `Un élève a commencé l’activité et a réalisé ${progress?.completedQuestionIds.length ?? 0} question${progress?.completedQuestionIds.length === 1 ? "" : "s"} sur ${progress?.totalQuestions ?? 0}.`,
-    suggestion: outcome?.consolidationTargets[0] ?? (completed ? "Poursuivre l’accompagnement à partir du bilan structuré de l’activité." : "Laisser l’élève poursuivre avant de tirer une conclusion pédagogique."),
+    suggestion: !outcome && !progress
+      ? "Les résultats apparaîtront lorsque les élèves commenceront l’activité."
+      : outcome?.consolidationTargets[0] ?? (completed ? "Poursuivre l’accompagnement à partir du bilan structuré de l’activité." : "Laisser l’élève poursuivre avant de tirer une conclusion pédagogique."),
     completedStudentCount: completed ? 1 : 0,
     targetedStudentCount: group.studentCount,
-    groupDetailHref: `/teacher/activities/${encodeURIComponent(activity.id)}/groups/${encodeURIComponent(group.id)}`,
-  }];
+    groupDetailHref: group.id === LOCAL_DEMO_STUDENT_GROUP_ID
+      ? `/teacher/activities/${encodeURIComponent(activity.id)}/groups/${encodeURIComponent(group.id)}`
+      : `/teacher/groups/${encodeURIComponent(group.id)}`,
+  }));
 }
 
 export function createLocalTeacherActivitySummaries(
   activities: readonly LocalPublishedActivity[],
-  groups: readonly TeacherGroupOverview[],
+  groups: readonly ActivitySummaryGroup[],
   outcomes: Readonly<Record<string, PedagogicalSummary>>,
   progressRecords: Readonly<Record<string, StudentProgressContract>> = {},
 ): TeacherActivitySummary[] {
@@ -42,7 +49,11 @@ export function createLocalTeacherActivitySummaries(
       .reduce((total, group) => total + group.studentCount, 0);
     return {
       id: activity.id,
-      summaryVersion: outcome ? `local-${outcome.completedAt}` : progress ? `local-progress-${progress.updatedAt}` : "local-pending-v1",
+      summaryVersion: outcome
+        ? `local-${activity.publicationStatus}-${activity.updatedAt}-${outcome.completedAt}`
+        : progress
+          ? `local-${activity.publicationStatus}-${activity.updatedAt}-progress-${progress.updatedAt}`
+          : `local-${activity.publicationStatus}-${activity.updatedAt}-pending-v1`,
       activityType: activity.workType,
       customTitle: activity.title,
       publishedAt: activity.publishedAt,

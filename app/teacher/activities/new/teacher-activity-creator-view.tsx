@@ -13,13 +13,13 @@ import {
   validateActivityConfiguration,
   type ActivityConfiguration,
   type ActivityCreatorCatalog,
-  type ActivityPreview,
   type WorkType,
 } from "@/lib/teacher-activity-creator";
 import { downloadActivityWord } from "@/lib/teacher-activity-creator/word-export";
 import { createLocalPublishedActivity } from "@/lib/local-published-activities";
 import { createTeacherActivityDraft } from "@/lib/teacher-activity-drafts";
 import { createConfiguredDataRepository } from "@/lib/data-repository";
+import { publishActivityToSupabase } from "./actions";
 
 const WORK_TYPES: { id: WorkType; label: string }[] = [
   { id: "revision", label: "Révision" },
@@ -58,39 +58,6 @@ function ConfigCard({ id, icon, title, children }: { id: string; icon: "format" 
   return <section className="creator-card" aria-labelledby={id}><h2 id={id}><span><Icon name={icon}/></span>{title}</h2>{children}</section>;
 }
 
-function documentBody(document: ActivityCreatorCatalog["documents"][number]) {
-  if (document.content.kind === "historical_image") return <Image src={document.content.localSrc} alt={document.content.alt} width={680} height={410} unoptimized />;
-  if (document.content.kind === "population_table") return <table><thead><tr><th>Région</th><th>Population</th><th>Représentation</th></tr></thead><tbody>{document.content.rows.map((row) => <tr key={row.region}><td>{row.region}</td><td>{row.population}</td><td>{row.representatives}</td></tr>)}</tbody></table>;
-  if (document.content.kind === "comparison_table") return <table><thead><tr>{document.content.headers.map((header) => <th key={header}>{header}</th>)}</tr></thead><tbody>{document.content.rows.map((row) => <tr key={row.label}><td>{row.label}</td><td>{row.value}</td></tr>)}</tbody></table>;
-  if (document.content.kind === "historical_timeline") return <div className="teacher-timeline-preview">{document.content.entries.map((entry) => <article key={entry.date}><strong>{entry.date}</strong><Image src={entry.imageUrl} alt={entry.imageAlt} width={320} height={190} unoptimized /><small>{entry.phase}</small><span>{entry.title}</span></article>)}</div>;
-  if (document.content.kind === "political_structure_diagram") return <PoliticalStructureDiagram className="teacher-political-structure" />;
-  return <blockquote>{document.content.excerpt}</blockquote>;
-}
-
-function PoliticalStructureDiagram({ className }: { className: string }) {
-  return <div className={className} role="img" aria-label="Schéma de la structure politique de l’Acte d’Union : la Couronne nomme le gouverneur; le gouverneur nomme les conseils; les électeurs élisent une Assemblée commune de 84 députés.">
-    <div className="ps-node ps-crown"><small>Autorité impériale</small><strong>Couronne et Parlement britannique</strong><span>Adoptent l’Acte d’Union</span></div><div className="ps-arrow">nomme ↓</div>
-    <div className="ps-node ps-governor"><small>Pouvoir exécutif</small><strong>Gouverneur général</strong><span>Nomme les conseils · sanctionne ou réserve les lois</span></div><div className="ps-arrow">nomme et consulte ↓</div>
-    <div className="ps-councils"><div className="ps-node"><small>Nommé</small><strong>Conseil exécutif</strong><span>Conseille et administre</span></div><div className="ps-node"><small>Nommé</small><strong>Conseil législatif</strong><span>Étudie et adopte les projets de loi</span></div></div>
-    <div className="ps-arrow">projets de loi ↕</div><div className="ps-node ps-assembly"><small>Élue</small><strong>Assemblée législative · 84 députés</strong><div><b>Canada-Ouest · 42</b><b>Canada-Est · 42</b></div></div><div className="ps-arrow">élisent ↑</div>
-    <div className="ps-node ps-voters"><strong>Électeurs admissibles</strong></div>
-  </div>;
-}
-
-function TeacherTimelineInteractionPreview({ timeline }: { timeline: NonNullable<ActivityPreview["timelineInteraction"]> }) {
-  return <section className="teacher-interaction-timeline" aria-label="Corrigé chronologique de référence">
-    <header><span>Aperçu de l’interaction</span><strong>Ordre chronologique attendu</strong></header>
-    <div className="teacher-interaction-timeline-track" aria-hidden="true" />
-    <div className="teacher-interaction-timeline-cards">{timeline.entries.map((entry, index) => <article key={entry.id}>
-      <div className="teacher-interaction-date"><span>{index + 1}</span><strong>{entry.date}</strong></div>
-      <Image src={entry.imageUrl} alt={entry.imageAlt} width={360} height={220} unoptimized />
-      <h4>{entry.title}</h4>
-      <p>{entry.description}</p>
-    </article>)}</div>
-    <p className="teacher-interaction-note">Dans la page de l’élève, ces cinq cartes apparaissent mélangées et doivent être replacées aux bonnes dates.</p>
-  </section>;
-}
-
 export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreatorCatalog }) {
   const [config, setConfig] = useState(() => INITIAL_CONFIGURATION(catalog));
   const [previewVariant, setPreviewVariant] = useState(0);
@@ -98,6 +65,7 @@ export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreat
   const [demoMessage, setDemoMessage] = useState("");
   const [showPublishReview, setShowPublishReview] = useState(false);
   const [downloadingWord, setDownloadingWord] = useState(false);
+  const [publishingActivity, setPublishingActivity] = useState(false);
   const [previouslyAssignedQuestionIds, setPreviouslyAssignedQuestionIds] = useState<string[]>([]);
   const [questionOverrides, setQuestionOverrides] = useState<Record<number, string>>({});
   const [draftReady, setDraftReady] = useState(false);
@@ -150,7 +118,13 @@ export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreat
     let active = true;
     void createConfiguredDataRepository(window.localStorage).readActiveDraft(catalog).then((draft) => {
       if (!active || !draft) return;
-      setConfig(draft.configuration); setQuestionOverrides(draft.questionOverrides); setPreviewVariant(draft.previewQuestionIndex); setDraftTouched(true);
+      const availableGroupIds = new Set(catalog.groups.map(({ id }) => id));
+      const selectedGroupIds = draft.configuration.selectedGroupIds.filter((id) => availableGroupIds.has(id));
+      setConfig({
+        ...draft.configuration,
+        selectedGroupIds: selectedGroupIds.length > 0 ? selectedGroupIds : catalog.groups.map(({ id }) => id),
+      });
+      setQuestionOverrides(draft.questionOverrides); setPreviewVariant(draft.previewQuestionIndex); setDraftTouched(true);
     }).catch(() => { if (active) setDemoMessage("Le brouillon n’a pas pu être chargé."); }).finally(() => { if (active) setDraftReady(true); });
     return () => { active = false; };
   }, [catalog]);
@@ -231,11 +205,20 @@ export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreat
       operationId: config.operationId,
       questionIds: activityQuestions.map(({ id }) => id),
     });
-    const repository = createConfiguredDataRepository(window.localStorage);
-    await repository.savePublishedActivity(publishedActivity);
-    await repository.clearActiveDraft();
-    setShowPublishReview(false);
-    window.location.assign(`/teacher?activity=${encodeURIComponent(publishedActivity.id)}`);
+    setPublishingActivity(true);
+    try {
+      await publishActivityToSupabase(publishedActivity);
+      const repository = createConfiguredDataRepository(window.localStorage);
+      await repository.savePublishedActivity(publishedActivity);
+      await repository.clearActiveDraft();
+      setShowPublishReview(false);
+      window.location.assign(`/teacher?activity=${encodeURIComponent(publishedActivity.id)}`);
+    } catch {
+      setShowPublishReview(false);
+      setDemoMessage("L’activité n’a pas pu être publiée dans Supabase. Aucun enregistrement local n’a été créé.");
+    } finally {
+      setPublishingActivity(false);
+    }
   }
 
   return <main className="activity-creator" data-theme={theme}>
@@ -311,7 +294,7 @@ export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreat
           <div><dt>Séquence à publier</dt><dd>{activityQuestionCount} question{activityQuestionCount > 1 ? "s" : ""}</dd></div>
           <div className="automatic-questions"><dt>Composition</dt><dd>Les questions et les opérations laissées en mode aléatoire seront attribuées automatiquement au moment de la publication. Les remplacements faits avec « Changer » seront conservés.</dd></div>
         </dl>
-        <footer><button type="button" className="review-back" onClick={() => setShowPublishReview(false)}>Retour aux réglages</button><button type="button" className="word-download" aria-label={downloadingWord ? "Création du fichier Word" : "Télécharger le fichier Word"} title={downloadingWord ? "Création du fichier Word…" : "Télécharger le fichier Word"} disabled={downloadingWord} onClick={downloadWord}><WordIcon/><span className="sr-only">{downloadingWord ? "Création du fichier Word…" : "Télécharger le fichier Word"}</span></button><button type="button" className="confirm-publish" onClick={confirmLocalPublication}>{publishLabel} →</button></footer>
+        <footer><button type="button" className="review-back" disabled={publishingActivity} onClick={() => setShowPublishReview(false)}>Retour aux réglages</button><button type="button" className="word-download" aria-label={downloadingWord ? "Création du fichier Word" : "Télécharger le fichier Word"} title={downloadingWord ? "Création du fichier Word…" : "Télécharger le fichier Word"} disabled={downloadingWord || publishingActivity} onClick={downloadWord}><WordIcon/><span className="sr-only">{downloadingWord ? "Création du fichier Word…" : "Télécharger le fichier Word"}</span></button><button type="button" className="confirm-publish" disabled={publishingActivity} onClick={confirmLocalPublication}>{publishingActivity ? "Publication…" : `${publishLabel} →`}</button></footer>
       </section>
     </div>}
   </main>;

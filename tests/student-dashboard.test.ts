@@ -39,6 +39,11 @@ test("protège le tableau de bord avec la session élève", async () => {
   assert.match(pageSource, /redirect\("\/eleve"\)/);
 });
 
+test("isole les résultats persistés au serveur des anciennes données du navigateur", () => {
+  assert.match(viewSource, /if \(data\.source === "server"\)[\s\S]*setDashboardData\(data\)/);
+  assert.doesNotMatch(viewSource, /applyStoredStudentActivityOutcomes|applyStoredStudentProgress/);
+});
+
 test("affiche par défaut l’activité récente avec son titre personnalisé", () => {
   const activity = getSelectedActivity(createDemoStudentDashboard());
   assert.equal(activity.id, "demo-teacher-practice-1");
