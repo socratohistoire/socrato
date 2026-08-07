@@ -40,7 +40,8 @@ export function createPedagogicalFeedback(
   }
   if (analysis.pedagogicalOutcome === "satisfactory") {
     const assessment = "Ta réponse satisfait les critères de cette question.";
-    return { acknowledgement, assessment, studentFacingText: joinParts([acknowledgement, assessment]), relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-011"] };
+    const enrichment = missingElement ? `Pour rendre ta réponse encore plus précise : ${missingElement}` : undefined;
+    return { acknowledgement, assessment, missingElement, studentFacingText: joinParts([acknowledgement, assessment, enrichment]), relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-011"] };
   }
   const assessment = analysis.pedagogicalOutcome === "partially_satisfactory"
     ? "Ton idée est pertinente, mais le raisonnement doit être précisé."
