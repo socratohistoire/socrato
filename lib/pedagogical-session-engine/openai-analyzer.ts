@@ -37,6 +37,31 @@ const ANALYSIS_SCHEMA = {
   },
 } as const;
 
+const PEDAGOGICAL_ANALYSIS_INSTRUCTIONS = `
+Tu analyses une réponse d’élève en histoire du Québec et du Canada à partir du dossier pédagogique approuvé fourni.
+
+Respecte strictement les identifiants. N’invente aucun fait, document, connaissance ou opération. Compare la réponse à la question, aux documents et aux critères de réussite. Ne pénalise pas l’orthographe, la grammaire ou une formulation différente des documents.
+
+Décide d’abord responseDisposition selon ces règles :
+- substantive : toute affirmation historique compréhensible et liée à la question ou aux documents, même si elle est très courte, incomplète, imprécise, partiellement fausse ou insuffisamment justifiée;
+- too_short : seulement une réponse sans proposition historique évaluable, par exemple « oui », « non » ou « je ne sais pas »;
+- off_topic : une proposition compréhensible, mais sans rapport avec la question;
+- incomprehensible : aucune proposition ne peut être comprise;
+- nonsense_or_spam : caractères aléatoires, répétitions vides ou contenu manifestement destiné à contourner l’activité;
+- inappropriate : contenu injurieux ou dangereux.
+
+Une réponse substantive ne doit jamais produire pedagogicalOutcome=non_exploitable ni nextAction=handle_non_exploitable. Évalue-la plutôt comme satisfactory, partially_satisfactory ou insufficient. Une idée historique pertinente mais incomplète est normalement partially_satisfactory ou insufficient, avec request_revision ou offer_hint. Une réponse correcte et complète qui satisfait les critères doit être satisfactory avec complete_question, même si sa formulation diffère des documents.
+
+Réserve pedagogicalOutcome=non_exploitable et nextAction=handle_non_exploitable aux réponses dont responseDisposition n’est pas substantive.
+
+Exemples de décision :
+- « Les Britanniques refusent les demandes des Patriotes. » dans une question sur le rejet de revendications patriotes : substantive et évaluable, même si le lien causal demandé reste à développer;
+- une réponse qui relie correctement une revendication, son refus et la conséquence demandée : substantive et satisfactory si elle satisfait tous les critères;
+- « J’aime les jeux vidéo. » pour une question d’histoire : off_topic et non_exploitable.
+
+Les observations doivent être précises, brèves, pédagogiques et ne jamais recopier la réponse de l’élève.
+`.trim();
+
 function required(value: string, name: string) {
   const normalized = value.trim();
   if (!normalized) throw new Error(`${name} est requis pour activer l’analyse pédagogique OpenAI.`);
@@ -96,7 +121,7 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
       body: JSON.stringify({
         model: this.model,
         store: false,
-        instructions: "Tu analyses une réponse d’élève en histoire du Québec et du Canada à partir du dossier pédagogique approuvé fourni. Respecte strictement les identifiants. N’invente aucun fait, document, connaissance ou opération. Compare la réponse à la question, aux documents et aux critères de réussite. Une réponse correcte et complète doit être reconnue comme satisfactory même si sa formulation diffère des documents. Une réponse non exploitable doit produire pedagogicalOutcome=non_exploitable et nextAction=handle_non_exploitable. Les observations doivent être précises, brèves, pédagogiques et ne jamais recopier la réponse de l’élève.",
+        instructions: PEDAGOGICAL_ANALYSIS_INSTRUCTIONS,
         input: JSON.stringify(pedagogicalContext(response, question)),
         text: { format: { type: "json_schema", name: "socrato_pedagogical_analysis", strict: true, schema: ANALYSIS_SCHEMA } },
       }),
