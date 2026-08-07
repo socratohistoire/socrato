@@ -48,7 +48,13 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.instructions), /même si elle est très courte, incomplète/);
   assert.match(String(requestBody?.instructions), /substantive ne doit jamais produire pedagogicalOutcome=non_exploitable/);
   assert.match(String(requestBody?.instructions), /Les Britanniques refusent les demandes des Patriotes/);
-  assert.match(String(requestBody?.instructions), /correctement une revendication, son refus et la conséquence/);
+  assert.match(String(requestBody?.instructions), /accomplit l’opération intellectuelle centrale/);
+  assert.match(String(requestBody?.instructions), /documentUse=partial/);
+  assert.match(String(requestBody?.instructions), /ne nomme pas explicitement le journal/);
+  assert.match(String(requestBody?.instructions), /une seule prochaine étape concrète et réalisable/);
+  assert.match(String(requestBody?.instructions), /nommer la source, ajouter le fait pertinent ou expliciter le lien attendu/);
+  assert.match(String(requestBody?.instructions), /Évite les conseils génériques/);
+  assert.match(String(requestBody?.instructions), /ne fournis jamais la réponse complète/);
 });
 
 test("refuse les identifiants inventés par le modèle", async () => {

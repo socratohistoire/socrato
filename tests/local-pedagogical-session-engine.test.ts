@@ -111,6 +111,21 @@ test("termine immédiatement une réponse satisfaisante", async () => {
   assert.equal(transition.state.questionStates[0].result?.advancedMastery, true);
 });
 
+test("accepte une réponse satisfaisante tout en proposant un enrichissement précis", async () => {
+  const satisfactory = analysis({
+    pedagogicalOutcome: "satisfactory", nextAction: "complete_question", historicalAccuracy: "demonstrated",
+    documentUse: "partial", justificationQuality: "demonstrated", primaryOperationPerformance: "demonstrated",
+    demonstratedKnowledgeIds: ["population", "representation"], observedOperationIds: question.operationIds,
+    usedDocumentIds: [question.documentIds[0]], missingElements: ["nomme explicitement La Minerve comme indice de radicalisation."],
+  });
+  const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Réponse", new ScriptedAnalyzer([satisfactory]), fixedClock);
+  assert.equal(transition.questionCompleted, true);
+  assert.equal(transition.state.questionStates[0].result?.status, "mastered");
+  assert.equal(transition.state.questionStates[0].result?.advancedMastery, false);
+  assert.match(transition.feedback?.studentFacingText ?? "", /satisfait les critères/);
+  assert.match(transition.feedback?.studentFacingText ?? "", /Pour rendre ta réponse encore plus précise : nomme explicitement La Minerve/);
+});
+
 test("une réponse partielle autorise une nouvelle tentative", async () => {
   const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Réponse", new ScriptedAnalyzer([analysis()]), fixedClock);
   assert.equal(transition.state.status, "active");

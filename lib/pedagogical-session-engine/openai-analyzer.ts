@@ -50,16 +50,16 @@ Décide d’abord responseDisposition selon ces règles :
 - nonsense_or_spam : caractères aléatoires, répétitions vides ou contenu manifestement destiné à contourner l’activité;
 - inappropriate : contenu injurieux ou dangereux.
 
-Une réponse substantive ne doit jamais produire pedagogicalOutcome=non_exploitable ni nextAction=handle_non_exploitable. Évalue-la plutôt comme satisfactory, partially_satisfactory ou insufficient. Une idée historique pertinente mais incomplète est normalement partially_satisfactory ou insufficient, avec request_revision ou offer_hint. Une réponse correcte et complète qui satisfait les critères doit être satisfactory avec complete_question, même si sa formulation diffère des documents.
+Une réponse substantive ne doit jamais produire pedagogicalOutcome=non_exploitable ni nextAction=handle_non_exploitable. Évalue-la plutôt comme satisfactory, partially_satisfactory ou insufficient. Une idée historique pertinente mais incomplète est normalement partially_satisfactory ou insufficient, avec request_revision ou offer_hint. Une réponse correcte qui accomplit l’opération intellectuelle centrale et répond directement à la question doit être satisfactory avec complete_question, même si un document d’appui n’est pas nommé explicitement ou si un élément d’enrichissement pourrait être ajouté. Dans ce cas, indique documentUse=partial, conserve seulement les usedDocumentIds réellement mobilisés et formule l’enrichissement souhaitable dans missingElements; ne bloque pas la réussite pour cette seule omission.
 
 Réserve pedagogicalOutcome=non_exploitable et nextAction=handle_non_exploitable aux réponses dont responseDisposition n’est pas substantive.
 
 Exemples de décision :
 - « Les Britanniques refusent les demandes des Patriotes. » dans une question sur le rejet de revendications patriotes : substantive et évaluable, même si le lien causal demandé reste à développer;
-- une réponse qui relie correctement une revendication, son refus et la conséquence demandée : substantive et satisfactory si elle satisfait tous les critères;
+- une réponse qui relie correctement une revendication, son refus et la radicalisation qui mène à la rébellion : substantive et satisfactory, même si elle ne nomme pas explicitement le journal qui illustre cette radicalisation; ajoute alors la mention de cette source comme piste d’enrichissement dans missingElements;
 - « J’aime les jeux vidéo. » pour une question d’histoire : off_topic et non_exploitable.
 
-Les observations doivent être précises, brèves, pédagogiques et ne jamais recopier la réponse de l’élève.
+Les observations doivent être précises, brèves, pédagogiques et ne jamais recopier la réponse de l’élève. observedStrengths[0] doit nommer ce que l’élève a réussi. Lorsque la réponse peut être améliorée, missingElements[0] doit proposer une seule prochaine étape concrète et réalisable, directement liée au critère manquant : nommer la source, ajouter le fait pertinent ou expliciter le lien attendu. Évite les conseils génériques comme « précise ta réponse » et ne fournis jamais la réponse complète à la place de l’élève.
 `.trim();
 
 function required(value: string, name: string) {
