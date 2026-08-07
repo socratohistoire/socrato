@@ -65,6 +65,46 @@ test("refuse les identifiants inventés par le modèle", async () => {
   await assert.rejects(() => analyzer.analyze(response, question), /non autorisé/);
 });
 
+test("réanalyse une idée clairement liée avant de la déclarer non exploitable", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  const nonExploitable = {
+    ...validAnalysis, responseDisposition: "off_topic", pedagogicalOutcome: "non_exploitable",
+    historicalAccuracy: "not_assessed", documentUse: "not_assessed", justificationQuality: "not_assessed",
+    primaryOperationPerformance: "not_assessed", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [],
+    observedStrengths: [], missingElements: ["Reformule."], nextAction: "handle_non_exploitable",
+  };
+  let calls = 0;
+  let secondInstructions = "";
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async (_input, init) => {
+    calls += 1;
+    if (calls === 2) secondInstructions = String((JSON.parse(String(init?.body)) as { instructions?: string }).instructions);
+    const analysis = calls === 1 ? nonExploitable : validAnalysis;
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(analysis) }] }] }), { status: 200 });
+  } });
+  const relatedResponse = { ...response, content: "La conséquence politique concerne les documents et les revenus réunis." };
+  assert.deepEqual(await analyzer.analyze(relatedResponse, question), validAnalysis);
+  assert.equal(calls, 2);
+  assert.match(secondInstructions, /Révision obligatoire/);
+  assert.match(secondInstructions, /responseDisposition=substantive/);
+});
+
+test("ne réanalyse pas une réponse réellement hors sujet", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  const nonExploitable = {
+    ...validAnalysis, responseDisposition: "off_topic", pedagogicalOutcome: "non_exploitable",
+    historicalAccuracy: "not_assessed", documentUse: "not_assessed", justificationQuality: "not_assessed",
+    primaryOperationPerformance: "not_assessed", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [],
+    observedStrengths: [], missingElements: ["Reformule."], nextAction: "handle_non_exploitable",
+  };
+  let calls = 0;
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
+    calls += 1;
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(nonExploitable) }] }] }), { status: 200 });
+  } });
+  assert.deepEqual(await analyzer.analyze({ ...response, content: "J’aime beaucoup les jeux vidéo modernes." }, question), nonExploitable);
+  assert.equal(calls, 1);
+});
+
 test("échoue fermé lorsque la configuration est absente", async () => {
   const { createConfiguredOpenAIPedagogicalAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
   assert.throws(() => createConfiguredOpenAIPedagogicalAnalyzer({}), /OPENAI_API_KEY/);

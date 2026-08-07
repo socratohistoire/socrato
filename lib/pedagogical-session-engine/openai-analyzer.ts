@@ -21,8 +21,8 @@ const ANALYSIS_SCHEMA = {
     "nextAction", "confidence",
   ],
   properties: {
-    responseDisposition: { type: "string", enum: ["substantive", "too_short", "off_topic", "incomprehensible", "nonsense_or_spam", "inappropriate"] },
-    pedagogicalOutcome: { type: "string", enum: ["satisfactory", "partially_satisfactory", "insufficient", "non_exploitable"] },
+    responseDisposition: { type: "string", description: "substantive dès qu’une affirmation historique compréhensible est liée à la question, même si elle est courte ou incomplète", enum: ["substantive", "too_short", "off_topic", "incomprehensible", "nonsense_or_spam", "inappropriate"] },
+    pedagogicalOutcome: { type: "string", description: "non_exploitable uniquement lorsqu’aucune idée historique liée à la question ne peut être évaluée", enum: ["satisfactory", "partially_satisfactory", "insufficient", "non_exploitable"] },
     historicalAccuracy: { type: "string", enum: ["demonstrated", "partial", "not_demonstrated", "not_assessed"] },
     documentUse: { type: "string", enum: ["demonstrated", "partial", "not_demonstrated", "not_assessed"] },
     justificationQuality: { type: "string", enum: ["demonstrated", "partial", "not_demonstrated", "not_assessed"] },
@@ -101,6 +101,26 @@ function pedagogicalContext(response: StudentResponse, question: PedagogicalQues
   };
 }
 
+const RELATION_STOP_WORDS = new Set([
+  "alors", "apres", "avec", "cette", "comme", "dans", "depuis", "elle", "elles", "entre", "faire", "leurs",
+  "mais", "meme", "parce", "pour", "pourquoi", "question", "seulement", "sont", "sous", "tous", "toute", "toutes",
+]);
+
+function normalizedTerms(value: string) {
+  return new Set(value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().match(/[a-z]{5,}/g)?.filter((term) => !RELATION_STOP_WORDS.has(term)) ?? []);
+}
+
+function hasClearPedagogicalRelation(response: StudentResponse, question: PedagogicalQuestionDefinition) {
+  if (response.content.trim().length < 20) return false;
+  const responseTerms = normalizedTerms(response.content);
+  const context = question.evaluationContext;
+  const referenceTerms = normalizedTerms([
+    context?.questionPrompt, context?.instruction,
+    ...(context?.approvedDocuments.flatMap(({ title, attribution, content }) => [title, attribution, content]) ?? []),
+  ].filter(Boolean).join(" "));
+  return [...responseTerms].filter((term) => referenceTerms.has(term)).length >= 2;
+}
+
 export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
   private readonly apiKey: string;
   private readonly model: string;
@@ -115,20 +135,26 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
   }
 
   async analyze(response: StudentResponse, question: PedagogicalQuestionDefinition): Promise<StructuredResponseAnalysis> {
-    const apiResponse = await this.fetcher(this.endpoint, {
+    const analyzeOnce = async (instructions: string) => {
+      const apiResponse = await this.fetcher(this.endpoint, {
       method: "POST",
       headers: { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: this.model,
         store: false,
-        instructions: PEDAGOGICAL_ANALYSIS_INSTRUCTIONS,
+        instructions,
         input: JSON.stringify(pedagogicalContext(response, question)),
         text: { format: { type: "json_schema", name: "socrato_pedagogical_analysis", strict: true, schema: ANALYSIS_SCHEMA } },
       }),
-    });
-    if (!apiResponse.ok) throw new Error(`L’analyse OpenAI a échoué (${apiResponse.status}).`);
-    const parsed = JSON.parse(extractOutputText(await apiResponse.json())) as unknown;
-    return validateStructuredAnalysis(parsed, question);
+      });
+      if (!apiResponse.ok) throw new Error(`L’analyse OpenAI a échoué (${apiResponse.status}).`);
+      const parsed = JSON.parse(extractOutputText(await apiResponse.json())) as unknown;
+      return validateStructuredAnalysis(parsed, question);
+    };
+
+    const initial = await analyzeOnce(PEDAGOGICAL_ANALYSIS_INSTRUCTIONS);
+    if (initial.pedagogicalOutcome !== "non_exploitable" || !hasClearPedagogicalRelation(response, question)) return initial;
+    return analyzeOnce(`${PEDAGOGICAL_ANALYSIS_INSTRUCTIONS}\n\nRévision obligatoire : la réponse contient plusieurs termes directement présents dans la question ou les documents. Elle exprime donc une idée historique liée et doit être responseDisposition=substantive. Réévalue son degré de réussite et donne une prochaine étape précise si elle demeure incomplète.`);
   }
 }
 
