@@ -10,6 +10,8 @@ const question = {
     questionPrompt: "Explique une conséquence politique de l’Acte d’Union.", instruction: "Appuie-toi sur le document.",
     notionTitle: "Acte d’union", primaryOperationLabel: "Déterminer des causes et des conséquences",
     successCriteria: ["Identifie une conséquence et l’explique."],
+    referenceMonograph: { id: "historical-record:acte-union", title: "Monographie de l’Acte d’Union", scope: "Acte d’Union", scopeBoundary: "Gouvernement responsable traité ailleurs.", sections: [{ id: "mono-1", title: "Union", paragraphs: [{ id: "p-1", text: "L’Acte d’Union réunit les deux Canadas.", sourceIds: ["source-1"] }] }] },
+    pedagogicalRules: ["Une réponse partielle reçoit une question ciblée."],
     approvedDocuments: [{ id: "document-1", title: "Acte d’Union", typeLabel: "Extrait", attribution: "Parlement britannique · 1840", content: "Les revenus sont réunis pour les besoins publics." }],
   },
 } satisfies PedagogicalQuestionDefinition;
@@ -43,6 +45,8 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.equal(JSON.stringify(requestBody).includes("session-secret"), false);
   assert.match(String(requestBody?.input), /Explique une conséquence politique/);
   assert.match(String(requestBody?.input), /Les revenus sont réunis/);
+  assert.match(String(requestBody?.input), /L’Acte d’Union réunit les deux Canadas/);
+  assert.match(String(requestBody?.input), /Une réponse partielle reçoit une question ciblée/);
   assert.match(String(requestBody?.instructions), /dossier pédagogique approuvé/);
   assert.match(String(requestBody?.instructions), /toute affirmation historique compréhensible/);
   assert.match(String(requestBody?.instructions), /même si elle est très courte, incomplète/);
@@ -52,7 +56,8 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.instructions), /documentUse=partial/);
   assert.match(String(requestBody?.instructions), /ne nomme pas explicitement le journal/);
   assert.match(String(requestBody?.instructions), /une seule prochaine étape concrète et réalisable/);
-  assert.match(String(requestBody?.instructions), /nommer la source, ajouter le fait pertinent ou expliciter le lien attendu/);
+  assert.match(String(requestBody?.instructions), /une seule question ciblée, fondée sur le document historique associé le plus pertinent/);
+  assert.match(String(requestBody?.instructions), /missingElements peut contenir une seule précision historique brève/);
   assert.match(String(requestBody?.instructions), /Évite les conseils génériques/);
   assert.match(String(requestBody?.instructions), /ne fournis jamais la réponse complète/);
 });

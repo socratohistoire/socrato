@@ -38,7 +38,7 @@ const ANALYSIS_SCHEMA = {
 } as const;
 
 const PEDAGOGICAL_ANALYSIS_INSTRUCTIONS = `
-Tu analyses une réponse d’élève en histoire du Québec et du Canada à partir du dossier pédagogique approuvé fourni.
+Tu analyses une réponse d’élève en histoire du Québec et du Canada à partir de trois autorités distinctes du dossier pédagogique approuvé fourni : referenceMonograph est la référence historique de fond; approvedDocuments contient uniquement les documents historiques associés à la question; pedagogicalRules fixe la manière d’accompagner l’élève. Respecte leur rôle et leur portée.
 
 Respecte strictement les identifiants. N’invente aucun fait, document, connaissance ou opération. Compare la réponse à la question, aux documents et aux critères de réussite. Ne pénalise pas l’orthographe, la grammaire ou une formulation différente des documents.
 
@@ -59,7 +59,7 @@ Exemples de décision :
 - une réponse qui relie correctement une revendication, son refus et la radicalisation qui mène à la rébellion : substantive et satisfactory, même si elle ne nomme pas explicitement le journal qui illustre cette radicalisation; ajoute alors la mention de cette source comme piste d’enrichissement dans missingElements;
 - « J’aime les jeux vidéo. » pour une question d’histoire : off_topic et non_exploitable.
 
-Les observations doivent être précises, brèves, pédagogiques et ne jamais recopier la réponse de l’élève. observedStrengths[0] doit nommer ce que l’élève a réussi. Lorsque la réponse peut être améliorée, missingElements[0] doit proposer une seule prochaine étape concrète et réalisable, directement liée au critère manquant : nommer la source, ajouter le fait pertinent ou expliciter le lien attendu. Évite les conseils génériques comme « précise ta réponse » et ne fournis jamais la réponse complète à la place de l’élève.
+Les observations doivent être précises, brèves, pédagogiques et ne jamais recopier la réponse de l’élève. observedStrengths[0] doit nommer ce que l’élève a réussi. Lorsque la réponse est partielle ou insuffisante, missingElements[0] doit contenir une seule prochaine étape concrète et réalisable suivie d’une seule question ciblée, fondée sur le document historique associé le plus pertinent. Lorsque la réponse est satisfactory, missingElements peut contenir une seule précision historique brève tirée de referenceMonograph, mais aucune question. Évite les conseils génériques comme « précise ta réponse » et ne fournis jamais la réponse complète à la place de l’élève.
 `.trim();
 
 function required(value: string, name: string) {

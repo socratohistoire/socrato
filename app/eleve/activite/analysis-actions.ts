@@ -8,6 +8,7 @@ import { LocalDeterministicResponseAnalyzer } from "@/lib/pedagogical-session-en
 import { createConfiguredOpenAIPedagogicalAnalyzer } from "@/lib/pedagogical-session-engine/openai-analyzer";
 import type { PedagogicalQuestionDefinition, StudentResponse } from "@/lib/pedagogical-session-engine/types";
 import { validateStructuredAnalysis } from "@/lib/pedagogical-session-engine/validation";
+import { ACTE_UNION_HISTORICAL_RECORD } from "@/lib/pedagogical-reference";
 
 type AnalysisRequest = {
   activityId: string;
@@ -49,6 +50,30 @@ function successCriteria(question: LearningSessionQuestion) {
   return criteria;
 }
 
+function referenceMonograph(notionId: string) {
+  if (notionId !== "acte-union") throw new Error("Aucune monographie pédagogique n’est configurée pour cette notion.");
+  const record = ACTE_UNION_HISTORICAL_RECORD;
+  return {
+    id: record.id,
+    title: record.manual.title,
+    scope: record.scope,
+    scopeBoundary: record.manual.scopeBoundary ?? "",
+    sections: record.manual.sections.map(({ id, title, paragraphs }) => ({
+      id, title,
+      paragraphs: paragraphs.map(({ id: paragraphId, text, sourceIds }) => ({ id: paragraphId, text, sourceIds: [...sourceIds] })),
+    })),
+  };
+}
+
+const PEDAGOGICAL_RULES = [
+  "Une idée historique compréhensible et liée à la question est toujours exploitable.",
+  "Une réponse qui accomplit correctement le raisonnement central est réussie même si un enrichissement demeure possible.",
+  "Après une réponse réussie, confirme la réussite, ajoute au besoin une seule précision historique brève tirée de la monographie, puis laisse passer à la question suivante; ne pose aucune question supplémentaire.",
+  "Après une réponse partielle, nomme précisément l’acquis, indique un seul élément à ajouter et pose une seule question ciblée qui aide l’élève à le trouver sans donner la réponse.",
+  "Après une réponse insuffisante, oriente l’élève vers le document historique associé le plus pertinent et pose une question d’observation simple.",
+  "N’utilise que la monographie et les documents historiques associés à cette question; n’invente aucun fait ni document.",
+] as const;
+
 function questionDefinition(question: LearningSessionQuestion, notionId: string, notionTitle: string, documents: LearningSessionDocument[]): PedagogicalQuestionDefinition {
   const documentIds = question.documentRelations.map(({ documentId }) => documentId);
   const documentsById = new Map(documents.map((document) => [document.id, document]));
@@ -67,6 +92,8 @@ function questionDefinition(question: LearningSessionQuestion, notionId: string,
       notionTitle,
       primaryOperationLabel: question.intellectualOperations.find(({ id }) => id === question.primaryOperationId)?.label ?? question.primaryOperationId,
       successCriteria: successCriteria(question),
+      referenceMonograph: referenceMonograph(notionId),
+      pedagogicalRules: [...PEDAGOGICAL_RULES],
       approvedDocuments: documentIds.flatMap((id) => {
         const document = documentsById.get(id);
         return document ? [{

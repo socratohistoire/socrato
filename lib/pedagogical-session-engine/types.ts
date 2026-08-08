@@ -92,6 +92,14 @@ export type PedagogicalQuestionDefinition = {
     notionTitle: string;
     primaryOperationLabel: string;
     successCriteria: string[];
+    referenceMonograph: {
+      id: string;
+      title: string;
+      scope: string;
+      scopeBoundary: string;
+      sections: Array<{ id: string; title: string; paragraphs: Array<{ id: string; text: string; sourceIds: string[] }> }>;
+    };
+    pedagogicalRules: string[];
     approvedDocuments: Array<{
       id: string;
       title: string;
