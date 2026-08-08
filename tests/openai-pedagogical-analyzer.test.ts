@@ -110,6 +110,30 @@ test("ne réanalyse pas une réponse réellement hors sujet", async () => {
   assert.equal(calls, 1);
 });
 
+test("empêche un faux rejet répété pour une idée manifestement liée", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  const nonExploitable = {
+    ...validAnalysis, responseDisposition: "incomprehensible", pedagogicalOutcome: "non_exploitable",
+    historicalAccuracy: "not_assessed", documentUse: "not_assessed", justificationQuality: "not_assessed",
+    primaryOperationPerformance: "not_assessed", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [],
+    observedStrengths: [], missingElements: ["Reformule."], nextAction: "handle_non_exploitable",
+  };
+  let calls = 0;
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
+    calls += 1;
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(nonExploitable) }] }] }), { status: 200 });
+  } });
+  const analysis = await analyzer.analyze({
+    ...response,
+    content: "Le fonds consolidé réunit les revenus pour répondre aux besoins publics et comprend aussi la dette publique.",
+  }, question);
+  assert.equal(calls, 2);
+  assert.equal(analysis.responseDisposition, "substantive");
+  assert.equal(analysis.pedagogicalOutcome, "insufficient");
+  assert.equal(analysis.nextAction, "offer_hint");
+  assert.match(analysis.missingElements[0], /document « Acte d’Union »/);
+});
+
 test("échoue fermé lorsque la configuration est absente", async () => {
   const { createConfiguredOpenAIPedagogicalAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
   assert.throws(() => createConfiguredOpenAIPedagogicalAnalyzer({}), /OPENAI_API_KEY/);

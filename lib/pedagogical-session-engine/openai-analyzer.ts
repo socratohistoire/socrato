@@ -121,6 +121,28 @@ function hasClearPedagogicalRelation(response: StudentResponse, question: Pedago
   return [...responseTerms].filter((term) => referenceTerms.has(term)).length >= 2;
 }
 
+function relatedResponseFallback(question: PedagogicalQuestionDefinition): StructuredResponseAnalysis {
+  const document = question.evaluationContext?.approvedDocuments[0];
+  const target = document
+    ? `Appuie-toi sur le document « ${document.title} » pour préciser le lien que tu établis. Quel élément du document soutient ton idée?`
+    : "Ajoute un fait précis qui soutient ton idée. Quel fait permet d’établir ce lien?";
+  return {
+    responseDisposition: "substantive",
+    pedagogicalOutcome: "insufficient",
+    historicalAccuracy: "not_assessed",
+    documentUse: "not_assessed",
+    justificationQuality: "not_assessed",
+    primaryOperationPerformance: "partial",
+    demonstratedKnowledgeIds: [],
+    observedOperationIds: [question.primaryOperationId],
+    usedDocumentIds: [],
+    observedStrengths: ["Ta réponse mobilise plusieurs éléments directement liés à la question."],
+    missingElements: [target],
+    nextAction: "offer_hint",
+    confidence: "low",
+  };
+}
+
 export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
   private readonly apiKey: string;
   private readonly model: string;
@@ -154,7 +176,8 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
 
     const initial = await analyzeOnce(PEDAGOGICAL_ANALYSIS_INSTRUCTIONS);
     if (initial.pedagogicalOutcome !== "non_exploitable" || !hasClearPedagogicalRelation(response, question)) return initial;
-    return analyzeOnce(`${PEDAGOGICAL_ANALYSIS_INSTRUCTIONS}\n\nRévision obligatoire : la réponse contient plusieurs termes directement présents dans la question ou les documents. Elle exprime donc une idée historique liée et doit être responseDisposition=substantive. Réévalue son degré de réussite et donne une prochaine étape précise si elle demeure incomplète.`);
+    const revised = await analyzeOnce(`${PEDAGOGICAL_ANALYSIS_INSTRUCTIONS}\n\nRévision obligatoire : la réponse contient plusieurs termes directement présents dans la question ou les documents. Elle exprime donc une idée historique liée et doit être responseDisposition=substantive. Réévalue son degré de réussite et donne une prochaine étape précise si elle demeure incomplète.`);
+    return revised.pedagogicalOutcome === "non_exploitable" ? relatedResponseFallback(question) : revised;
   }
 }
 
