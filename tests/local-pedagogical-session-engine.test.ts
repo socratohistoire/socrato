@@ -123,7 +123,7 @@ test("accepte une réponse satisfaisante tout en proposant un enrichissement pr�
   assert.equal(transition.state.questionStates[0].result?.status, "mastered");
   assert.equal(transition.state.questionStates[0].result?.advancedMastery, false);
   assert.match(transition.feedback?.studentFacingText ?? "", /satisfait les critères/);
-  assert.match(transition.feedback?.studentFacingText ?? "", /Pour rendre ta réponse encore plus précise : nomme explicitement La Minerve/);
+  assert.match(transition.feedback?.studentFacingText ?? "", /À retenir aussi : nomme explicitement La Minerve/);
 });
 
 test("une réponse partielle autorise une nouvelle tentative", async () => {

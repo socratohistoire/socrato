@@ -40,19 +40,20 @@ export function createPedagogicalFeedback(
   }
   if (analysis.pedagogicalOutcome === "satisfactory") {
     const assessment = "Ta réponse satisfait les critères de cette question.";
-    const enrichment = missingElement ? `Pour rendre ta réponse encore plus précise : ${missingElement}` : undefined;
+    const enrichment = missingElement ? `À retenir aussi : ${missingElement}` : undefined;
     return { acknowledgement, assessment, missingElement, studentFacingText: joinParts([acknowledgement, assessment, enrichment]), relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-011"] };
   }
   const assessment = analysis.pedagogicalOutcome === "partially_satisfactory"
     ? "Ton idée est pertinente, mais le raisonnement doit être précisé."
     : "Le raisonnement attendu n’est pas encore démontré.";
-  const priorityPrompt = analysis.pedagogicalOutcome === "partially_satisfactory"
+  const tailoredQuestion = missingElement?.includes("?") ? missingElement : undefined;
+  const priorityPrompt = tailoredQuestion ?? (analysis.pedagogicalOutcome === "partially_satisfactory"
     ? "Quel fait précis permet de justifier le lien que tu proposes?"
-    : "Quel élément du document peux-tu d’abord établir comme fait?";
+    : "Quel élément du document peux-tu d’abord établir comme fait?");
   const resourceDirection = question.documentIds[0] ? "Observe un document autorisé avant de reprendre." : undefined;
   return {
     acknowledgement, assessment, missingElement, priorityPrompt, resourceDirection,
-    studentFacingText: joinParts([acknowledgement, assessment, missingElement, priorityPrompt, resourceDirection]),
+    studentFacingText: joinParts([acknowledgement, assessment, tailoredQuestion ? undefined : missingElement, priorityPrompt, resourceDirection]),
     relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-006", "PED-FDBK-009"],
   };
 }
