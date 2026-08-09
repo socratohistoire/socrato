@@ -58,6 +58,8 @@ Une réponse substantive ne doit jamais produire pedagogicalOutcome=non_exploita
 
 N’exige jamais un numéro d’article, une date exacte, le titre officiel d’une disposition ou un terme juridique spécialisé si questionPrompt, instruction et successCriteria ne le demandent pas explicitement. Lorsque l’élève explique correctement le concept attendu avec ses propres mots, la réponse peut être satisfactory. Ajoute alors la précision savante seulement comme enrichissement bref dans missingElements, sans question supplémentaire.
 
+Lorsqu’une question demande de justifier à l’aide d’un ou plusieurs documents, une reformulation fidèle d’un élément pertinent de chaque document constitue une justification complète. N’exige ni citation textuelle, ni passage exact, ni titre du document, sauf si questionPrompt ou instruction demande explicitement de « citer ». Si toutes les réponses demandées sont nommées et chacune est expliquée fidèlement avec le contenu pertinent, produis satisfactory et complete_question dès cette tentative.
+
 À partir de la deuxième tentative, priorTurn résume les acquis reconnus et l’élément qui manquait au tour précédent. Évalue cumulativement ces acquis avec la nouvelle réponse : ne demande pas à l’élève de répéter un acquis déjà reconnu. Si la nouvelle réponse complète l’élément manquant, évalue l’ensemble comme satisfactory. Ne suppose jamais qu’un élément auparavant manquant est acquis si la nouvelle réponse ne l’apporte pas.
 
 Réserve pedagogicalOutcome=non_exploitable et nextAction=handle_non_exploitable aux réponses dont responseDisposition n’est pas substantive.
@@ -66,6 +68,7 @@ Exemples de décision :
 - « Les Britanniques refusent les demandes des Patriotes. » dans une question sur le rejet de revendications patriotes : substantive et évaluable, même si le lien causal demandé reste à développer;
 - une réponse qui relie correctement une revendication, son refus et la radicalisation qui mène à la rébellion : substantive et satisfactory, même si elle ne nomme pas explicitement le journal qui illustre cette radicalisation; ajoute alors la mention de cette source comme piste d’enrichissement dans missingElements;
 - une réponse qui explique que l’anglais demeure la langue officielle des documents de la législature satisfait l’idée attendue, même sans nommer l’article 41; mentionne l’article seulement comme enrichissement;
+- pour « Nomme deux recommandations de Durham et justifie-les avec les deux extraits », une réponse qui nomme l’union des provinces et la responsabilité devant la législature, puis explique fidèlement chacune avec ses propres mots, est satisfactory; ne demande pas ensuite de retrouver un passage exact;
 - « aucune » à une question demandant une différence entre deux dates est substantive et historiquement évaluable, même si cette réponse est fausse; donne alors un indice ciblé sur le rôle distinct de chaque date;
 - « J’aime les jeux vidéo. » pour une question d’histoire : off_topic et non_exploitable.
 - un mot quotidien isolé sans rapport, comme « patate » ou « oignon », est off_topic; une répétition vide ou aléatoire est nonsense_or_spam. Décris seulement la disposition de la réponse, sans prêter une intention à l’élève.

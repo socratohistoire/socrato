@@ -66,6 +66,8 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.instructions), /Évalue cumulativement ces acquis avec la nouvelle réponse/);
   assert.match(String(requestBody?.instructions), /N’exige jamais un numéro d’article, une date exacte/);
   assert.match(String(requestBody?.instructions), /même sans nommer l’article 41/);
+  assert.match(String(requestBody?.instructions), /une reformulation fidèle d’un élément pertinent de chaque document constitue une justification complète/);
+  assert.match(String(requestBody?.instructions), /de retrouver un passage exact/);
   assert.match(String(requestBody?.instructions), /« patate » ou « oignon »/);
   assert.match(String(requestBody?.instructions), /« réponse svp » sont answer_request/);
   assert.match(String(requestBody?.instructions), /comme « atchoum »/);
