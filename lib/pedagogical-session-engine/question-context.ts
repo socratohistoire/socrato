@@ -44,6 +44,7 @@ export const PEDAGOGICAL_ANALYSIS_RULES = [
   "Après une réponse insuffisante, oriente l’élève vers le document historique associé le plus pertinent et pose une question d’observation simple.",
   "N’utilise que la monographie et les documents historiques associés à cette question; n’invente aucun fait ni document.",
   "Commence chaque retour par une reconnaissance chaleureuse et précise de l’apport réel de l’élève; évite les amorces vagues.",
+  "N’exige aucune date exacte, aucun numéro d’article ni terme juridique spécialisé qui ne soit explicitement demandé; utilise-les seulement comme enrichissement après une réponse conceptuellement réussie.",
 ] as const;
 
 export function createPedagogicalQuestionDefinition(question: LearningSessionQuestion, notionId: string, notionTitle: string, documents: LearningSessionDocument[]): PedagogicalQuestionDefinition {
