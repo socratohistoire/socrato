@@ -736,7 +736,7 @@ export const ACTE_UNION_DURHAM_ACT_DEVELOPMENT_QUESTION = {
   status: "approved",
   format: "development-150",
   prompt: "Compare les recommandations formulées dans le rapport Durham avec les mesures adoptées dans l’Acte d’Union. Explique une similitude et une différence entre les deux. Consulte les documents pour appuyer ta réponse.",
-  instruction: "1. Relève une recommandation de Durham reprise dans l’Acte d’Union. 2. Présente une recommandation absente de l’Acte ou appliquée différemment.",
+  instruction: "Commençons par la ressemblance : quelle recommandation de Durham reconnais-tu dans l’Acte d’Union?",
   expectedAnswer: "Dans une réponse d’environ 150 mots, l’élève explique comme similitude que Durham recommande l’union législative du Haut-Canada et du Bas-Canada et que l’Acte d’Union réunit effectivement les deux colonies dans la Province du Canada. Comme différence, l’élève peut montrer que Durham recommande aussi un gouvernement responsable, tandis que l’Acte d’Union de 1840 ne l’établit pas : le Conseil exécutif demeure nommé et n’est pas encore responsable devant l’Assemblée élue. Toute comparaison équivalente, historiquement juste et appuyée sur les documents est acceptée.",
   historicalDocumentIds: [ACTE_UNION_DURHAM_UNION_PRESENTATION.id, ACTE_UNION_DURHAM_RESPONSIBLE_GOVERNMENT_PRESENTATION.id, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT.id],
   commonErrors: ["Affirmer que toutes les recommandations de Durham sont adoptées dans l’Acte d’Union.", "Confondre l’adoption de l’Acte d’Union avec l’obtention du gouvernement responsable en 1848.", "Présenter deux ressemblances sans expliquer une différence."],

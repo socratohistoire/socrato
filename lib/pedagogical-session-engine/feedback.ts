@@ -38,7 +38,7 @@ export function createPedagogicalFeedback(
   if (analysis.pedagogicalOutcome === "non_exploitable") {
     if (helpRequest) {
       const assessment = {
-        forgotten: "Ce n’est pas grave si tu ne t’en souviens plus. Voici un autre indice.",
+        forgotten: "Ce n’est pas grave, on va la retrouver ensemble.",
         needs_method: "Bien sûr. Commençons une étape à la fois avec cet indice.",
         asks_for_answer: "Je ne vais pas faire le travail à ta place, mais je vais t’aider à construire ta réponse.",
         general: "Bien sûr, je vais t’aider avec un indice.",

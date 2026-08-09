@@ -187,7 +187,7 @@ test("un oubli déclaré reçoit chaleureusement un nouvel indice", async () => 
     usedDocumentIds: [],
   });
   const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Je ne me souviens plus", new ScriptedAnalyzer([forgotten]), fixedClock);
-  assert.equal(transition.feedback?.studentFacingText, "Ce n’est pas grave si tu ne t’en souviens plus. Voici un autre indice.");
+  assert.equal(transition.feedback?.studentFacingText, "Ce n’est pas grave, on va la retrouver ensemble.");
   assert.equal(transition.hint?.level, 1);
   assert.equal(transition.state.questionStates[0].hintLevel, 1);
   assert.equal(transition.state.questionStates[0].hintRequestCount, 1);
