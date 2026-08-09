@@ -1,4 +1,5 @@
 import type { PedagogicalFeedback, PedagogicalQuestionDefinition, StructuredResponseAnalysis } from "./types.ts";
+import type { HelpRequestKind } from "./help-request.ts";
 
 function joinParts(parts: Array<string | undefined>) {
   return parts.filter((part): part is string => Boolean(part)).join(" ");
@@ -26,7 +27,7 @@ export function createPedagogicalFeedback(
   question: PedagogicalQuestionDefinition,
   nonExploitableCount: number,
   questionClosing = false,
-  helpRequested = false,
+  helpRequest: HelpRequestKind | false = false,
 ): PedagogicalFeedback {
   if (analysis.responseDisposition === "inappropriate") {
     const assessment = questionClosing
@@ -35,8 +36,13 @@ export function createPedagogicalFeedback(
     return { assessment, studentFacingText: assessment, relatedRuleIds: ["PED-NONEXP-011", "PED-NONEXP-012"] };
   }
   if (analysis.pedagogicalOutcome === "non_exploitable") {
-    if (helpRequested) {
-      const assessment = "Ce n’est pas grave si tu ne t’en souviens plus. Je vais t’aider avec un autre indice.";
+    if (helpRequest) {
+      const assessment = {
+        forgotten: "Ce n’est pas grave si tu ne t’en souviens plus. Voici un autre indice.",
+        needs_method: "Bien sûr. Commençons une étape à la fois avec cet indice.",
+        asks_for_answer: "Je ne vais pas faire le travail à ta place, mais je vais t’aider à construire ta réponse.",
+        general: "Bien sûr, je vais t’aider avec un indice.",
+      }[helpRequest];
       return {
         assessment,
         studentFacingText: assessment,
