@@ -386,7 +386,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
     const correct = Boolean(selectedOption?.correct);
     setChoiceFeedback(correct
       ? `Bonne réponse ! ${question.answerExplanation ?? "Cet ordre respecte la succession chronologique des événements."}`
-      : "Ce n’est pas la bonne réponse. Consulte les documents ou demande un indice, puis réessaie.");
+      : "Pas tout à fait. Consulte les documents ou demande un indice, puis réessaie.");
     if (correct) {
       setTimelineCompleted(true);
       await completeObjectiveQuestion(true);
