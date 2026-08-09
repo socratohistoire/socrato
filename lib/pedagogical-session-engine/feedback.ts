@@ -31,6 +31,14 @@ export function createPedagogicalFeedback(
     return { assessment, studentFacingText: assessment, relatedRuleIds: ["PED-NONEXP-011", "PED-NONEXP-012"] };
   }
   if (analysis.pedagogicalOutcome === "non_exploitable") {
+    if (analysis.responseDisposition === "too_short") {
+      const assessment = "Ce n’est pas grave si tu ne t’en souviens plus. Je vais t’aider avec un autre indice.";
+      return {
+        assessment,
+        studentFacingText: assessment,
+        relatedRuleIds: ["PED-NONEXP-003", "PED-NONEXP-004", "PED-NONEXP-005"],
+      };
+    }
     const assessment = nonExploitableCount <= 1
       ? "Je n’arrive pas encore à interpréter cette réponse comme une idée historique."
       : nonExploitableCount === 2

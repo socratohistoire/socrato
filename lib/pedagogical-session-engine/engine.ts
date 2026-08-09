@@ -159,12 +159,27 @@ export async function submitStudentResponse(
     analysis = neutralAnalysis();
   }
   const nonExploitableCount = runtime.nonExploitableCount + (analysis.pedagogicalOutcome === "non_exploitable" ? 1 : 0);
-  const updatedRuntime: QuestionRuntimeState = { ...runtime, attemptNumber, nonExploitableCount, lastAnalysis: analysis, status: "awaiting_response" };
+  const offeredHintLevel = analysis.responseDisposition === "too_short" ? nextHintLevel(runtime) : null;
+  const updatedRuntime: QuestionRuntimeState = {
+    ...runtime,
+    attemptNumber,
+    nonExploitableCount,
+    lastAnalysis: analysis,
+    status: "awaiting_response",
+    hintLevel: offeredHintLevel ?? runtime.hintLevel,
+    hintRequestCount: runtime.hintRequestCount + (offeredHintLevel ? 1 : 0),
+  };
   const feedback = createPedagogicalFeedback(analysis, question, nonExploitableCount);
   const mustComplete = analysis.pedagogicalOutcome === "satisfactory" || attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS;
   let nextState = { ...state, questionStates: state.questionStates.with(state.currentQuestionIndex, updatedRuntime) };
   if (mustComplete) nextState = completeQuestion(definition, nextState, question, updatedRuntime, analysis, clock);
-  return { state: nextState, feedback, questionCompleted: mustComplete, sessionCompleted: nextState.status === "completed" };
+  return {
+    state: nextState,
+    feedback,
+    hint: offeredHintLevel ? hintFor(question, offeredHintLevel) : undefined,
+    questionCompleted: mustComplete,
+    sessionCompleted: nextState.status === "completed",
+  };
 }
 
 export async function finalizePedagogicalSession(

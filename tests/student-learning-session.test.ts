@@ -146,7 +146,7 @@ test("la conversation grandit naturellement puis fait défiler uniquement les me
   assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\)[\s\S]*\.message-list \{ min-height:0; max-height:none; flex:1; \}/);
   assert.match(cssSource, /\.message-list \{[^}]*overflow-y:auto[^}]*overflow-x:hidden/);
   assert.match(cssSource, /\.response-composer \{[^}]*flex:0 0 auto/);
-  assert.match(viewSource, /<section className=\{`conversation\$\{[\s\S]*<div[^>]*className="message-list"[\s\S]*<form className="response-composer"/);
+  assert.match(viewSource, /<section className="conversation"[\s\S]*<div[^>]*className="message-list"[\s\S]*<form className="response-composer"/);
   assert.match(cssSource, /\.question-card \{[^}]*padding:12px 20px/);
   assert.doesNotMatch(cssSource, /\.question-card \{[^}]*min-height/);
   assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\)[\s\S]*\.conversation \{ min-height:0; flex:1/);
@@ -187,17 +187,11 @@ test("intègre l’indice à droite de la dernière ligne de la question", () =>
   assert.match(viewSource, /<svg className="hint-icon"[^>]*aria-hidden="true"/);
 });
 
-test("empile à 75 % la question, la ligne du temps et la conversation", () => {
-  assert.match(viewSource, /questionDocuments\.some\(\(\{ id \}\) => id === "AU-D-002"\)/);
-  assert.match(viewSource, /isTimelineDevelopment \? " session-layout--timeline-development"/);
-  assert.match(cssSource, /\.session-layout--timeline-development \.question-heading,\.session-layout--timeline-development \.question-card,[^}]*\.conversation \{ width:75%; \}/);
-  assert.match(cssSource, /\.session-layout--timeline-development \.question-pane,\.session-layout--timeline-development \.question-module \{ display:contents; \}/);
-  assert.match(cssSource, /\.session-layout--timeline-development \.question-card \{[^}]*grid-row:2/);
-  assert.match(cssSource, /\.session-layout--timeline-development \.documents-pane \{[^}]*grid-row:4/);
-  assert.match(cssSource, /\.session-layout--timeline-development \.conversation \{[^}]*grid-row:5/);
-  assert.match(viewSource, /timelineConversationExpanded \? " is-expanded"/);
-  assert.match(viewSource, /Afficher la conversation/);
-  assert.match(cssSource, /\.conversation--timeline-dock\{[^}]*position:sticky!important[^}]*bottom:12px!important/);
+test("conserve la question à gauche et compacte la ligne du temps dans le volet documentaire", () => {
+  assert.doesNotMatch(viewSource, /session-layout--timeline-development|conversation--timeline-dock|Afficher la conversation/);
+  assert.match(viewSource, /const useStackedDocuments = questionDocuments\.length > 0/);
+  assert.match(viewSource, /<DocumentContent document=\{document\} compact onExpand=\{\(\) => expandStackedDocument\(document\.id\)\} \/>/);
+  assert.match(viewSource, /<DocumentContent document=\{selected\} expanded \/>/);
 });
 
 test("affiche uniquement l’opération principale explicitement définie près de QUESTION 1", () => {
