@@ -6,6 +6,11 @@ import { ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM, ACTE_UNION_STUDENT_TIMELINE } f
 
 const PUBLIC_DOMAIN_RIGHTS = "Texte original de 1840 dans le domaine public.";
 
+const REBELLION_DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  "AU-T-006": "Suspension du régime représentatif",
+  "AU-T-009": "Données sur les Patriotes emprisonnés",
+};
+
 export const ACTE_UNION_DURHAM_EXCERPT_DOCUMENTS: LearningSessionDocument[] = ACTE_UNION_DURHAM_PRESENTATIONS.map((presentation) => ({
   id: presentation.id,
   title: presentation.title,
@@ -26,7 +31,7 @@ export const ACTE_UNION_DURHAM_EXCERPT_DOCUMENTS: LearningSessionDocument[] = AC
 export const ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENTS: LearningSessionDocument[] = [ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT].map((document) => ({
   id: document.id,
   title: document.title,
-  typeLabel: "Document sur les conséquences des Rébellions",
+  typeLabel: REBELLION_DOCUMENT_TYPE_LABELS[document.id] ?? "Document sur les conséquences des Rébellions",
   dateLabel: document.historicalDate,
   authorLabel: document.creator,
   institutionLabel: document.holdingInstitution,
