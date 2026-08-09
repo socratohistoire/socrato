@@ -189,9 +189,9 @@ test("les fautes et la syntaxe fragile ne rendent pas automatiquement la répons
 test("une réponse ordinaire reçoit une rétroaction unique sans avertissement technique visible", async () => {
   const analyzer = new LocalDeterministicResponseAnalyzer("test");
   const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Le Canada-Est avait davantage d’habitants.", analyzer, fixedClock);
-  const expected = "Ta réponse a bien été reçue. Pour poursuivre, ajoute un fait précis tiré des documents et explique le lien que tu établis.";
+  const expected = "Merci pour ta réponse. On va avancer ensemble : ajoute un fait précis et explique le lien que tu établis.";
   assert.equal(transition.feedback?.studentFacingText, expected);
-  assert.equal(transition.feedback?.studentFacingText.match(/Ta réponse a bien été reçue/g)?.length, 1);
+  assert.equal(transition.feedback?.studentFacingText.match(/Merci pour ta réponse/g)?.length, 1);
   assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /ne peut pas confirmer son exactitude historique ni ton raisonnement|L’analyse locale ne peut pas confirmer/);
   assert.equal(transition.feedback?.technicalNotice, undefined);
   assert.equal(transition.state.questionStates[0].lastAnalysis?.pedagogicalOutcome, "partially_satisfactory");
