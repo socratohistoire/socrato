@@ -22,7 +22,7 @@ const ANALYSIS_SCHEMA = {
     "nextAction", "confidence",
   ],
   properties: {
-    responseDisposition: { type: "string", description: "substantive dès qu’une affirmation historique compréhensible est liée à la question, même si elle est courte ou incomplète", enum: ["substantive", "too_short", "off_topic", "incomprehensible", "nonsense_or_spam", "inappropriate"] },
+    responseDisposition: { type: "string", description: "classe le sens pédagogique du message, y compris une demande d’aide ou de réponse", enum: ["substantive", "too_short", "help_request", "answer_request", "off_topic", "incomprehensible", "nonsense_or_spam", "inappropriate"] },
     pedagogicalOutcome: { type: "string", description: "non_exploitable uniquement lorsqu’aucune idée historique liée à la question ne peut être évaluée", enum: ["satisfactory", "partially_satisfactory", "insufficient", "non_exploitable"] },
     historicalAccuracy: { type: "string", enum: ["demonstrated", "partial", "not_demonstrated", "not_assessed"] },
     documentUse: { type: "string", enum: ["demonstrated", "partial", "not_demonstrated", "not_assessed"] },
@@ -46,6 +46,8 @@ Respecte strictement les identifiants. N’invente aucun fait, document, connais
 Décide d’abord responseDisposition selon ces règles :
 - substantive : toute affirmation historique compréhensible et liée à la question ou aux documents, même si elle est très courte, incomplète, imprécise, partiellement fausse ou insuffisamment justifiée;
 - too_short : seulement une réponse sans proposition historique évaluable. Une négation comme « aucune », « aucun » ou « il n’y en a pas » est toutefois une affirmation évaluable lorsque la question demande une différence, une conséquence, une cause ou un élément historique : classe-la substantive, puis explique chaleureusement ce qui doit être corrigé;
+- help_request : l’élève demande de l’aide, un indice, une méthode ou dit ne pas savoir comment commencer;
+- answer_request : l’élève demande que Socrato lui donne la réponse complète ou fasse le travail à sa place, même de façon elliptique comme « réponse svp »;
 - off_topic : une proposition compréhensible, mais sans rapport avec la question;
 - incomprehensible : aucune proposition ne peut être comprise;
 - nonsense_or_spam : caractères aléatoires, répétitions vides ou contenu manifestement destiné à contourner l’activité;
@@ -66,6 +68,7 @@ Exemples de décision :
 - « aucune » à une question demandant une différence entre deux dates est substantive et historiquement évaluable, même si cette réponse est fausse; donne alors un indice ciblé sur le rôle distinct de chaque date;
 - « J’aime les jeux vidéo. » pour une question d’histoire : off_topic et non_exploitable.
 - un mot quotidien isolé sans rapport, comme « patate » ou « oignon », est off_topic; une répétition vide ou aléatoire est nonsense_or_spam. Décris seulement la disposition de la réponse, sans prêter une intention à l’élève.
+- « je ne sais pas comment » est help_request; « donne-moi la réponse », « je veux la réponse » et « réponse svp » sont answer_request. Ces messages sont non_exploitable avec handle_non_exploitable afin que Socrato fournisse une aide sans évaluer une connaissance.
 
 Adresse-toi directement à l’élève avec un ton chaleureux, encourageant et naturel. Commence observedStrengths[0] par une reconnaissance brève comme « Oui, », « Bien vu, » ou « Bonne piste : », puis explique précisément en quoi l’élément donné contribue à la question. Évite les formulations vagues comme « tu as repéré », « tu mobilises un élément » ou « ta réponse est liée à la question ». Ne recopie jamais la réponse de l’élève. Lorsque la réponse est partielle ou insuffisante, missingElements[0] doit être une seule question d’aide courte, de 22 mots au maximum, fondée sur le document historique associé le plus pertinent. N’ajoute ni consigne avant cette question ni seconde question. N’utilise jamais l’identifiant interne d’un document (par exemple PAT-T-002); nomme-le uniquement par son title fourni dans approvedDocuments. Lorsque la réponse est satisfactory, missingElements peut contenir une seule précision historique brève tirée de referenceMonograph, mais aucune question. Évite les conseils génériques comme « précise ta réponse » et ne fournis jamais la réponse complète à la place de l’élève.
 `.trim();

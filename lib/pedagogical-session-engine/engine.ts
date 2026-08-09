@@ -164,10 +164,12 @@ export async function submitStudentResponse(
   } catch {
     analysis = neutralAnalysis();
   }
-  const helpRequest = explicitHelpRequestKind(content);
+  const helpRequest = explicitHelpRequestKind(content)
+    ?? (analysis.responseDisposition === "answer_request" ? "asks_for_answer"
+      : analysis.responseDisposition === "help_request" ? "general" : null);
   const requestsHelp = helpRequest !== null;
   const recordedAttemptNumber = requestsHelp ? runtime.attemptNumber : attemptNumber;
-  const nonExploitableCount = runtime.nonExploitableCount + (analysis.pedagogicalOutcome === "non_exploitable" ? 1 : 0);
+  const nonExploitableCount = runtime.nonExploitableCount + (!requestsHelp && analysis.pedagogicalOutcome === "non_exploitable" ? 1 : 0);
   const offeredHintLevel = requestsHelp ? nextHintLevel(runtime) : null;
   const updatedRuntime: QuestionRuntimeState = {
     ...runtime,
