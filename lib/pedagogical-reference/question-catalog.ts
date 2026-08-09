@@ -689,7 +689,7 @@ export const ACTE_UNION_IMPRISONMENT_DEPORTATION_DOCUMENT_QUESTION = {
   historicalRecordId: "historical-record:acte-union",
   status: "approved",
   format: "document-interpretation",
-  prompt: "À l’aide des deux documents, explique ce que les emprisonnements et les déportations révèlent sur la répression qui suit les Rébellions de 1837-1838.",
+  prompt: "À l’aide des deux documents, nomme deux formes de répression utilisées après les Rébellions de 1837-1838 et explique ce que les données montrent sur l’ampleur de cette répression.",
   instruction: "Utilise un élément précis de chaque document. Toute formulation historiquement juste qui explique l’ampleur et la sévérité de la répression est acceptée.",
   expectedAnswer: "Réponse flexible : le texte de BAnQ montre l’ampleur de la répression puisque 512 Patriotes emprisonnés ont été repérés dans les registres montréalais. Le second document en montre la sévérité : 58 prisonniers condamnés à mort ont vu leur peine transformée en déportation pénale vers l’Australie. Toute réponse équivalente utilisant les emprisonnements nombreux et l’éloignement forcé comme preuves est acceptée.",
   historicalDocumentIds: [ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT.id, ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT.id],
