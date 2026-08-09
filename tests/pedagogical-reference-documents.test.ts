@@ -356,6 +356,8 @@ test("expose la banque par période, notion et fiche documentaire", () => {
   assert.match(page, /Ligne du temps horizontale de 1837 à 1848/);
   assert.match(page, /Détails de vérification/);
   assert.match(page, /ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT/);
+  assert.match(page, /ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT/);
+  assert.match(page, /executive-council-act-title/);
   assert.match(page, /Code documentaire/);
   assert.match(page, /Approuvé/);
   assert.doesNotMatch(page, /Cartes candidates pour le territoire/);
