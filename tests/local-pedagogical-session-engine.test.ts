@@ -176,6 +176,16 @@ test("une demande de réponse complète devient une aide guidée sans donner la 
   assert.doesNotMatch(`${transition.feedback?.studentFacingText} ${transition.hint?.text}`, /la réponse est/i);
 });
 
+test("reconnaît plusieurs formulations ayant l’intention d’obtenir la réponse complète", async () => {
+  const unavailable = analysis({ responseDisposition: "too_short", pedagogicalOutcome: "non_exploitable", nextAction: "handle_non_exploitable", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [] });
+  for (const request of ["Je veux la réponse", "C’est quoi la réponse?", "Peux-tu me dire quoi écrire?", "Réponds à ma place", "Fais-le pour moi"]) {
+    const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), request, new ScriptedAnalyzer([unavailable]), fixedClock);
+    assert.equal(transition.state.questionStates[0].attemptNumber, 0, request);
+    assert.match(transition.feedback?.studentFacingText ?? "", /construire ta réponse/, request);
+    assert.equal(transition.hint?.level, 1, request);
+  }
+});
+
 test("une réponse courte liée n’est pas confondue avec une demande d’aide", async () => {
   const shortRelated = analysis({
     responseDisposition: "too_short",
