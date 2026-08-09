@@ -56,6 +56,14 @@ test("ajoute un quatrième document sur l’exécutif à la comparaison Durham�
   assert.match(executiveDocument?.content.kind === "historical_excerpt" ? executiveDocument.content.excerpt : "", /Conseil exécutif que Sa Majesté peut nommer/);
 });
 
+test("formule le premier indice Durham–Acte d’Union comme une question chaleureuse", () => {
+  const question = getQuestionsForKnowledgeHeading("acte-union")
+    .find(({ id }) => id === "question:acte-union:development-003");
+  assert.ok(question);
+  assert.equal(question.instruction, "Commençons par la ressemblance : quelle recommandation de Durham reconnais-tu dans l’Acte d’Union?");
+  assert.doesNotMatch(question.instruction, /^1\.|\b2\./);
+});
+
 test("réserve le banc d’essai à l’enseignant et ne touche pas à la progression élève", async () => {
   const page = await readFile(new URL("../app/teacher/api-test/page.tsx", import.meta.url), "utf8");
   const action = await readFile(new URL("../app/teacher/api-test/actions.ts", import.meta.url), "utf8");
