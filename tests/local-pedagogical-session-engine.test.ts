@@ -24,6 +24,8 @@ import type {
   StructuredResponseAnalysis,
   WorkbookReference,
 } from "../lib/pedagogical-session-engine/index.ts";
+import { createHintSequence } from "../lib/pedagogical-session-engine/demo-definition.ts";
+import type { LearningSessionQuestion } from "../lib/student-learning-session/types.ts";
 
 const question: PedagogicalQuestionDefinition = {
   id: "question-1",
@@ -73,6 +75,33 @@ class ScriptedAnalyzer implements ResponseAnalyzer {
 }
 
 const fixedClock = { now: () => new Date("2026-07-26T12:00:00.000Z") };
+
+test("un indice sans document ne demande jamais de consulter des documents", () => {
+  const questionWithoutDocuments = {
+    id: "q-no-doc", type: "question_without_documents", format: "short-answer", number: 1,
+    prompt: "Quel territoire est créé et quelles sont ses deux sections?",
+    instruction: "Nomme le territoire et ses sections.", primaryOperationId: "establish_facts",
+    intellectualOperations: [{ id: "establish_facts", label: "Établir des faits" }], historicalKnowledgeIds: ["acte-union"],
+    documentRelations: [], requiredDocumentIds: [], localHint: "Repère les trois noms demandés.", initialMessages: [],
+  } satisfies LearningSessionQuestion;
+  const hints = createHintSequence(questionWithoutDocuments);
+  assert.match(hints[2], /sans chercher de document/);
+  assert.doesNotMatch(hints[2], /documents demandés|appuie chaque étape sur les documents/i);
+});
+
+test("un indice avec documents reprend l’observation propre à la question", () => {
+  const questionWithDocuments = {
+    id: "q-docs", type: "question_with_documents", format: "document-interpretation", number: 1,
+    prompt: "Compare les deux points de vue.", instruction: "Compare les auteurs.", primaryOperationId: "differences_and_similarities",
+    intellectualOperations: [{ id: "differences_and_similarities", label: "Déterminer des différences" }], historicalKnowledgeIds: ["acte-union"],
+    documentRelations: [{ documentId: "russell", displayOrder: 1 }, { documentId: "lafontaine", displayOrder: 2 }], requiredDocumentIds: ["russell", "lafontaine"],
+    localHint: "Relève la position de Russell, puis celle de La Fontaine.", initialMessages: [],
+  } satisfies LearningSessionQuestion;
+  const hints = createHintSequence(questionWithDocuments);
+  assert.match(hints[2], /Relève la position de Russell, puis celle de La Fontaine/);
+  assert.match(hints[2], /compare ou relie/);
+  assert.doesNotMatch(hints[2], /documents demandés/);
+});
 
 test("crée une séance en conservant tous les identifiants pédagogiques", () => {
   const state = createPedagogicalSession(definition);
