@@ -9,7 +9,9 @@ test("expose les 37 questions de l’Acte d’Union avec leur vrai contexte Terr
   const approved = getQuestionsForKnowledgeHeading("acte-union");
   const catalog = createCatalogLearningSessionQuestions(approved.map(({ id }) => id));
   assert.equal(catalog.questions.length, 37);
-  for (const question of catalog.questions) {
+  for (const [index, question] of catalog.questions.entries()) {
+    assert.equal(question.localHint, approved[index]?.instruction);
+    assert.notEqual(question.localHint, "Repère les éléments importants de la question et des documents, puis formule une réponse précise.");
     const definition = createPedagogicalQuestionDefinition(question, "acte-union", "Acte d’Union", catalog.documents);
     assert.equal(definition.evaluationContext?.referenceMonograph.id, "historical-record:acte-union");
     assert.ok((definition.evaluationContext?.pedagogicalRules.length ?? 0) >= 6);

@@ -44,7 +44,7 @@ export default async function StudentActivityPreviewPage({ searchParams }: { sea
     historicalKnowledgeIds: [...preview.historicalKnowledgeIds],
     documentRelations: preview.documents.map(({ id }, index) => ({ documentId: id, displayOrder: index + 1 })),
     requiredDocumentIds: preview.documents.map(({ id }) => id),
-    localHint: "Repère d’abord les éléments importants dans la question et dans les documents, puis formule une réponse précise.",
+    localHint: preview.instruction,
     initialMessages: [{ id: `teacher-preview-welcome-${index}`, author: "socrato" as const, content: preview.guidance[0] }],
     answerOptions: preview.answerOptions,
     answerExplanation: preview.answerExplanation,

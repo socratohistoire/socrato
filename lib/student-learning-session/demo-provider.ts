@@ -45,7 +45,7 @@ export function createCatalogLearningSessionQuestions(questionIds: readonly stri
       historicalKnowledgeIds: [...question.relatedKnowledgeHeadingIds],
       documentRelations: documents.map(({ id: documentId }, documentIndex) => ({ documentId, displayOrder: documentIndex + 1 })),
       requiredDocumentIds: documents.map(({ id: documentId }) => documentId),
-      localHint: "Repère les éléments importants de la question et des documents, puis formule une réponse précise.",
+      localHint: question.instruction,
       initialMessages: [{ id: `published-test-welcome-${index}`, author: "socrato", content: question.format === "short-answer" ? "J’attends ta réponse…" : question.format === "document-interpretation" ? "Bonjour, consulte les sources puis réponds à la question." : "J’attends ta réponse…" }],
       answerOptions: question.answerOptions,
       answerExplanation: question.expectedAnswer,
