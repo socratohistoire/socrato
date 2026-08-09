@@ -239,6 +239,21 @@ test("la troisième réponse non exploitable termine sans maîtrise ni remarque 
   assert.deepEqual(state.questionStates[0].result?.demonstratedOperationIds, []);
 });
 
+test("ramène progressivement une diversion répétée vers la tâche", async () => {
+  const diversion = analysis({ responseDisposition: "off_topic", pedagogicalOutcome: "non_exploitable", nextAction: "handle_non_exploitable", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [], observedStrengths: [] });
+  const analyzer = new ScriptedAnalyzer([diversion]);
+  let state = createPedagogicalSession(definition);
+  const first = await submitStudentResponse(definition, state, "patate", analyzer, fixedClock);
+  assert.equal(first.feedback?.studentFacingText, "Ce mot nous éloigne un peu de la question. Revenons-y ensemble. Quelle idée historique peux-tu proposer?");
+  state = first.state;
+  const second = await submitStudentResponse(definition, state, "oignon", analyzer, fixedClock);
+  assert.equal(second.feedback?.studentFacingText, "Je vois que tu fais un petit détour. Revenons maintenant à l’histoire. Quelle idée, même très courte, est directement liée à la question?");
+  state = second.state;
+  const third = await submitStudentResponse(definition, state, "carotte", analyzer, fixedClock);
+  assert.equal(third.feedback?.studentFacingText, "Nous allons poursuivre avec la prochaine question et garder celle-ci à retravailler.");
+  assert.doesNotMatch(`${first.feedback?.studentFacingText} ${second.feedback?.studentFacingText} ${third.feedback?.studentFacingText}`, /punition|comportement|volontaire|intention/i);
+});
+
 test("progresse explicitement de 0 à 2 puis refuse tout troisième indice", () => {
   let state = createPedagogicalSession(definition);
   const levels: number[] = [];
