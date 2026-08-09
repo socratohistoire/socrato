@@ -53,6 +53,17 @@ export function createPedagogicalFeedback(
       const assessment = "Nous allons poursuivre avec la prochaine question et garder celle-ci à retravailler.";
       return { assessment, studentFacingText: assessment, relatedRuleIds: ["PED-NONEXP-003", "PED-NONEXP-005"] };
     }
+    if (analysis.responseDisposition === "playful_diversion") {
+      const assessment = "À tes souhaits! Revenons tranquillement à notre enquête historique.";
+      const priorityPrompt = keepOnlyQuestion(replaceDocumentIds(analysis.missingElements[0], question))
+        ?? "Quelle idée historique peux-tu proposer?";
+      return {
+        assessment,
+        priorityPrompt,
+        studentFacingText: joinParts([assessment, priorityPrompt]),
+        relatedRuleIds: ["PED-NONEXP-003", "PED-NONEXP-004", "PED-NONEXP-005"],
+      };
+    }
     if (analysis.responseDisposition === "off_topic" || analysis.responseDisposition === "nonsense_or_spam") {
       const assessment = nonExploitableCount <= 1
         ? "Ce mot nous éloigne un peu de la question. Revenons-y ensemble."

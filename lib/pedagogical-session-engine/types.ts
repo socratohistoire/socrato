@@ -8,6 +8,7 @@ export type ResponseDisposition =
   | "too_short"
   | "help_request"
   | "answer_request"
+  | "playful_diversion"
   | "off_topic"
   | "incomprehensible"
   | "nonsense_or_spam"

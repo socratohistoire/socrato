@@ -195,6 +195,14 @@ test("utilise le raisonnement de Terra pour reconnaître une demande elliptique 
   assert.equal(transition.hint?.level, 1);
 });
 
+test("réagit chaleureusement à une diversion légère puis reprend la question ciblée", async () => {
+  const playful = analysis({ responseDisposition: "playful_diversion", pedagogicalOutcome: "non_exploitable", nextAction: "handle_non_exploitable", historicalAccuracy: "not_assessed", documentUse: "not_assessed", justificationQuality: "not_assessed", primaryOperationPerformance: "not_assessed", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [], observedStrengths: [], missingElements: ["Comment le refus britannique augmente-t-il le mécontentement?"] });
+  const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Atchoum", new ScriptedAnalyzer([playful]), fixedClock);
+  assert.equal(transition.state.questionStates[0].attemptNumber, 1);
+  assert.equal(transition.feedback?.studentFacingText, "À tes souhaits! Revenons tranquillement à notre enquête historique. Comment le refus britannique augmente-t-il le mécontentement?");
+  assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /interpréter cette réponse|reformuler une seule idée/i);
+});
+
 test("une réponse courte liée n’est pas confondue avec une demande d’aide", async () => {
   const shortRelated = analysis({
     responseDisposition: "too_short",
