@@ -79,7 +79,7 @@
 .multiple-choice-response p { font-size:14px; line-height:1.4; }
 .multiple-choice-response [role="status"] { display:grid; gap:3px; }
 .multiple-choice-response [role="status"] strong { font-size:12px; }
-.choice-feedback-correct { color:#68b943; }
+.choice-feedback-correct { max-height:min(42vh,360px); overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding-right:8px; color:#68b943; }
 .choice-feedback-correct p { color:var(--ink); }
 .choice-feedback-retry { color:var(--gold); }
 .socrato-choice-pane { height:100%; }
