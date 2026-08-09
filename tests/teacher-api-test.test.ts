@@ -14,9 +14,10 @@ test("expose les 37 questions de l’Acte d’Union avec leur vrai contexte Terr
     assert.notEqual(question.localHint, "Repère les éléments importants de la question et des documents, puis formule une réponse précise.");
     const definition = createPedagogicalQuestionDefinition(question, "acte-union", "Acte d’Union", catalog.documents);
     assert.equal(definition.evaluationContext?.referenceMonograph.id, "historical-record:acte-union");
-    assert.ok((definition.evaluationContext?.pedagogicalRules.length ?? 0) >= 8);
+    assert.ok((definition.evaluationContext?.pedagogicalRules.length ?? 0) >= 9);
     assert.match(definition.evaluationContext?.pedagogicalRules.join(" ") ?? "", /reconnaissance chaleureuse et précise/);
     assert.match(definition.evaluationContext?.pedagogicalRules.join(" ") ?? "", /aucun numéro d’article/);
+    assert.match(definition.evaluationContext?.pedagogicalRules.join(" ") ?? "", /diversion/);
     assert.deepEqual(definition.evaluationContext?.approvedDocuments.map(({ id }) => id), question.documentRelations.map(({ documentId }) => documentId));
   }
 });
