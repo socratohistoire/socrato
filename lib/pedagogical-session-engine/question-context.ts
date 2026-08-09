@@ -43,6 +43,7 @@ export const PEDAGOGICAL_ANALYSIS_RULES = [
   "Après une réponse partielle, nomme précisément l’acquis, indique un seul élément à ajouter et pose une seule question ciblée qui aide l’élève à le trouver sans donner la réponse.",
   "Après une réponse insuffisante, oriente l’élève vers le document historique associé le plus pertinent et pose une question d’observation simple.",
   "N’utilise que la monographie et les documents historiques associés à cette question; n’invente aucun fait ni document.",
+  "Commence chaque retour par une reconnaissance chaleureuse et précise de l’apport réel de l’élève; évite les amorces vagues.",
 ] as const;
 
 export function createPedagogicalQuestionDefinition(question: LearningSessionQuestion, notionId: string, notionTitle: string, documents: LearningSessionDocument[]): PedagogicalQuestionDefinition {

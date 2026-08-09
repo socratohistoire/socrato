@@ -74,7 +74,7 @@ export function createPedagogicalFeedback(
     };
   }
   if (analysis.historicalAccuracy === "not_assessed" && analysis.primaryOperationPerformance === "not_assessed") {
-    const assessment = "Ta réponse a bien été reçue. Pour poursuivre, ajoute un fait précis tiré des documents et explique le lien que tu établis.";
+    const assessment = "Merci pour ta réponse. On va avancer ensemble : ajoute un fait précis et explique le lien que tu établis.";
     return {
       assessment,
       studentFacingText: assessment,
@@ -87,8 +87,8 @@ export function createPedagogicalFeedback(
     return { acknowledgement, assessment, missingElement, studentFacingText: joinParts([acknowledgement, assessment, enrichment]), relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-011"] };
   }
   const assessment = analysis.pedagogicalOutcome === "partially_satisfactory"
-    ? "Tu es sur la bonne voie. Il reste un lien à préciser."
-    : "On reprend une étape à la fois.";
+    ? "C’est un bon début. Il reste un lien à préciser."
+    : "Merci pour ta réponse. On va avancer ensemble.";
   const tailoredQuestion = missingElement?.includes("?") ? keepOnlyQuestion(missingElement) : undefined;
   const priorityPrompt = tailoredQuestion ?? (analysis.pedagogicalOutcome === "partially_satisfactory"
     ? "Quel fait précis permet de justifier le lien que tu proposes?"

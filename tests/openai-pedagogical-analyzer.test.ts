@@ -56,6 +56,8 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.instructions), /documentUse=partial/);
   assert.match(String(requestBody?.instructions), /ne nomme pas explicitement le journal/);
   assert.match(String(requestBody?.instructions), /ton chaleureux, encourageant et naturel/);
+  assert.match(String(requestBody?.instructions), /Commence observedStrengths\[0\] par une reconnaissance brève/);
+  assert.match(String(requestBody?.instructions), /Évite les formulations vagues comme « tu as repéré »/);
   assert.match(String(requestBody?.instructions), /une seule question d’aide courte, de 22 mots au maximum/);
   assert.match(String(requestBody?.instructions), /N’utilise jamais l’identifiant interne d’un document/);
   assert.match(String(requestBody?.instructions), /missingElements peut contenir une seule précision historique brève/);
@@ -201,7 +203,7 @@ test("présente une relance chaleureuse sans code interne ni consigne répétée
     ...validAnalysis,
     missingElements: ["Ajoute une revendication précise, puis relie-la au refus : que demande le document document-1 au sujet du Conseil législatif?"],
   }, question, 0);
-  assert.equal(feedback.studentFacingText, "Un lien historique pertinent est amorcé. Tu es sur la bonne voie. Il reste un lien à préciser. Que demande le document Acte d’Union au sujet du Conseil législatif?");
+  assert.equal(feedback.studentFacingText, "Un lien historique pertinent est amorcé. C’est un bon début. Il reste un lien à préciser. Que demande le document Acte d’Union au sujet du Conseil législatif?");
   assert.doesNotMatch(feedback.studentFacingText, /document-1|Observe un document autorisé|Ajoute une revendication/);
 });
 
