@@ -153,7 +153,6 @@ test("un oubli déclaré reçoit chaleureusement un nouvel indice", async () => 
   const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Je ne me souviens plus", new ScriptedAnalyzer([forgotten]), fixedClock);
   assert.equal(transition.feedback?.studentFacingText, "Ce n’est pas grave si tu ne t’en souviens plus. Je vais t’aider avec un autre indice.");
   assert.equal(transition.hint?.level, 1);
-  assert.match(transition.hint?.text ?? "", /\?$/);
   assert.equal(transition.state.questionStates[0].hintLevel, 1);
   assert.equal(transition.state.questionStates[0].hintRequestCount, 1);
   assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /interpréter cette réponse|reformuler/i);
@@ -248,8 +247,7 @@ test("les deux indices orientent puis structurent sans fournir la réponse", () 
   assert.match(first.hint?.text ?? "", /document 1|donnée précise/i);
   assert.match(second.hint?.text ?? "", /Structure|Je relève|j’explique/i);
   assert.doesNotMatch(`${first.hint?.text} ${second.hint?.text}`, /Canada-Est.*désavantag|réponse est/i);
-  assert.match(first.hint?.text ?? "", /\?$/);
-  assert.match(second.hint?.text ?? "", /\?$/);
+  assert.doesNotMatch(`${first.hint?.text} ${second.hint?.text}`, /Que remarques-tu|Que peux-tu répondre|utiliser cet indice pour répondre à la question/i);
 });
 
 test("une nouvelle question recommence au niveau zéro", async () => {
