@@ -135,6 +135,42 @@ test("empêche un faux rejet répété pour une idée manifestement liée", asyn
   assert.match(analysis.missingElements[0], /Dans « Acte d’Union »/);
 });
 
+test("réanalyse aussi une très courte réponse qui reprend précisément la question", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  const nonExploitable = {
+    ...validAnalysis, responseDisposition: "too_short", pedagogicalOutcome: "non_exploitable",
+    historicalAccuracy: "not_assessed", documentUse: "not_assessed", justificationQuality: "not_assessed",
+    primaryOperationPerformance: "not_assessed", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [],
+    observedStrengths: [], missingElements: ["Reformule."], nextAction: "handle_non_exploitable",
+  } as const;
+  let calls = 0;
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
+    calls += 1;
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(nonExploitable) }] }] }), { status: 200 });
+  } });
+  const analysis = await analyzer.analyze({ ...response, content: "L’Acte d’Union" }, question);
+  assert.equal(calls, 2);
+  assert.equal(analysis.responseDisposition, "substantive");
+  assert.equal(analysis.pedagogicalOutcome, "insufficient");
+});
+
+test("ne force pas la réanalyse d’une demande d’aide explicite", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  const nonExploitable = {
+    ...validAnalysis, responseDisposition: "too_short", pedagogicalOutcome: "non_exploitable",
+    historicalAccuracy: "not_assessed", documentUse: "not_assessed", justificationQuality: "not_assessed",
+    primaryOperationPerformance: "not_assessed", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [],
+    observedStrengths: [], missingElements: ["Reformule."], nextAction: "handle_non_exploitable",
+  } as const;
+  let calls = 0;
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
+    calls += 1;
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(nonExploitable) }] }] }), { status: 200 });
+  } });
+  await analyzer.analyze({ ...response, content: "Je ne me souviens plus" }, question);
+  assert.equal(calls, 1);
+});
+
 test("présente une relance chaleureuse sans code interne ni consigne répétée", async () => {
   const { createPedagogicalFeedback } = await import("../lib/pedagogical-session-engine/feedback.ts");
   const feedback = createPedagogicalFeedback({

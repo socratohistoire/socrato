@@ -1,6 +1,7 @@
 import type { ResponseAnalyzer } from "./ports.ts";
 import type { PedagogicalQuestionDefinition, StructuredResponseAnalysis, StudentResponse } from "./types.ts";
 import { validateStructuredAnalysis } from "./validation.ts";
+import { isExplicitHelpRequest } from "./help-request.ts";
 
 type FetchLike = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
 
@@ -111,14 +112,15 @@ function normalizedTerms(value: string) {
 }
 
 function hasClearPedagogicalRelation(response: StudentResponse, question: PedagogicalQuestionDefinition) {
-  if (response.content.trim().length < 20) return false;
+  if (isExplicitHelpRequest(response.content)) return false;
   const responseTerms = normalizedTerms(response.content);
   const context = question.evaluationContext;
   const referenceTerms = normalizedTerms([
     context?.questionPrompt, context?.instruction,
     ...(context?.approvedDocuments.flatMap(({ title, attribution, content }) => [title, attribution, content]) ?? []),
   ].filter(Boolean).join(" "));
-  return [...responseTerms].filter((term) => referenceTerms.has(term)).length >= 2;
+  const sharedTerms = [...responseTerms].filter((term) => referenceTerms.has(term)).length;
+  return response.content.trim().length < 20 ? sharedTerms >= 1 : sharedTerms >= 2;
 }
 
 function relatedResponseFallback(question: PedagogicalQuestionDefinition): StructuredResponseAnalysis {

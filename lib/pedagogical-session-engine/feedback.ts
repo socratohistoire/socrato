@@ -26,6 +26,7 @@ export function createPedagogicalFeedback(
   question: PedagogicalQuestionDefinition,
   nonExploitableCount: number,
   questionClosing = false,
+  helpRequested = false,
 ): PedagogicalFeedback {
   if (analysis.responseDisposition === "inappropriate") {
     const assessment = questionClosing
@@ -34,7 +35,7 @@ export function createPedagogicalFeedback(
     return { assessment, studentFacingText: assessment, relatedRuleIds: ["PED-NONEXP-011", "PED-NONEXP-012"] };
   }
   if (analysis.pedagogicalOutcome === "non_exploitable") {
-    if (analysis.responseDisposition === "too_short") {
+    if (helpRequested) {
       const assessment = "Ce n’est pas grave si tu ne t’en souviens plus. Je vais t’aider avec un autre indice.";
       return {
         assessment,

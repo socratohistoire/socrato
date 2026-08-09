@@ -1,4 +1,5 @@
 import { createPedagogicalFeedback } from "./feedback.ts";
+import { isExplicitHelpRequest } from "./help-request.ts";
 import type { PedagogicalClock, ResponseAnalyzer, SummaryProducer, WorkbookReferenceProvider } from "./ports.ts";
 import { produceLocalStructuredSummary } from "./summary.ts";
 import type {
@@ -158,10 +159,10 @@ export async function submitStudentResponse(
   } catch {
     analysis = neutralAnalysis();
   }
-  const requestsHelp = analysis.responseDisposition === "too_short";
+  const requestsHelp = isExplicitHelpRequest(content);
   const recordedAttemptNumber = requestsHelp ? runtime.attemptNumber : attemptNumber;
   const nonExploitableCount = runtime.nonExploitableCount + (analysis.pedagogicalOutcome === "non_exploitable" ? 1 : 0);
-  const offeredHintLevel = analysis.responseDisposition === "too_short" ? nextHintLevel(runtime) : null;
+  const offeredHintLevel = requestsHelp ? nextHintLevel(runtime) : null;
   const updatedRuntime: QuestionRuntimeState = {
     ...runtime,
     attemptNumber: recordedAttemptNumber,
@@ -172,7 +173,7 @@ export async function submitStudentResponse(
     hintRequestCount: runtime.hintRequestCount + (offeredHintLevel ? 1 : 0),
   };
   const mustComplete = analysis.pedagogicalOutcome === "satisfactory" || recordedAttemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS;
-  const feedback = createPedagogicalFeedback(analysis, question, nonExploitableCount, mustComplete);
+  const feedback = createPedagogicalFeedback(analysis, question, nonExploitableCount, mustComplete, requestsHelp);
   let nextState = { ...state, questionStates: state.questionStates.with(state.currentQuestionIndex, updatedRuntime) };
   if (mustComplete) nextState = completeQuestion(definition, nextState, question, updatedRuntime, analysis, clock);
   return {

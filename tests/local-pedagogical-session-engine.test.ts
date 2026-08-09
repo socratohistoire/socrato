@@ -159,6 +159,19 @@ test("un oubli déclaré reçoit chaleureusement un nouvel indice", async () => 
   assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /interpréter cette réponse|reformuler/i);
 });
 
+test("une réponse courte liée n’est pas confondue avec une demande d’aide", async () => {
+  const shortRelated = analysis({
+    responseDisposition: "too_short",
+    pedagogicalOutcome: "non_exploitable",
+    nextAction: "handle_non_exploitable",
+    demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [],
+  });
+  const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "L’Acte d’Union", new ScriptedAnalyzer([shortRelated]), fixedClock);
+  assert.equal(transition.state.questionStates[0].attemptNumber, 1);
+  assert.equal(transition.hint, undefined);
+  assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /tu ne t’en souviens plus|autre indice/i);
+});
+
 test("l’analyseur local conserve une réponse courte mais historiquement pertinente comme exploitable", async () => {
   const analyzer = new LocalDeterministicResponseAnalyzer("test");
   const response = { ...createPedagogicalSession(definition).questionStates[0], content: "Union injuste", attemptNumber: 1 };
