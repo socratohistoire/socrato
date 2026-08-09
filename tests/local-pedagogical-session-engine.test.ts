@@ -122,7 +122,7 @@ test("accepte une réponse satisfaisante tout en proposant un enrichissement pr�
   assert.equal(transition.questionCompleted, true);
   assert.equal(transition.state.questionStates[0].result?.status, "mastered");
   assert.equal(transition.state.questionStates[0].result?.advancedMastery, false);
-  assert.match(transition.feedback?.studentFacingText ?? "", /satisfait les critères/);
+  assert.match(transition.feedback?.studentFacingText ?? "", /Bravo, ta réponse est réussie/);
   assert.match(transition.feedback?.studentFacingText ?? "", /À retenir aussi : nomme explicitement La Minerve/);
 });
 

@@ -14,7 +14,7 @@ export default async function TeacherApiTestPage() {
   const documents = new Map(catalog.documents.map((document) => [document.id, document]));
   const questions = catalog.questions.map((question) => ({
     id: question.id, number: question.number, format: question.format ?? question.type,
-    prompt: question.prompt, instruction: question.instruction,
+    prompt: question.prompt,
     operation: question.intellectualOperations.find(({ id }) => id === question.primaryOperationId)?.label ?? question.primaryOperationId,
     expectedAnswer: approved.find(({ id }) => id === question.id)?.expectedAnswer ?? "",
     documents: question.documentRelations.flatMap(({ documentId }) => {

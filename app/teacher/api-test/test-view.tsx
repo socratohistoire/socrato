@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { analyzeActeUnionTestResponse } from "./actions";
 
 type Question = {
-  id: string; number: number; format: string; prompt: string; instruction: string; operation: string;
+  id: string; number: number; format: string; prompt: string; operation: string;
   expectedAnswer: string; documents: Array<{ id: string; title: string; typeLabel: string }>;
 };
 type Result = Awaited<ReturnType<typeof analyzeActeUnionTestResponse>>;
@@ -45,7 +45,7 @@ export function ApiTestView({ questions }: { questions: Question[] }) {
 
       <section className="api-test-card">
         <div className="api-test-meta"><span>{question.format}</span><span>{question.operation}</span></div>
-        <h2>{question.prompt}</h2><p>{question.instruction}</p>
+        <h2>{question.prompt}</h2>
         <div className="api-test-documents"><h3>Documents associés</h3>{question.documents.length ? <ul>{question.documents.map((document) => <li key={document.id}><strong>{document.title}</strong><small>{document.typeLabel}</small></li>)}</ul> : <p>Aucun document associé.</p>}</div>
         <label htmlFor="test-answer">Réponse à tester</label>
         <textarea id="test-answer" value={content} onChange={(event) => setContent(event.target.value)} rows={7} placeholder="Écrivez ici une réponse d’élève possible…" />
@@ -54,7 +54,6 @@ export function ApiTestView({ questions }: { questions: Question[] }) {
         {result ? result.ok ? <div className={`api-test-result api-test-result--${result.analysis.pedagogicalOutcome}`} aria-live="polite">
           <div className="api-test-result-heading"><h3>Décision de Terra</h3><strong>{OUTCOMES[result.analysis.pedagogicalOutcome]}</strong></div>
           <p className="api-test-feedback">{result.feedback.studentFacingText}</p>
-          <dl><div><dt>Interprétation</dt><dd>{result.analysis.responseDisposition}</dd></div><div><dt>Exactitude</dt><dd>{result.analysis.historicalAccuracy}</dd></div><div><dt>Usage des documents</dt><dd>{result.analysis.documentUse}</dd></div><div><dt>Action</dt><dd>{result.analysis.nextAction}</dd></div><div><dt>Confiance</dt><dd>{result.analysis.confidence}</dd></div></dl>
         </div> : <p className="api-test-error" role="alert">{result.error}</p> : null}
       </section>
     </div>
