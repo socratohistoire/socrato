@@ -565,6 +565,7 @@ test("affiche les choix A à D et remplace la réponse libre pour une question �
   assert.match(cssSource, /\.learning-session \.session-layout--choice-no-documents \.question-pane\{[^}]*grid-column:1[^}]*width:100%/);
   assert.match(cssSource, /\.learning-session \.session-layout--choice-no-documents \.documents-heading,[^}]*\.documents-pane\{display:none\}/);
   assert.match(viewSource, /Pas tout à fait\. Consulte les documents ou demande un indice, puis réessaie\./);
+  assert.match(viewSource, /Pas tout à fait\. Demande un indice, puis réessaie\./);
   assert.match(cssSource, /\.choice-feedback-correct \{[^}]*max-height:min\(42vh,360px\)[^}]*overflow-y:auto[^}]*scrollbar-gutter:stable/);
 });
 
