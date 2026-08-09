@@ -67,6 +67,7 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.instructions), /N’exige jamais un numéro d’article, une date exacte/);
   assert.match(String(requestBody?.instructions), /même sans nommer l’article 41/);
   assert.match(String(requestBody?.instructions), /« patate » ou « oignon »/);
+  assert.match(String(requestBody?.instructions), /« aucune » à une question demandant une différence/);
   assert.match(String(requestBody?.instructions), /sans prêter une intention à l’élève/);
 });
 
@@ -182,6 +183,39 @@ test("réanalyse aussi une très courte réponse qui reprend précisément la qu
   assert.equal(calls, 2);
   assert.equal(analysis.responseDisposition, "substantive");
   assert.equal(analysis.pedagogicalOutcome, "insufficient");
+});
+
+test("traite une négation brève comme une réponse historique évaluable", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  const datedQuestion = {
+    ...question,
+    evaluationContext: {
+      ...question.evaluationContext,
+      questionPrompt: "Quelle différence faut-il faire entre l’année 1840 et l’année 1841 concernant l’Acte d’Union?",
+    },
+  } satisfies PedagogicalQuestionDefinition;
+  const nonExploitable = {
+    ...validAnalysis, responseDisposition: "too_short", pedagogicalOutcome: "non_exploitable",
+    historicalAccuracy: "not_assessed", documentUse: "not_assessed", justificationQuality: "not_assessed",
+    primaryOperationPerformance: "not_assessed", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [],
+    observedStrengths: [], missingElements: ["Reformule."], nextAction: "handle_non_exploitable",
+  } as const;
+  const corrected = {
+    ...validAnalysis,
+    pedagogicalOutcome: "insufficient" as const,
+    historicalAccuracy: "not_demonstrated" as const,
+    observedStrengths: ["Bonne tentative : tu proposes qu’il n’y a pas de différence."],
+    missingElements: ["Quelle date correspond à l’adoption de la loi, et laquelle à son entrée en vigueur?"],
+    nextAction: "offer_hint" as const,
+  };
+  let calls = 0;
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
+    calls += 1;
+    const analysis = calls === 1 ? nonExploitable : corrected;
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(analysis) }] }] }), { status: 200 });
+  } });
+  assert.deepEqual(await analyzer.analyze({ ...response, content: "aucune" }, datedQuestion), corrected);
+  assert.equal(calls, 2);
 });
 
 test("ne force pas la réanalyse d’une demande d’aide explicite", async () => {

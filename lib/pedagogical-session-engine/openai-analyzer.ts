@@ -45,7 +45,7 @@ Respecte strictement les identifiants. N’invente aucun fait, document, connais
 
 Décide d’abord responseDisposition selon ces règles :
 - substantive : toute affirmation historique compréhensible et liée à la question ou aux documents, même si elle est très courte, incomplète, imprécise, partiellement fausse ou insuffisamment justifiée;
-- too_short : seulement une réponse sans proposition historique évaluable, par exemple « oui », « non » ou « je ne sais pas »;
+- too_short : seulement une réponse sans proposition historique évaluable. Une négation comme « aucune », « aucun » ou « il n’y en a pas » est toutefois une affirmation évaluable lorsque la question demande une différence, une conséquence, une cause ou un élément historique : classe-la substantive, puis explique chaleureusement ce qui doit être corrigé;
 - off_topic : une proposition compréhensible, mais sans rapport avec la question;
 - incomprehensible : aucune proposition ne peut être comprise;
 - nonsense_or_spam : caractères aléatoires, répétitions vides ou contenu manifestement destiné à contourner l’activité;
@@ -63,6 +63,7 @@ Exemples de décision :
 - « Les Britanniques refusent les demandes des Patriotes. » dans une question sur le rejet de revendications patriotes : substantive et évaluable, même si le lien causal demandé reste à développer;
 - une réponse qui relie correctement une revendication, son refus et la radicalisation qui mène à la rébellion : substantive et satisfactory, même si elle ne nomme pas explicitement le journal qui illustre cette radicalisation; ajoute alors la mention de cette source comme piste d’enrichissement dans missingElements;
 - une réponse qui explique que l’anglais demeure la langue officielle des documents de la législature satisfait l’idée attendue, même sans nommer l’article 41; mentionne l’article seulement comme enrichissement;
+- « aucune » à une question demandant une différence entre deux dates est substantive et historiquement évaluable, même si cette réponse est fausse; donne alors un indice ciblé sur le rôle distinct de chaque date;
 - « J’aime les jeux vidéo. » pour une question d’histoire : off_topic et non_exploitable.
 - un mot quotidien isolé sans rapport, comme « patate » ou « oignon », est off_topic; une répétition vide ou aléatoire est nonsense_or_spam. Décris seulement la disposition de la réponse, sans prêter une intention à l’élève.
 
@@ -122,6 +123,11 @@ function hasClearPedagogicalRelation(response: StudentResponse, question: Pedago
   if (isExplicitHelpRequest(response.content)) return false;
   const responseTerms = normalizedTerms(response.content);
   const context = question.evaluationContext;
+  const normalizedResponse = response.content.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const prompt = `${context?.questionPrompt ?? ""} ${context?.instruction ?? ""}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const isEvaluableNegation = /^(aucun|aucune|aucuns|aucunes|il n['’ ]?y en a pas|pas de difference)[.!? ]*$/.test(normalizedResponse)
+    && /\b(difference|consequence|cause|element|changement|effet|mesure|raison)\b/.test(prompt);
+  if (isEvaluableNegation) return true;
   const referenceTerms = normalizedTerms([
     context?.questionPrompt, context?.instruction,
     ...(context?.approvedDocuments.flatMap(({ title, attribution, content }) => [title, attribution, content]) ?? []),
