@@ -151,12 +151,29 @@ test("un oubli déclaré reçoit chaleureusement un nouvel indice", async () => 
     usedDocumentIds: [],
   });
   const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Je ne me souviens plus", new ScriptedAnalyzer([forgotten]), fixedClock);
-  assert.equal(transition.feedback?.studentFacingText, "Ce n’est pas grave si tu ne t’en souviens plus. Je vais t’aider avec un autre indice.");
+  assert.equal(transition.feedback?.studentFacingText, "Ce n’est pas grave si tu ne t’en souviens plus. Voici un autre indice.");
   assert.equal(transition.hint?.level, 1);
   assert.equal(transition.state.questionStates[0].hintLevel, 1);
   assert.equal(transition.state.questionStates[0].hintRequestCount, 1);
   assert.equal(transition.state.questionStates[0].attemptNumber, 0);
   assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /interpréter cette réponse|reformuler/i);
+});
+
+test("une demande de méthode reçoit un indice sans être comptée comme essai", async () => {
+  const unavailable = analysis({ responseDisposition: "too_short", pedagogicalOutcome: "non_exploitable", nextAction: "handle_non_exploitable", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [] });
+  const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Je sais pas comment", new ScriptedAnalyzer([unavailable]), fixedClock);
+  assert.equal(transition.state.questionStates[0].attemptNumber, 0);
+  assert.equal(transition.feedback?.studentFacingText, "Bien sûr. Commençons une étape à la fois avec cet indice.");
+  assert.equal(transition.hint?.level, 1);
+});
+
+test("une demande de réponse complète devient une aide guidée sans donner la réponse", async () => {
+  const unavailable = analysis({ responseDisposition: "too_short", pedagogicalOutcome: "non_exploitable", nextAction: "handle_non_exploitable", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [] });
+  const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Donne-moi la réponse", new ScriptedAnalyzer([unavailable]), fixedClock);
+  assert.equal(transition.state.questionStates[0].attemptNumber, 0);
+  assert.equal(transition.feedback?.studentFacingText, "Je ne vais pas faire le travail à ta place, mais je vais t’aider à construire ta réponse.");
+  assert.equal(transition.hint?.level, 1);
+  assert.doesNotMatch(`${transition.feedback?.studentFacingText} ${transition.hint?.text}`, /la réponse est/i);
 });
 
 test("une réponse courte liée n’est pas confondue avec une demande d’aide", async () => {
