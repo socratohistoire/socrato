@@ -155,6 +155,7 @@ test("un oubli déclaré reçoit chaleureusement un nouvel indice", async () => 
   assert.equal(transition.hint?.level, 1);
   assert.equal(transition.state.questionStates[0].hintLevel, 1);
   assert.equal(transition.state.questionStates[0].hintRequestCount, 1);
+  assert.equal(transition.state.questionStates[0].attemptNumber, 0);
   assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /interpréter cette réponse|reformuler/i);
 });
 
@@ -269,6 +270,41 @@ test("limite strictement une question à trois tentatives", async () => {
   assert.equal(state.status, "completed");
   assert.equal(state.questionStates[0].result?.status, "to_consolidate");
   await assert.rejects(() => submitStudentResponse(definition, state, "Quatrième", analyzer, fixedClock), /aucune question active/);
+});
+
+test("la dernière intervention clôt sans poser une question impossible à répondre", async () => {
+  const partial = analysis({
+    pedagogicalOutcome: "partially_satisfactory",
+    nextAction: "request_revision",
+    observedStrengths: ["Tu relies correctement le refus britannique au mécontentement."],
+    missingElements: ["Quelles demandes précises sont refusées?"],
+  });
+  const analyzer = new ScriptedAnalyzer([partial]);
+  let state = createPedagogicalSession(definition);
+  let transition = await submitStudentResponse(definition, state, "Première réponse", analyzer, fixedClock);
+  state = transition.state;
+  assert.match(transition.feedback?.studentFacingText ?? "", /\?$/);
+  transition = await submitStudentResponse(definition, state, "Deuxième réponse", analyzer, fixedClock);
+  state = transition.state;
+  assert.match(transition.feedback?.studentFacingText ?? "", /\?$/);
+  transition = await submitStudentResponse(definition, state, "Troisième réponse", analyzer, fixedClock);
+  assert.equal(transition.questionCompleted, true);
+  assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /\?/);
+  assert.match(transition.feedback?.studentFacingText ?? "", /garderons ce point à consolider/i);
+});
+
+test("une demande d’aide ne consomme pas la dernière tentative disponible", async () => {
+  const partial = analysis({ pedagogicalOutcome: "partially_satisfactory", nextAction: "request_revision" });
+  const forgotten = analysis({ responseDisposition: "too_short", pedagogicalOutcome: "non_exploitable", nextAction: "handle_non_exploitable", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [] });
+  const analyzer = new ScriptedAnalyzer([partial, partial, forgotten, partial]);
+  let state = createPedagogicalSession(definition);
+  state = (await submitStudentResponse(definition, state, "Première réponse", analyzer, fixedClock)).state;
+  state = (await submitStudentResponse(definition, state, "Deuxième réponse", analyzer, fixedClock)).state;
+  const help = await submitStudentResponse(definition, state, "Je ne sais plus", analyzer, fixedClock);
+  assert.equal(help.questionCompleted, false);
+  assert.equal(help.state.questionStates[0].attemptNumber, 2);
+  const final = await submitStudentResponse(definition, help.state, "Troisième réponse historique", analyzer, fixedClock);
+  assert.equal(final.questionCompleted, true);
 });
 
 test("passe à la question suivante avant de terminer la séance", async () => {

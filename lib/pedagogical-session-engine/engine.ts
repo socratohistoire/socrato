@@ -158,19 +158,21 @@ export async function submitStudentResponse(
   } catch {
     analysis = neutralAnalysis();
   }
+  const requestsHelp = analysis.responseDisposition === "too_short";
+  const recordedAttemptNumber = requestsHelp ? runtime.attemptNumber : attemptNumber;
   const nonExploitableCount = runtime.nonExploitableCount + (analysis.pedagogicalOutcome === "non_exploitable" ? 1 : 0);
   const offeredHintLevel = analysis.responseDisposition === "too_short" ? nextHintLevel(runtime) : null;
   const updatedRuntime: QuestionRuntimeState = {
     ...runtime,
-    attemptNumber,
+    attemptNumber: recordedAttemptNumber,
     nonExploitableCount,
     lastAnalysis: analysis,
     status: "awaiting_response",
     hintLevel: offeredHintLevel ?? runtime.hintLevel,
     hintRequestCount: runtime.hintRequestCount + (offeredHintLevel ? 1 : 0),
   };
-  const feedback = createPedagogicalFeedback(analysis, question, nonExploitableCount);
-  const mustComplete = analysis.pedagogicalOutcome === "satisfactory" || attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS;
+  const mustComplete = analysis.pedagogicalOutcome === "satisfactory" || recordedAttemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS;
+  const feedback = createPedagogicalFeedback(analysis, question, nonExploitableCount, mustComplete);
   let nextState = { ...state, questionStates: state.questionStates.with(state.currentQuestionIndex, updatedRuntime) };
   if (mustComplete) nextState = completeQuestion(definition, nextState, question, updatedRuntime, analysis, clock);
   return {

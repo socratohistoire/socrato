@@ -25,9 +25,12 @@ export function createPedagogicalFeedback(
   analysis: StructuredResponseAnalysis,
   question: PedagogicalQuestionDefinition,
   nonExploitableCount: number,
+  questionClosing = false,
 ): PedagogicalFeedback {
   if (analysis.responseDisposition === "inappropriate") {
-    const assessment = "Revenons calmement à la question d’histoire.";
+    const assessment = questionClosing
+      ? "Nous allons poursuivre avec la prochaine question et garder celle-ci à retravailler."
+      : "Revenons calmement à la question d’histoire.";
     return { assessment, studentFacingText: assessment, relatedRuleIds: ["PED-NONEXP-011", "PED-NONEXP-012"] };
   }
   if (analysis.pedagogicalOutcome === "non_exploitable") {
@@ -38,6 +41,10 @@ export function createPedagogicalFeedback(
         studentFacingText: assessment,
         relatedRuleIds: ["PED-NONEXP-003", "PED-NONEXP-004", "PED-NONEXP-005"],
       };
+    }
+    if (questionClosing) {
+      const assessment = "Nous allons poursuivre et garder cette question à retravailler.";
+      return { assessment, studentFacingText: assessment, relatedRuleIds: ["PED-NONEXP-003", "PED-NONEXP-005"] };
     }
     const assessment = nonExploitableCount <= 1
       ? "Je n’arrive pas encore à interpréter cette réponse comme une idée historique."
@@ -55,6 +62,16 @@ export function createPedagogicalFeedback(
 
   const acknowledgement = replaceDocumentIds(analysis.observedStrengths[0], question);
   const missingElement = replaceDocumentIds(analysis.missingElements[0], question);
+  if (questionClosing && analysis.pedagogicalOutcome !== "satisfactory") {
+    const assessment = "Tu as fait trois essais sérieux. Il reste un élément historique à préciser; nous garderons ce point à consolider.";
+    return {
+      acknowledgement,
+      assessment,
+      missingElement,
+      studentFacingText: joinParts([acknowledgement, assessment]),
+      relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-006", "PED-FDBK-009"],
+    };
+  }
   if (analysis.historicalAccuracy === "not_assessed" && analysis.primaryOperationPerformance === "not_assessed") {
     const assessment = "Ta réponse a bien été reçue. Pour poursuivre, ajoute un fait précis tiré des documents et explique le lien que tu établis.";
     return {
