@@ -41,6 +41,32 @@ export const ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT = {
   approvedAt: "2026-07-31T00:00:00.000-04:00",
 } as const satisfies HistoricalDocumentRecord;
 
+export const ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT = {
+  schemaVersion: 1,
+  id: "AU-T-013",
+  title: "Le Conseil exécutif demeure sous l’autorité de la Couronne",
+  kind: "law-or-official-text",
+  status: "approved",
+  periodIds: ["1840-1896"],
+  knowledgeHeadingIds: ["acte-union", "gouvernement-responsable"],
+  operationIds: ["establish_facts", "differences_and_similarities", "relationships_between_facts"],
+  historicalDate: "23 juillet 1840; entrée en vigueur le 10 février 1841",
+  creator: "Parlement du Royaume-Uni",
+  holdingInstitution: "PrimaryDocuments.ca — reproduction du texte officiel dans les Lois révisées du Canada (1985)",
+  sourceUrl: "https://primarydocuments.ca/acte-dunion-1840-r-u/?lang=fr",
+  sourceLocator: "Acte d’Union (R.-U.), 3-4 Victoria, ch. 35, art. XLV; reproduit dans L.R.C. 1985, annexe II, no 4.",
+  assetUrl: "https://primarydocuments.ca/wp-content/uploads/2018/03/Act-of-Union-1840.pdf",
+  rightsStatement: "Texte législatif officiel de 1840 dans le domaine public; adaptation pédagogique fidèle de l’article 45.",
+  transcription: "Les pouvoirs auparavant exercés par les gouverneurs du Haut-Canada et du Bas-Canada sont confiés au gouverneur de la Province du Canada. Celui-ci peut les exercer avec l’avis et le consentement du Conseil exécutif que Sa Majesté peut nommer pour administrer les affaires de la province.",
+  accessibleDescription: "Adaptation de l’article 45 montrant que le gouverneur conserve les pouvoirs exécutifs et que le Conseil exécutif est nommé sous l’autorité de la Couronne.",
+  historicalContext: "Contrairement à la recommandation de Durham, l’Acte d’Union n’exige pas que les membres du Conseil exécutif possèdent ou conservent la confiance de l’Assemblée élue. Le gouvernement responsable sera reconnu dans la pratique en 1848.",
+  observationGuide: ["Identifier qui conserve les pouvoirs exécutifs.", "Repérer qui nomme le Conseil exécutif.", "Vérifier si le texte exige la confiance de l’Assemblée élue."],
+  interpretationCautions: ["L’absence d’une exigence de confiance dans la loi doit être mise en relation avec la recommandation explicite de Durham.", "Ne pas affirmer que le Conseil exécutif est élu par l’Assemblée.", "Distinguer l’Acte d’Union de la reconnaissance ultérieure du gouvernement responsable en 1848."],
+  pedagogicalUses: ["Comparer le régime exécutif de l’Acte d’Union à la recommandation de Durham.", "Établir que le gouvernement responsable n’est pas accordé immédiatement par la loi."],
+  version: "1.0",
+  approvedAt: "2026-08-09T00:00:00.000-04:00",
+} as const satisfies HistoricalDocumentRecord;
+
 export const ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT = {
   schemaVersion: 1,
   id: "AU-T-010",
