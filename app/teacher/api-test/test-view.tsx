@@ -8,6 +8,7 @@ type Question = {
   expectedAnswer: string; documents: Array<{ id: string; title: string; typeLabel: string }>;
 };
 type Result = Awaited<ReturnType<typeof analyzeActeUnionTestResponse>>;
+type Message = { id: string; author: "student" | "socrato" | "system"; content: string };
 
 const OUTCOMES: Record<string, string> = {
   satisfactory: "Réussie", partially_satisfactory: "Partiellement réussie",
@@ -18,19 +19,37 @@ export function ApiTestView({ questions }: { questions: Question[] }) {
   const [index, setIndex] = useState(0);
   const [content, setContent] = useState("");
   const [result, setResult] = useState<Result>();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [attemptNumber, setAttemptNumber] = useState(1);
   const [showExpected, setShowExpected] = useState(false);
   const [pending, startTransition] = useTransition();
   const question = questions[index];
   const counter = useMemo(() => `${index + 1} / ${questions.length}`, [index, questions.length]);
 
   function choose(next: number) {
-    setIndex(next); setContent(""); setResult(undefined); setShowExpected(false);
+    setIndex(next); setContent(""); setResult(undefined); setMessages([]); setAttemptNumber(1); setShowExpected(false);
   }
   function submit() {
     if (!question || !content.trim()) return;
-    startTransition(async () => setResult(await analyzeActeUnionTestResponse({ questionId: question.id, content })));
+    const answer = content.trim();
+    const currentAttempt = attemptNumber;
+    setContent("");
+    setMessages((current) => [...current, { id: `student-${currentAttempt}`, author: "student", content: answer }]);
+    startTransition(async () => {
+      const nextResult = await analyzeActeUnionTestResponse({ questionId: question.id, content: answer, attemptNumber: currentAttempt });
+      setResult(nextResult);
+      setMessages((current) => [...current, {
+        id: `reply-${currentAttempt}`,
+        author: nextResult.ok ? "socrato" : "system",
+        content: nextResult.ok ? nextResult.feedback.studentFacingText : nextResult.error,
+      }]);
+      setAttemptNumber(currentAttempt + 1);
+    });
   }
   if (!question) return <p>Aucune question approuvée n’est disponible.</p>;
+  const completed = result?.ok && result.analysis.pedagogicalOutcome === "satisfactory";
+  const exhausted = attemptNumber > 3 && !completed;
+  const canAnswer = !pending && !completed && !exhausted;
 
   return (
     <div className="api-test-grid">
@@ -47,14 +66,20 @@ export function ApiTestView({ questions }: { questions: Question[] }) {
         <div className="api-test-meta"><span>{question.format}</span><span>{question.operation}</span></div>
         <h2>{question.prompt}</h2>
         <div className="api-test-documents"><h3>Documents associés</h3>{question.documents.length ? <ul>{question.documents.map((document) => <li key={document.id}><strong>{document.title}</strong><small>{document.typeLabel}</small></li>)}</ul> : <p>Aucun document associé.</p>}</div>
-        <label htmlFor="test-answer">Réponse à tester</label>
-        <textarea id="test-answer" value={content} onChange={(event) => setContent(event.target.value)} rows={7} placeholder="Écrivez ici une réponse d’élève possible…" />
-        <div className="api-test-actions"><button className="api-test-primary" disabled={pending || !content.trim()} onClick={submit}>{pending ? "Analyse en cours…" : "Envoyer à Terra"}</button><button onClick={() => setShowExpected((value) => !value)}>{showExpected ? "Masquer" : "Voir"} la réponse attendue</button></div>
+        <div className="api-test-conversation" aria-live="polite">
+          <article className="api-test-message api-test-message--socrato"><strong>Socrato</strong><p>{messages.length ? "Poursuivons ensemble." : "Prends ton temps. Je suis là pour t’aider à construire ta réponse."}</p></article>
+          {messages.map((message) => <article key={message.id} className={`api-test-message api-test-message--${message.author}`}><strong>{message.author === "student" ? "Élève" : message.author === "socrato" ? "Socrato" : "Système"}</strong><p>{message.content}</p></article>)}
+          {pending ? <article className="api-test-message api-test-message--socrato"><strong>Socrato</strong><p>Je regarde ta réponse…</p></article> : null}
+        </div>
+        {result?.ok ? <p className={`api-test-outcome api-test-outcome--${result.analysis.pedagogicalOutcome}`}>{OUTCOMES[result.analysis.pedagogicalOutcome]}</p> : null}
+        {canAnswer ? <><label htmlFor="test-answer">Ta réponse — tentative {attemptNumber} sur 3</label><textarea id="test-answer" value={content} onChange={(event) => setContent(event.target.value)} rows={4} placeholder={attemptNumber === 1 ? "Écris une première réponse…" : "Tu peux préciser ou reformuler ta réponse…"} /></> : null}
+        <div className="api-test-actions">
+          {canAnswer ? <button className="api-test-primary" disabled={!content.trim()} onClick={submit}>Envoyer</button> : null}
+          {(completed || exhausted) && index < questions.length - 1 ? <button className="api-test-primary" onClick={() => choose(index + 1)}>Question suivante</button> : null}
+          <button onClick={() => setShowExpected((value) => !value)}>{showExpected ? "Masquer" : "Voir"} la réponse attendue</button>
+          {messages.length ? <button onClick={() => choose(index)}>Recommencer cette question</button> : null}
+        </div>
         {showExpected ? <div className="api-test-expected"><h3>Réponse attendue</h3><p>{question.expectedAnswer}</p></div> : null}
-        {result ? result.ok ? <div className={`api-test-result api-test-result--${result.analysis.pedagogicalOutcome}`} aria-live="polite">
-          <div className="api-test-result-heading"><h3>Décision de Terra</h3><strong>{OUTCOMES[result.analysis.pedagogicalOutcome]}</strong></div>
-          <p className="api-test-feedback">{result.feedback.studentFacingText}</p>
-        </div> : <p className="api-test-error" role="alert">{result.error}</p> : null}
       </section>
     </div>
   );
