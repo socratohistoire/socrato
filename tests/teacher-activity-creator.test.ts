@@ -312,7 +312,8 @@ test("permet de fermer le test complet sans alourdir l’aperçu intégré", () 
   assert.match(studentPreviewSource, /teacherPreview=\{embedded !== "1" && published !== "1"\}/);
   assert.match(sessionViewSource, /Fermer l’aperçu/);
   assert.match(sessionViewSource, /window\.close\(\)/);
-  assert.match(sessionViewSource, /window\.location\.assign\("\/teacher\/activities\/new"\)/);
+  assert.match(sessionViewSource, /teacherPreviewExitHref = "\/teacher\/activities\/new"/);
+  assert.match(sessionViewSource, /window\.location\.assign\(teacherPreviewExitHref\)/);
   assert.match(studentPreviewCssSource, /\.teacher-preview-navigation \.teacher-preview-close/);
 });
 

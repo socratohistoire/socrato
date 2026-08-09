@@ -20,17 +20,20 @@ test("expose les 37 questions de l’Acte d’Union avec leur vrai contexte Terr
 test("réserve le banc d’essai à l’enseignant et ne touche pas à la progression élève", async () => {
   const page = await readFile(new URL("../app/teacher/api-test/page.tsx", import.meta.url), "utf8");
   const action = await readFile(new URL("../app/teacher/api-test/actions.ts", import.meta.url), "utf8");
-  const view = await readFile(new URL("../app/teacher/api-test/test-view.tsx", import.meta.url), "utf8");
+  const studentView = await readFile(new URL("../app/eleve/activite/[activityId]/session-view.tsx", import.meta.url), "utf8");
   const dashboard = await readFile(new URL("../app/teacher/teacher-dashboard-view.tsx", import.meta.url), "utf8");
   assert.match(page, /requireTeacherActor/);
   assert.match(action, /requireTeacherActor/);
   assert.match(action, /createConfiguredOpenAIPedagogicalAnalyzer/);
   assert.doesNotMatch(action, /student-progress|saveProgress|transitionStudentProgress/);
   assert.match(dashboard, /href="\/teacher\/api-test"/);
-  assert.doesNotMatch(page, /instruction: question\.instruction/);
-  assert.doesNotMatch(view, /<dl>|Interprétation|Usage des documents|Confiance/);
-  assert.match(view, /tentative \{attemptNumber\} sur 3/);
-  assert.match(view, /Question suivante/);
-  assert.match(view, /Recommencer cette question/);
+  assert.match(page, /StudentLearningSessionView/);
+  assert.match(page, /teacherPreview/);
+  assert.match(page, /teacherApiTest/);
+  assert.match(page, /persistProgress=\{false\}/);
+  assert.match(studentView, /analyzeActeUnionTestResponse/);
+  assert.match(studentView, /isMultipleChoice/);
+  assert.match(studentView, /InteractiveTimelineQuestion/);
+  assert.match(studentView, /InteractiveAssociationQuestion/);
   assert.match(action, /attemptNumber: request\.attemptNumber/);
 });
