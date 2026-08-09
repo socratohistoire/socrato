@@ -74,10 +74,17 @@ function nextHintLevel(runtime: QuestionRuntimeState): ExplicitHintLevel | null 
   return (runtime.hintLevel + 1) as ExplicitHintLevel;
 }
 
+function turnHintIntoQuestion(text: string) {
+  const trimmed = text.trim();
+  if (trimmed.endsWith("?")) return trimmed;
+  const statement = trimmed.replace(/[.!…]+$/, "");
+  return `${statement}. Comment peux-tu utiliser cet indice pour répondre à la question?`;
+}
+
 function hintFor(question: PedagogicalQuestionDefinition, level: ExplicitHintLevel): PedagogicalHint {
   return {
     level,
-    text: question.hintSequence[level],
+    text: turnHintIntoQuestion(question.hintSequence[level]),
     documentId: level === 1 ? question.documentIds[0] : undefined,
     relatedRuleIds: ["PED-HINT-001", "PED-HINT-003", "PED-HINT-004"],
   };

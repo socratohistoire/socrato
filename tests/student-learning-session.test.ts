@@ -194,6 +194,11 @@ test("conserve la question à gauche et compacte la ligne du temps dans le volet
   assert.match(viewSource, /<DocumentContent document=\{selected\} expanded \/>/);
 });
 
+test("place les indices ouverts dans la conversation avec Socrato", () => {
+  assert.match(viewSource, /const conversationFeedback = transition\.hint[\s\S]*`\$\{feedback\.studentFacingText\} \$\{transition\.hint\.text\}`/);
+  assert.match(viewSource, /content: `Voici un indice : \$\{hint\.text\}`/);
+});
+
 test("affiche uniquement l’opération principale explicitement définie près de QUESTION 1", () => {
   assert.match(viewSource, /find\(\(\{ id \}\) => id === question\.primaryOperationId\)/);
   assert.match(viewSource, /<h2 id="question-section-title" className="column-title question-number">Question \{question\.number\}<\/h2>\s*\{primaryOperation \? <span className="operation-chip">\{primaryOperation\.label\}<\/span> : null\}/);
@@ -320,7 +325,7 @@ test("demande au moteur un indice local borné", () => {
   const data = createDemoStudentLearningSession(); assert.ok(data);
   assert.ok((getCurrentLearningQuestion(data)?.localHint ?? "").length > 0);
   assert.match(viewSource, /requestNextHint\(engineDefinition, engineState\)/);
-  assert.match(viewSource, /setCurrentHint\(transition\.hint\?\.text/);
+  assert.match(viewSource, /setCurrentHint\(hint\?\.text/);
   assert.match(viewSource, /maximumHelpReceived = activeQuestionState\.hintLevel >= MAX_EXPLICIT_HINT_LEVEL/);
   assert.match(viewSource, /disabled=\{engineState\.status === "completed" \|\| maximumHelpReceived\}/);
   assert.match(viewSource, /maximumHelpReceived \? "Aide maximale reçue" : "Obtenir un indice"/);

@@ -208,13 +208,15 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
       } else {
         setEngineState(nextState);
       }
-      if (transition.hint) setCurrentHint(transition.hint.text);
       if (transition.feedback) {
         const feedback = transition.feedback;
-        setMessages((current) => current.at(-1)?.author === "socrato" && current.at(-1)?.content === feedback.studentFacingText ? current : [...current, {
+        const conversationFeedback = transition.hint
+          ? `${feedback.studentFacingText} ${transition.hint.text}`
+          : feedback.studentFacingText;
+        setMessages((current) => current.at(-1)?.author === "socrato" && current.at(-1)?.content === conversationFeedback ? current : [...current, {
           id: `socrato-${current.length}`,
           author: "socrato",
-          content: feedback.studentFacingText,
+          content: conversationFeedback,
         }]);
         if (transition.sessionCompleted) setFinalFeedbackDelivered(true);
       }
@@ -245,7 +247,16 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
     if (engineState.status === "completed") return;
     const transition = requestNextHint(engineDefinition, engineState);
     setEngineState(transition.state);
-    setCurrentHint(transition.hint?.text ?? null);
+    const hint = transition.hint;
+    if (isMultipleChoice) {
+      setCurrentHint(hint?.text ?? null);
+    } else if (hint) {
+      setMessages((current) => [...current, {
+        id: `socrato-hint-${current.length}`,
+        author: "socrato",
+        content: `Voici un indice : ${hint.text}`,
+      }]);
+    }
   }
 
   function handleVoicePrimaryAction() {
