@@ -1,6 +1,6 @@
 import type { PedagogicalQuestionDefinition, StructuredResponseAnalysis } from "./types.ts";
 
-const DISPOSITIONS = new Set(["substantive", "too_short", "off_topic", "incomprehensible", "nonsense_or_spam", "inappropriate"]);
+const DISPOSITIONS = new Set(["substantive", "too_short", "help_request", "answer_request", "off_topic", "incomprehensible", "nonsense_or_spam", "inappropriate"]);
 const OUTCOMES = new Set(["satisfactory", "partially_satisfactory", "insufficient", "non_exploitable"]);
 const LEVELS = new Set(["demonstrated", "partial", "not_demonstrated", "not_assessed"]);
 const ACTIONS = new Set(["complete_question", "request_revision", "offer_hint", "handle_non_exploitable"]);

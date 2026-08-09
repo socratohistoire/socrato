@@ -6,6 +6,8 @@ export type ExplicitHintLevel = Exclude<HintLevel, 0>;
 export type ResponseDisposition =
   | "substantive"
   | "too_short"
+  | "help_request"
+  | "answer_request"
   | "off_topic"
   | "incomprehensible"
   | "nonsense_or_spam"

@@ -67,6 +67,7 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.instructions), /N’exige jamais un numéro d’article, une date exacte/);
   assert.match(String(requestBody?.instructions), /même sans nommer l’article 41/);
   assert.match(String(requestBody?.instructions), /« patate » ou « oignon »/);
+  assert.match(String(requestBody?.instructions), /« réponse svp » sont answer_request/);
   assert.match(String(requestBody?.instructions), /« aucune » à une question demandant une différence/);
   assert.match(String(requestBody?.instructions), /sans prêter une intention à l’élève/);
 });
