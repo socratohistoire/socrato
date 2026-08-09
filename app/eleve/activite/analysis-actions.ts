@@ -15,6 +15,7 @@ type AnalysisRequest = {
   attemptNumber: number;
   hintLevel: 0 | 1 | 2;
   content: string;
+  priorTurn?: StudentResponse["priorTurn"];
 };
 
 function validIdentifier(value: unknown, maximumLength = 120): value is string {
@@ -25,7 +26,15 @@ function validRequest(value: AnalysisRequest) {
   return validIdentifier(value.activityId) && validIdentifier(value.questionId)
     && Number.isInteger(value.attemptNumber) && value.attemptNumber >= 1 && value.attemptNumber <= 3
     && [0, 1, 2].includes(value.hintLevel)
-    && typeof value.content === "string" && value.content.trim().length > 0 && value.content.length <= 10_000;
+    && typeof value.content === "string" && value.content.trim().length > 0 && value.content.length <= 10_000
+    && validPriorTurn(value.priorTurn);
+}
+
+function validPriorTurn(value: AnalysisRequest["priorTurn"]) {
+  if (value === undefined) return true;
+  return ["satisfactory", "partially_satisfactory", "insufficient", "non_exploitable"].includes(value.pedagogicalOutcome)
+    && [value.observedStrengths, value.missingElements].every((items) => Array.isArray(items) && items.length <= 4
+      && items.every((item) => typeof item === "string" && item.length <= 500));
 }
 
 function configuredAnalyzer() {
@@ -61,6 +70,7 @@ export async function analyzeAuthorizedStudentResponse(request: AnalysisRequest)
       attemptNumber: request.attemptNumber,
       hintLevel: request.hintLevel,
       content: request.content,
+      priorTurn: request.priorTurn,
     };
     const analysis = validateStructuredAnalysis(await configuredAnalyzer().analyze(response, definition), definition);
     return { ok: true as const, analysis };

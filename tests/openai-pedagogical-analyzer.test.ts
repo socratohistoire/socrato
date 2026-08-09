@@ -61,6 +61,30 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.instructions), /missingElements peut contenir une seule précision historique brève/);
   assert.match(String(requestBody?.instructions), /Évite les conseils génériques/);
   assert.match(String(requestBody?.instructions), /ne fournis jamais la réponse complète/);
+  assert.match(String(requestBody?.instructions), /Évalue cumulativement ces acquis avec la nouvelle réponse/);
+});
+
+test("transmet les acquis structurés du tour précédent sans conserver son texte", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  let input = "";
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async (_input, init) => {
+    input = String((JSON.parse(String(init?.body)) as { input?: string }).input);
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify({ ...validAnalysis, pedagogicalOutcome: "satisfactory", nextAction: "complete_question" }) }] }] }), { status: 200 });
+  } });
+  await analyzer.analyze({
+    ...response,
+    content: "Canada-Est et Canada-Ouest",
+    attemptNumber: 2,
+    priorTurn: {
+      pedagogicalOutcome: "partially_satisfactory",
+      observedStrengths: ["Tu as correctement nommé la Province du Canada."],
+      missingElements: ["Quelles sont ses deux sections?"],
+    },
+  }, question);
+  assert.match(input, /correctement nommé la Province du Canada/);
+  assert.match(input, /Quelles sont ses deux sections/);
+  assert.match(input, /Canada-Est et Canada-Ouest/);
+  assert.doesNotMatch(input, /texte précédent de l’élève/i);
 });
 
 test("refuse les identifiants inventés par le modèle", async () => {
