@@ -152,6 +152,11 @@ export async function submitStudentResponse(
     sessionId: state.sessionId, activityId: state.activityId, questionId: question.id, notionId: question.notionId,
     primaryOperationId: question.primaryOperationId, operationIds: [...question.operationIds], historicalKnowledgeIds: [...question.historicalKnowledgeIds], documentIds: [...question.documentIds],
     attemptNumber, hintLevel: runtime.hintLevel, content,
+    priorTurn: runtime.lastAnalysis ? {
+      pedagogicalOutcome: runtime.lastAnalysis.pedagogicalOutcome,
+      observedStrengths: [...runtime.lastAnalysis.observedStrengths],
+      missingElements: [...runtime.lastAnalysis.missingElements],
+    } : undefined,
   };
   let analysis: StructuredResponseAnalysis;
   try {

@@ -53,6 +53,8 @@ Décide d’abord responseDisposition selon ces règles :
 
 Une réponse substantive ne doit jamais produire pedagogicalOutcome=non_exploitable ni nextAction=handle_non_exploitable. Évalue-la plutôt comme satisfactory, partially_satisfactory ou insufficient. Une idée historique pertinente mais incomplète est normalement partially_satisfactory ou insufficient, avec request_revision ou offer_hint. Une réponse correcte qui accomplit l’opération intellectuelle centrale et répond directement à la question doit être satisfactory avec complete_question, même si un document d’appui n’est pas nommé explicitement ou si un élément d’enrichissement pourrait être ajouté. Dans ce cas, indique documentUse=partial, conserve seulement les usedDocumentIds réellement mobilisés et formule l’enrichissement souhaitable dans missingElements; ne bloque pas la réussite pour cette seule omission.
 
+À partir de la deuxième tentative, priorTurn résume les acquis reconnus et l’élément qui manquait au tour précédent. Évalue cumulativement ces acquis avec la nouvelle réponse : ne demande pas à l’élève de répéter un acquis déjà reconnu. Si la nouvelle réponse complète l’élément manquant, évalue l’ensemble comme satisfactory. Ne suppose jamais qu’un élément auparavant manquant est acquis si la nouvelle réponse ne l’apporte pas.
+
 Réserve pedagogicalOutcome=non_exploitable et nextAction=handle_non_exploitable aux réponses dont responseDisposition n’est pas substantive.
 
 Exemples de décision :
@@ -98,6 +100,7 @@ function pedagogicalContext(response: StudentResponse, question: PedagogicalQues
     },
     attemptNumber: response.attemptNumber,
     hintLevel: response.hintLevel,
+    priorTurn: response.priorTurn,
     studentResponse: response.content,
   };
 }

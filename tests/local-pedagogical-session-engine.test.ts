@@ -306,6 +306,29 @@ test("la dernière intervention clôt sans poser une question impossible à rép
   assert.match(transition.feedback?.studentFacingText ?? "", /garderons ce point à consolider/i);
 });
 
+test("transmet à toutes les questions ouvertes le bilan structuré du tour précédent", async () => {
+  const firstAnalysis = analysis({
+    pedagogicalOutcome: "partially_satisfactory",
+    nextAction: "request_revision",
+    observedStrengths: ["Tu as nommé le nouveau territoire."],
+    missingElements: ["Quelles sont ses deux sections?"],
+  });
+  let receivedPriorTurn: Parameters<ResponseAnalyzer["analyze"]>[0]["priorTurn"];
+  const analyzer: ResponseAnalyzer = {
+    async analyze(response) {
+      receivedPriorTurn = response.priorTurn;
+      return firstAnalysis;
+    },
+  };
+  const state = (await submitStudentResponse(definition, createPedagogicalSession(definition), "Province du Canada", analyzer, fixedClock)).state;
+  await submitStudentResponse(definition, state, "Canada-Est et Canada-Ouest", analyzer, fixedClock);
+  assert.deepEqual(receivedPriorTurn, {
+    pedagogicalOutcome: "partially_satisfactory",
+    observedStrengths: ["Tu as nommé le nouveau territoire."],
+    missingElements: ["Quelles sont ses deux sections?"],
+  });
+});
+
 test("une demande d’aide ne consomme pas la dernière tentative disponible", async () => {
   const partial = analysis({ pedagogicalOutcome: "partially_satisfactory", nextAction: "request_revision" });
   const forgotten = analysis({ responseDisposition: "too_short", pedagogicalOutcome: "non_exploitable", nextAction: "handle_non_exploitable", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [] });

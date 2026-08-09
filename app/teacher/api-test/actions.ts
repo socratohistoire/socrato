@@ -9,7 +9,7 @@ import type { StudentResponse } from "@/lib/pedagogical-session-engine/types";
 import { validateStructuredAnalysis } from "@/lib/pedagogical-session-engine/validation";
 import { createCatalogLearningSessionQuestions } from "@/lib/student-learning-session/demo-provider";
 
-type TestRequest = { questionId: string; content: string; attemptNumber: number };
+type TestRequest = { questionId: string; content: string; attemptNumber: number; priorTurn?: StudentResponse["priorTurn"] };
 
 export async function analyzeActeUnionTestResponse(request: TestRequest) {
   await requireTeacherActor();
@@ -32,6 +32,7 @@ export async function analyzeActeUnionTestResponse(request: TestRequest) {
       notionId: definition.notionId, primaryOperationId: definition.primaryOperationId,
       operationIds: [...definition.operationIds], historicalKnowledgeIds: [...definition.historicalKnowledgeIds],
       documentIds: [...definition.documentIds], attemptNumber: request.attemptNumber, hintLevel: 0, content: request.content,
+      priorTurn: request.priorTurn,
     };
     const analysis = validateStructuredAnalysis(await createConfiguredOpenAIPedagogicalAnalyzer().analyze(response, definition), definition);
     const feedback = createPedagogicalFeedback(analysis, definition, analysis.pedagogicalOutcome === "non_exploitable" ? request.attemptNumber : 0);

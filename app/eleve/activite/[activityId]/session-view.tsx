@@ -33,6 +33,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
         questionId: response.questionId,
         attemptNumber: response.attemptNumber,
         content: response.content,
+        priorTurn: response.priorTurn,
       });
       if (!result.ok) throw new Error(result.error);
       return result.analysis;
@@ -45,6 +46,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
         attemptNumber: response.attemptNumber,
         hintLevel: response.hintLevel,
         content: response.content,
+        priorTurn: response.priorTurn,
       });
       if (!result.ok) throw new Error(result.error);
       return result.analysis;

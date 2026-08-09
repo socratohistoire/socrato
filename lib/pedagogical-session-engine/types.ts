@@ -30,6 +30,11 @@ export type StudentResponse = PedagogicalIdentifiers & {
   attemptNumber: number;
   hintLevel: HintLevel;
   content: string;
+  priorTurn?: {
+    pedagogicalOutcome: PedagogicalOutcome;
+    observedStrengths: string[];
+    missingElements: string[];
+  };
 };
 
 export type StructuredResponseAnalysis = {
