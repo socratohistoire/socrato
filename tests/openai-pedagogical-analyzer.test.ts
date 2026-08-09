@@ -64,6 +64,8 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.instructions), /Évite les conseils génériques/);
   assert.match(String(requestBody?.instructions), /ne fournis jamais la réponse complète/);
   assert.match(String(requestBody?.instructions), /Évalue cumulativement ces acquis avec la nouvelle réponse/);
+  assert.match(String(requestBody?.instructions), /N’exige jamais un numéro d’article, une date exacte/);
+  assert.match(String(requestBody?.instructions), /même sans nommer l’article 41/);
 });
 
 test("transmet les acquis structurés du tour précédent sans conserver son texte", async () => {
