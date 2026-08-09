@@ -54,6 +54,11 @@ test("ajoute un quatrième document sur l’exécutif à la comparaison Durham�
   const executiveDocument = catalog.documents.find(({ id }) => id === "AU-T-013");
   assert.equal(executiveDocument?.title, "Le Conseil exécutif demeure sous l’autorité de la Couronne");
   assert.match(executiveDocument?.content.kind === "historical_excerpt" ? executiveDocument.content.excerpt : "", /Conseil exécutif que Sa Majesté peut nommer/);
+
+  const question29 = approved.find(({ id }) => id === "question:acte-union:development-003");
+  assert.ok(question29);
+  assert.equal(question29.historicalDocumentIds.length, 4);
+  assert.equal(question29.historicalDocumentIds[3], "AU-T-013");
 });
 
 test("formule le premier indice Durham–Acte d’Union comme une question chaleureuse", () => {
