@@ -59,7 +59,7 @@ Exemples de décision :
 - une réponse qui relie correctement une revendication, son refus et la radicalisation qui mène à la rébellion : substantive et satisfactory, même si elle ne nomme pas explicitement le journal qui illustre cette radicalisation; ajoute alors la mention de cette source comme piste d’enrichissement dans missingElements;
 - « J’aime les jeux vidéo. » pour une question d’histoire : off_topic et non_exploitable.
 
-Les observations doivent être précises, brèves, pédagogiques et ne jamais recopier la réponse de l’élève. observedStrengths[0] doit nommer ce que l’élève a réussi. Lorsque la réponse est partielle ou insuffisante, missingElements[0] doit contenir une seule prochaine étape concrète et réalisable suivie d’une seule question ciblée, fondée sur le document historique associé le plus pertinent. Lorsque la réponse est satisfactory, missingElements peut contenir une seule précision historique brève tirée de referenceMonograph, mais aucune question. Évite les conseils génériques comme « précise ta réponse » et ne fournis jamais la réponse complète à la place de l’élève.
+Adresse-toi directement à l’élève avec un ton chaleureux, encourageant et naturel. Les observations doivent être précises, brèves et ne jamais recopier sa réponse. observedStrengths[0] doit nommer simplement ce que l’élève a réussi. Lorsque la réponse est partielle ou insuffisante, missingElements[0] doit être une seule question d’aide courte, de 22 mots au maximum, fondée sur le document historique associé le plus pertinent. N’ajoute ni consigne avant cette question ni seconde question. N’utilise jamais l’identifiant interne d’un document (par exemple PAT-T-002); nomme-le uniquement par son title fourni dans approvedDocuments. Lorsque la réponse est satisfactory, missingElements peut contenir une seule précision historique brève tirée de referenceMonograph, mais aucune question. Évite les conseils génériques comme « précise ta réponse » et ne fournis jamais la réponse complète à la place de l’élève.
 `.trim();
 
 function required(value: string, name: string) {
@@ -124,8 +124,8 @@ function hasClearPedagogicalRelation(response: StudentResponse, question: Pedago
 function relatedResponseFallback(question: PedagogicalQuestionDefinition): StructuredResponseAnalysis {
   const document = question.evaluationContext?.approvedDocuments[0];
   const target = document
-    ? `Appuie-toi sur le document « ${document.title} » pour préciser le lien que tu établis. Quel élément du document soutient ton idée?`
-    : "Ajoute un fait précis qui soutient ton idée. Quel fait permet d’établir ce lien?";
+    ? `Dans « ${document.title} », quel élément pourrait appuyer ton idée?`
+    : "Quel fait précis pourrait appuyer ton idée?";
   return {
     responseDisposition: "substantive",
     pedagogicalOutcome: "insufficient",

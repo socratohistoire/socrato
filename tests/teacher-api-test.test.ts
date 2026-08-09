@@ -20,10 +20,13 @@ test("expose les 37 questions de l’Acte d’Union avec leur vrai contexte Terr
 test("réserve le banc d’essai à l’enseignant et ne touche pas à la progression élève", async () => {
   const page = await readFile(new URL("../app/teacher/api-test/page.tsx", import.meta.url), "utf8");
   const action = await readFile(new URL("../app/teacher/api-test/actions.ts", import.meta.url), "utf8");
+  const view = await readFile(new URL("../app/teacher/api-test/test-view.tsx", import.meta.url), "utf8");
   const dashboard = await readFile(new URL("../app/teacher/teacher-dashboard-view.tsx", import.meta.url), "utf8");
   assert.match(page, /requireTeacherActor/);
   assert.match(action, /requireTeacherActor/);
   assert.match(action, /createConfiguredOpenAIPedagogicalAnalyzer/);
   assert.doesNotMatch(action, /student-progress|saveProgress|transitionStudentProgress/);
   assert.match(dashboard, /href="\/teacher\/api-test"/);
+  assert.doesNotMatch(page, /instruction: question\.instruction/);
+  assert.doesNotMatch(view, /<dl>|Interprétation|Usage des documents|Confiance/);
 });

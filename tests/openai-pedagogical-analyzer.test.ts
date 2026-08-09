@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { PedagogicalQuestionDefinition } from "../lib/pedagogical-session-engine/types.ts";
+import type { PedagogicalQuestionDefinition, StructuredResponseAnalysis } from "../lib/pedagogical-session-engine/types.ts";
 
 const question = {
   id: "q-1", notionId: "acte-union", primaryOperationId: "causes_and_consequences",
@@ -30,7 +30,7 @@ const validAnalysis = {
   observedOperationIds: ["causes_and_consequences"], usedDocumentIds: ["document-1"],
   observedStrengths: ["Un lien historique pertinent est amorcé."], missingElements: ["Précise la conséquence."],
   nextAction: "request_revision", confidence: "medium",
-};
+} satisfies StructuredResponseAnalysis;
 
 test("envoie une requête sans conservation et valide la sortie structurée", async () => {
   const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
@@ -55,8 +55,9 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.instructions), /accomplit l’opération intellectuelle centrale/);
   assert.match(String(requestBody?.instructions), /documentUse=partial/);
   assert.match(String(requestBody?.instructions), /ne nomme pas explicitement le journal/);
-  assert.match(String(requestBody?.instructions), /une seule prochaine étape concrète et réalisable/);
-  assert.match(String(requestBody?.instructions), /une seule question ciblée, fondée sur le document historique associé le plus pertinent/);
+  assert.match(String(requestBody?.instructions), /ton chaleureux, encourageant et naturel/);
+  assert.match(String(requestBody?.instructions), /une seule question d’aide courte, de 22 mots au maximum/);
+  assert.match(String(requestBody?.instructions), /N’utilise jamais l’identifiant interne d’un document/);
   assert.match(String(requestBody?.instructions), /missingElements peut contenir une seule précision historique brève/);
   assert.match(String(requestBody?.instructions), /Évite les conseils génériques/);
   assert.match(String(requestBody?.instructions), /ne fournis jamais la réponse complète/);
@@ -131,7 +132,17 @@ test("empêche un faux rejet répété pour une idée manifestement liée", asyn
   assert.equal(analysis.responseDisposition, "substantive");
   assert.equal(analysis.pedagogicalOutcome, "insufficient");
   assert.equal(analysis.nextAction, "offer_hint");
-  assert.match(analysis.missingElements[0], /document « Acte d’Union »/);
+  assert.match(analysis.missingElements[0], /Dans « Acte d’Union »/);
+});
+
+test("présente une relance chaleureuse sans code interne ni consigne répétée", async () => {
+  const { createPedagogicalFeedback } = await import("../lib/pedagogical-session-engine/feedback.ts");
+  const feedback = createPedagogicalFeedback({
+    ...validAnalysis,
+    missingElements: ["Ajoute une revendication précise, puis relie-la au refus : que demande le document document-1 au sujet du Conseil législatif?"],
+  }, question, 0);
+  assert.equal(feedback.studentFacingText, "Un lien historique pertinent est amorcé. Tu es sur la bonne voie. Il reste un lien à préciser. Que demande le document Acte d’Union au sujet du Conseil législatif?");
+  assert.doesNotMatch(feedback.studentFacingText, /document-1|Observe un document autorisé|Ajoute une revendication/);
 });
 
 test("échoue fermé lorsque la configuration est absente", async () => {
