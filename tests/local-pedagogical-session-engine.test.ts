@@ -155,6 +155,13 @@ test("accepte une réponse satisfaisante tout en proposant un enrichissement pr�
   assert.match(transition.feedback?.studentFacingText ?? "", /À retenir aussi : nomme explicitement La Minerve/);
 });
 
+test("évite de répéter le libellé précision dans un enrichissement réussi", async () => {
+  const satisfactory = analysis({ pedagogicalOutcome: "satisfactory", nextAction: "complete_question", missingElements: ["Précision : Durham vise aussi les lois et la langue."] });
+  const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Réponse complète", new ScriptedAnalyzer([satisfactory]), fixedClock);
+  assert.match(transition.feedback?.studentFacingText ?? "", /À retenir aussi : Durham vise aussi/);
+  assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /À retenir aussi : Précision :/);
+});
+
 test("une réponse partielle autorise une nouvelle tentative", async () => {
   const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Réponse", new ScriptedAnalyzer([analysis()]), fixedClock);
   assert.equal(transition.state.status, "active");
