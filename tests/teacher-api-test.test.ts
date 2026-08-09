@@ -29,4 +29,8 @@ test("réserve le banc d’essai à l’enseignant et ne touche pas à la progre
   assert.match(dashboard, /href="\/teacher\/api-test"/);
   assert.doesNotMatch(page, /instruction: question\.instruction/);
   assert.doesNotMatch(view, /<dl>|Interprétation|Usage des documents|Confiance/);
+  assert.match(view, /tentative \{attemptNumber\} sur 3/);
+  assert.match(view, /Question suivante/);
+  assert.match(view, /Recommencer cette question/);
+  assert.match(action, /attemptNumber: request\.attemptNumber/);
 });
