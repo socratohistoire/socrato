@@ -7,6 +7,7 @@ import { ThemeToggle } from "../../tableau-de-bord/theme-toggle";
 import { StudentLogoutButton } from "../../logout-button";
 import { saveStudentOutcomeToDatabase, saveStudentProgressToDatabase } from "../progress-actions";
 import { analyzeAuthorizedStudentResponse } from "../analysis-actions";
+import { analyzeActeUnionTestResponse } from "@/app/teacher/api-test/actions";
 import { createStudentProgressContract, restoreStudentProgress } from "@/lib/student-progress";
 import { createConfiguredDataRepository } from "@/lib/data-repository";
 import { createDemoPedagogicalDefinition, createPedagogicalFeedback, createPedagogicalSession, finalizePedagogicalSession, LocalDeterministicResponseAnalyzer, MAX_EXPLICIT_HINT_LEVEL, MAX_PEDAGOGICAL_ATTEMPTS, requestNextHint, submitStudentResponse, type PedagogicalSessionState, type ResponseAnalyzer } from "@/lib/pedagogical-session-engine";
@@ -23,10 +24,20 @@ function revealNewestConversationMessage(region: HTMLDivElement, message: HTMLEl
   region.scrollTo({ top: targetTop, behavior: reducedMotion ? "auto" : "smooth" });
 }
 
-export function StudentLearningSessionView({ data, teacherPreview = false, persistProgress = true }: { data: StudentLearningSessionData; teacherPreview?: boolean; persistProgress?: boolean }) {
+export function StudentLearningSessionView({ data, teacherPreview = false, persistProgress = true, teacherApiTest = false, teacherPreviewExitHref = "/teacher/activities/new" }: { data: StudentLearningSessionData; teacherPreview?: boolean; persistProgress?: boolean; teacherApiTest?: boolean; teacherPreviewExitHref?: string }) {
   const engineDefinition = useMemo(() => createDemoPedagogicalDefinition(data), [data]);
   const initialEngineState = useMemo(() => restoreStudentProgress(createPedagogicalSession(engineDefinition), data.progress), [data.progress, engineDefinition]);
-  const analyzer = useMemo<ResponseAnalyzer>(() => data.source === "server" ? {
+  const analyzer = useMemo<ResponseAnalyzer>(() => teacherApiTest ? {
+    async analyze(response) {
+      const result = await analyzeActeUnionTestResponse({
+        questionId: response.questionId,
+        attemptNumber: response.attemptNumber,
+        content: response.content,
+      });
+      if (!result.ok) throw new Error(result.error);
+      return result.analysis;
+    },
+  } : data.source === "server" ? {
     async analyze(response) {
       const result = await analyzeAuthorizedStudentResponse({
         activityId: response.activityId,
@@ -38,7 +49,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
       if (!result.ok) throw new Error(result.error);
       return result.analysis;
     },
-  } : new LocalDeterministicResponseAnalyzer(), [data.source]);
+  } : new LocalDeterministicResponseAnalyzer(), [data.source, teacherApiTest]);
   const [engineState, setEngineState] = useState(initialEngineState);
   const [progressReady, setProgressReady] = useState(!persistProgress || data.source === "server");
   const [persistenceMessage, setPersistenceMessage] = useState("");
@@ -386,7 +397,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
   function exitTeacherPreview() {
     window.close();
     window.setTimeout(() => {
-      if (!window.closed) window.location.assign("/teacher/activities/new");
+      if (!window.closed) window.location.assign(teacherPreviewExitHref);
     }, 120);
   }
 
@@ -407,7 +418,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
             {heading.contextualNotion ? <strong>{heading.contextualNotion}</strong> : null}
             <span>Période historique · {getHistoricalPeriodLabel(data.historicalPeriod)}</span>
           </div>
-          <div className="session-header-actions"><ThemeToggle /><StudentLogoutButton /></div>
+          <div className="session-header-actions"><ThemeToggle />{teacherPreview ? null : <StudentLogoutButton />}</div>
         </div>
         <div className="session-nav-row">
           <Link href={data.dashboardHref} className="session-back"><span aria-hidden="true">←</span> Retour au tableau de bord</Link>
