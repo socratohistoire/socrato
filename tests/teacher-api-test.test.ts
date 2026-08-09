@@ -44,6 +44,18 @@ test("distingue les titres visibles des documents 3 et 4 de la question 28", () 
   assert.notEqual(documents.get("AU-T-009"), "Document sur les conséquences des Rébellions");
 });
 
+test("ajoute un quatrième document sur l’exécutif à la comparaison Durham–Acte d’Union", () => {
+  const approved = getQuestionsForKnowledgeHeading("acte-union");
+  const question = approved.find(({ id }) => id === "question:acte-union:document-interpretation-004");
+  assert.ok(question);
+  assert.equal(question.historicalDocumentIds.length, 4);
+  assert.equal(question.historicalDocumentIds[3], "AU-T-013");
+  const catalog = createCatalogLearningSessionQuestions([question.id]);
+  const executiveDocument = catalog.documents.find(({ id }) => id === "AU-T-013");
+  assert.equal(executiveDocument?.title, "Le Conseil exécutif demeure sous l’autorité de la Couronne");
+  assert.match(executiveDocument?.content.kind === "historical_excerpt" ? executiveDocument.content.excerpt : "", /Conseil exécutif que Sa Majesté peut nommer/);
+});
+
 test("réserve le banc d’essai à l’enseignant et ne touche pas à la progression élève", async () => {
   const page = await readFile(new URL("../app/teacher/api-test/page.tsx", import.meta.url), "utf8");
   const action = await readFile(new URL("../app/teacher/api-test/actions.ts", import.meta.url), "utf8");

@@ -3,7 +3,7 @@ import { ACTE_UNION_HISTORICAL_RECORD } from "./records/acte-union.ts";
 import { ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM, ACTE_UNION_STUDENT_TIMELINE } from "./responsible-government-iconography.ts";
 import { ACTE_UNION_DEBT_COMPARISON_CHART } from "./historical-comparison-charts.ts";
 import { ACTE_UNION_DOCUMENT_SOURCE_CATALOG } from "./acte-union-document-source-catalog.ts";
-import { ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_CONSOLIDATED_REVENUE_FUND_DOCUMENT, ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT, ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT, ACTE_UNION_MAP_ADAPTATION_DRAFT, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT, ACTE_UNION_SPECIAL_COUNCIL_RESOLUTIONS_DOCUMENT, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT } from "./historical-document-needs.ts";
+import { ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_CONSOLIDATED_REVENUE_FUND_DOCUMENT, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT, ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT, ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT, ACTE_UNION_MAP_ADAPTATION_DRAFT, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT, ACTE_UNION_SPECIAL_COUNCIL_RESOLUTIONS_DOCUMENT, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT } from "./historical-document-needs.ts";
 import { ACTE_UNION_DURHAM_ANGLICIZATION_PRESENTATION, ACTE_UNION_DURHAM_CONTINUITIES_PRESENTATION, ACTE_UNION_DURHAM_DOCUMENT, ACTE_UNION_DURHAM_FINANCES_PRESENTATION, ACTE_UNION_DURHAM_RESPONSIBLE_GOVERNMENT_PRESENTATION, ACTE_UNION_DURHAM_UNION_PRESENTATION } from "./historical-document-presentations.ts";
 
 const PILOT_SOURCE_IDS = ["lower-canada-92-resolutions-1834-primary", "uk-russell-resolutions-1837-primary"] as const;
@@ -410,7 +410,7 @@ export const ACTE_UNION_DURHAM_ACT_COMPARISON_QUESTION = {
   prompt: "À l’aide du rapport Durham et de l’extrait de l’Acte d’Union, indique une recommandation de Durham qui est appliquée par la loi et une recommandation qui ne l’est pas immédiatement.",
   instruction: "Pour chaque élément, appuie ta réponse sur une information provenant des documents.",
   expectedAnswer: "L’Acte d’Union applique la recommandation de réunir le Haut-Canada et le Bas-Canada sous une seule législature. Cependant, la loi n’instaure pas immédiatement le gouvernement responsable recommandé par Durham. Le gouverneur conserve le contrôle de l’exécutif, qui n’est pas encore obligé d’obtenir la confiance de l’Assemblée élue.",
-  historicalDocumentIds: [ACTE_UNION_DURHAM_UNION_PRESENTATION.id, ACTE_UNION_DURHAM_RESPONSIBLE_GOVERNMENT_PRESENTATION.id, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT.id],
+  historicalDocumentIds: [ACTE_UNION_DURHAM_UNION_PRESENTATION.id, ACTE_UNION_DURHAM_RESPONSIBLE_GOVERNMENT_PRESENTATION.id, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT.id, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.id],
   commonErrors: ["Affirmer que toutes les recommandations de Durham sont intégrées immédiatement à la loi.", "Oublier de distinguer l’union législative du gouvernement responsable.", "Présenter le rapport Durham comme le texte même de l’Acte d’Union."],
   distractors: [],
   operationId: "differences_and_similarities",

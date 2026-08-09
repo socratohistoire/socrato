@@ -8,6 +8,7 @@ import {
   ACTE_UNION_DEBT_COMPARISON_CHART,
   ACTE_UNION_DURHAM_DOCUMENT,
   ACTE_UNION_DURHAM_PRESENTATIONS,
+  ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT,
   ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT,
   ACTE_UNION_LANGUAGE_REPEAL_DOCUMENT,
   ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT,
@@ -120,6 +121,20 @@ export function HistoricalDocumentsNotionPage({ notionId }: { notionId: string }
           <div className="document-candidate__assessment"><section><h4>Mise en contexte · enseignant seulement</h4><p>{ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT.historicalContext}</p></section><section><h4>Intention pédagogique</h4><ul>{ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT.observationGuide.slice(0, 3).map((item) => <li key={item}>{item}</li>)}</ul></section></div>
           <section><h4>Questions possibles</h4><ul>{ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT.pedagogicalUses.map((item) => <li key={item}>{item}</li>)}</ul></section>
           <div className="document-adaptation__links"><a href={ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT.sourceUrl} target="_blank" rel="noreferrer">Consulter la version numérique ↗</a><a href={ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT.assetUrl} target="_blank" rel="noreferrer">Consulter le PDF source ↗</a></div>
+        </div></details>
+      </article></div>
+    </section>
+
+    <section id={ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.id} className="document-bank__candidates" aria-labelledby="executive-council-act-title">
+      <div className="document-bank__section-title"><p>Document approuvé · {ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.id}</p><h2 id="executive-council-act-title">{ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.title}</h2><span>Extrait de l’article 45 permettant de comparer l’Acte d’Union à la recommandation de Durham sur le gouvernement responsable.</span></div>
+      <div><article className="document-candidate document-candidate--preferred">
+        <header><div><small>Texte législatif · {ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.historicalDate}</small><h3><cite>Acte pour réunir les Provinces du Haut et du Bas-Canada et pour le Gouvernement du Canada</cite></h3><p>{ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.creator}</p></div><strong>Approuvé · v{ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.version}</strong></header>
+        <section><h4>Extrait adapté pour l’élève</h4><HistoricalExcerpt text={ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.transcription} attribution={ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.creator} /></section>
+        <details className="document-verification-details"><summary>Détails de vérification</summary><div>
+          <dl><div><dt>Code documentaire</dt><dd>{ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.id}</dd></div><div><dt>Référence</dt><dd>{ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.sourceLocator}</dd></div><div><dt>Connaissances associées</dt><dd>Acte d’Union · Conseil exécutif · Gouvernement responsable</dd></div><div><dt>Opérations suggérées</dt><dd>{ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.operationIds.map((id) => getIntellectualOperation(id).officialLabel).join(" · ")}</dd></div></dl>
+          <div className="document-candidate__assessment"><section><h4>Mise en contexte · enseignant seulement</h4><p>{ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.historicalContext}</p></section><section><h4>Intention pédagogique</h4><ul>{ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.observationGuide.map((item) => <li key={item}>{item}</li>)}</ul></section></div>
+          <section><h4>Questions possibles</h4><ul>{ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.pedagogicalUses.map((item) => <li key={item}>{item}</li>)}</ul></section>
+          <div className="document-adaptation__links"><a href={ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.sourceUrl} target="_blank" rel="noreferrer">Consulter la version numérique ↗</a><a href={ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.assetUrl} target="_blank" rel="noreferrer">Consulter le PDF source ↗</a></div>
         </div></details>
       </article></div>
     </section>
