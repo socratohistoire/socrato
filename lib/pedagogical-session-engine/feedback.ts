@@ -105,7 +105,8 @@ export function createPedagogicalFeedback(
   }
   if (analysis.pedagogicalOutcome === "satisfactory") {
     const assessment = "Bravo, ta réponse est réussie.";
-    const enrichment = missingElement ? `À retenir aussi : ${missingElement}` : undefined;
+    const conciseEnrichment = missingElement?.replace(/^\s*précision\s*:\s*/i, "");
+    const enrichment = conciseEnrichment ? `À retenir aussi : ${conciseEnrichment}` : undefined;
     return { acknowledgement, assessment, missingElement, studentFacingText: joinParts([acknowledgement, assessment, enrichment]), relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-011"] };
   }
   const assessment = analysis.pedagogicalOutcome === "partially_satisfactory"

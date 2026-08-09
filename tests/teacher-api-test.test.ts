@@ -22,6 +22,16 @@ test("expose les 37 questions de l’Acte d’Union avec leur vrai contexte Terr
   }
 });
 
+test("centre la question d’assimilation sur le seul extrait qui explicite l’intention de Durham", () => {
+  const approved = getQuestionsForKnowledgeHeading("acte-union");
+  const question = approved.find(({ id }) => id === "question:acte-union:document-interpretation-009");
+  assert.ok(question);
+  assert.deepEqual(question.historicalDocumentIds, ["historical-presentation:acte-union:durham-anglicisation"]);
+  assert.match(question.prompt, /extrait sur le projet d’anglicisation/);
+  assert.doesNotMatch(question.prompt, /union législative/);
+  assert.match(question.instruction, /deux moyens proposés dans l’extrait/);
+});
+
 test("réserve le banc d’essai à l’enseignant et ne touche pas à la progression élève", async () => {
   const page = await readFile(new URL("../app/teacher/api-test/page.tsx", import.meta.url), "utf8");
   const action = await readFile(new URL("../app/teacher/api-test/actions.ts", import.meta.url), "utf8");
