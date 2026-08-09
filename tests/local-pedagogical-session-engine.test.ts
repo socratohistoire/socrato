@@ -195,6 +195,22 @@ test("utilise le raisonnement de Terra pour reconnaître une demande elliptique 
   assert.equal(transition.hint?.level, 1);
 });
 
+test("réagit chaleureusement à une diversion légère puis reprend la question ciblée", async () => {
+  const playful = analysis({ responseDisposition: "playful_diversion", pedagogicalOutcome: "non_exploitable", nextAction: "handle_non_exploitable", historicalAccuracy: "not_assessed", documentUse: "not_assessed", justificationQuality: "not_assessed", primaryOperationPerformance: "not_assessed", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [], observedStrengths: ["À tes souhaits!"], missingElements: ["Comment le refus britannique augmente-t-il le mécontentement?"] });
+  const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Atchoum", new ScriptedAnalyzer([playful]), fixedClock);
+  assert.equal(transition.state.questionStates[0].attemptNumber, 1);
+  assert.equal(transition.feedback?.studentFacingText, "À tes souhaits! Revenons tranquillement à notre enquête historique. Comment le refus britannique augmente-t-il le mécontentement?");
+  assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /interpréter cette réponse|reformuler une seule idée/i);
+});
+
+test("adapte une remarque adressée à Socrato sans la réduire à un mot", async () => {
+  const aside = analysis({ responseDisposition: "playful_diversion", pedagogicalOutcome: "non_exploitable", nextAction: "handle_non_exploitable", historicalAccuracy: "not_assessed", documentUse: "not_assessed", justificationQuality: "not_assessed", primaryOperationPerformance: "not_assessed", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [], observedStrengths: ["Oui, je suis là pour t’accompagner en histoire."], missingElements: ["Quelle différence vois-tu entre l’adoption d’une loi et son entrée en vigueur?"] });
+  const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Tu es un prof d’histoire", new ScriptedAnalyzer([aside]), fixedClock);
+  assert.match(transition.feedback?.studentFacingText ?? "", /je suis là pour t’accompagner en histoire/);
+  assert.match(transition.feedback?.studentFacingText ?? "", /Quelle différence vois-tu/);
+  assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /Ce mot/);
+});
+
 test("une réponse courte liée n’est pas confondue avec une demande d’aide", async () => {
   const shortRelated = analysis({
     responseDisposition: "too_short",
@@ -280,10 +296,10 @@ test("ramène progressivement une diversion répétée vers la tâche", async ()
   const analyzer = new ScriptedAnalyzer([diversion]);
   let state = createPedagogicalSession(definition);
   const first = await submitStudentResponse(definition, state, "patate", analyzer, fixedClock);
-  assert.equal(first.feedback?.studentFacingText, "Ce mot nous éloigne un peu de la question. Revenons-y ensemble. Quelle idée historique peux-tu proposer?");
+  assert.equal(first.feedback?.studentFacingText, "D’accord. Revenons tranquillement à notre enquête historique. Quelle idée historique peux-tu proposer?");
   state = first.state;
   const second = await submitStudentResponse(definition, state, "oignon", analyzer, fixedClock);
-  assert.equal(second.feedback?.studentFacingText, "Je vois que tu fais un petit détour. Revenons maintenant à l’histoire. Quelle idée, même très courte, est directement liée à la question?");
+  assert.equal(second.feedback?.studentFacingText, "Je te suis. Reprenons maintenant la question d’histoire. Quelle idée, même très courte, est directement liée à la question?");
   state = second.state;
   const third = await submitStudentResponse(definition, state, "carotte", analyzer, fixedClock);
   assert.equal(third.feedback?.studentFacingText, "Nous allons poursuivre avec la prochaine question et garder celle-ci à retravailler.");
