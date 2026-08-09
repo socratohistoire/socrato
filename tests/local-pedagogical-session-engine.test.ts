@@ -141,6 +141,23 @@ test("une réponse insuffisante conserve une relance sans compter un indice expl
   assert.ok(transition.feedback?.priorityPrompt);
 });
 
+test("un oubli déclaré reçoit chaleureusement un nouvel indice", async () => {
+  const forgotten = analysis({
+    responseDisposition: "too_short",
+    pedagogicalOutcome: "non_exploitable",
+    nextAction: "handle_non_exploitable",
+    demonstratedKnowledgeIds: [],
+    observedOperationIds: [],
+    usedDocumentIds: [],
+  });
+  const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Je ne me souviens plus", new ScriptedAnalyzer([forgotten]), fixedClock);
+  assert.equal(transition.feedback?.studentFacingText, "Ce n’est pas grave si tu ne t’en souviens plus. Je vais t’aider avec un autre indice.");
+  assert.equal(transition.hint?.level, 1);
+  assert.equal(transition.state.questionStates[0].hintLevel, 1);
+  assert.equal(transition.state.questionStates[0].hintRequestCount, 1);
+  assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /interpréter cette réponse|reformuler/i);
+});
+
 test("l’analyseur local conserve une réponse courte mais historiquement pertinente comme exploitable", async () => {
   const analyzer = new LocalDeterministicResponseAnalyzer("test");
   const response = { ...createPedagogicalSession(definition).questionStates[0], content: "Union injuste", attemptNumber: 1 };

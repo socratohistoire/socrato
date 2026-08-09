@@ -61,7 +61,6 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
   const [timelineCompleted, setTimelineCompleted] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [choiceFeedback, setChoiceFeedback] = useState<string | null>(null);
-  const [timelineConversationExpanded, setTimelineConversationExpanded] = useState(false);
   const [pendingNextState, setPendingNextState] = useState<PedagogicalSessionState | null>(null);
   const [finalFeedbackDelivered, setFinalFeedbackDelivered] = useState(false);
   const completedQuestions = engineState.questionStates.filter(({ status }) => status === "completed").length;
@@ -267,7 +266,6 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
   const responseUnavailable = submitting || engineState.status === "completed" || activeQuestionState.attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS;
   const sendUnavailable = !response.trim() || responseUnavailable || voiceBlocksSending;
   const questionDocuments = getQuestionDocuments(activeData);
-  const isTimelineDevelopment = !isMultipleChoice && question.type !== "interactive_timeline" && questionDocuments.some(({ id }) => id === "AU-D-002");
   const useStackedDocuments = questionDocuments.length > 0 && !isInteractiveTimeline && !isInteractiveAssociation;
   const isShortAnswerWithoutDocuments = question.format === "short-answer" && questionDocuments.length === 0;
 
@@ -355,7 +353,6 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
     setSelectedAnswer(null);
     setChoiceFeedback(null);
     setTimelineCompleted(false);
-    setTimelineConversationExpanded(false);
     setPendingNextState(null);
     setFinalFeedbackDelivered(false);
   }
@@ -427,7 +424,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
       </header>
       {persistenceMessage ? <p className="session-data-error" role="alert">{persistenceMessage}</p> : null}
 
-      <div className={`session-layout${isInteractiveTimeline || isInteractiveAssociation ? " session-layout--timeline" : ""}${isTimelineDevelopment ? " session-layout--timeline-development" : ""}${isMultipleChoice && questionDocuments.length > 0 ? " session-layout--choice-with-documents" : ""}${questionDocuments.length === 0 && (isMultipleChoice || question.type === "question_without_documents") ? " session-layout--choice-no-documents" : ""}${isShortAnswerWithoutDocuments ? " session-layout--short-answer-no-documents" : ""}`}>
+      <div className={`session-layout${isInteractiveTimeline || isInteractiveAssociation ? " session-layout--timeline" : ""}${isMultipleChoice && questionDocuments.length > 0 ? " session-layout--choice-with-documents" : ""}${questionDocuments.length === 0 && (isMultipleChoice || question.type === "question_without_documents") ? " session-layout--choice-no-documents" : ""}${isShortAnswerWithoutDocuments ? " session-layout--short-answer-no-documents" : ""}`}>
         {isInteractiveTimeline && question.timelineInteraction ? (
           <InteractiveTimelineQuestion key={question.id} question={question} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
         ) : isInteractiveAssociation && question.associationInteraction ? (
@@ -479,8 +476,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
             </div>
 
             {isMultipleChoice ? (questionDocuments.length === 0 ? renderMultipleChoiceResponse(true) : choiceFeedback ? renderMultipleChoiceResponse() : null) : (
-            <section className={`conversation${isTimelineDevelopment ? ` conversation--timeline-dock${timelineConversationExpanded ? " is-expanded" : ""}` : ""}`} aria-label="Conversation avec Socrato">
-            {isTimelineDevelopment ? <button type="button" className="timeline-conversation-toggle" aria-expanded={timelineConversationExpanded} onClick={() => setTimelineConversationExpanded((expanded) => !expanded)}>{timelineConversationExpanded ? "Réduire la conversation" : "Afficher la conversation"}</button> : null}
+            <section className="conversation" aria-label="Conversation avec Socrato">
             <div ref={messagesRegionRef} className="message-list" aria-live="polite" aria-relevant="additions">
               {messages.map((message, index) => (
                 <article ref={index === messages.length - 1 ? newestMessageRef : undefined} key={message.id} className={`message message-${message.author}`}>
