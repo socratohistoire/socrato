@@ -32,6 +32,18 @@ test("centre la question d’assimilation sur le seul extrait qui explicite l’
   assert.match(question.instruction, /deux moyens proposés dans l’extrait/);
 });
 
+test("distingue les titres visibles des documents 3 et 4 de la question 28", () => {
+  const approved = getQuestionsForKnowledgeHeading("acte-union");
+  const question = approved.find(({ id }) => id === "question:acte-union:development-002");
+  assert.ok(question);
+  const catalog = createCatalogLearningSessionQuestions([question.id]);
+  const documents = new Map(catalog.documents.map((document) => [document.id, document.typeLabel]));
+  assert.equal(documents.get("AU-T-006"), "Suspension du régime représentatif");
+  assert.equal(documents.get("AU-T-009"), "Données sur les Patriotes emprisonnés");
+  assert.notEqual(documents.get("AU-T-006"), "Document sur les conséquences des Rébellions");
+  assert.notEqual(documents.get("AU-T-009"), "Document sur les conséquences des Rébellions");
+});
+
 test("réserve le banc d’essai à l’enseignant et ne touche pas à la progression élève", async () => {
   const page = await readFile(new URL("../app/teacher/api-test/page.tsx", import.meta.url), "utf8");
   const action = await readFile(new URL("../app/teacher/api-test/actions.ts", import.meta.url), "utf8");
