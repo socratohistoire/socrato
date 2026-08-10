@@ -78,11 +78,11 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.instructions), /missingElements peut contenir une seule précision historique brève/);
   assert.match(String(requestBody?.instructions), /Évite les conseils génériques/);
   assert.match(String(requestBody?.instructions), /ne fournis jamais la réponse complète/);
-  assert.match(String(requestBody?.instructions), /dialogue socratique cumulatif pouvant aller jusqu’à cinq réponses/);
+  assert.match(String(requestBody?.instructions), /dialogue socratique cumulatif pouvant aller jusqu’à trois réponses/);
   assert.match(String(requestBody?.instructions), /Conserve dans observedStrengths les acquis conceptuels déjà reconnus/);
   assert.match(String(requestBody?.instructions), /corrige au plus une confusion/);
-  assert.match(String(requestBody?.instructions), /réunir dans une réponse complète en une seule phrase/);
-  assert.match(String(requestBody?.instructions), /Produis satisfactory immédiatement si la réponse courante est déjà complète et cohérente/);
+  assert.match(String(requestBody?.instructions), /évalue l’ensemble cumulé comme satisfactory/);
+  assert.match(String(requestBody?.instructions), /Ne demande jamais à l’élève de réunir ou reformuler tous ses acquis/);
   assert.match(String(requestBody?.instructions), /N’exige jamais un numéro d’article, une date exacte/);
   assert.match(String(requestBody?.instructions), /même sans nommer l’article 41/);
   assert.match(String(requestBody?.instructions), /une reformulation fidèle d’un élément pertinent de chaque document constitue une justification complète/);

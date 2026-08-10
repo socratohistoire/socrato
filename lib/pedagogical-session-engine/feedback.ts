@@ -74,7 +74,7 @@ export function createPedagogicalFeedback(
       : nonExploitableCount === 2
         ? "Appuie-toi sur un document précis et formule une idée historique."
         : "Utilise une structure simple : un fait, puis le lien que tu établis.";
-    const priorityPrompt = nonExploitableCount < 5 ? "Peux-tu reformuler une seule idée liée à la question?" : undefined;
+    const priorityPrompt = nonExploitableCount < 3 ? "Peux-tu reformuler une seule idée liée à la question?" : undefined;
     return {
       assessment, priorityPrompt,
       resourceDirection: question.documentIds[0] ? "Tu peux observer le premier document associé à la question." : undefined,
@@ -86,7 +86,7 @@ export function createPedagogicalFeedback(
   const acknowledgement = replaceDocumentIds(analysis.observedStrengths[0], question);
   const missingElement = replaceDocumentIds(analysis.missingElements[0], question);
   if (questionClosing && analysis.pedagogicalOutcome !== "satisfactory") {
-    const assessment = "Tu as fait cinq essais sérieux. Il reste un élément historique à préciser; nous garderons ce point à consolider.";
+    const assessment = "Tu as fait trois essais sérieux. Il reste un élément historique à préciser; nous garderons ce point à consolider.";
     return {
       acknowledgement,
       assessment,
