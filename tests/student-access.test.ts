@@ -164,3 +164,10 @@ test("attend la confirmation du cookie avant d’ouvrir le tableau de bord", asy
   assert.doesNotMatch(formSource, /useRouter/);
   assert.match(formSource, /pending \|\| Boolean\(state\.redirectTo\)/);
 });
+
+test("la page d’accueil ouvre directement l’espace élève avec une seule saisie", async () => {
+  const homeSource = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  assert.match(homeSource, /import \{ StudentAccessForm \}/);
+  assert.match(homeSource, /<StudentAccessForm \/>/);
+  assert.doesNotMatch(homeSource, /action="\/eleve"|method="get"|Commencer la révision/);
+});
