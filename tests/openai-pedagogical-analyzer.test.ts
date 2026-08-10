@@ -60,40 +60,15 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.input), /Les revenus sont réunis/);
   assert.match(String(requestBody?.input), /L’Acte d’Union réunit les deux Canadas/);
   assert.match(String(requestBody?.input), /Une réponse partielle reçoit une question ciblée/);
-  assert.match(String(requestBody?.instructions), /dossier pédagogique approuvé/);
-  assert.match(String(requestBody?.instructions), /grille conceptuelle/);
-  assert.match(String(requestBody?.instructions), /toute affirmation historique compréhensible/);
-  assert.match(String(requestBody?.instructions), /même si elle est très courte, incomplète/);
-  assert.match(String(requestBody?.instructions), /substantive ne doit jamais produire pedagogicalOutcome=non_exploitable/);
-  assert.match(String(requestBody?.instructions), /Les Britanniques refusent les demandes des Patriotes/);
-  assert.match(String(requestBody?.instructions), /Il sert à payer les dettes des deux Canadas/);
-  assert.match(String(requestBody?.instructions), /accomplit l’opération intellectuelle centrale/);
-  assert.match(String(requestBody?.instructions), /existait avant et demeure après démontre déjà une continuité/);
-  assert.match(String(requestBody?.instructions), /Ne demande jamais à l’élève d’expliquer de nouveau une relation/);
-  assert.match(String(requestBody?.instructions), /documentUse=partial/);
-  assert.match(String(requestBody?.instructions), /ne nomme pas explicitement le journal/);
-  assert.match(String(requestBody?.instructions), /ton chaleureux, encourageant et naturel/);
-  assert.match(String(requestBody?.instructions), /Commence observedStrengths\[0\] par une reconnaissance brève/);
-  assert.match(String(requestBody?.instructions), /Évite les formulations vagues comme « tu as repéré »/);
-  assert.match(String(requestBody?.instructions), /une seule question d’aide courte, de 22 mots au maximum/);
-  assert.match(String(requestBody?.instructions), /N’utilise jamais l’identifiant interne d’un document/);
-  assert.match(String(requestBody?.instructions), /missingElements peut contenir une seule précision historique brève/);
-  assert.match(String(requestBody?.instructions), /Évite les conseils génériques/);
-  assert.match(String(requestBody?.instructions), /ne fournis jamais la réponse complète/);
-  assert.match(String(requestBody?.instructions), /dialogue socratique cumulatif pouvant aller jusqu’à trois réponses/);
-  assert.match(String(requestBody?.instructions), /Conserve dans observedStrengths les acquis conceptuels déjà reconnus/);
-  assert.match(String(requestBody?.instructions), /corrige au plus une confusion/);
-  assert.match(String(requestBody?.instructions), /évalue l’ensemble cumulé comme satisfactory/);
-  assert.match(String(requestBody?.instructions), /Ne demande jamais à l’élève de réunir ou reformuler tous ses acquis/);
-  assert.match(String(requestBody?.instructions), /N’exige jamais un numéro d’article, une date exacte/);
-  assert.match(String(requestBody?.instructions), /même sans nommer l’article 41/);
-  assert.match(String(requestBody?.instructions), /une reformulation fidèle d’un élément pertinent de chaque document constitue une justification complète/);
-  assert.match(String(requestBody?.instructions), /de retrouver un passage exact/);
-  assert.match(String(requestBody?.instructions), /« patate » ou « oignon »/);
-  assert.match(String(requestBody?.instructions), /« réponse svp » sont answer_request/);
-  assert.match(String(requestBody?.instructions), /comme « atchoum »/);
-  assert.match(String(requestBody?.instructions), /« aucune » à une question demandant une différence/);
-  assert.match(String(requestBody?.instructions), /sans prêter une intention à l’élève/);
+  const instructions = String(requestBody?.instructions);
+  assert.match(instructions, /Tu es Socrato, un tuteur d’histoire/);
+  assert.match(instructions, /Comprends ce que l’élève essaie réellement de dire/);
+  assert.match(instructions, /ne redemande jamais un élément déjà démontré/);
+  assert.match(instructions, /Choisis le moins d’aide nécessaire/);
+  assert.match(instructions, /affirmation liée à la question est substantive/);
+  assert.match(instructions, /dialogue est cumulatif et peut compter jusqu’à trois réponses/);
+  assert.match(instructions, /Adapte toujours ton intervention au message réel/);
+  assert.doesNotMatch(instructions, /patate|oignon|atchoum|article 41/);
 });
 
 test("transmet les acquis structurés du tour précédent sans conserver son texte", async () => {
@@ -417,8 +392,23 @@ test("présente une relance chaleureuse sans code interne ni consigne répétée
     ...validAnalysis,
     missingElements: ["Ajoute une revendication précise, puis relie-la au refus : que demande le document document-1 au sujet du Conseil législatif?"],
   }, question, 0);
-  assert.equal(feedback.studentFacingText, "Un lien historique pertinent est amorcé. C’est un bon début. Il reste un lien à préciser. Que demande le document Acte d’Union au sujet du Conseil législatif?");
+  assert.equal(feedback.studentFacingText, "Un lien historique pertinent est amorcé. Que demande le document Acte d’Union au sujet du Conseil législatif?");
   assert.doesNotMatch(feedback.studentFacingText, /document-1|Observe un document autorisé|Ajoute une revendication/);
+});
+
+test("permet de revenir temporairement au contrat v1 sans modifier le moteur", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  let instructions = "";
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({
+    apiKey: "test-key", model: "test-model", contractVersion: "v1",
+    fetch: async (_input, init) => {
+      instructions = String((JSON.parse(String(init?.body)) as { instructions?: string }).instructions);
+      return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(validAnalysis) }] }] }), { status: 200 });
+    },
+  });
+  await analyzer.analyze(response, question);
+  assert.match(instructions, /Exemples de décision/);
+  assert.doesNotMatch(instructions, /Tu es Socrato, un tuteur d’histoire/);
 });
 
 test("échoue fermé lorsque la configuration est absente", async () => {
