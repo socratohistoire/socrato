@@ -304,12 +304,14 @@ test("affiche les deux états vides fixes lorsque rien n’est travaillé", () =
   assert.match(viewSource, /Tes connaissances travaillées apparaîtront ici au fil de l’activité/);
 });
 
-test("distingue le nombre ciblé des résultats effectivement affichés", () => {
+test("la carte annonce les notions tandis que le bilan conserve les connaissances évaluées", () => {
   const activity = getSelectedActivity(createDemoStudentDashboard("demo-activity-acte-union"));
   assert.equal(activity.historicalKnowledgeIds.length, 4);
   assert.equal(activity.historicalKnowledge.length, 4);
   assert.equal(getWorkedHistoricalKnowledge(activity.historicalKnowledge).length, 3);
-  assert.match(viewSource, /activity\.historicalKnowledgeIds\.length/);
+  assert.match(viewSource, /coveredNotions\.length/);
+  assert.match(viewSource, /<KnowledgeResults items=\{activity\.historicalKnowledge\}/);
+  assert.doesNotMatch(viewSource, /activity\.historicalKnowledgeIds\.length/);
 });
 
 test("navigue vers la page 3 avec identifiant et contexte autorisé", () => {

@@ -137,6 +137,8 @@ export type QuestionResult = PedagogicalIdentifiers & {
   advancedMastery: boolean;
   demonstratedKnowledgeIds: string[];
   demonstratedOperationIds: string[];
+  operationAssessments?: PedagogicalResultEntry[];
+  historicalKnowledgeAssessments?: PedagogicalResultEntry[];
   observedStrengths: string[];
   consolidationTargets: string[];
   completedAt: string;

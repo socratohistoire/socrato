@@ -504,9 +504,29 @@ test("le bilan contient seulement les éléments réellement travaillés et une 
   for (let index = 0; index < 3; index += 1) state = (await submitStudentResponse(definition, state, "Réponse", analyzer, fixedClock)).state;
   const summary = produceLocalStructuredSummary(state, [], "2026-07-26T12:00:00.000Z");
   assert.deepEqual(summary.historicalKnowledgeResults.map(({ id }) => id), ["population", "representation"]);
-  assert.deepEqual(summary.operationResults.map(({ id }) => id), ["establish_facts", "causes-and-consequences", "relate_facts"]);
+  assert.deepEqual(summary.operationResults.map(({ id }) => id), ["establish_facts", "causes-and-consequences"]);
   assert.equal(summary.recommendation?.kind, "optional_consolidation");
   assert.doesNotMatch(JSON.stringify(summary), /not_assessed|Réponse/);
+});
+
+test("le bilan distingue la maîtrise des connaissances de celle des opérations", async () => {
+  const mixed = analysis({
+    pedagogicalOutcome: "satisfactory",
+    historicalAccuracy: "demonstrated",
+    primaryOperationPerformance: "partial",
+    demonstratedKnowledgeIds: ["population", "representation"],
+    observedOperationIds: ["establish_facts"],
+    nextAction: "complete_question",
+  });
+  const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Réponse juste mais opération partielle", new ScriptedAnalyzer([mixed]), fixedClock);
+  const summary = produceLocalStructuredSummary(transition.state, [], "2026-07-26T12:00:00.000Z");
+  assert.deepEqual(summary.historicalKnowledgeResults, [
+    { id: "population", status: "mastered" },
+    { id: "representation", status: "mastered" },
+  ]);
+  assert.equal(summary.operationResults.find(({ id }) => id === "establish_facts")?.status, "to_consolidate");
+  assert.equal(summary.operationResults.find(({ id }) => id === "causes-and-consequences")?.status, "to_consolidate");
+  assert.equal(summary.operationResults.some(({ id }) => id === "relate_facts"), false);
 });
 
 const approvedReference: WorkbookReference = {
