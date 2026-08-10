@@ -201,6 +201,15 @@ function requirePersonalExplanation(analysis: StructuredResponseAnalysis, respon
   };
 }
 
+function preserveCumulativeStrengths(analysis: StructuredResponseAnalysis, response: StudentResponse): StructuredResponseAnalysis {
+  if (analysis.pedagogicalOutcome === "non_exploitable" || !response.priorTurn) return analysis;
+  const observedStrengths = [...analysis.observedStrengths];
+  for (const strength of response.priorTurn.observedStrengths) {
+    if (!observedStrengths.includes(strength)) observedStrengths.push(strength);
+  }
+  return { ...analysis, observedStrengths };
+}
+
 export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
   private readonly apiKey: string;
   private readonly model: string;
@@ -233,19 +242,27 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
       return JSON.parse(extractOutputText(await apiResponse.json())) as unknown;
     };
 
-    const analyzeOnce = async (instructions: string, forceSubstantive = false) => requirePersonalExplanation(validateStructuredAnalysis(
-      await requestStructuredOutput(
-        instructions,
-        forceSubstantive ? analysisSchemaForSubstantiveResponse() : ANALYSIS_SCHEMA,
-        "socrato_pedagogical_analysis",
-      ),
-      question,
-    ), response, question);
+    const analyzeOnce = async (instructions: string, forceSubstantive = false) => preserveCumulativeStrengths(
+      requirePersonalExplanation(validateStructuredAnalysis(
+        await requestStructuredOutput(
+          instructions,
+          forceSubstantive ? analysisSchemaForSubstantiveResponse() : ANALYSIS_SCHEMA,
+          "socrato_pedagogical_analysis",
+        ),
+        question,
+      ), response, question),
+      response,
+    );
 
     const initial = await analyzeOnce(this.instructions);
     const isIntentionalNonAnswer = isExplicitHelpRequest(response.content)
       || ["help_request", "answer_request", "playful_diversion", "nonsense_or_spam", "inappropriate"].includes(initial.responseDisposition);
-    if (initial.pedagogicalOutcome !== "non_exploitable" || isIntentionalNonAnswer) return initial;
+    if (initial.pedagogicalOutcome !== "non_exploitable" || isIntentionalNonAnswer) {
+      if (response.attemptNumber >= 3 && initial.responseDisposition === "substantive" && initial.pedagogicalOutcome !== "satisfactory") {
+        return analyzeOnce(`${this.instructions}\n\nCeci est le contrôle final cumulatif du troisième essai. Réévalue la réponse actuelle avec tous les acquis de priorTurn et les critères essentiels explicitement demandés. Si la réponse actuelle apporte l’élément demandé au tour précédent et que l’ensemble cumulé répond à la question, choisis obligatoirement satisfactory et complete_question. Ne maintiens pas un verdict partiel pour une précision facultative, un enrichissement ou parce que les acquis sont répartis entre plusieurs messages.`, true);
+      }
+      return initial;
+    }
 
     if (["too_short", "incomprehensible"].includes(initial.responseDisposition)) {
       return analyzeOnce(`${this.instructions}\n\nLe premier passage n’a pas réussi à évaluer ce message. Traite-le maintenant comme une proposition de l’élève à propos de la tâche courante : détermine ce qu’elle apporte réellement, corrige-la si nécessaire et poursuis le dialogue socratique. Ne la déclare pas non exploitable simplement parce qu’elle est courte, maladroite ou formulée comme un fragment de phrase.`, true);
