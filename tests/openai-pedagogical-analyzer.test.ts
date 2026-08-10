@@ -52,6 +52,7 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.instructions), /même si elle est très courte, incomplète/);
   assert.match(String(requestBody?.instructions), /substantive ne doit jamais produire pedagogicalOutcome=non_exploitable/);
   assert.match(String(requestBody?.instructions), /Les Britanniques refusent les demandes des Patriotes/);
+  assert.match(String(requestBody?.instructions), /Il sert à payer les dettes des deux Canadas/);
   assert.match(String(requestBody?.instructions), /accomplit l’opération intellectuelle centrale/);
   assert.match(String(requestBody?.instructions), /documentUse=partial/);
   assert.match(String(requestBody?.instructions), /ne nomme pas explicitement le journal/);
@@ -168,6 +169,43 @@ test("empêche un faux rejet répété pour une idée manifestement liée", asyn
   assert.equal(analysis.pedagogicalOutcome, "insufficient");
   assert.equal(analysis.nextAction, "offer_hint");
   assert.match(analysis.missingElements[0], /Dans « Acte d’Union »/);
+});
+
+test("reconnaît l’usage juste du fonds consolidé comme une réponse partielle", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  const fundQuestion = {
+    ...question,
+    evaluationContext: {
+      ...question.evaluationContext,
+      questionPrompt: "À l’aide du document, explique ce qu’est le fonds consolidé et indique à quoi il sert dans la Province du Canada.",
+      instruction: "Formule une réponse courte qui précise l’origine des sommes et leur utilisation.",
+      approvedDocuments: [{
+        ...question.evaluationContext.approvedDocuments[0],
+        title: "Le fonds consolidé de la Province du Canada",
+        content: "Les revenus réunis forment un fonds consolidé qui paie les dépenses publiques et l’intérêt des dettes.",
+      }],
+    },
+  } satisfies PedagogicalQuestionDefinition;
+  const nonExploitable = {
+    ...validAnalysis, responseDisposition: "incomprehensible", pedagogicalOutcome: "non_exploitable",
+    historicalAccuracy: "not_assessed", documentUse: "not_assessed", justificationQuality: "not_assessed",
+    primaryOperationPerformance: "not_assessed", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [],
+    observedStrengths: [], missingElements: ["Reformule."], nextAction: "handle_non_exploitable",
+  } as const;
+  const partial = {
+    ...validAnalysis,
+    observedStrengths: ["Oui, tu indiques correctement que ce fonds sert à payer les dettes communes."],
+    missingElements: ["Quelles sommes sont réunies dans ce fonds?"],
+  };
+  let calls = 0;
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
+    calls += 1;
+    const analysis = calls === 1 ? nonExploitable : partial;
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(analysis) }] }] }), { status: 200 });
+  } });
+
+  assert.deepEqual(await analyzer.analyze({ ...response, content: "Il sert à payer les dettes des deux canada" }, fundQuestion), partial);
+  assert.equal(calls, 2);
 });
 
 test("réanalyse aussi une très courte réponse qui reprend précisément la question", async () => {

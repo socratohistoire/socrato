@@ -66,6 +66,7 @@ Réserve pedagogicalOutcome=non_exploitable et nextAction=handle_non_exploitable
 
 Exemples de décision :
 - « Les Britanniques refusent les demandes des Patriotes. » dans une question sur le rejet de revendications patriotes : substantive et évaluable, même si le lien causal demandé reste à développer;
+- « Il sert à payer les dettes des deux Canadas. » dans une question demandant de définir le fonds consolidé et d’indiquer son usage : substantive et partially_satisfactory; reconnais l’usage donné, puis demande seulement ce qu’est ce fonds;
 - une réponse qui relie correctement une revendication, son refus et la radicalisation qui mène à la rébellion : substantive et satisfactory, même si elle ne nomme pas explicitement le journal qui illustre cette radicalisation; ajoute alors la mention de cette source comme piste d’enrichissement dans missingElements;
 - une réponse qui explique que l’anglais demeure la langue officielle des documents de la législature satisfait l’idée attendue, même sans nommer l’article 41; mentionne l’article seulement comme enrichissement;
 - pour « Nomme deux recommandations de Durham et justifie-les avec les deux extraits », une réponse qui nomme l’union des provinces et la responsabilité devant la législature, puis explique fidèlement chacune avec ses propres mots, est satisfactory; ne demande pas ensuite de retrouver un passage exact;
@@ -125,7 +126,10 @@ const RELATION_STOP_WORDS = new Set([
 ]);
 
 function normalizedTerms(value: string) {
-  return new Set(value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().match(/[a-z]{5,}/g)?.filter((term) => !RELATION_STOP_WORDS.has(term)) ?? []);
+  const terms = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().match(/[a-z]{5,}/g) ?? [];
+  return new Set(terms
+    .filter((term) => !RELATION_STOP_WORDS.has(term))
+    .map((term) => term.length > 5 && term.endsWith("s") ? term.slice(0, -1) : term));
 }
 
 function hasClearPedagogicalRelation(response: StudentResponse, question: PedagogicalQuestionDefinition) {
