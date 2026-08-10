@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   createLocalActivityPreview,
+  createTerraSummaryPilotConfiguration,
   getActivityQuestionSelection,
   getActivityQuestionCategory,
   getEligibleActivityQuestions,
@@ -58,6 +59,21 @@ test("sélectionne tous les groupes et Révision par défaut", async () => {
   assert.match(viewSource, /placeholder="Inscrivez le titre de l’activité"/);
   assert.equal(catalog.groups.length, 7);
   assert.ok(catalog.groups.every(({ name }) => /fictif/.test(name)));
+});
+
+test("prépare en un clic une activité pilote complète pour le bilan Terra", async () => {
+  const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
+  const config = createTerraSummaryPilotConfiguration(catalog, [catalog.groups[0].id]);
+  const questions = getActivityQuestionSelection(config, catalog);
+
+  assert.equal(config.title, "Activité pilote — bilan Terra");
+  assert.equal(config.questionCount, 10);
+  assert.deepEqual(config.notionIds, ["acte-union"]);
+  assert.deepEqual(config.selectedGroupIds, [catalog.groups[0].id]);
+  assert.equal(questions.length, 10);
+  assert.equal(new Set(questions.map(({ operationId }) => operationId)).size >= 4, true);
+  assert.equal(new Set(questions.map(({ format }) => getActivityQuestionCategory(format))).size, 3);
+  assert.match(viewSource, /Préparer l’activité pilote/);
 });
 
 test("remplace les groupes de démonstration par les groupes enregistrés de l’enseignant", () => {
@@ -179,10 +195,10 @@ test("réserve les questions de 150 mots au mode développement", async () => {
   assert.equal(new Set(allDevelopment.map(({ question }) => question)).size, 5);
   const timelineQuestion = allDevelopment.find(({ question }) => question.startsWith("À l’aide de la ligne du temps"));
   assert.deepEqual(timelineQuestion?.documents.map(({ id }) => id), ["AU-D-002"]);
-  const debtQuestion = allDevelopment.find(({ question }) => question.startsWith("À l’aide des deux documents"));
-  assert.deepEqual(debtQuestion?.documents.map(({ id }) => id), ["AU-G-001", "AU-D-001"]);
+  const debtQuestion = allDevelopment.find(({ questionId }) => questionId === "question:acte-union:development-004");
+  assert.deepEqual(debtQuestion?.documents.map(({ id }) => id), ["AU-G-001", "AU-G-002", "AU-D-001"]);
   const comparisonQuestion = allDevelopment.find(({ question }) => question.startsWith("Compare les recommandations"));
-  assert.deepEqual(comparisonQuestion?.documents.map(({ id }) => id), ["historical-presentation:acte-union:durham-union-legislative", "historical-presentation:acte-union:durham-responsabilite", "AU-T-001"]);
+  assert.deepEqual(comparisonQuestion?.documents.map(({ id }) => id), ["historical-presentation:acte-union:durham-union-legislative", "historical-presentation:acte-union:durham-responsabilite", "AU-T-001", "AU-T-013"]);
 });
 
 test("compose une activité équilibrée et diversifie les opérations", async () => {

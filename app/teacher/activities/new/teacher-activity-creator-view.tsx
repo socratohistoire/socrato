@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createLocalActivityPreview,
+  createTerraSummaryPilotConfiguration,
   getActivityQuestionSelection,
   getActivityQuestionCategory,
   getEligibleActivityQuestions,
@@ -148,6 +149,14 @@ export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreat
     update({ workType, operationId: null });
   }
 
+  function prepareTerraSummaryPilot() {
+    setDraftTouched(true);
+    setConfig(createTerraSummaryPilotConfiguration(catalog, config.selectedGroupIds));
+    setQuestionOverrides({});
+    setPreviewVariant(0);
+    setDemoMessage("L’activité pilote est prête : 10 questions variées sur l’Acte d’Union.");
+  }
+
   function toggleGroup(groupId: string) {
     update({ selectedGroupIds: config.selectedGroupIds.includes(groupId) ? config.selectedGroupIds.filter((id) => id !== groupId) : [...config.selectedGroupIds, groupId] });
   }
@@ -242,6 +251,10 @@ export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreat
 
       <div className="creator-layout">
         {!draftReady ? <p className="creator-draft-loading" role="status">Chargement du brouillon…</p> : null}
+        <section className="terra-pilot" aria-labelledby="terra-pilot-title">
+          <div><strong id="terra-pilot-title">Tester le bilan personnalisé de Terra</strong><span>Prépare une activité complète de 10 questions variées sur l’Acte d’Union.</span></div>
+          <button type="button" onClick={prepareTerraSummaryPilot}>Préparer l’activité pilote</button>
+        </section>
         <div className="creator-config" aria-label="Configuration de l’activité">
           <ConfigCard id="format-title" icon="format" title="Quel format ?">
             <label className="format-section">Titre de l’activité<input value={config.title} placeholder="Inscrivez le titre de l’activité" onChange={(event) => update({ title: event.target.value })} aria-invalid={Boolean(errors.title)} /></label>
