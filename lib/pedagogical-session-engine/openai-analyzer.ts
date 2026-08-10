@@ -196,6 +196,10 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
       || ["help_request", "answer_request", "playful_diversion", "nonsense_or_spam", "inappropriate"].includes(initial.responseDisposition);
     if (initial.pedagogicalOutcome !== "non_exploitable" || isIntentionalNonAnswer) return initial;
 
+    if (["too_short", "incomprehensible"].includes(initial.responseDisposition)) {
+      return analyzeOnce(`${PEDAGOGICAL_ANALYSIS_INSTRUCTIONS}\n\nLe premier passage n’a pas réussi à évaluer ce message. Traite-le maintenant comme une proposition de l’élève à propos de la tâche courante : détermine ce qu’elle apporte réellement, corrige-la si nécessaire et poursuis le dialogue socratique. Ne la déclare pas non exploitable simplement parce qu’elle est courte, maladroite ou formulée comme un fragment de phrase.`, true);
+    }
+
     let intent: { isHistoricalProposition?: unknown; responseDisposition?: unknown; confidence?: unknown };
     try {
       intent = await requestStructuredOutput(INTENT_ANALYSIS_INSTRUCTIONS, INTENT_SCHEMA, "socrato_student_response_intent") as typeof intent;
