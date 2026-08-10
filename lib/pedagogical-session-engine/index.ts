@@ -3,6 +3,7 @@ export * from "./engine.ts";
 export * from "./feedback.ts";
 export * from "./local-analyzer.ts";
 export * from "./memory-repository.ts";
+export * from "./openai-summary.ts";
 export * from "./ports.ts";
 export * from "./summary.ts";
 export * from "./types.ts";
