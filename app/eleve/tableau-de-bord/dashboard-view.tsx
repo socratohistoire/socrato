@@ -54,7 +54,7 @@ export function StudentDashboardView({ data }: { data: StudentDashboardData }) {
         <SummaryPanel activity={activity} />
         <section className="activity-results" aria-label="Résultats de cette activité">
           <OperationResults items={activity.operations} />
-          <KnowledgeResults items={activity.historicalKnowledge} showCompletePortrait={activity.activityStatus === "completed"} />
+          <KnowledgeResults items={activity.historicalKnowledge} />
         </section>
         <ActivityList activities={dashboardData.activities} selectedActivityId={dashboardData.selectedActivityId} />
         <p className="dashboard-note"><span aria-hidden="true">i</span> Les connaissances non travaillées n’ont pas encore été couvertes dans cette activité.</p>
@@ -154,7 +154,7 @@ function SummaryPanel({ activity }: { activity: StudentActivity }) {
   const items = complete ? [
     { kind: "strength", title: "Tes points forts", entries: activity.summary.strengths },
     { kind: "consolidate", title: "Les éléments à consolider", entries: activity.summary.consolidationTargets },
-    { kind: "recommend", title: "Une activité de consolidation", entries: [activity.summary.consolidationActivity ?? activity.summary.recommendation ?? (needsConsolidation ? "Reprends les éléments à consolider dans une courte activité ciblée." : "Aucune activité supplémentaire n’est nécessaire pour le moment.")] },
+    { kind: "recommend", title: "Ta prochaine étape", entries: [activity.summary.consolidationActivity ?? activity.summary.recommendation ?? (needsConsolidation ? "Reprends en priorité le premier élément à consolider ci-dessus." : "Aucune activité supplémentaire n’est nécessaire pour le moment.")] },
   ] : [
     { kind: "strength", title: "Tes points forts", entries: ["Ils apparaîtront après le traitement confirmé de l’activité."] },
     { kind: "consolidate", title: "Les éléments à consolider", entries: ["Ils seront réutilisés depuis le bilan enregistré de la séance."] },
@@ -179,8 +179,8 @@ function OperationResults({ items }: { items: IntellectualOperation[] }) {
   );
 }
 
-function KnowledgeResults({ items, showCompletePortrait = false }: { items: HistoricalKnowledge[]; showCompletePortrait?: boolean }) {
-  const workedItems = getWorkedHistoricalKnowledge(items, showCompletePortrait);
+function KnowledgeResults({ items }: { items: HistoricalKnowledge[] }) {
+  const workedItems = getWorkedHistoricalKnowledge(items);
   return (
     <section className="results-panel knowledge-results" aria-labelledby="knowledge-title">
       <ResultsHeading id="knowledge-title" title={DASHBOARD_LABELS.knowledge} />

@@ -29,6 +29,6 @@ export function getWorkedOperations(items: IntellectualOperation[]): Intellectua
   return items.filter(({ status }) => status !== "not_assessed");
 }
 
-export function getWorkedHistoricalKnowledge(items: HistoricalKnowledge[], includeNotAssessed = false): HistoricalKnowledge[] {
-  return includeNotAssessed ? items : items.filter(({ status }) => status !== "not_assessed");
+export function getWorkedHistoricalKnowledge(items: HistoricalKnowledge[]): HistoricalKnowledge[] {
+  return items.filter(({ status }) => status !== "not_assessed");
 }

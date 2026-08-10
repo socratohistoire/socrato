@@ -61,8 +61,10 @@ export function createStudentProgressContract(
 ): Extract<StudentProgressContract, { schemaVersion: typeof STUDENT_PROGRESS_CONVERSATION_VERSION }> {
   const completedQuestions = state.questionStates.filter(({ status, result }) => status === "completed" && result);
   const hasStarted = state.currentQuestionIndex > 0 || state.questionStates.some(({ attemptNumber, hintRequestCount, status }) => attemptNumber > 0 || hintRequestCount > 0 || status !== "presented");
-  const operationResults = completedQuestions.flatMap(({ result }) => result!.operationIds.map((id) => ({ id, status: result!.status })));
-  const historicalKnowledgeResults = completedQuestions.flatMap(({ result }) => result!.historicalKnowledgeIds.map((id) => ({ id, status: result!.status })));
+  const operationResults = completedQuestions.flatMap(({ result }) => result!.operationAssessments
+    ?? result!.operationIds.map((id) => ({ id, status: result!.status })));
+  const historicalKnowledgeResults = completedQuestions.flatMap(({ result }) => result!.historicalKnowledgeAssessments
+    ?? result!.historicalKnowledgeIds.map((id) => ({ id, status: result!.status })));
   const timestamp = now.toISOString();
   return {
     schemaVersion: STUDENT_PROGRESS_CONVERSATION_VERSION,

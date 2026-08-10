@@ -31,6 +31,8 @@ Rédige en français québécois clair, chaleureux et sobre :
 - jusqu’à trois éléments réellement présents dans sourceConsolidationTargets;
 - une prochaine étape brève seulement si allowedRecommendation est fourni.
 
+Relie la prochaine étape à un élément précis à consolider. Décris la connaissance ou le raisonnement à travailler avec des mots accessibles : ne demande jamais de retrouver un passage exact, un numéro de document ou une citation. Invite l’élève à expliquer avec ses propres mots.
+
 Reformule les éléments redondants sans ajouter de nouvelle conclusion. Ne mentionne ni l’API, ni Terra, ni des identifiants techniques. N’utilise pas de note, de pourcentage ou de jugement sur la personne.
 `.trim();
 

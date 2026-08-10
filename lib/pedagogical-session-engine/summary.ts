@@ -35,11 +35,14 @@ export function produceLocalStructuredSummary(
   const consolidationTargets = [...new Set(results.flatMap(({ consolidationTargets }) => consolidationTargets))];
   const targetOperationIds = operationResults.filter(({ status }) => status !== "mastered").map(({ id }) => id);
   const targetHistoricalKnowledgeIds = historicalKnowledgeResults.filter(({ status }) => status !== "mastered").map(({ id }) => id);
+  const priorityTarget = consolidationTargets[0];
   const recommendation = targetOperationIds.length || targetHistoricalKnowledgeIds.length ? {
     kind: "optional_consolidation" as const,
     targetOperationIds,
     targetHistoricalKnowledgeIds,
-    label: "Reprends les éléments à consolider dans une courte activité ciblée.",
+    label: priorityTarget
+      ? `Reprends d’abord ce point dans une courte activité : ${priorityTarget}`
+      : "Reprends d’abord la compétence la moins maîtrisée dans une courte activité ciblée.",
   } : undefined;
 
   return {
