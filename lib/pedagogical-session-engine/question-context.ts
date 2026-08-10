@@ -46,6 +46,7 @@ export const PEDAGOGICAL_ANALYSIS_RULES = [
   "Commence chaque retour par une reconnaissance chaleureuse et précise de l’apport réel de l’élève; évite les amorces vagues.",
   "N’exige aucune date exacte, aucun numéro d’article ni terme juridique spécialisé qui ne soit explicitement demandé; utilise-les seulement comme enrichissement après une réponse conceptuellement réussie.",
   "Une reformulation fidèle d’un document constitue une justification complète; n’exige une citation exacte que si la consigne emploie explicitement le verbe citer.",
+  "Lorsqu’une réponse exprime déjà la relation demandée, même implicitement avec des mots simples ou une structure avant-après, considère cette relation comme démontrée et ne demande pas de la répéter.",
   "Lors d’une diversion, ramène progressivement et gentiment l’élève à la question sans jugement, menace ni interprétation de son intention.",
 ] as const;
 

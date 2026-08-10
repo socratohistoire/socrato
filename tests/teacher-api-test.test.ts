@@ -20,6 +20,7 @@ test("expose les 37 questions de l’Acte d’Union avec leur vrai contexte Terr
     assert.match(definition.evaluationContext?.pedagogicalRules.join(" ") ?? "", /reconnaissance chaleureuse et précise/);
     assert.match(definition.evaluationContext?.pedagogicalRules.join(" ") ?? "", /aucun numéro d’article/);
     assert.match(definition.evaluationContext?.pedagogicalRules.join(" ") ?? "", /diversion/);
+    assert.match(definition.evaluationContext?.pedagogicalRules.join(" ") ?? "", /structure avant-après/);
     assert.deepEqual(definition.evaluationContext?.approvedDocuments.map(({ id }) => id), question.documentRelations.map(({ documentId }) => documentId));
   }
 });
