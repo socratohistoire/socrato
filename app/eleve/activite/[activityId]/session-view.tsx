@@ -7,6 +7,7 @@ import { ThemeToggle } from "../../tableau-de-bord/theme-toggle";
 import { StudentLogoutButton } from "../../logout-button";
 import { saveStudentOutcomeToDatabase, saveStudentProgressToDatabase } from "../progress-actions";
 import { analyzeAuthorizedStudentResponse } from "../analysis-actions";
+import { personalizeCompletedStudentSummary } from "../summary-actions";
 import { analyzeActeUnionTestResponse } from "@/app/teacher/api-test/actions";
 import { createStudentProgressContract, restoreStudentProgress } from "@/lib/student-progress";
 import { createConfiguredDataRepository } from "@/lib/data-repository";
@@ -201,6 +202,10 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
       let nextState = transition.state;
       if (transition.sessionCompleted) {
         nextState = await finalizePedagogicalSession(nextState);
+        if (data.source === "server" && nextState.summary) {
+          const personalized = await personalizeCompletedStudentSummary(nextState.summary);
+          nextState = { ...nextState, summary: personalized.summary };
+        }
       }
       let progressAlreadySaved = false;
       if (persistProgress && data.source === "server") {
@@ -321,6 +326,10 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
     let nextState: PedagogicalSessionState = { ...engineState, status: isLastQuestion ? "completed" : "active", questionStates };
     if (isLastQuestion) {
       nextState = await finalizePedagogicalSession(nextState);
+      if (data.source === "server" && nextState.summary) {
+        const personalized = await personalizeCompletedStudentSummary(nextState.summary);
+        nextState = { ...nextState, summary: personalized.summary };
+      }
       if (persistProgress && nextState.summary) await persistCompletedSession(nextState);
       setFinalFeedbackDelivered(true);
     }
