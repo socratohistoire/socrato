@@ -247,6 +247,38 @@ test("reconnaît l’usage juste du fonds consolidé comme une réponse partiell
   assert.equal(calls, 2);
 });
 
+test("évalue une courte affirmation erronée qui reprend un concept historique central", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  const fundQuestion = {
+    ...question,
+    evaluationContext: {
+      ...question.evaluationContext,
+      questionPrompt: "À l’aide du document, explique ce qu’est le fonds consolidé et indique à quoi il sert dans la Province du Canada.",
+      evaluationGuide: {
+        expectedAnswer: "Les revenus et les dettes des deux Canadas sont réunis dans un fonds consolidé destiné aux dépenses publiques.",
+        commonErrors: ["Affirmer que les dettes ne sont pas partagées."],
+      },
+    },
+  } satisfies PedagogicalQuestionDefinition;
+  const nonExploitable = {
+    ...validAnalysis, responseDisposition: "incomprehensible", pedagogicalOutcome: "non_exploitable",
+    historicalAccuracy: "not_assessed", documentUse: "not_assessed", justificationQuality: "not_assessed",
+    primaryOperationPerformance: "not_assessed", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [],
+    observedStrengths: [], missingElements: ["Reformule."], nextAction: "handle_non_exploitable",
+  } as const;
+  let calls = 0;
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
+    calls += 1;
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(nonExploitable) }] }] }), { status: 200 });
+  } });
+
+  const analysis = await analyzer.analyze({ ...response, content: "La dette n’est pas partagée." }, fundQuestion);
+  assert.equal(calls, 2);
+  assert.equal(analysis.responseDisposition, "substantive");
+  assert.equal(analysis.pedagogicalOutcome, "insufficient");
+  assert.equal(analysis.nextAction, "offer_hint");
+});
+
 test("réanalyse aussi une très courte réponse qui reprend précisément la question", async () => {
   const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
   const nonExploitable = {

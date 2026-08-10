@@ -122,7 +122,7 @@ function pedagogicalContext(response: StudentResponse, question: PedagogicalQues
 }
 
 const RELATION_STOP_WORDS = new Set([
-  "alors", "apres", "avec", "cette", "comme", "dans", "depuis", "elle", "elles", "entre", "faire", "leurs",
+  "alors", "apres", "avec", "cette", "comme", "dans", "depuis", "document", "elle", "elles", "entre", "faire", "histoire", "leurs",
   "mais", "meme", "parce", "pour", "pourquoi", "question", "seulement", "sont", "sous", "tous", "toute", "toutes",
 ]);
 
@@ -148,7 +148,7 @@ function hasClearPedagogicalRelation(response: StudentResponse, question: Pedago
     ...(context?.approvedDocuments.flatMap(({ title, attribution, content }) => [title, attribution, content]) ?? []),
   ].filter(Boolean).join(" "));
   const sharedTerms = [...responseTerms].filter((term) => referenceTerms.has(term)).length;
-  return response.content.trim().length < 20 ? sharedTerms >= 1 : sharedTerms >= 2;
+  return response.content.trim().length <= 80 ? sharedTerms >= 1 : sharedTerms >= 2;
 }
 
 function relatedResponseFallback(question: PedagogicalQuestionDefinition): StructuredResponseAnalysis {
