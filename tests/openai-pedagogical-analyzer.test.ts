@@ -150,6 +150,38 @@ test("réanalyse une idée clairement liée avant de la déclarer non exploitabl
   assert.match(thirdInstructions, /lecture spécialisée indépendante/);
 });
 
+test("réévalue directement un fragment compréhensible dans le dialogue socratique", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  const rejected = {
+    ...validAnalysis,
+    responseDisposition: "too_short",
+    pedagogicalOutcome: "non_exploitable",
+    historicalAccuracy: "not_assessed",
+    documentUse: "not_assessed",
+    justificationQuality: "not_assessed",
+    primaryOperationPerformance: "not_assessed",
+    demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [], observedStrengths: [],
+    missingElements: ["Reformule."], nextAction: "handle_non_exploitable", confidence: "low",
+  };
+  const recovered = {
+    ...validAnalysis,
+    pedagogicalOutcome: "partially_satisfactory",
+    nextAction: "request_revision",
+    observedStrengths: ["Oui, tu indiques un usage pertinent du fonds commun."],
+    missingElements: ["Peux-tu maintenant réunir sa définition et son usage en une phrase?"],
+  };
+  const outputs = [rejected, recovered];
+  let calls = 0;
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
+    const output = outputs[calls++];
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(output) }] }] }), { status: 200 });
+  } });
+  const result = await analyzer.analyze({ ...response, content: "payer les travaux publics à partir des mêmes revenus", attemptNumber: 3 }, question);
+  assert.equal(calls, 2);
+  assert.equal(result.pedagogicalOutcome, "partially_satisfactory");
+  assert.match(result.observedStrengths[0], /usage pertinent/);
+});
+
 test("ne réanalyse pas une réponse réellement hors sujet", async () => {
   const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
   const nonExploitable = {
@@ -180,21 +212,21 @@ test("empêche un faux rejet répété pour une idée manifestement liée", asyn
   const corrected = { ...validAnalysis, pedagogicalOutcome: "insufficient" as const, nextAction: "offer_hint" as const };
   const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
     calls += 1;
-    const result = calls === 1 ? nonExploitable : calls === 2 ? historicalIntent : corrected;
+    const result = calls === 1 ? nonExploitable : corrected;
     return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(result) }] }] }), { status: 200 });
   } });
   const analysis = await analyzer.analyze({
     ...response,
     content: "Le fonds consolidé réunit les revenus pour répondre aux besoins publics et comprend aussi la dette publique.",
   }, question);
-  assert.equal(calls, 3);
+  assert.equal(calls, 2);
   assert.equal(analysis.responseDisposition, "substantive");
   assert.equal(analysis.pedagogicalOutcome, "insufficient");
   assert.equal(analysis.nextAction, "offer_hint");
   assert.equal(analysis.missingElements[0], "Précise la conséquence.");
 });
 
-test("conserve le premier jugement lorsque la lecture d’intention échoue techniquement", async () => {
+test("signale l’échec technique de la réévaluation directe", async () => {
   const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
   const fundQuestion = {
     ...question,
@@ -220,15 +252,12 @@ test("conserve le premier jugement lorsque la lecture d’intention échoue tech
     return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(nonExploitable) }] }] }), { status: 200 });
   } });
 
-  const analysis = await analyzer.analyze({
+  await assert.rejects(() => analyzer.analyze({
     ...response,
     content: "Le fonds consolidé fusionne les argents des deux Canadas.",
-  }, fundQuestion);
+  }, fundQuestion), /L’analyse OpenAI a échoué/);
 
   assert.equal(calls, 2);
-  assert.equal(analysis.responseDisposition, "incomprehensible");
-  assert.equal(analysis.pedagogicalOutcome, "non_exploitable");
-  assert.equal(analysis.nextAction, "handle_non_exploitable");
 });
 
 test("reconnaît l’usage juste du fonds consolidé comme une réponse partielle", async () => {
@@ -260,12 +289,12 @@ test("reconnaît l’usage juste du fonds consolidé comme une réponse partiell
   let calls = 0;
   const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
     calls += 1;
-    const analysis = calls === 1 ? nonExploitable : calls === 2 ? historicalIntent : partial;
+    const analysis = calls === 1 ? nonExploitable : partial;
     return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(analysis) }] }] }), { status: 200 });
   } });
 
   assert.deepEqual(await analyzer.analyze({ ...response, content: "Il sert à payer les dettes des deux canada" }, fundQuestion), partial);
-  assert.equal(calls, 3);
+  assert.equal(calls, 2);
 });
 
 test("évalue une courte affirmation erronée qui reprend un concept historique central", async () => {
@@ -298,12 +327,12 @@ test("évalue une courte affirmation erronée qui reprend un concept historique 
   let calls = 0;
   const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
     calls += 1;
-    const result = calls === 1 ? nonExploitable : calls === 2 ? historicalIntent : corrected;
+    const result = calls === 1 ? nonExploitable : corrected;
     return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(result) }] }] }), { status: 200 });
   } });
 
   const analysis = await analyzer.analyze({ ...response, content: "La dette n’est pas partagée." }, fundQuestion);
-  assert.equal(calls, 3);
+  assert.equal(calls, 2);
   assert.equal(analysis.responseDisposition, "substantive");
   assert.equal(analysis.pedagogicalOutcome, "insufficient");
   assert.equal(analysis.nextAction, "offer_hint");
@@ -321,11 +350,11 @@ test("réanalyse aussi une très courte réponse qui reprend précisément la qu
   let calls = 0;
   const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
     calls += 1;
-    const result = calls === 1 ? nonExploitable : calls === 2 ? historicalIntent : corrected;
+    const result = calls === 1 ? nonExploitable : corrected;
     return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(result) }] }] }), { status: 200 });
   } });
   const analysis = await analyzer.analyze({ ...response, content: "L’Acte d’Union" }, question);
-  assert.equal(calls, 3);
+  assert.equal(calls, 2);
   assert.equal(analysis.responseDisposition, "substantive");
   assert.equal(analysis.pedagogicalOutcome, "insufficient");
 });
@@ -356,11 +385,11 @@ test("traite une négation brève comme une réponse historique évaluable", asy
   let calls = 0;
   const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
     calls += 1;
-    const analysis = calls === 1 ? nonExploitable : calls === 2 ? historicalIntent : corrected;
+    const analysis = calls === 1 ? nonExploitable : corrected;
     return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(analysis) }] }] }), { status: 200 });
   } });
   assert.deepEqual(await analyzer.analyze({ ...response, content: "aucune" }, datedQuestion), corrected);
-  assert.equal(calls, 3);
+  assert.equal(calls, 2);
 });
 
 test("ne force pas la réanalyse d’une demande d’aide explicite", async () => {
