@@ -100,6 +100,10 @@ export type PedagogicalQuestionDefinition = {
     notionTitle: string;
     primaryOperationLabel: string;
     successCriteria: string[];
+    evaluationGuide?: {
+      expectedAnswer: string;
+      commonErrors: readonly string[];
+    };
     referenceMonograph: {
       id: string;
       title: string;

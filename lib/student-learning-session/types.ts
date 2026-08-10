@@ -66,6 +66,10 @@ export type LearningSessionQuestion = {
   initialMessages: LearningSessionMessage[];
   answerOptions?: readonly { label: "A" | "B" | "C" | "D"; text: string; correct: boolean }[];
   answerExplanation?: string;
+  evaluationGuide?: {
+    expectedAnswer: string;
+    commonErrors: readonly string[];
+  };
   timelineInteraction?: {
     documentId: string;
     dates: readonly string[];

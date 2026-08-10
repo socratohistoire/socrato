@@ -39,7 +39,8 @@ const ANALYSIS_SCHEMA = {
 } as const;
 
 const PEDAGOGICAL_ANALYSIS_INSTRUCTIONS = `
-Tu analyses une réponse d’élève en histoire du Québec et du Canada à partir de trois autorités distinctes du dossier pédagogique approuvé fourni : referenceMonograph est la référence historique de fond; approvedDocuments contient uniquement les documents historiques associés à la question; pedagogicalRules fixe la manière d’accompagner l’élève. Respecte leur rôle et leur portée.
+Tu analyses une réponse d’élève en histoire du Québec et du Canada à partir de quatre autorités distinctes du dossier pédagogique approuvé fourni : referenceMonograph est la référence historique de fond; approvedDocuments contient uniquement les documents historiques associés à la question; evaluationGuide précise les éléments acceptables et les erreurs fréquentes propres à cette question; pedagogicalRules fixe la manière d’accompagner l’élève. Respecte leur rôle et leur portée.
+Utilise evaluationGuide comme une grille conceptuelle, jamais comme une réponse à recopier. Accepte les synonymes, les paraphrases, les formulations d’élèves, les fautes et tout raisonnement historiquement équivalent. Ne demande pas un détail absent de questionPrompt et successCriteria simplement parce qu’il figure dans expectedAnswer.
 
 Respecte strictement les identifiants. N’invente aucun fait, document, connaissance ou opération. Compare la réponse à la question, aux documents et aux critères de réussite. Ne pénalise pas l’orthographe, la grammaire ou une formulation différente des documents.
 
@@ -66,6 +67,7 @@ Réserve pedagogicalOutcome=non_exploitable et nextAction=handle_non_exploitable
 
 Exemples de décision :
 - « Les Britanniques refusent les demandes des Patriotes. » dans une question sur le rejet de revendications patriotes : substantive et évaluable, même si le lien causal demandé reste à développer;
+- « Il sert à payer les dettes des deux Canadas. » dans une question demandant de définir le fonds consolidé et d’indiquer son usage : substantive et partially_satisfactory; reconnais l’usage donné, puis demande seulement ce qu’est ce fonds;
 - une réponse qui relie correctement une revendication, son refus et la radicalisation qui mène à la rébellion : substantive et satisfactory, même si elle ne nomme pas explicitement le journal qui illustre cette radicalisation; ajoute alors la mention de cette source comme piste d’enrichissement dans missingElements;
 - une réponse qui explique que l’anglais demeure la langue officielle des documents de la législature satisfait l’idée attendue, même sans nommer l’article 41; mentionne l’article seulement comme enrichissement;
 - pour « Nomme deux recommandations de Durham et justifie-les avec les deux extraits », une réponse qui nomme l’union des provinces et la responsabilité devant la législature, puis explique fidèlement chacune avec ses propres mots, est satisfactory; ne demande pas ensuite de retrouver un passage exact;
@@ -125,7 +127,10 @@ const RELATION_STOP_WORDS = new Set([
 ]);
 
 function normalizedTerms(value: string) {
-  return new Set(value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().match(/[a-z]{5,}/g)?.filter((term) => !RELATION_STOP_WORDS.has(term)) ?? []);
+  const terms = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().match(/[a-z]{5,}/g) ?? [];
+  return new Set(terms
+    .filter((term) => !RELATION_STOP_WORDS.has(term))
+    .map((term) => term.length > 5 && term.endsWith("s") ? term.slice(0, -1) : term));
 }
 
 function hasClearPedagogicalRelation(response: StudentResponse, question: PedagogicalQuestionDefinition) {
@@ -139,6 +144,7 @@ function hasClearPedagogicalRelation(response: StudentResponse, question: Pedago
   if (isEvaluableNegation) return true;
   const referenceTerms = normalizedTerms([
     context?.questionPrompt, context?.instruction,
+    context?.evaluationGuide?.expectedAnswer,
     ...(context?.approvedDocuments.flatMap(({ title, attribution, content }) => [title, attribution, content]) ?? []),
   ].filter(Boolean).join(" "));
   const sharedTerms = [...responseTerms].filter((term) => referenceTerms.has(term)).length;
@@ -199,9 +205,13 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
     };
 
     const initial = await analyzeOnce(PEDAGOGICAL_ANALYSIS_INSTRUCTIONS);
-    if (initial.pedagogicalOutcome !== "non_exploitable" || !hasClearPedagogicalRelation(response, question)) return initial;
-    const revised = await analyzeOnce(`${PEDAGOGICAL_ANALYSIS_INSTRUCTIONS}\n\nRévision obligatoire : la réponse contient plusieurs termes directement présents dans la question ou les documents. Elle exprime donc une idée historique liée et doit être responseDisposition=substantive. Réévalue son degré de réussite et donne une prochaine étape précise si elle demeure incomplète.`);
-    return revised.pedagogicalOutcome === "non_exploitable" ? relatedResponseFallback(question) : revised;
+    const isIntentionalNonAnswer = isExplicitHelpRequest(response.content)
+      || ["help_request", "answer_request", "playful_diversion", "nonsense_or_spam", "inappropriate"].includes(initial.responseDisposition);
+    const needsAdjudication = initial.confidence === "low" || (initial.pedagogicalOutcome === "non_exploitable" && !isIntentionalNonAnswer);
+    if (!needsAdjudication) return initial;
+    const relationIsClear = hasClearPedagogicalRelation(response, question);
+    const revised = await analyzeOnce(`${PEDAGOGICAL_ANALYSIS_INSTRUCTIONS}\n\nSeconde lecture indépendante obligatoire : vérifie d’abord si la réponse exprime, même maladroitement, un élément de evaluationGuide, de la question ou des documents. Une seule idée juste répondant à un volet suffit pour substantive et généralement partially_satisfactory. Ne confirme non_exploitable que si aucun contenu historique pertinent n’est réellement évaluable. ${relationIsClear ? "La protection lexicale a aussi détecté un lien direct : responseDisposition doit être substantive." : "Ne suppose ni réussite ni échec à partir de la seule longueur."}`);
+    return revised.pedagogicalOutcome === "non_exploitable" && relationIsClear ? relatedResponseFallback(question) : revised;
   }
 }
 

@@ -10,6 +10,7 @@ const question = {
     questionPrompt: "Explique une conséquence politique de l’Acte d’Union.", instruction: "Appuie-toi sur le document.",
     notionTitle: "Acte d’union", primaryOperationLabel: "Déterminer des causes et des conséquences",
     successCriteria: ["Identifie une conséquence et l’explique."],
+    evaluationGuide: { expectedAnswer: "L’Acte d’Union réunit les deux Canadas.", commonErrors: ["Confondre union et séparation."] },
     referenceMonograph: { id: "historical-record:acte-union", title: "Monographie de l’Acte d’Union", scope: "Acte d’Union", scopeBoundary: "Gouvernement responsable traité ailleurs.", sections: [{ id: "mono-1", title: "Union", paragraphs: [{ id: "p-1", text: "L’Acte d’Union réunit les deux Canadas.", sourceIds: ["source-1"] }] }] },
     pedagogicalRules: ["Une réponse partielle reçoit une question ciblée."],
     approvedDocuments: [{ id: "document-1", title: "Acte d’Union", typeLabel: "Extrait", attribution: "Parlement britannique · 1840", content: "Les revenus sont réunis pour les besoins publics." }],
@@ -48,10 +49,12 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.input), /L’Acte d’Union réunit les deux Canadas/);
   assert.match(String(requestBody?.input), /Une réponse partielle reçoit une question ciblée/);
   assert.match(String(requestBody?.instructions), /dossier pédagogique approuvé/);
+  assert.match(String(requestBody?.instructions), /grille conceptuelle/);
   assert.match(String(requestBody?.instructions), /toute affirmation historique compréhensible/);
   assert.match(String(requestBody?.instructions), /même si elle est très courte, incomplète/);
   assert.match(String(requestBody?.instructions), /substantive ne doit jamais produire pedagogicalOutcome=non_exploitable/);
   assert.match(String(requestBody?.instructions), /Les Britanniques refusent les demandes des Patriotes/);
+  assert.match(String(requestBody?.instructions), /Il sert à payer les dettes des deux Canadas/);
   assert.match(String(requestBody?.instructions), /accomplit l’opération intellectuelle centrale/);
   assert.match(String(requestBody?.instructions), /documentUse=partial/);
   assert.match(String(requestBody?.instructions), /ne nomme pas explicitement le journal/);
@@ -125,8 +128,8 @@ test("réanalyse une idée clairement liée avant de la déclarer non exploitabl
   const relatedResponse = { ...response, content: "La conséquence politique concerne les documents et les revenus réunis." };
   assert.deepEqual(await analyzer.analyze(relatedResponse, question), validAnalysis);
   assert.equal(calls, 2);
-  assert.match(secondInstructions, /Révision obligatoire/);
-  assert.match(secondInstructions, /responseDisposition=substantive/);
+  assert.match(secondInstructions, /Seconde lecture indépendante obligatoire/);
+  assert.match(secondInstructions, /responseDisposition doit être substantive/);
 });
 
 test("ne réanalyse pas une réponse réellement hors sujet", async () => {
@@ -143,7 +146,7 @@ test("ne réanalyse pas une réponse réellement hors sujet", async () => {
     return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(nonExploitable) }] }] }), { status: 200 });
   } });
   assert.deepEqual(await analyzer.analyze({ ...response, content: "J’aime beaucoup les jeux vidéo modernes." }, question), nonExploitable);
-  assert.equal(calls, 1);
+  assert.equal(calls, 2);
 });
 
 test("empêche un faux rejet répété pour une idée manifestement liée", async () => {
@@ -168,6 +171,43 @@ test("empêche un faux rejet répété pour une idée manifestement liée", asyn
   assert.equal(analysis.pedagogicalOutcome, "insufficient");
   assert.equal(analysis.nextAction, "offer_hint");
   assert.match(analysis.missingElements[0], /Dans « Acte d’Union »/);
+});
+
+test("reconnaît l’usage juste du fonds consolidé comme une réponse partielle", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  const fundQuestion = {
+    ...question,
+    evaluationContext: {
+      ...question.evaluationContext,
+      questionPrompt: "À l’aide du document, explique ce qu’est le fonds consolidé et indique à quoi il sert dans la Province du Canada.",
+      instruction: "Formule une réponse courte qui précise l’origine des sommes et leur utilisation.",
+      approvedDocuments: [{
+        ...question.evaluationContext.approvedDocuments[0],
+        title: "Le fonds consolidé de la Province du Canada",
+        content: "Les revenus réunis forment un fonds consolidé qui paie les dépenses publiques et l’intérêt des dettes.",
+      }],
+    },
+  } satisfies PedagogicalQuestionDefinition;
+  const nonExploitable = {
+    ...validAnalysis, responseDisposition: "incomprehensible", pedagogicalOutcome: "non_exploitable",
+    historicalAccuracy: "not_assessed", documentUse: "not_assessed", justificationQuality: "not_assessed",
+    primaryOperationPerformance: "not_assessed", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [],
+    observedStrengths: [], missingElements: ["Reformule."], nextAction: "handle_non_exploitable",
+  } as const;
+  const partial = {
+    ...validAnalysis,
+    observedStrengths: ["Oui, tu indiques correctement que ce fonds sert à payer les dettes communes."],
+    missingElements: ["Quelles sommes sont réunies dans ce fonds?"],
+  };
+  let calls = 0;
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
+    calls += 1;
+    const analysis = calls === 1 ? nonExploitable : partial;
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(analysis) }] }] }), { status: 200 });
+  } });
+
+  assert.deepEqual(await analyzer.analyze({ ...response, content: "Il sert à payer les dettes des deux canada" }, fundQuestion), partial);
+  assert.equal(calls, 2);
 });
 
 test("réanalyse aussi une très courte réponse qui reprend précisément la question", async () => {
