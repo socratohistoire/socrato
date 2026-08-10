@@ -2,6 +2,7 @@ import type { ResponseAnalyzer } from "./ports.ts";
 import type { PedagogicalQuestionDefinition, StructuredResponseAnalysis, StudentResponse } from "./types.ts";
 import { validateStructuredAnalysis } from "./validation.ts";
 import { isExplicitHelpRequest } from "./help-request.ts";
+import { PEDAGOGICAL_ANALYSIS_CONTRACT_V2 } from "./pedagogical-contract-v2.ts";
 
 type FetchLike = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
 
@@ -10,6 +11,7 @@ export type OpenAIPedagogicalAnalyzerOptions = {
   model: string;
   fetch?: FetchLike;
   endpoint?: string;
+  contractVersion?: "v1" | "v2";
 };
 
 const ANALYSIS_SCHEMA = {
@@ -67,7 +69,7 @@ function analysisSchemaForSubstantiveResponse() {
   } as const;
 }
 
-const PEDAGOGICAL_ANALYSIS_INSTRUCTIONS = `
+const PEDAGOGICAL_ANALYSIS_CONTRACT_V1 = `
 Tu analyses une réponse d’élève en histoire du Québec et du Canada à partir de quatre autorités distinctes du dossier pédagogique approuvé fourni : referenceMonograph est la référence historique de fond; approvedDocuments contient uniquement les documents historiques associés à la question; evaluationGuide précise les éléments acceptables et les erreurs fréquentes propres à cette question; pedagogicalRules fixe la manière d’accompagner l’élève. Respecte leur rôle et leur portée.
 Utilise evaluationGuide comme une grille conceptuelle, jamais comme une réponse à recopier. Accepte les synonymes, les paraphrases, les formulations d’élèves, les fautes et tout raisonnement historiquement équivalent. Ne demande pas un détail absent de questionPrompt et successCriteria simplement parce qu’il figure dans expectedAnswer.
 
@@ -159,12 +161,14 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
   private readonly model: string;
   private readonly fetcher: FetchLike;
   private readonly endpoint: string;
+  private readonly instructions: string;
 
   constructor(options: OpenAIPedagogicalAnalyzerOptions) {
     this.apiKey = required(options.apiKey, "OPENAI_API_KEY");
     this.model = required(options.model, "SOCRATO_PEDAGOGICAL_AI_MODEL");
     this.fetcher = options.fetch ?? fetch;
     this.endpoint = options.endpoint ?? "https://api.openai.com/v1/responses";
+    this.instructions = options.contractVersion === "v1" ? PEDAGOGICAL_ANALYSIS_CONTRACT_V1 : PEDAGOGICAL_ANALYSIS_CONTRACT_V2;
   }
 
   async analyze(response: StudentResponse, question: PedagogicalQuestionDefinition): Promise<StructuredResponseAnalysis> {
@@ -193,13 +197,13 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
       question,
     );
 
-    const initial = await analyzeOnce(PEDAGOGICAL_ANALYSIS_INSTRUCTIONS);
+    const initial = await analyzeOnce(this.instructions);
     const isIntentionalNonAnswer = isExplicitHelpRequest(response.content)
       || ["help_request", "answer_request", "playful_diversion", "nonsense_or_spam", "inappropriate"].includes(initial.responseDisposition);
     if (initial.pedagogicalOutcome !== "non_exploitable" || isIntentionalNonAnswer) return initial;
 
     if (["too_short", "incomprehensible"].includes(initial.responseDisposition)) {
-      return analyzeOnce(`${PEDAGOGICAL_ANALYSIS_INSTRUCTIONS}\n\nLe premier passage n’a pas réussi à évaluer ce message. Traite-le maintenant comme une proposition de l’élève à propos de la tâche courante : détermine ce qu’elle apporte réellement, corrige-la si nécessaire et poursuis le dialogue socratique. Ne la déclare pas non exploitable simplement parce qu’elle est courte, maladroite ou formulée comme un fragment de phrase.`, true);
+      return analyzeOnce(`${this.instructions}\n\nLe premier passage n’a pas réussi à évaluer ce message. Traite-le maintenant comme une proposition de l’élève à propos de la tâche courante : détermine ce qu’elle apporte réellement, corrige-la si nécessaire et poursuis le dialogue socratique. Ne la déclare pas non exploitable simplement parce qu’elle est courte, maladroite ou formulée comme un fragment de phrase.`, true);
     }
 
     let intent: { isHistoricalProposition?: unknown; responseDisposition?: unknown; confidence?: unknown };
@@ -210,7 +214,7 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
     }
     if (intent.isHistoricalProposition !== true || intent.responseDisposition !== "substantive") return initial;
 
-    return analyzeOnce(`${PEDAGOGICAL_ANALYSIS_INSTRUCTIONS}\n\nUne lecture spécialisée indépendante a établi que le message contient une proposition historique liée à la tâche. Évalue maintenant son exactitude et sa contribution réelle, même si cette proposition est fausse, courte ou incomplète. Ne la traite ni comme une diversion ni comme un message non exploitable.`, true);
+    return analyzeOnce(`${this.instructions}\n\nUne lecture spécialisée indépendante a établi que le message contient une proposition historique liée à la tâche. Évalue maintenant son exactitude et sa contribution réelle, même si cette proposition est fausse, courte ou incomplète. Ne la traite ni comme une diversion ni comme un message non exploitable.`, true);
   }
 }
 
@@ -219,5 +223,6 @@ export function createConfiguredOpenAIPedagogicalAnalyzer(environment: Record<st
     apiKey: environment.OPENAI_API_KEY ?? "",
     model: environment.SOCRATO_PEDAGOGICAL_AI_MODEL ?? "",
     fetch: fetcher,
+    contractVersion: environment.SOCRATO_PEDAGOGICAL_CONTRACT === "v1" ? "v1" : "v2",
   });
 }

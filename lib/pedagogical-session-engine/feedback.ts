@@ -109,16 +109,13 @@ export function createPedagogicalFeedback(
     const enrichment = conciseEnrichment ? `À retenir aussi : ${conciseEnrichment}` : undefined;
     return { acknowledgement, assessment, missingElement, studentFacingText: joinParts([acknowledgement, assessment, enrichment]), relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-011"] };
   }
-  const assessment = analysis.pedagogicalOutcome === "partially_satisfactory"
-    ? "C’est un bon début. Il reste un lien à préciser."
-    : "Merci pour ta réponse. On va avancer ensemble.";
   const tailoredQuestion = missingElement?.includes("?") ? keepOnlyQuestion(missingElement) : undefined;
   const priorityPrompt = tailoredQuestion ?? (analysis.pedagogicalOutcome === "partially_satisfactory"
     ? "Quel fait précis permet de justifier le lien que tu proposes?"
     : "Quel élément du document peux-tu d’abord établir comme fait?");
   return {
-    acknowledgement, assessment, missingElement, priorityPrompt,
-    studentFacingText: joinParts([acknowledgement, assessment, tailoredQuestion ? undefined : missingElement, priorityPrompt]),
+    acknowledgement, assessment: acknowledgement ?? "Poursuivons ensemble.", missingElement, priorityPrompt,
+    studentFacingText: joinParts([acknowledgement, tailoredQuestion ? undefined : missingElement, priorityPrompt]),
     relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-006", "PED-FDBK-009"],
   };
 }
