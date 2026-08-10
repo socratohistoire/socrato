@@ -222,7 +222,7 @@ test("reconnaît plusieurs formulations ayant l’intention d’obtenir la répo
   }
 });
 
-test("utilise le raisonnement de Terra pour reconnaître une demande elliptique de réponse", async () => {
+test("utilise le raisonnement de Sol pour reconnaître une demande elliptique de réponse", async () => {
   const aiIntent = analysis({ responseDisposition: "answer_request", pedagogicalOutcome: "non_exploitable", nextAction: "handle_non_exploitable", historicalAccuracy: "not_assessed", documentUse: "not_assessed", justificationQuality: "not_assessed", primaryOperationPerformance: "not_assessed", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [], observedStrengths: [], missingElements: [] });
   const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Réponse svp", new ScriptedAnalyzer([aiIntent]), fixedClock);
   assert.equal(transition.state.questionStates[0].attemptNumber, 0);
