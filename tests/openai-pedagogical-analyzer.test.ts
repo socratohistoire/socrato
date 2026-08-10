@@ -159,6 +159,51 @@ test("réévalue directement un fragment compréhensible dans le dialogue socrat
   assert.match(result.observedStrengths[0], /usage pertinent/);
 });
 
+test("réévalue cumulativement le troisième essai avant de consolider", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  const partial = {
+    ...validAnalysis,
+    observedStrengths: ["Oui, tu ajoutes le gouvernement exécutif commun."],
+    missingElements: ["Un élément demeure à préciser."],
+  };
+  const satisfactory = {
+    ...validAnalysis,
+    pedagogicalOutcome: "satisfactory",
+    historicalAccuracy: "demonstrated",
+    primaryOperationPerformance: "demonstrated",
+    observedStrengths: ["Oui, l’ensemble de tes réponses explique la transformation politique."],
+    missingElements: [],
+    nextAction: "complete_question",
+    confidence: "high",
+  };
+  const outputs = [partial, satisfactory];
+  const instructions: string[] = [];
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async (_input, init) => {
+    const request = JSON.parse(String(init?.body)) as { instructions: string };
+    instructions.push(request.instructions);
+    const output = outputs[instructions.length - 1];
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(output) }] }] }), { status: 200 });
+  } });
+  const result = await analyzer.analyze({
+    ...response,
+    attemptNumber: 3,
+    content: "un seul gouvernement exécutif",
+    priorTurn: {
+      pedagogicalOutcome: "partially_satisfactory",
+      observedStrengths: ["Tu as nommé la Province du Canada et sa législature commune."],
+      missingElements: ["Que devient le gouvernement exécutif?"],
+    },
+  }, question);
+  assert.equal(instructions.length, 2);
+  assert.match(instructions[1], /contrôle final cumulatif du troisième essai/);
+  assert.equal(result.pedagogicalOutcome, "satisfactory");
+  assert.equal(result.nextAction, "complete_question");
+  assert.deepEqual(result.observedStrengths, [
+    "Oui, l’ensemble de tes réponses explique la transformation politique.",
+    "Tu as nommé la Province du Canada et sa législature commune.",
+  ]);
+});
+
 test("ne réanalyse pas une réponse réellement hors sujet", async () => {
   const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
   const nonExploitable = {
