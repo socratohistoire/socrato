@@ -69,6 +69,19 @@ test("formule le premier indice Durham–Acte d’Union comme une question chale
   assert.doesNotMatch(question.instruction, /^1\.|\b2\./);
 });
 
+test("ajoute le tableau démographique comme troisième document de la question 30", () => {
+  const question = getQuestionsForKnowledgeHeading("acte-union")
+    .find(({ id }) => id === "question:acte-union:development-004");
+  assert.ok(question);
+  assert.deepEqual(question.historicalDocumentIds, ["AU-G-001", "AU-D-001", "AU-G-002"]);
+  assert.match(question.prompt, /trois documents/);
+  const catalog = createCatalogLearningSessionQuestions([question.id]);
+  const populationDocument = catalog.documents.find(({ id }) => id === "AU-G-002");
+  assert.equal(populationDocument?.id, "AU-G-002");
+  assert.equal(populationDocument?.title, "Population au moment de l’Union");
+  assert.equal(populationDocument?.content.kind, "comparison_table");
+});
+
 test("réserve le banc d’essai à l’enseignant et ne touche pas à la progression élève", async () => {
   const page = await readFile(new URL("../app/teacher/api-test/page.tsx", import.meta.url), "utf8");
   const action = await readFile(new URL("../app/teacher/api-test/actions.ts", import.meta.url), "utf8");

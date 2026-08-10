@@ -1,7 +1,7 @@
 import type { LearningSessionDocument } from "./types.ts";
 import { ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_CONSOLIDATED_REVENUE_FUND_DOCUMENT, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT, ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT, ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT, ACTE_UNION_MAP_ADAPTATION_DRAFT, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT, PATRIOTES_MINERVE_INDEPENDENCE_DOCUMENT, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT } from "../pedagogical-reference/historical-document-needs.ts";
 import { ACTE_UNION_DURHAM_DOCUMENT, ACTE_UNION_DURHAM_PRESENTATIONS } from "../pedagogical-reference/historical-document-presentations.ts";
-import { ACTE_UNION_DEBT_COMPARISON_CHART } from "../pedagogical-reference/historical-comparison-charts.ts";
+import { ACTE_UNION_DEBT_COMPARISON_CHART, ACTE_UNION_POPULATION_COMPARISON_CHART } from "../pedagogical-reference/historical-comparison-charts.ts";
 import { ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM, ACTE_UNION_STUDENT_TIMELINE } from "../pedagogical-reference/responsible-government-iconography.ts";
 
 const PUBLIC_DOMAIN_RIGHTS = "Texte original de 1840 dans le domaine public.";
@@ -50,6 +50,12 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
     sourceLabel: ACTE_UNION_DEBT_COMPARISON_CHART.sourceLabel, sourceUrls: [ACTE_UNION_DEBT_COMPARISON_CHART.sourceUrl], rightsLabel: "Présentation Socrato fondée sur des données historiques du domaine public.", editorialNote: ACTE_UNION_DEBT_COMPARISON_CHART.methodology,
     content: { kind: "comparison_table", caption: "Dette publique des deux colonies au moment de l’Union", headers: ["Colonie", "Dette publique"], rows: ACTE_UNION_DEBT_COMPARISON_CHART.items.map(({ label, displayValue }) => ({ label, value: displayValue })) },
     historicalKnowledgeIds: ["acte-union", "dette-publique"], intellectualOperationIds: ["differences_and_similarities", "relationships_between_facts", "causal_connections"],
+  },
+  {
+    id: ACTE_UNION_POPULATION_COMPARISON_CHART.id, title: ACTE_UNION_POPULATION_COMPARISON_CHART.title, typeLabel: ACTE_UNION_POPULATION_COMPARISON_CHART.typeLabel, dateLabel: ACTE_UNION_POPULATION_COMPARISON_CHART.dateLabel,
+    sourceLabel: ACTE_UNION_POPULATION_COMPARISON_CHART.sourceLabel, sourceUrls: [ACTE_UNION_POPULATION_COMPARISON_CHART.sourceUrl], rightsLabel: "Présentation Socrato fondée sur des données historiques du domaine public.", editorialNote: ACTE_UNION_POPULATION_COMPARISON_CHART.methodology,
+    content: { kind: "comparison_table", caption: "Population des deux colonies au moment de l’Union", headers: ["Colonie", "Population estimée"], rows: ACTE_UNION_POPULATION_COMPARISON_CHART.items.map(({ label, displayValue }) => ({ label, value: displayValue })) },
+    historicalKnowledgeIds: ["acte-union", "populations-bas-haut-canada", "representation-politique"], intellectualOperationIds: ["differences_and_similarities", "relationships_between_facts"],
   },
   {
     id: ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM.id, title: ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM.title, typeLabel: "Schéma politique", dateLabel: ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM.historicalDate, authorLabel: ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM.creator,
