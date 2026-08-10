@@ -68,6 +68,8 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.instructions), /Les Britanniques refusent les demandes des Patriotes/);
   assert.match(String(requestBody?.instructions), /Il sert à payer les dettes des deux Canadas/);
   assert.match(String(requestBody?.instructions), /accomplit l’opération intellectuelle centrale/);
+  assert.match(String(requestBody?.instructions), /existait avant et demeure après démontre déjà une continuité/);
+  assert.match(String(requestBody?.instructions), /Ne demande jamais à l’élève d’expliquer de nouveau une relation/);
   assert.match(String(requestBody?.instructions), /documentUse=partial/);
   assert.match(String(requestBody?.instructions), /ne nomme pas explicitement le journal/);
   assert.match(String(requestBody?.instructions), /ton chaleureux, encourageant et naturel/);
