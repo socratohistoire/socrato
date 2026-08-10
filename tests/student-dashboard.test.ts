@@ -311,6 +311,7 @@ test("la carte annonce les notions tandis que le bilan conserve les connaissance
   assert.equal(getWorkedHistoricalKnowledge(activity.historicalKnowledge).length, 3);
   assert.match(viewSource, /coveredNotions\.length/);
   assert.match(viewSource, /<KnowledgeResults items=\{activity\.historicalKnowledge\}/);
+  assert.doesNotMatch(viewSource, /showCompletePortrait/);
   assert.doesNotMatch(viewSource, /activity\.historicalKnowledgeIds\.length/);
 });
 

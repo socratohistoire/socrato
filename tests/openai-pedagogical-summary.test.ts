@@ -43,6 +43,8 @@ test("Terra rédige le bilan sans pouvoir modifier les niveaux calculés", async
   assert.deepEqual(personalized.recommendation?.targetHistoricalKnowledgeIds, ["acte-union"]);
   assert.match(personalized.encouragement, /persévéré/);
   assert.match(requestBody, /"store":false/);
+  assert.match(requestBody, /avec ses propres mots/);
+  assert.match(requestBody, /ne demande jamais de retrouver un passage exact/);
   assert.doesNotMatch(requestBody, /studentResponse|conversation|transcription/);
 });
 

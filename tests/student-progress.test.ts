@@ -84,6 +84,24 @@ test("stores only structured completed-question results", () => {
   assert.deepEqual(progress.historicalKnowledgeResults, [{ id: "knowledge-1", status: "to_consolidate" }]);
 });
 
+test("stores independent operation and knowledge assessments instead of the global question result", () => {
+  const completedQuestion = question({ status: "completed", attemptNumber: 2, result: {
+    sessionId: "session-1", activityId: "activity-1", questionId: "question-1", notionId: "notion-1",
+    primaryOperationId: "operation-1", operationIds: ["operation-1", "operation-2"], historicalKnowledgeIds: ["knowledge-1", "knowledge-2"], documentIds: [],
+    attemptNumber: 2, hintLevel: 0, status: "mastered", advancedMastery: false,
+    demonstratedKnowledgeIds: ["knowledge-1"], demonstratedOperationIds: ["operation-1"],
+    operationAssessments: [{ id: "operation-1", status: "to_consolidate" }],
+    historicalKnowledgeAssessments: [{ id: "knowledge-1", status: "mastered" }, { id: "knowledge-2", status: "to_work_on" }],
+    observedStrengths: [], consolidationTargets: [], completedAt: "2026-08-05T12:05:00.000Z",
+  }});
+  const progress = createStudentProgressContract(session(completedQuestion));
+  assert.deepEqual(progress.operationResults, [{ id: "operation-1", status: "to_consolidate" }]);
+  assert.deepEqual(progress.historicalKnowledgeResults, [
+    { id: "knowledge-1", status: "mastered" },
+    { id: "knowledge-2", status: "to_work_on" },
+  ]);
+});
+
 test("preserves the original start time and rejects invalid stored records", () => {
   const storage = new MemoryStorage();
   const first = createStudentProgressContract(session(), new Date("2026-08-05T12:00:00.000Z"));
