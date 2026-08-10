@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { StudentAccessForm } from "./eleve/student-access-form";
 
 export default function Home() {
   return (
@@ -72,43 +73,8 @@ export default function Home() {
               Socrato.
             </p>
 
-            {/* Carte du code d’accès */}
-            <form
-              action="/eleve"
-              method="get"
-              className="mt-7 w-full max-w-[420px] rounded-[24px] bg-gradient-to-br from-[#0c2944] to-[#092038] px-7 py-7 shadow-[0_14px_30px_rgba(15,23,42,0.20)] sm:px-9"
-            >
-              <label
-                htmlFor="code"
-                className="block text-center text-base font-medium text-white sm:text-lg"
-              >
-                Entre ton code d’accès
-              </label>
-
-              <input
-                id="code"
-                name="code"
-                type="text"
-                autoComplete="off"
-                required
-                aria-label="Code d’accès"
-                className="mt-5 h-16 w-full rounded-2xl border border-slate-200 bg-white px-5 text-center text-lg font-semibold uppercase tracking-[0.16em] text-[#0d2945] shadow-inner outline-none transition focus:border-[#b99155] focus:ring-4 focus:ring-[#d9c399]/35"
-              />
-
-              <button
-                type="submit"
-                className="group mt-6 flex h-16 w-full items-center justify-center rounded-2xl bg-white px-6 text-base font-semibold text-[#0d2945] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-white/30 sm:text-lg"
-              >
-                <span>Commencer la révision</span>
-
-                <span
-                  aria-hidden="true"
-                  className="ml-4 text-2xl font-light transition-transform group-hover:translate-x-1"
-                >
-                  →
-                </span>
-              </button>
-            </form>
+            {/* Le même formulaire crée la session élève ici et sur /eleve. */}
+            <StudentAccessForm />
           </div>
         </section>
 
