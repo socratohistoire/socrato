@@ -223,6 +223,13 @@ test("place les deux en-têtes hors des cartes dans une grille alignée", () => 
   assert.match(cssSource, /@media \(max-width:1119px\)[^{]*\{[\s\S]*\.question-pane,\.documents-pane \{ height:auto; display:block; grid-row:auto; \}/);
 });
 
+test("réserve la mise en page sans défilement aux choix multiples", () => {
+  assert.match(viewSource, /questionDocuments\.length === 0 && isMultipleChoice \? " session-layout--choice-no-documents"/);
+  assert.doesNotMatch(viewSource, /isMultipleChoice \|\| question\.type === "question_without_documents"/);
+  assert.match(cssSource, /\.session-layout--short-answer-no-documents \.message-list\{[^}]*max-height:150px!important[^}]*flex:none!important/);
+  assert.match(cssSource, /\.message-list \{[^}]*overflow-y:auto/);
+});
+
 test("utilise la typographie documentaire sans empattement sans surtitre", () => {
   assert.doesNotMatch(viewSource, /RESSOURCES DE LA QUESTION/);
   assert.match(viewSource, />Documents historiques<\/h2>/);

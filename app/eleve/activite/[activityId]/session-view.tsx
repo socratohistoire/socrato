@@ -458,7 +458,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
       </header>
       {persistenceMessage ? <p className="session-data-error" role="alert">{persistenceMessage}</p> : null}
 
-      <div className={`session-layout${isInteractiveTimeline || isInteractiveAssociation ? " session-layout--timeline" : ""}${isMultipleChoice && questionDocuments.length > 0 ? " session-layout--choice-with-documents" : ""}${questionDocuments.length === 0 && (isMultipleChoice || question.type === "question_without_documents") ? " session-layout--choice-no-documents" : ""}${isShortAnswerWithoutDocuments ? " session-layout--short-answer-no-documents" : ""}`}>
+      <div className={`session-layout${isInteractiveTimeline || isInteractiveAssociation ? " session-layout--timeline" : ""}${isMultipleChoice && questionDocuments.length > 0 ? " session-layout--choice-with-documents" : ""}${questionDocuments.length === 0 && isMultipleChoice ? " session-layout--choice-no-documents" : ""}${isShortAnswerWithoutDocuments ? " session-layout--short-answer-no-documents" : ""}`}>
         {isInteractiveTimeline && question.timelineInteraction ? (
           <InteractiveTimelineQuestion key={question.id} question={question} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
         ) : isInteractiveAssociation && question.associationInteraction ? (
