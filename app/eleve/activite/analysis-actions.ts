@@ -19,7 +19,7 @@ type AnalysisRequest = {
 };
 
 function validIdentifier(value: unknown, maximumLength = 120): value is string {
-  return typeof value === "string" && value.length > 0 && value.length <= maximumLength && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value);
+  return typeof value === "string" && value.length > 0 && value.length <= maximumLength && /^[a-z0-9]+(?:[-:][a-z0-9]+)*$/.test(value);
 }
 
 function validRequest(value: AnalysisRequest) {
