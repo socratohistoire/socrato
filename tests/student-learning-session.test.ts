@@ -569,6 +569,12 @@ test("affiche les choix A à D et remplace la réponse libre pour une question �
   assert.match(cssSource, /\.choice-feedback-correct \{[^}]*max-height:min\(42vh,360px\)[^}]*overflow-y:auto[^}]*scrollbar-gutter:stable/);
 });
 
+test("rend visible la rétroaction Socrato après une longue question à choix", () => {
+  assert.match(viewSource, /choiceFeedbackRef\.current\?\.scrollIntoView/);
+  assert.match(viewSource, /ref=\{choiceFeedbackRef\}/);
+  assert.match(cssSource, /session-layout--choice-no-documents\{height:auto!important;min-height:0!important;grid-template-rows:auto auto!important;align-items:start!important;overflow:visible!important/);
+});
+
 test("regroupe actions, navigation et quatre vignettes dans l’encadré documentaire local", () => {
   assert.match(viewSource, /<div className=\{`document-system-card\$\{stacked[\s\S]*<DocumentContent document=\{selected\} onExpand=[\s\S]*<div className="document-separator"[\s\S]*<div className="document-navigation"[\s\S]*<div className="document-thumbnails"/);
   assert.match(viewSource, /<div className="document-actions">[\s\S]*className="expand-document"[\s\S]*Agrandir[\s\S]*<details className="document-details">\s*<summary>Détails<\/summary>/);

@@ -99,6 +99,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
   const restoreResponseFocusRef = useRef(false);
   const messagesRegionRef = useRef<HTMLDivElement>(null);
   const newestMessageRef = useRef<HTMLElement>(null);
+  const choiceFeedbackRef = useRef<HTMLElement>(null);
   const renderedMessageCountRef = useRef(messages.length);
   const voiceControllerRef = useRef<LocalVoiceCaptureController | null>(null);
   const [voiceState, setVoiceState] = useState<VoiceCaptureState>({
@@ -108,6 +109,15 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
     warningReached: false,
     message: isLocalVoicePrototypeEnabled() ? "Dictée prête." : "La dictée est désactivée dans cet environnement.",
   });
+
+  useEffect(() => {
+    if (!choiceFeedback) return;
+    const frame = window.requestAnimationFrame(() => {
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      choiceFeedbackRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [choiceFeedback]);
 
   useEffect(() => {
     if (!persistProgress || data.source === "server") return;
@@ -399,7 +409,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
 
   function renderMultipleChoiceResponse(showWelcome = false) {
     return (
-      <section className={`multiple-choice-response${showWelcome ? " multiple-choice-socrato-panel" : ""}`} aria-label="Validation du choix de réponse">
+      <section ref={choiceFeedbackRef} className={`multiple-choice-response${showWelcome ? " multiple-choice-socrato-panel" : ""}`} aria-label="Validation du choix de réponse">
         {showWelcome ? <div className="multiple-choice-socrato-welcome"><article><strong>Socrato</strong><p>J’attends ta réponse…</p></article></div> : null}
         {choiceFeedback ? <div className={choiceFeedback.startsWith("Bonne") ? "choice-feedback-correct" : "choice-feedback-retry"} role="status"><strong>Socrato</strong><p>{choiceFeedback}</p>{choiceFeedback.startsWith("Bonne") && engineState.currentQuestionIndex < data.questions.length - 1 ? <button type="button" className="socrato-next-question" onClick={() => moveToQuestion(1)}>Passer à la question suivante →</button> : null}</div> : null}
       </section>
