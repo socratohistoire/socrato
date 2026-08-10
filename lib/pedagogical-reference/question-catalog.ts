@@ -1,7 +1,7 @@
 import type { ApprovedQuestion } from "./types.ts";
 import { ACTE_UNION_HISTORICAL_RECORD } from "./records/acte-union.ts";
 import { ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM, ACTE_UNION_STUDENT_TIMELINE } from "./responsible-government-iconography.ts";
-import { ACTE_UNION_DEBT_COMPARISON_CHART } from "./historical-comparison-charts.ts";
+import { ACTE_UNION_DEBT_COMPARISON_CHART, ACTE_UNION_POPULATION_COMPARISON_CHART } from "./historical-comparison-charts.ts";
 import { ACTE_UNION_DOCUMENT_SOURCE_CATALOG } from "./acte-union-document-source-catalog.ts";
 import { ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_CONSOLIDATED_REVENUE_FUND_DOCUMENT, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT, ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT, ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT, ACTE_UNION_MAP_ADAPTATION_DRAFT, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT, ACTE_UNION_SPECIAL_COUNCIL_RESOLUTIONS_DOCUMENT, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT } from "./historical-document-needs.ts";
 import { ACTE_UNION_DURHAM_ANGLICIZATION_PRESENTATION, ACTE_UNION_DURHAM_CONTINUITIES_PRESENTATION, ACTE_UNION_DURHAM_DOCUMENT, ACTE_UNION_DURHAM_FINANCES_PRESENTATION, ACTE_UNION_DURHAM_RESPONSIBLE_GOVERNMENT_PRESENTATION, ACTE_UNION_DURHAM_UNION_PRESENTATION } from "./historical-document-presentations.ts";
@@ -758,10 +758,10 @@ export const ACTE_UNION_DEBT_REPRESENTATION_DEVELOPMENT_QUESTION = {
   historicalRecordId: "historical-record:acte-union",
   status: "approved",
   format: "development-150",
-  prompt: "À l’aide des deux documents, explique comment la mise en commun des dettes et la représentation politique égale sont liées à l’opposition envers l’Acte d’Union au Canada-Est.",
-  instruction: "Éléments à considérer : la dette des deux colonies; la représentation des députés.",
-  expectedAnswer: "Dans une réponse d’environ 150 mots, l’élève établit que le Haut-Canada possède une dette nettement plus élevée que le Bas-Canada avant l’Union. La mise en commun oblige donc les habitants du Canada-Est à participer au remboursement d’une dette surtout contractée par le Haut-Canada, ce qui peut être perçu comme injuste. L’élève relie aussi l’opposition à la représentation égale : le Canada-Est et le Canada-Ouest obtiennent chacun 42 députés, même si le Canada-Est est alors plus peuplé. Cette combinaison — partage d’une dette inégale et nombre égal de députés — alimente l’impression que l’Union désavantage politiquement et financièrement le Canada-Est. Toute réponse historiquement juste et appuyée sur les deux documents est acceptée.",
-  historicalDocumentIds: [ACTE_UNION_DEBT_COMPARISON_CHART.id, ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM.id],
+  prompt: "À l’aide des trois documents, explique comment la mise en commun des dettes et la représentation politique égale sont liées à l’opposition envers l’Acte d’Union au Canada-Est.",
+  instruction: "Éléments à considérer : la dette des deux colonies, leur population et la représentation des députés.",
+  expectedAnswer: "Dans une réponse d’environ 150 mots, l’élève établit que le Haut-Canada possède une dette nettement plus élevée que le Bas-Canada avant l’Union. La mise en commun oblige donc les habitants du Canada-Est à participer au remboursement d’une dette surtout contractée par le Haut-Canada, ce qui peut être perçu comme injuste. L’élève relie aussi l’opposition à la représentation égale : le Canada-Est et le Canada-Ouest obtiennent chacun 42 députés, même si le tableau démographique montre que le Canada-Est est alors plus peuplé. Cette combinaison — partage d’une dette inégale et nombre égal de députés malgré l’écart de population — alimente l’impression que l’Union désavantage politiquement et financièrement le Canada-Est. Toute réponse historiquement juste et appuyée sur les trois documents est acceptée.",
+  historicalDocumentIds: [ACTE_UNION_DEBT_COMPARISON_CHART.id, ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM.id, ACTE_UNION_POPULATION_COMPARISON_CHART.id],
   commonErrors: ["Inverser la dette du Haut-Canada et celle du Bas-Canada.", "Affirmer que le Canada-Est obtient davantage de députés.", "Décrire séparément les documents sans relier les deux mesures à l’opposition."],
   distractors: [],
   operationId: "relationships_between_facts",
