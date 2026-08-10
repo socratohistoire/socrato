@@ -15,6 +15,7 @@ import type {
   StudentSession,
   StudentSessionRepository,
 } from "../lib/student-access/session.ts";
+import { readFile } from "node:fs/promises";
 
 const lookup = new HmacAccessCodeLookup("test-only-key");
 const validCode = "K7MPR4XT9QHC";
@@ -151,4 +152,14 @@ test("limite les tentatives répétées après dix échecs sur quinze minutes", 
   const blocked = await authenticateStudentAccess(validCode, "repeated-client", deps);
   assert.deepEqual(blocked, { success: false, message: GENERIC_ACCESS_ERROR });
   assert.equal(deps.sessions.created, 0);
+});
+
+test("attend la confirmation du cookie avant d’ouvrir le tableau de bord", async () => {
+  const actionSource = await readFile(new URL("../app/eleve/actions.ts", import.meta.url), "utf8");
+  const formSource = await readFile(new URL("../app/eleve/student-access-form.tsx", import.meta.url), "utf8");
+
+  assert.match(actionSource, /return \{ message: "", redirectTo: result\.redirectTo \}/);
+  assert.doesNotMatch(actionSource, /redirect\(result\.redirectTo\)/);
+  assert.match(formSource, /router\.replace\(state\.redirectTo\)/);
+  assert.match(formSource, /pending \|\| Boolean\(state\.redirectTo\)/);
 });

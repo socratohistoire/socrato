@@ -11,7 +11,10 @@ import {
   STUDENT_SESSION_COOKIE,
 } from "@/lib/student-access/local-runtime";
 
-export type StudentAccessFormState = { message: string };
+export type StudentAccessFormState = {
+  message: string;
+  redirectTo?: "/eleve/tableau-de-bord";
+};
 
 export async function leaveStudentSpace(): Promise<void> {
   const cookieStore = await cookies();
@@ -56,18 +59,8 @@ export async function enterStudentSpace(
       expires: result.session.expiresAt,
     });
 
-    redirect(result.redirectTo);
-  } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "digest" in error &&
-      typeof error.digest === "string" &&
-      error.digest.startsWith("NEXT_REDIRECT")
-    ) {
-      throw error;
-    }
-
+    return { message: "", redirectTo: result.redirectTo };
+  } catch {
     return { message: GENERIC_ACCESS_ERROR };
   }
 }
