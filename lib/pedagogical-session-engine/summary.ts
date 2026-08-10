@@ -8,15 +8,15 @@ import type {
   WorkbookReference,
 } from "./types.ts";
 
-function strongestStatus(current: ResultStatus | undefined, candidate: ResultStatus): ResultStatus {
+function mostCautiousStatus(current: ResultStatus | undefined, candidate: ResultStatus): ResultStatus {
   const rank: Record<ResultStatus, number> = { to_work_on: 0, to_consolidate: 1, mastered: 2 };
-  return !current || rank[candidate] > rank[current] ? candidate : current;
+  return !current || rank[candidate] < rank[current] ? candidate : current;
 }
 
 function aggregate(results: QuestionResult[], field: "operationIds" | "historicalKnowledgeIds"): PedagogicalResultEntry[] {
   const statuses = new Map<string, ResultStatus>();
   for (const result of results) {
-    for (const id of result[field]) statuses.set(id, strongestStatus(statuses.get(id), result.status));
+    for (const id of result[field]) statuses.set(id, mostCautiousStatus(statuses.get(id), result.status));
   }
   return [...statuses].map(([id, status]) => ({ id, status }));
 }

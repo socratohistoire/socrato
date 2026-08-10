@@ -2,6 +2,7 @@ import { getSocratoDatabase } from "../server/database.ts";
 import { getActivityDashboardUrl } from "./selection.ts";
 import type { StudentDashboardProvider } from "./provider.ts";
 import type { ActivityStatus, ActivityType, HistoricalKnowledge, IntellectualOperation, ProgressStatus, StudentActivity, StudentDashboardData } from "./types.ts";
+import { getHistoricalKnowledgeForNotion, HISTORICAL_KNOWLEDGE_CATALOG } from "./historical-knowledge-catalog.ts";
 
 type ActivityRow = {
   id: string;
@@ -27,9 +28,16 @@ const operationTitles: Record<string, string> = {
   causes_and_consequences: "Déterminer des causes et des conséquences",
   causal_connections: "Établir des liens de causalité",
   relationships_between_facts: "Mettre en relation des faits",
+  changes_and_continuities: "Déterminer des changements et des continuités",
 };
 const formatDate = (value: Date) => new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "long", year: "numeric", timeZone: "America/Toronto" }).format(new Date(value));
-const progressStatus = (value: unknown): ProgressStatus => value === "mastered" || value === "consolidate" || value === "needs_work" ? value : "not_assessed";
+const progressStatus = (value: unknown): ProgressStatus => value === "mastered" || value === "consolidate" || value === "needs_work"
+  ? value
+  : value === "to_consolidate"
+    ? "consolidate"
+    : value === "to_work_on"
+      ? "needs_work"
+      : "not_assessed";
 const jsonValue = (value: unknown) => {
   if (typeof value !== "string") return value;
   try { return JSON.parse(value) as unknown; } catch { return value; }
@@ -53,7 +61,13 @@ function toStudentActivity(row: ActivityRow): StudentActivity {
   const percentage = row.state === "completed" ? 100 : total > 0 ? Math.min(99, Math.round((current / total) * 100)) : 0;
   const notionId = row.notion_ids[0] ?? "acte-union";
   const params = new URLSearchParams({ notion: notionId, mode: "teacher-assigned" });
-  const historicalKnowledge = knowledgeResults(row.historical_knowledge_results);
+  const recordedHistoricalKnowledge = knowledgeResults(row.historical_knowledge_results);
+  const recordedKnowledgeById = new Map(recordedHistoricalKnowledge.map((item) => [item.id, item]));
+  const historicalKnowledge = getHistoricalKnowledgeForNotion(HISTORICAL_KNOWLEDGE_CATALOG, notionId).map(({ id, label }) =>
+    recordedKnowledgeById.get(id) ?? { id, label, status: "not_assessed" as const });
+  for (const item of recordedHistoricalKnowledge) {
+    if (!historicalKnowledge.some(({ id }) => id === item.id)) historicalKnowledge.push(item);
+  }
   const parsedOutcome = jsonValue(row.outcome_summary);
   const outcome = parsedOutcome && typeof parsedOutcome === "object" ? parsedOutcome as Record<string, unknown> : null;
   const outcomeStrings = (key: string) => outcome && Array.isArray(outcome[key]) ? outcome[key].filter((value): value is string => typeof value === "string") : [];
