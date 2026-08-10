@@ -33,7 +33,7 @@ Rédige en français québécois clair, chaleureux et sobre :
 
 Relie la prochaine étape à un élément précis à consolider. Décris la connaissance ou le raisonnement à travailler avec des mots accessibles : ne demande jamais de retrouver un passage exact, un numéro de document ou une citation. Invite l’élève à expliquer avec ses propres mots.
 
-Reformule les éléments redondants sans ajouter de nouvelle conclusion. Ne mentionne ni l’API, ni Terra, ni des identifiants techniques. N’utilise pas de note, de pourcentage ou de jugement sur la personne.
+Reformule les éléments redondants sans ajouter de nouvelle conclusion. Ne mentionne ni l’API, ni Sol, ni des identifiants techniques. N’utilise pas de note, de pourcentage ou de jugement sur la personne.
 `.trim();
 
 function required(value: string, name: string) {
@@ -65,7 +65,7 @@ function validTexts(value: unknown) {
 
 export async function writePersonalizedSummary(base: PedagogicalSummary, options: OpenAISummaryWriterOptions): Promise<PedagogicalSummary> {
   const apiKey = required(options.apiKey, "OPENAI_API_KEY");
-  const model = required(options.model, "SOCRATO_PEDAGOGICAL_AI_MODEL");
+  const model = required(options.model, "SOCRATO_SOL_AI_MODEL");
   const fetcher = options.fetch ?? fetch;
   const response = await fetcher(options.endpoint ?? "https://api.openai.com/v1/responses", {
     method: "POST",
@@ -101,7 +101,7 @@ export async function writePersonalizedSummary(base: PedagogicalSummary, options
 export function createConfiguredOpenAISummaryWriter(base: PedagogicalSummary, environment: Record<string, string | undefined> = process.env, fetcher?: FetchLike) {
   return writePersonalizedSummary(base, {
     apiKey: environment.OPENAI_API_KEY ?? "",
-    model: environment.SOCRATO_PEDAGOGICAL_AI_MODEL ?? "",
+    model: environment.SOCRATO_SOL_AI_MODEL ?? "gpt-5.6-sol",
     fetch: fetcher,
   });
 }

@@ -415,3 +415,14 @@ test("échoue fermé lorsque la configuration est absente", async () => {
   const { createConfiguredOpenAIPedagogicalAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
   assert.throws(() => createConfiguredOpenAIPedagogicalAnalyzer({}), /OPENAI_API_KEY/);
 });
+
+test("utilise Sol par défaut pour toutes les analyses pédagogiques", async () => {
+  const { createConfiguredOpenAIPedagogicalAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  let requestBody: Record<string, unknown> | undefined;
+  const analyzer = createConfiguredOpenAIPedagogicalAnalyzer({ OPENAI_API_KEY: "test-key" }, async (_input, init) => {
+    requestBody = JSON.parse(String(init?.body));
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(validAnalysis) }] }] }), { status: 200 });
+  });
+  await analyzer.analyze(response, question);
+  assert.equal(requestBody?.model, "gpt-5.6-sol");
+});

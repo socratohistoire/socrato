@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   createLocalActivityPreview,
-  createTerraSummaryPilotConfiguration,
+  createSolSummaryPilotConfiguration,
   getActivityQuestionSelection,
   getActivityQuestionCategory,
   getEligibleActivityQuestions,
@@ -61,12 +61,12 @@ test("sélectionne tous les groupes et Révision par défaut", async () => {
   assert.ok(catalog.groups.every(({ name }) => /fictif/.test(name)));
 });
 
-test("prépare en un clic une activité pilote complète pour le bilan Terra", async () => {
+test("prépare en un clic une activité pilote complète pour le bilan Sol", async () => {
   const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
-  const config = createTerraSummaryPilotConfiguration(catalog, [catalog.groups[0].id]);
+  const config = createSolSummaryPilotConfiguration(catalog, [catalog.groups[0].id]);
   const questions = getActivityQuestionSelection(config, catalog);
 
-  assert.equal(config.title, "Activité pilote — bilan Terra");
+  assert.equal(config.title, "Activité pilote — bilan Sol");
   assert.equal(config.questionCount, 10);
   assert.deepEqual(config.notionIds, ["acte-union"]);
   assert.deepEqual(config.selectedGroupIds, [catalog.groups[0].id]);

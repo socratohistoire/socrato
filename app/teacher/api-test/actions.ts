@@ -14,7 +14,7 @@ type TestRequest = { questionId: string; content: string; attemptNumber: number;
 export async function analyzeActeUnionTestResponse(request: TestRequest) {
   await requireTeacherActor();
   if (process.env.SOCRATO_PEDAGOGICAL_ANALYZER !== "openai") {
-    return { ok: false as const, error: "Terra n’est pas activée dans la configuration actuelle." };
+    return { ok: false as const, error: "Sol n’est pas activé dans la configuration actuelle." };
   }
   if (typeof request?.questionId !== "string" || typeof request?.content !== "string"
     || request.content.trim().length === 0 || request.content.length > 10_000
@@ -38,6 +38,6 @@ export async function analyzeActeUnionTestResponse(request: TestRequest) {
     const feedback = createPedagogicalFeedback(analysis, definition, analysis.pedagogicalOutcome === "non_exploitable" ? request.attemptNumber : 0);
     return { ok: true as const, analysis, feedback };
   } catch {
-    return { ok: false as const, error: "Terra n’a pas pu analyser cette réponse. Vérifiez la configuration et les crédits, puis réessayez." };
+    return { ok: false as const, error: "Sol n’a pas pu analyser cette réponse. Vérifiez la configuration et les crédits, puis réessayez." };
   }
 }

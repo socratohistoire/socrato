@@ -2,7 +2,7 @@ import type { ActivityConfiguration, ActivityCreatorCatalog } from "./types.ts";
 
 export const TERRA_SUMMARY_PILOT_QUESTION_COUNT = 10;
 
-export function createTerraSummaryPilotConfiguration(
+export function createSolSummaryPilotConfiguration(
   catalog: ActivityCreatorCatalog,
   selectedGroupIds: readonly string[] = catalog.groups.map(({ id }) => id),
 ): ActivityConfiguration {
@@ -10,7 +10,7 @@ export function createTerraSummaryPilotConfiguration(
   const validSelectedGroupIds = selectedGroupIds.filter((id) => availableGroupIds.has(id));
 
   return {
-    title: "Activité pilote — bilan Terra",
+    title: "Activité pilote — bilan Sol",
     durationMinutes: null,
     questionCount: TERRA_SUMMARY_PILOT_QUESTION_COUNT,
     selectedGroupIds: validSelectedGroupIds.length > 0

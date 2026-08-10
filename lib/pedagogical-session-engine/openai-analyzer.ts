@@ -210,7 +210,7 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
 
   constructor(options: OpenAIPedagogicalAnalyzerOptions) {
     this.apiKey = required(options.apiKey, "OPENAI_API_KEY");
-    this.model = required(options.model, "SOCRATO_PEDAGOGICAL_AI_MODEL");
+    this.model = required(options.model, "SOCRATO_SOL_AI_MODEL");
     this.fetcher = options.fetch ?? fetch;
     this.endpoint = options.endpoint ?? "https://api.openai.com/v1/responses";
     this.instructions = options.contractVersion === "v1" ? PEDAGOGICAL_ANALYSIS_CONTRACT_V1 : PEDAGOGICAL_ANALYSIS_CONTRACT_V2;
@@ -266,7 +266,7 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
 export function createConfiguredOpenAIPedagogicalAnalyzer(environment: Record<string, string | undefined> = process.env, fetcher?: FetchLike) {
   return new OpenAIPedagogicalResponseAnalyzer({
     apiKey: environment.OPENAI_API_KEY ?? "",
-    model: environment.SOCRATO_PEDAGOGICAL_AI_MODEL ?? "",
+    model: environment.SOCRATO_SOL_AI_MODEL ?? "gpt-5.6-sol",
     fetch: fetcher,
     contractVersion: environment.SOCRATO_PEDAGOGICAL_CONTRACT === "v1" ? "v1" : "v2",
   });

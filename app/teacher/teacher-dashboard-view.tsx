@@ -187,9 +187,9 @@ export function TeacherDashboardView({ data, authenticatedTeacher, storedTeacher
             <span className="sidebar-create-divider" aria-hidden="true" />
             <span className="sidebar-create-arrow" aria-hidden="true">→</span>
           </Link>
-          <Link className="sidebar-nav-tile" href="/teacher/api-test" aria-label="Tester Terra avec les questions de l’Acte d’Union">
+          <Link className="sidebar-nav-tile" href="/teacher/api-test" aria-label="Tester Sol avec les questions de l’Acte d’Union">
             <span className="sidebar-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3M7.5 15h9" /></svg></span>
-            <span>Tester Terra</span>
+            <span>Tester Sol</span>
             <span aria-hidden="true">→</span>
           </Link>
         </nav>

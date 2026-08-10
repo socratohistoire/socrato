@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { writePersonalizedSummary } from "../lib/pedagogical-session-engine/openai-summary.ts";
+import { createConfiguredOpenAISummaryWriter, writePersonalizedSummary } from "../lib/pedagogical-session-engine/openai-summary.ts";
 import type { PedagogicalSummary } from "../lib/pedagogical-session-engine/types.ts";
 
 const base: PedagogicalSummary = {
@@ -23,11 +23,11 @@ function responseWith(value: unknown) {
   return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(value) }] }] }), { status: 200 });
 }
 
-test("Terra rédige le bilan sans pouvoir modifier les niveaux calculés", async () => {
+test("Sol rédige le bilan sans pouvoir modifier les niveaux calculés", async () => {
   let requestBody = "";
   const personalized = await writePersonalizedSummary(base, {
     apiKey: "test-key",
-    model: "gpt-5.6-terra",
+    model: "gpt-5.6-sol",
     fetch: async (_input, init) => {
       requestBody = String(init?.body ?? "");
       return responseWith({
@@ -48,10 +48,10 @@ test("Terra rédige le bilan sans pouvoir modifier les niveaux calculés", async
   assert.doesNotMatch(requestBody, /studentResponse|conversation|transcription/);
 });
 
-test("refuse une rédaction Terra qui ne respecte pas le contrat", async () => {
+test("refuse une rédaction Sol qui ne respecte pas le contrat", async () => {
   await assert.rejects(() => writePersonalizedSummary(base, {
     apiKey: "test-key",
-    model: "gpt-5.6-terra",
+    model: "gpt-5.6-sol",
     fetch: async () => responseWith({ encouragement: "", strengths: [], consolidationTargets: [], recommendationLabel: "" }),
   }));
 });
@@ -64,4 +64,16 @@ test("branche le rédacteur seulement à la fin d’une activité serveur", asyn
   assert.match(action, /usedFallback: true/);
   assert.match(action, /publication_status/);
   assert.doesNotMatch(action, /studentResponse|conversation|transcription/);
+});
+
+test("utilise Sol par défaut pour rédiger le bilan final", async () => {
+  let requestBody: Record<string, unknown> | undefined;
+  await createConfiguredOpenAISummaryWriter(base, { OPENAI_API_KEY: "test-key" }, async (_input, init) => {
+    requestBody = JSON.parse(String(init?.body));
+    return responseWith({
+      encouragement: "Bravo pour ton travail.", strengths: base.strengths,
+      consolidationTargets: base.consolidationTargets, recommendationLabel: "Reprends une courte comparaison ciblée.",
+    });
+  });
+  assert.equal(requestBody?.model, "gpt-5.6-sol");
 });

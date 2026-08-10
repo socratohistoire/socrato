@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createLocalActivityPreview,
-  createTerraSummaryPilotConfiguration,
+  createSolSummaryPilotConfiguration,
   getActivityQuestionSelection,
   getActivityQuestionCategory,
   getEligibleActivityQuestions,
@@ -149,9 +149,9 @@ export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreat
     update({ workType, operationId: null });
   }
 
-  function prepareTerraSummaryPilot() {
+  function prepareSolSummaryPilot() {
     setDraftTouched(true);
-    setConfig(createTerraSummaryPilotConfiguration(catalog, config.selectedGroupIds));
+    setConfig(createSolSummaryPilotConfiguration(catalog, config.selectedGroupIds));
     setQuestionOverrides({});
     setPreviewVariant(0);
     setDemoMessage("L’activité pilote est prête : 10 questions variées sur l’Acte d’Union.");
@@ -251,9 +251,9 @@ export function TeacherActivityCreatorView({ catalog }: { catalog: ActivityCreat
 
       <div className="creator-layout">
         {!draftReady ? <p className="creator-draft-loading" role="status">Chargement du brouillon…</p> : null}
-        <section className="terra-pilot" aria-labelledby="terra-pilot-title">
-          <div><strong id="terra-pilot-title">Tester le bilan personnalisé de Terra</strong><span>Prépare une activité complète de 10 questions variées sur l’Acte d’Union.</span></div>
-          <button type="button" onClick={prepareTerraSummaryPilot}>Préparer l’activité pilote</button>
+        <section className="sol-pilot" aria-labelledby="sol-pilot-title">
+          <div><strong id="sol-pilot-title">Tester le bilan personnalisé de Sol</strong><span>Prépare une activité complète de 10 questions variées sur l’Acte d’Union.</span></div>
+          <button type="button" onClick={prepareSolSummaryPilot}>Préparer l’activité pilote</button>
         </section>
         <div className="creator-config" aria-label="Configuration de l’activité">
           <ConfigCard id="format-title" icon="format" title="Quel format ?">
