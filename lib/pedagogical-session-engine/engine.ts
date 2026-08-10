@@ -129,7 +129,7 @@ function completeQuestion(
     demonstratedKnowledgeIds,
     demonstratedOperationIds,
     observedStrengths: [...analysis.observedStrengths],
-    consolidationTargets: [...analysis.missingElements],
+    consolidationTargets: status === "mastered" ? [] : [...analysis.missingElements],
     completedAt: clock.now().toISOString(),
   };
   const questionStates = state.questionStates.with(state.currentQuestionIndex, { ...runtime, status: "completed", result });

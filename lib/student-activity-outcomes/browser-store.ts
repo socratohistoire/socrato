@@ -52,8 +52,8 @@ export function applyStoredStudentActivityOutcomes(data: StudentDashboardData, s
         .filter(({ id }) => operationStatuses.has(id))
         .map(({ id, officialLabel }) => ({ id, label: officialLabel, status: operationStatuses.get(id)! }));
       const historicalKnowledge = ACTE_UNION_HISTORICAL_KNOWLEDGE
-        .filter(({ id }) => knowledgeStatuses.has(id))
-        .map(({ id, label }) => ({ id, label, status: knowledgeStatuses.get(id)! }));
+        .map(({ id, label }) => ({ id, label, status: knowledgeStatuses.get(id) ?? "not_assessed" as const }))
+        .sort((left, right) => Number(left.status === "not_assessed") - Number(right.status === "not_assessed"));
       return {
         ...activity,
         activityStatus: "completed" as const,

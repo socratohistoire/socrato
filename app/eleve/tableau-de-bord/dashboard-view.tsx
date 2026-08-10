@@ -54,7 +54,7 @@ export function StudentDashboardView({ data }: { data: StudentDashboardData }) {
         <SummaryPanel activity={activity} />
         <section className="activity-results" aria-label="Résultats de cette activité">
           <OperationResults items={activity.operations} />
-          <KnowledgeResults items={activity.historicalKnowledge} />
+          <KnowledgeResults items={activity.historicalKnowledge} showCompletePortrait={activity.activityStatus === "completed"} />
         </section>
         <ActivityList activities={dashboardData.activities} selectedActivityId={dashboardData.selectedActivityId} />
         <p className="dashboard-note"><span aria-hidden="true">i</span> Les connaissances non travaillées n’ont pas encore été couvertes dans cette activité.</p>
@@ -149,20 +149,21 @@ function SummaryPanel({ activity }: { activity: StudentActivity }) {
   const complete = activity.summary.state !== "pending";
   const consolidationProgress = activity.summary.consolidationProgress;
   const consolidationSource = consolidationProgress?.source === "teacher_assigned" ? "Assignée par l’enseignant" : "Proposée par Socrato";
+  const needsConsolidation = [...activity.operations, ...activity.historicalKnowledge].some(({ status }) => status === "consolidate" || status === "needs_work");
   const items = complete ? [
-    { kind: "strength", title: "Tes points forts", text: activity.summary.strengths.join(" ") },
-    { kind: "consolidate", title: "Les éléments à consolider", text: activity.summary.consolidationTargets.join(" ") },
-    { kind: "recommend", title: "Une activité de consolidation", text: activity.summary.consolidationActivity ?? activity.summary.recommendation ?? "Aucune recommandation confirmée." },
+    { kind: "strength", title: "Tes points forts", entries: activity.summary.strengths },
+    { kind: "consolidate", title: "Les éléments à consolider", entries: activity.summary.consolidationTargets },
+    { kind: "recommend", title: "Une activité de consolidation", entries: [activity.summary.consolidationActivity ?? activity.summary.recommendation ?? (needsConsolidation ? "Reprends les éléments à consolider dans une courte activité ciblée." : "Aucune activité supplémentaire n’est nécessaire pour le moment.")] },
   ] : [
-    { kind: "strength", title: "Tes points forts", text: "Ils apparaîtront après le traitement confirmé de l’activité." },
-    { kind: "consolidate", title: "Les éléments à consolider", text: "Ils seront réutilisés depuis le bilan enregistré de la séance." },
-    { kind: "recommend", title: "Une activité de consolidation, si nécessaire", text: "Elle sera proposée uniquement à partir d’un résultat confirmé." },
+    { kind: "strength", title: "Tes points forts", entries: ["Ils apparaîtront après le traitement confirmé de l’activité."] },
+    { kind: "consolidate", title: "Les éléments à consolider", entries: ["Ils seront réutilisés depuis le bilan enregistré de la séance."] },
+    { kind: "recommend", title: "Une activité de consolidation, si nécessaire", entries: ["Elle sera proposée uniquement à partir d’un résultat confirmé."] },
   ];
   return (
     <section id="bilan" className="summary-panel" aria-labelledby="summary-title">
       <div className="summary-heading"><CompassIcon /><div><h2 id="summary-title">{DASHBOARD_LABELS.summary}</h2><p>{complete ? "Voici les résultats enregistrés pour cette activité." : "Lorsque tu auras terminé cette activité, Socrato préparera un bilan personnalisé."}</p></div></div>
       {consolidationProgress && <article className={`consolidation-progress consolidation-progress--${consolidationProgress.state}`} aria-labelledby="consolidation-progress-title"><div><span>Progression après consolidation</span><h3 id="consolidation-progress-title">{consolidationProgress.previousLevel} <span aria-hidden="true">→</span> {consolidationProgress.currentLevel}</h3><p>{consolidationProgress.observation}</p></div><dl><div><dt>Origine</dt><dd>{consolidationSource}</dd></div><div><dt>Terminée le</dt><dd>{consolidationProgress.completedAt}</dd></div></dl></article>}
-      <div className="summary-grid">{items.map((item) => <article key={item.kind} className={`summary-item summary-${item.kind}`}><span aria-hidden="true">{item.kind === "strength" ? "✓" : item.kind === "consolidate" ? "◎" : "✎"}</span><div><h3>{item.title}</h3><p>{item.text}</p></div></article>)}</div>
+      <div className="summary-grid">{items.map((item) => <article key={item.kind} className={`summary-item summary-${item.kind}`}><span aria-hidden="true">{item.kind === "strength" ? "✓" : item.kind === "consolidate" ? "◎" : "✎"}</span><div><h3>{item.title}</h3>{item.entries.length > 1 ? <ul>{item.entries.map((entry) => <li key={entry}>{entry}</li>)}</ul> : <p>{item.entries[0] ?? (item.kind === "consolidate" ? "Aucun élément prioritaire à consolider." : "Bilan enregistré.")}</p>}</div></article>)}</div>
     </section>
   );
 }
@@ -177,8 +178,8 @@ function OperationResults({ items }: { items: IntellectualOperation[] }) {
   );
 }
 
-function KnowledgeResults({ items }: { items: HistoricalKnowledge[] }) {
-  const workedItems = getWorkedHistoricalKnowledge(items);
+function KnowledgeResults({ items, showCompletePortrait = false }: { items: HistoricalKnowledge[]; showCompletePortrait?: boolean }) {
+  const workedItems = getWorkedHistoricalKnowledge(items, showCompletePortrait);
   return (
     <section className="results-panel knowledge-results" aria-labelledby="knowledge-title">
       <ResultsHeading id="knowledge-title" title={DASHBOARD_LABELS.knowledge} />

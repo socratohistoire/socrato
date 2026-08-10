@@ -42,6 +42,11 @@ export const ACTE_UNION_HISTORICAL_KNOWLEDGE = [
     label: "Acte d’union",
   },
   {
+    id: "gouvernement-responsable",
+    notionId: ACTE_UNION_NOTION_ID,
+    label: "Gouvernement responsable",
+  },
+  {
     id: "creation-province-canada",
     notionId: ACTE_UNION_NOTION_ID,
     label:
