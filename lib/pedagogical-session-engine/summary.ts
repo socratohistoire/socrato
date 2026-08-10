@@ -16,7 +16,9 @@ function mostCautiousStatus(current: ResultStatus | undefined, candidate: Result
 function aggregate(results: QuestionResult[], field: "operationIds" | "historicalKnowledgeIds"): PedagogicalResultEntry[] {
   const statuses = new Map<string, ResultStatus>();
   for (const result of results) {
-    for (const id of result[field]) statuses.set(id, mostCautiousStatus(statuses.get(id), result.status));
+    const assessments = field === "operationIds" ? result.operationAssessments : result.historicalKnowledgeAssessments;
+    const entries = assessments ?? result[field].map((id) => ({ id, status: result.status }));
+    for (const { id, status } of entries) statuses.set(id, mostCautiousStatus(statuses.get(id), status));
   }
   return [...statuses].map(([id, status]) => ({ id, status }));
 }

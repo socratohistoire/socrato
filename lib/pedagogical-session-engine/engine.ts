@@ -110,6 +110,12 @@ function resultStatus(analysis: StructuredResponseAnalysis): ResultStatus {
   return "to_work_on";
 }
 
+function assessmentStatus(level: StructuredResponseAnalysis["historicalAccuracy"]): ResultStatus {
+  if (level === "demonstrated") return "mastered";
+  if (level === "partial") return "to_consolidate";
+  return "to_work_on";
+}
+
 function completeQuestion(
   definition: PedagogicalSessionDefinition,
   state: PedagogicalSessionState,
@@ -121,6 +127,16 @@ function completeQuestion(
   const status = resultStatus(analysis);
   const demonstratedOperationIds = analysis.observedOperationIds.filter((id) => question.operationIds.includes(id));
   const demonstratedKnowledgeIds = analysis.demonstratedKnowledgeIds.filter((id) => question.historicalKnowledgeIds.includes(id));
+  const operationAssessments = question.operationIds
+    .filter((id) => id === question.primaryOperationId || demonstratedOperationIds.includes(id))
+    .map((id) => ({
+    id,
+    status: assessmentStatus(analysis.primaryOperationPerformance),
+  }));
+  const historicalKnowledgeAssessments = question.historicalKnowledgeIds.map((id) => ({
+    id,
+    status: demonstratedKnowledgeIds.includes(id) ? assessmentStatus(analysis.historicalAccuracy) : "to_work_on" as const,
+  }));
   const result: QuestionResult = {
     sessionId: state.sessionId, activityId: state.activityId, questionId: question.id, notionId: question.notionId,
     primaryOperationId: question.primaryOperationId, operationIds: [...question.operationIds], historicalKnowledgeIds: [...question.historicalKnowledgeIds], documentIds: [...question.documentIds],
@@ -128,6 +144,8 @@ function completeQuestion(
     advancedMastery: status === "mastered" && advancedMastery(analysis, question),
     demonstratedKnowledgeIds,
     demonstratedOperationIds,
+    operationAssessments,
+    historicalKnowledgeAssessments,
     observedStrengths: [...analysis.observedStrengths],
     consolidationTargets: status === "mastered" ? [] : [...analysis.missingElements],
     completedAt: clock.now().toISOString(),

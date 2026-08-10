@@ -49,7 +49,7 @@ export function StudentDashboardView({ data }: { data: StudentDashboardData }) {
       <div className="dashboard-body">
         <section id="activite" className="activity-overview" aria-label="Activité sélectionnée">
           <SocratoWelcome activity={activity} data={dashboardData} />
-          <MainActivityCard activity={activity} testMode={testMode} />
+          <MainActivityCard activity={activity} data={dashboardData} testMode={testMode} />
         </section>
         <SummaryPanel activity={activity} />
         <section className="activity-results" aria-label="Résultats de cette activité">
@@ -108,8 +108,9 @@ function SocratoWelcome({ activity, data }: { activity: StudentActivity; data: S
   );
 }
 
-function MainActivityCard({ activity, testMode }: { activity: StudentActivity; testMode: boolean }) {
+function MainActivityCard({ activity, data, testMode }: { activity: StudentActivity; data: StudentDashboardData; testMode: boolean }) {
   const period = getHistoricalPeriodLabel(activity.historicalPeriod);
+  const coveredNotions = activity.notionIds.map((id) => data.notions.find((notion) => notion.id === id)?.title ?? id);
   async function restartActivity() {
     const repository = createConfiguredDataRepository(window.localStorage);
     await repository.clearStudentOutcome(activity.id);
@@ -127,10 +128,10 @@ function MainActivityCard({ activity, testMode }: { activity: StudentActivity; t
       {period ? <p className="main-activity-period">{period}</p> : null}
       <div className="activity-card-content">
         <div className="activity-details">
-          <div className="activity-facts">{activity.durationMinutes > 0 ? <span>◷ {activity.durationMinutes} minutes</span> : null}<span>▤ {activity.historicalKnowledgeIds.length} connaissances</span></div>
-          {activity.historicalKnowledge.length > 0 ? (
-            <ul className="targeted-knowledge">{activity.historicalKnowledge.map((item) => <li key={item.id}>{item.label}</li>)}</ul>
-          ) : <p className="no-targeted-knowledge">Aucune connaissance historique approuvée n’est associée à cette activité.</p>}
+          <div className="activity-facts">{activity.durationMinutes > 0 ? <span>◷ {activity.durationMinutes} minutes</span> : null}<span>▤ {coveredNotions.length} {coveredNotions.length > 1 ? "notions" : "notion"}</span></div>
+          {coveredNotions.length > 0 ? (
+            <ul className="targeted-knowledge">{coveredNotions.map((title) => <li key={title}>{title}</li>)}</ul>
+          ) : <p className="no-targeted-knowledge">Aucune notion n’est associée à cette activité.</p>}
         </div>
         <div className="activity-progress" aria-label={`Progression ${activity.progressPercentage} %`} style={{ "--progress": `${activity.progressPercentage * 3.6}deg` } as CSSProperties}>
           <div><strong>{activity.progressPercentage}%</strong><span>complété</span></div>
