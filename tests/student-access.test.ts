@@ -160,6 +160,7 @@ test("attend la confirmation du cookie avant d’ouvrir le tableau de bord", asy
 
   assert.match(actionSource, /return \{ message: "", redirectTo: result\.redirectTo \}/);
   assert.doesNotMatch(actionSource, /redirect\(result\.redirectTo\)/);
-  assert.match(formSource, /router\.replace\(state\.redirectTo\)/);
+  assert.match(formSource, /window\.location\.assign\(state\.redirectTo\)/);
+  assert.doesNotMatch(formSource, /useRouter/);
   assert.match(formSource, /pending \|\| Boolean\(state\.redirectTo\)/);
 });

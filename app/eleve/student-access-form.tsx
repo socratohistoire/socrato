@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
 import {
   enterStudentSpace,
@@ -10,15 +9,14 @@ import {
 const INITIAL_STATE: StudentAccessFormState = { message: "" };
 
 export function StudentAccessForm() {
-  const router = useRouter();
   const [state, formAction, pending] = useActionState(
     enterStudentSpace,
     INITIAL_STATE,
   );
 
   useEffect(() => {
-    if (state.redirectTo) router.replace(state.redirectTo);
-  }, [router, state.redirectTo]);
+    if (state.redirectTo) window.location.assign(state.redirectTo);
+  }, [state.redirectTo]);
 
   return (
     <form

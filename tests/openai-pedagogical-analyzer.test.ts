@@ -33,6 +33,18 @@ const validAnalysis = {
   nextAction: "request_revision", confidence: "medium",
 } satisfies StructuredResponseAnalysis;
 
+const historicalIntent = {
+  isHistoricalProposition: true,
+  responseDisposition: "substantive",
+  confidence: "high",
+};
+
+const nonHistoricalIntent = {
+  isHistoricalProposition: false,
+  responseDisposition: "off_topic",
+  confidence: "high",
+};
+
 test("envoie une requête sans conservation et valide la sortie structurée", async () => {
   const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
   let requestBody: Record<string, unknown> | undefined;
@@ -66,7 +78,11 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.instructions), /missingElements peut contenir une seule précision historique brève/);
   assert.match(String(requestBody?.instructions), /Évite les conseils génériques/);
   assert.match(String(requestBody?.instructions), /ne fournis jamais la réponse complète/);
-  assert.match(String(requestBody?.instructions), /Évalue cumulativement ces acquis avec la nouvelle réponse/);
+  assert.match(String(requestBody?.instructions), /dialogue socratique cumulatif pouvant aller jusqu’à cinq réponses/);
+  assert.match(String(requestBody?.instructions), /Conserve dans observedStrengths les acquis conceptuels déjà reconnus/);
+  assert.match(String(requestBody?.instructions), /corrige au plus une confusion/);
+  assert.match(String(requestBody?.instructions), /réunir dans une réponse complète en une seule phrase/);
+  assert.match(String(requestBody?.instructions), /Produis satisfactory immédiatement si la réponse courante est déjà complète et cohérente/);
   assert.match(String(requestBody?.instructions), /N’exige jamais un numéro d’article, une date exacte/);
   assert.match(String(requestBody?.instructions), /même sans nommer l’article 41/);
   assert.match(String(requestBody?.instructions), /une reformulation fidèle d’un élément pertinent de chaque document constitue une justification complète/);
@@ -119,17 +135,19 @@ test("réanalyse une idée clairement liée avant de la déclarer non exploitabl
   };
   let calls = 0;
   let secondInstructions = "";
+  let thirdInstructions = "";
   const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async (_input, init) => {
     calls += 1;
     if (calls === 2) secondInstructions = String((JSON.parse(String(init?.body)) as { instructions?: string }).instructions);
-    const analysis = calls === 1 ? nonExploitable : validAnalysis;
+    if (calls === 3) thirdInstructions = String((JSON.parse(String(init?.body)) as { instructions?: string }).instructions);
+    const analysis = calls === 1 ? nonExploitable : calls === 2 ? historicalIntent : validAnalysis;
     return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(analysis) }] }] }), { status: 200 });
   } });
   const relatedResponse = { ...response, content: "La conséquence politique concerne les documents et les revenus réunis." };
   assert.deepEqual(await analyzer.analyze(relatedResponse, question), validAnalysis);
-  assert.equal(calls, 2);
-  assert.match(secondInstructions, /Seconde lecture indépendante obligatoire/);
-  assert.match(secondInstructions, /responseDisposition doit être substantive/);
+  assert.equal(calls, 3);
+  assert.match(secondInstructions, /nature du message/);
+  assert.match(thirdInstructions, /lecture spécialisée indépendante/);
 });
 
 test("ne réanalyse pas une réponse réellement hors sujet", async () => {
@@ -143,7 +161,8 @@ test("ne réanalyse pas une réponse réellement hors sujet", async () => {
   let calls = 0;
   const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
     calls += 1;
-    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(nonExploitable) }] }] }), { status: 200 });
+    const result = calls === 1 ? nonExploitable : nonHistoricalIntent;
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(result) }] }] }), { status: 200 });
   } });
   assert.deepEqual(await analyzer.analyze({ ...response, content: "J’aime beaucoup les jeux vidéo modernes." }, question), nonExploitable);
   assert.equal(calls, 2);
@@ -158,22 +177,24 @@ test("empêche un faux rejet répété pour une idée manifestement liée", asyn
     observedStrengths: [], missingElements: ["Reformule."], nextAction: "handle_non_exploitable",
   };
   let calls = 0;
+  const corrected = { ...validAnalysis, pedagogicalOutcome: "insufficient" as const, nextAction: "offer_hint" as const };
   const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
     calls += 1;
-    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(nonExploitable) }] }] }), { status: 200 });
+    const result = calls === 1 ? nonExploitable : calls === 2 ? historicalIntent : corrected;
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(result) }] }] }), { status: 200 });
   } });
   const analysis = await analyzer.analyze({
     ...response,
     content: "Le fonds consolidé réunit les revenus pour répondre aux besoins publics et comprend aussi la dette publique.",
   }, question);
-  assert.equal(calls, 2);
+  assert.equal(calls, 3);
   assert.equal(analysis.responseDisposition, "substantive");
   assert.equal(analysis.pedagogicalOutcome, "insufficient");
   assert.equal(analysis.nextAction, "offer_hint");
-  assert.match(analysis.missingElements[0], /Dans « Acte d’Union »/);
+  assert.equal(analysis.missingElements[0], "Précise la conséquence.");
 });
 
-test("conserve une réponse liée lorsque la seconde lecture technique échoue", async () => {
+test("conserve le premier jugement lorsque la lecture d’intention échoue techniquement", async () => {
   const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
   const fundQuestion = {
     ...question,
@@ -205,9 +226,9 @@ test("conserve une réponse liée lorsque la seconde lecture technique échoue",
   }, fundQuestion);
 
   assert.equal(calls, 2);
-  assert.equal(analysis.responseDisposition, "substantive");
-  assert.equal(analysis.pedagogicalOutcome, "insufficient");
-  assert.equal(analysis.nextAction, "offer_hint");
+  assert.equal(analysis.responseDisposition, "incomprehensible");
+  assert.equal(analysis.pedagogicalOutcome, "non_exploitable");
+  assert.equal(analysis.nextAction, "handle_non_exploitable");
 });
 
 test("reconnaît l’usage juste du fonds consolidé comme une réponse partielle", async () => {
@@ -239,12 +260,53 @@ test("reconnaît l’usage juste du fonds consolidé comme une réponse partiell
   let calls = 0;
   const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
     calls += 1;
-    const analysis = calls === 1 ? nonExploitable : partial;
+    const analysis = calls === 1 ? nonExploitable : calls === 2 ? historicalIntent : partial;
     return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(analysis) }] }] }), { status: 200 });
   } });
 
   assert.deepEqual(await analyzer.analyze({ ...response, content: "Il sert à payer les dettes des deux canada" }, fundQuestion), partial);
-  assert.equal(calls, 2);
+  assert.equal(calls, 3);
+});
+
+test("évalue une courte affirmation erronée qui reprend un concept historique central", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  const fundQuestion = {
+    ...question,
+    evaluationContext: {
+      ...question.evaluationContext,
+      questionPrompt: "À l’aide du document, explique ce qu’est le fonds consolidé et indique à quoi il sert dans la Province du Canada.",
+      evaluationGuide: {
+        expectedAnswer: "Les revenus et les dettes des deux Canadas sont réunis dans un fonds consolidé destiné aux dépenses publiques.",
+        commonErrors: ["Affirmer que les dettes ne sont pas partagées."],
+      },
+    },
+  } satisfies PedagogicalQuestionDefinition;
+  const nonExploitable = {
+    ...validAnalysis, responseDisposition: "incomprehensible", pedagogicalOutcome: "non_exploitable",
+    historicalAccuracy: "not_assessed", documentUse: "not_assessed", justificationQuality: "not_assessed",
+    primaryOperationPerformance: "not_assessed", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [],
+    observedStrengths: [], missingElements: ["Reformule."], nextAction: "handle_non_exploitable",
+  } as const;
+  const corrected = {
+    ...validAnalysis,
+    pedagogicalOutcome: "insufficient" as const,
+    historicalAccuracy: "not_demonstrated" as const,
+    observedStrengths: ["Bonne tentative : tu proposes une idée au sujet du partage de la dette."],
+    missingElements: ["Que précise le document sur la mise en commun des dettes?"],
+    nextAction: "offer_hint" as const,
+  };
+  let calls = 0;
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
+    calls += 1;
+    const result = calls === 1 ? nonExploitable : calls === 2 ? historicalIntent : corrected;
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(result) }] }] }), { status: 200 });
+  } });
+
+  const analysis = await analyzer.analyze({ ...response, content: "La dette n’est pas partagée." }, fundQuestion);
+  assert.equal(calls, 3);
+  assert.equal(analysis.responseDisposition, "substantive");
+  assert.equal(analysis.pedagogicalOutcome, "insufficient");
+  assert.equal(analysis.nextAction, "offer_hint");
 });
 
 test("réanalyse aussi une très courte réponse qui reprend précisément la question", async () => {
@@ -255,13 +317,15 @@ test("réanalyse aussi une très courte réponse qui reprend précisément la qu
     primaryOperationPerformance: "not_assessed", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [],
     observedStrengths: [], missingElements: ["Reformule."], nextAction: "handle_non_exploitable",
   } as const;
+  const corrected = { ...validAnalysis, pedagogicalOutcome: "insufficient" as const, nextAction: "offer_hint" as const };
   let calls = 0;
   const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
     calls += 1;
-    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(nonExploitable) }] }] }), { status: 200 });
+    const result = calls === 1 ? nonExploitable : calls === 2 ? historicalIntent : corrected;
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(result) }] }] }), { status: 200 });
   } });
   const analysis = await analyzer.analyze({ ...response, content: "L’Acte d’Union" }, question);
-  assert.equal(calls, 2);
+  assert.equal(calls, 3);
   assert.equal(analysis.responseDisposition, "substantive");
   assert.equal(analysis.pedagogicalOutcome, "insufficient");
 });
@@ -292,11 +356,11 @@ test("traite une négation brève comme une réponse historique évaluable", asy
   let calls = 0;
   const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
     calls += 1;
-    const analysis = calls === 1 ? nonExploitable : corrected;
+    const analysis = calls === 1 ? nonExploitable : calls === 2 ? historicalIntent : corrected;
     return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(analysis) }] }] }), { status: 200 });
   } });
   assert.deepEqual(await analyzer.analyze({ ...response, content: "aucune" }, datedQuestion), corrected);
-  assert.equal(calls, 2);
+  assert.equal(calls, 3);
 });
 
 test("ne force pas la réanalyse d’une demande d’aide explicite", async () => {

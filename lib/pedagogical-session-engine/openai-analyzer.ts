@@ -38,6 +38,35 @@ const ANALYSIS_SCHEMA = {
   },
 } as const;
 
+const INTENT_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["isHistoricalProposition", "responseDisposition", "confidence"],
+  properties: {
+    isHistoricalProposition: { type: "boolean" },
+    responseDisposition: { type: "string", enum: ["substantive", "too_short", "help_request", "answer_request", "playful_diversion", "off_topic", "incomprehensible", "nonsense_or_spam", "inappropriate"] },
+    confidence: { type: "string", enum: ["low", "medium", "high"] },
+  },
+} as const;
+
+const INTENT_ANALYSIS_INSTRUCTIONS = `
+Détermine uniquement la nature du message de l’élève dans le contexte de la question d’histoire fourni.
+isHistoricalProposition doit être true dès que le message affirme, nie, suppose, compare ou explique quelque chose au sujet d’un fait, d’un concept, d’un acteur, d’une date ou d’un document lié à la tâche. La proposition demeure historique même si elle est fausse, très courte, imprécise, mal orthographiée ou incomplète. Dans ce cas, responseDisposition doit être substantive.
+isHistoricalProposition doit être false pour une demande d’aide ou de réponse, une diversion, un message hors sujet, incompréhensible, vide de sens ou inapproprié. Ne juge ni l’exactitude ni la qualité de la réponse à cette étape.
+`.trim();
+
+function analysisSchemaForSubstantiveResponse() {
+  return {
+    ...ANALYSIS_SCHEMA,
+    properties: {
+      ...ANALYSIS_SCHEMA.properties,
+      responseDisposition: { ...ANALYSIS_SCHEMA.properties.responseDisposition, enum: ["substantive"] },
+      pedagogicalOutcome: { ...ANALYSIS_SCHEMA.properties.pedagogicalOutcome, enum: ["satisfactory", "partially_satisfactory", "insufficient"] },
+      nextAction: { ...ANALYSIS_SCHEMA.properties.nextAction, enum: ["complete_question", "request_revision", "offer_hint"] },
+    },
+  } as const;
+}
+
 const PEDAGOGICAL_ANALYSIS_INSTRUCTIONS = `
 Tu analyses une réponse d’élève en histoire du Québec et du Canada à partir de quatre autorités distinctes du dossier pédagogique approuvé fourni : referenceMonograph est la référence historique de fond; approvedDocuments contient uniquement les documents historiques associés à la question; evaluationGuide précise les éléments acceptables et les erreurs fréquentes propres à cette question; pedagogicalRules fixe la manière d’accompagner l’élève. Respecte leur rôle et leur portée.
 Utilise evaluationGuide comme une grille conceptuelle, jamais comme une réponse à recopier. Accepte les synonymes, les paraphrases, les formulations d’élèves, les fautes et tout raisonnement historiquement équivalent. Ne demande pas un détail absent de questionPrompt et successCriteria simplement parce qu’il figure dans expectedAnswer.
@@ -61,7 +90,9 @@ N’exige jamais un numéro d’article, une date exacte, le titre officiel d’
 
 Lorsqu’une question demande de justifier à l’aide d’un ou plusieurs documents, une reformulation fidèle d’un élément pertinent de chaque document constitue une justification complète. N’exige ni citation textuelle, ni passage exact, ni titre du document, sauf si questionPrompt ou instruction demande explicitement de « citer ». Si toutes les réponses demandées sont nommées et chacune est expliquée fidèlement avec le contenu pertinent, produis satisfactory et complete_question dès cette tentative.
 
-À partir de la deuxième tentative, priorTurn résume les acquis reconnus et l’élément qui manquait au tour précédent. Évalue cumulativement ces acquis avec la nouvelle réponse : ne demande pas à l’élève de répéter un acquis déjà reconnu. Si la nouvelle réponse complète l’élément manquant, évalue l’ensemble comme satisfactory. Ne suppose jamais qu’un élément auparavant manquant est acquis si la nouvelle réponse ne l’apporte pas.
+À partir de la deuxième tentative, priorTurn résume les acquis reconnus et l’élément qui manquait au tour précédent. Construis un dialogue socratique cumulatif pouvant aller jusqu’à cinq réponses d’élève. Conserve dans observedStrengths les acquis conceptuels déjà reconnus, en les fusionnant avec le nouvel acquis sans recopier la conversation. Ne demande pas à l’élève de redémontrer un acquis reconnu et ne suppose jamais qu’un élément manquant est acquis sans preuve dans sa nouvelle réponse.
+
+Pour une réponse partielle, suis toujours ce rythme : reconnais précisément l’acquis, corrige au plus une confusion, puis pose dans missingElements[0] une seule question courte portant sur le prochain élément essentiel. Adapte cette question à la réponse réelle et au chemin déjà parcouru; n’utilise pas une relance générique. Quand tous les éléments essentiels ont été construits au fil de plusieurs réponses fragmentaires, ne valide pas encore automatiquement : demande à l’élève de les réunir dans une réponse complète en une seule phrase. Produis satisfactory immédiatement si la réponse courante est déjà complète et cohérente, ou lorsqu’elle constitue cette synthèse finale. L’objectif est de faire raisonner et formuler l’élève, sans lui dicter la réponse.
 
 Réserve pedagogicalOutcome=non_exploitable et nextAction=handle_non_exploitable aux réponses dont responseDisposition n’est pas substantive.
 
@@ -121,58 +152,6 @@ function pedagogicalContext(response: StudentResponse, question: PedagogicalQues
   };
 }
 
-const RELATION_STOP_WORDS = new Set([
-  "alors", "apres", "avec", "cette", "comme", "dans", "depuis", "elle", "elles", "entre", "faire", "leurs",
-  "mais", "meme", "parce", "pour", "pourquoi", "question", "seulement", "sont", "sous", "tous", "toute", "toutes",
-]);
-
-function normalizedTerms(value: string) {
-  const terms = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().match(/[a-z]{5,}/g) ?? [];
-  return new Set(terms
-    .filter((term) => !RELATION_STOP_WORDS.has(term))
-    .map((term) => term.length > 5 && term.endsWith("s") ? term.slice(0, -1) : term));
-}
-
-function hasClearPedagogicalRelation(response: StudentResponse, question: PedagogicalQuestionDefinition) {
-  if (isExplicitHelpRequest(response.content)) return false;
-  const responseTerms = normalizedTerms(response.content);
-  const context = question.evaluationContext;
-  const normalizedResponse = response.content.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-  const prompt = `${context?.questionPrompt ?? ""} ${context?.instruction ?? ""}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  const isEvaluableNegation = /^(aucun|aucune|aucuns|aucunes|il n['’ ]?y en a pas|pas de difference)[.!? ]*$/.test(normalizedResponse)
-    && /\b(difference|consequence|cause|element|changement|effet|mesure|raison)\b/.test(prompt);
-  if (isEvaluableNegation) return true;
-  const referenceTerms = normalizedTerms([
-    context?.questionPrompt, context?.instruction,
-    context?.evaluationGuide?.expectedAnswer,
-    ...(context?.approvedDocuments.flatMap(({ title, attribution, content }) => [title, attribution, content]) ?? []),
-  ].filter(Boolean).join(" "));
-  const sharedTerms = [...responseTerms].filter((term) => referenceTerms.has(term)).length;
-  return response.content.trim().length < 20 ? sharedTerms >= 1 : sharedTerms >= 2;
-}
-
-function relatedResponseFallback(question: PedagogicalQuestionDefinition): StructuredResponseAnalysis {
-  const document = question.evaluationContext?.approvedDocuments[0];
-  const target = document
-    ? `Dans « ${document.title} », quel élément pourrait appuyer ton idée?`
-    : "Quel fait précis pourrait appuyer ton idée?";
-  return {
-    responseDisposition: "substantive",
-    pedagogicalOutcome: "insufficient",
-    historicalAccuracy: "not_assessed",
-    documentUse: "not_assessed",
-    justificationQuality: "not_assessed",
-    primaryOperationPerformance: "partial",
-    demonstratedKnowledgeIds: [],
-    observedOperationIds: [question.primaryOperationId],
-    usedDocumentIds: [],
-    observedStrengths: ["Ta réponse mobilise plusieurs éléments directement liés à la question."],
-    missingElements: [target],
-    nextAction: "offer_hint",
-    confidence: "low",
-  };
-}
-
 export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
   private readonly apiKey: string;
   private readonly model: string;
@@ -187,7 +166,7 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
   }
 
   async analyze(response: StudentResponse, question: PedagogicalQuestionDefinition): Promise<StructuredResponseAnalysis> {
-    const analyzeOnce = async (instructions: string) => {
+    const requestStructuredOutput = async (instructions: string, schema: object, name: string) => {
       const apiResponse = await this.fetcher(this.endpoint, {
       method: "POST",
       headers: { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json" },
@@ -196,27 +175,36 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
         store: false,
         instructions,
         input: JSON.stringify(pedagogicalContext(response, question)),
-        text: { format: { type: "json_schema", name: "socrato_pedagogical_analysis", strict: true, schema: ANALYSIS_SCHEMA } },
+        text: { format: { type: "json_schema", name, strict: true, schema } },
       }),
       });
       if (!apiResponse.ok) throw new Error(`L’analyse OpenAI a échoué (${apiResponse.status}).`);
-      const parsed = JSON.parse(extractOutputText(await apiResponse.json())) as unknown;
-      return validateStructuredAnalysis(parsed, question);
+      return JSON.parse(extractOutputText(await apiResponse.json())) as unknown;
     };
+
+    const analyzeOnce = async (instructions: string, forceSubstantive = false) => validateStructuredAnalysis(
+      await requestStructuredOutput(
+        instructions,
+        forceSubstantive ? analysisSchemaForSubstantiveResponse() : ANALYSIS_SCHEMA,
+        "socrato_pedagogical_analysis",
+      ),
+      question,
+    );
 
     const initial = await analyzeOnce(PEDAGOGICAL_ANALYSIS_INSTRUCTIONS);
     const isIntentionalNonAnswer = isExplicitHelpRequest(response.content)
       || ["help_request", "answer_request", "playful_diversion", "nonsense_or_spam", "inappropriate"].includes(initial.responseDisposition);
-    const needsAdjudication = initial.confidence === "low" || (initial.pedagogicalOutcome === "non_exploitable" && !isIntentionalNonAnswer);
-    if (!needsAdjudication) return initial;
-    const relationIsClear = hasClearPedagogicalRelation(response, question);
+    if (initial.pedagogicalOutcome !== "non_exploitable" || isIntentionalNonAnswer) return initial;
+
+    let intent: { isHistoricalProposition?: unknown; responseDisposition?: unknown; confidence?: unknown };
     try {
-      const revised = await analyzeOnce(`${PEDAGOGICAL_ANALYSIS_INSTRUCTIONS}\n\nSeconde lecture indépendante obligatoire : vérifie d’abord si la réponse exprime, même maladroitement, un élément de evaluationGuide, de la question ou des documents. Une seule idée juste répondant à un volet suffit pour substantive et généralement partially_satisfactory. Ne confirme non_exploitable que si aucun contenu historique pertinent n’est réellement évaluable. ${relationIsClear ? "La protection lexicale a aussi détecté un lien direct : responseDisposition doit être substantive." : "Ne suppose ni réussite ni échec à partir de la seule longueur."}`);
-      return revised.pedagogicalOutcome === "non_exploitable" && relationIsClear ? relatedResponseFallback(question) : revised;
-    } catch (error) {
-      if (relationIsClear) return relatedResponseFallback(question);
-      throw error;
+      intent = await requestStructuredOutput(INTENT_ANALYSIS_INSTRUCTIONS, INTENT_SCHEMA, "socrato_student_response_intent") as typeof intent;
+    } catch {
+      return initial;
     }
+    if (intent.isHistoricalProposition !== true || intent.responseDisposition !== "substantive") return initial;
+
+    return analyzeOnce(`${PEDAGOGICAL_ANALYSIS_INSTRUCTIONS}\n\nUne lecture spécialisée indépendante a établi que le message contient une proposition historique liée à la tâche. Évalue maintenant son exactitude et sa contribution réelle, même si cette proposition est fausse, courte ou incomplète. Ne la traite ni comme une diversion ni comme un message non exploitable.`, true);
   }
 }
 

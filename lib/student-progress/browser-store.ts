@@ -24,7 +24,7 @@ function isStudentProgressContract(value: unknown): value is StudentProgressCont
   const validRuntime = (runtime: unknown): runtime is StudentQuestionRuntimeProgress[] => Array.isArray(runtime) && runtime.every((entry) => {
     if (!entry || typeof entry !== "object") return false;
     const item = entry as Record<string, unknown>;
-    return typeof item.questionId === "string" && Number.isInteger(item.attemptNumber) && Number(item.attemptNumber) >= 0 && Number(item.attemptNumber) <= 3
+    return typeof item.questionId === "string" && Number.isInteger(item.attemptNumber) && Number(item.attemptNumber) >= 0 && Number(item.attemptNumber) <= 5
       && [0, 1, 2].includes(Number(item.hintLevel)) && Number.isInteger(item.hintRequestCount) && Number(item.hintRequestCount) >= 0
       && Number.isInteger(item.nonExploitableCount) && Number(item.nonExploitableCount) >= 0
       && ["presented", "awaiting_response", "completed"].includes(String(item.status));
