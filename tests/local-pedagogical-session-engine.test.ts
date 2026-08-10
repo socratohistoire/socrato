@@ -316,11 +316,11 @@ for (const disposition of ["off_topic", "incomprehensible", "nonsense_or_spam", 
   });
 }
 
-test("la cinquième réponse non exploitable termine sans maîtrise ni remarque comportementale", async () => {
+test("la troisième réponse non exploitable termine sans maîtrise ni remarque comportementale", async () => {
   const output = analysis({ responseDisposition: "off_topic", pedagogicalOutcome: "non_exploitable", nextAction: "handle_non_exploitable", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [], observedStrengths: [] });
   const analyzer = new ScriptedAnalyzer([output]);
   let state = createPedagogicalSession(definition);
-  for (let index = 0; index < 5; index += 1) state = (await submitStudentResponse(definition, state, "hors sujet", analyzer, fixedClock)).state;
+  for (let index = 0; index < 3; index += 1) state = (await submitStudentResponse(definition, state, "hors sujet", analyzer, fixedClock)).state;
   assert.equal(state.status, "completed");
   assert.equal(state.questionStates[0].result?.status, "to_work_on");
   assert.deepEqual(state.questionStates[0].result?.demonstratedKnowledgeIds, []);
@@ -337,8 +337,7 @@ test("ramène progressivement une diversion répétée vers la tâche", async ()
   const second = await submitStudentResponse(definition, state, "oignon", analyzer, fixedClock);
   assert.equal(second.feedback?.studentFacingText, "Je te suis. Reprenons maintenant la question d’histoire. Quelle idée, même très courte, est directement liée à la question?");
   state = second.state;
-  let final = await submitStudentResponse(definition, state, "carotte", analyzer, fixedClock);
-  for (const content of ["navet", "poireau"]) final = await submitStudentResponse(definition, final.state, content, analyzer, fixedClock);
+  const final = await submitStudentResponse(definition, state, "carotte", analyzer, fixedClock);
   assert.equal(final.feedback?.studentFacingText, "Nous allons poursuivre avec la prochaine question et garder celle-ci à retravailler.");
   assert.doesNotMatch(`${first.feedback?.studentFacingText} ${second.feedback?.studentFacingText} ${final.feedback?.studentFacingText}`, /punition|comportement|volontaire|intention/i);
 });
@@ -379,14 +378,14 @@ test("une nouvelle question recommence au niveau zéro", async () => {
   assert.equal(transition.state.questionStates[1].hintLevel, 0);
 });
 
-test("limite strictement une question à cinq tentatives", async () => {
-  assert.equal(MAX_PEDAGOGICAL_ATTEMPTS, 5);
+test("limite strictement une question à trois tentatives", async () => {
+  assert.equal(MAX_PEDAGOGICAL_ATTEMPTS, 3);
   const analyzer = new ScriptedAnalyzer([analysis()]);
   let state = createPedagogicalSession(definition);
-  for (let index = 0; index < 5; index += 1) state = (await submitStudentResponse(definition, state, "Réponse", analyzer, fixedClock)).state;
+  for (let index = 0; index < 3; index += 1) state = (await submitStudentResponse(definition, state, "Réponse", analyzer, fixedClock)).state;
   assert.equal(state.status, "completed");
   assert.equal(state.questionStates[0].result?.status, "to_consolidate");
-  await assert.rejects(() => submitStudentResponse(definition, state, "Sixième", analyzer, fixedClock), /aucune question active/);
+  await assert.rejects(() => submitStudentResponse(definition, state, "Quatrième", analyzer, fixedClock), /aucune question active/);
 });
 
 test("la dernière intervention clôt sans poser une question impossible à répondre", async () => {
@@ -405,12 +404,6 @@ test("la dernière intervention clôt sans poser une question impossible à rép
   state = transition.state;
   assert.match(transition.feedback?.studentFacingText ?? "", /\?$/);
   transition = await submitStudentResponse(definition, state, "Troisième réponse", analyzer, fixedClock);
-  state = transition.state;
-  assert.match(transition.feedback?.studentFacingText ?? "", /\?$/);
-  transition = await submitStudentResponse(definition, state, "Quatrième réponse", analyzer, fixedClock);
-  state = transition.state;
-  assert.match(transition.feedback?.studentFacingText ?? "", /\?$/);
-  transition = await submitStudentResponse(definition, state, "Cinquième réponse", analyzer, fixedClock);
   assert.equal(transition.questionCompleted, true);
   assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /\?/);
   assert.match(transition.feedback?.studentFacingText ?? "", /garderons ce point à consolider/i);
@@ -442,15 +435,15 @@ test("transmet à toutes les questions ouvertes le bilan structuré du tour pré
 test("une demande d’aide ne consomme pas la dernière tentative disponible", async () => {
   const partial = analysis({ pedagogicalOutcome: "partially_satisfactory", nextAction: "request_revision" });
   const forgotten = analysis({ responseDisposition: "too_short", pedagogicalOutcome: "non_exploitable", nextAction: "handle_non_exploitable", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [] });
-  const analyzer = new ScriptedAnalyzer([partial, partial, partial, partial, forgotten, partial]);
+  const analyzer = new ScriptedAnalyzer([partial, partial, forgotten, partial]);
   let state = createPedagogicalSession(definition);
-  for (const content of ["Première réponse", "Deuxième réponse", "Troisième réponse", "Quatrième réponse"]) {
+  for (const content of ["Première réponse", "Deuxième réponse"]) {
     state = (await submitStudentResponse(definition, state, content, analyzer, fixedClock)).state;
   }
   const help = await submitStudentResponse(definition, state, "Je ne sais plus", analyzer, fixedClock);
   assert.equal(help.questionCompleted, false);
-  assert.equal(help.state.questionStates[0].attemptNumber, 4);
-  const final = await submitStudentResponse(definition, help.state, "Cinquième réponse historique", analyzer, fixedClock);
+  assert.equal(help.state.questionStates[0].attemptNumber, 2);
+  const final = await submitStudentResponse(definition, help.state, "Troisième réponse historique", analyzer, fixedClock);
   assert.equal(final.questionCompleted, true);
 });
 
@@ -508,7 +501,7 @@ test("le bilan contient seulement les éléments réellement travaillés et une 
   const partial = analysis({ demonstratedKnowledgeIds: ["population"], observedOperationIds: ["establish_facts"] });
   const analyzer = new ScriptedAnalyzer([partial]);
   let state = createPedagogicalSession(definition);
-  for (let index = 0; index < 5; index += 1) state = (await submitStudentResponse(definition, state, "Réponse", analyzer, fixedClock)).state;
+  for (let index = 0; index < 3; index += 1) state = (await submitStudentResponse(definition, state, "Réponse", analyzer, fixedClock)).state;
   const summary = produceLocalStructuredSummary(state, [], "2026-07-26T12:00:00.000Z");
   assert.deepEqual(summary.historicalKnowledgeResults.map(({ id }) => id), ["population", "representation"]);
   assert.deepEqual(summary.operationResults.map(({ id }) => id), ["establish_facts", "causes-and-consequences", "relate_facts"]);

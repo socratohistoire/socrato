@@ -18,7 +18,7 @@ export async function analyzeActeUnionTestResponse(request: TestRequest) {
   }
   if (typeof request?.questionId !== "string" || typeof request?.content !== "string"
     || request.content.trim().length === 0 || request.content.length > 10_000
-    || !Number.isInteger(request.attemptNumber) || request.attemptNumber < 1 || request.attemptNumber > 5) {
+    || !Number.isInteger(request.attemptNumber) || request.attemptNumber < 1 || request.attemptNumber > 3) {
     return { ok: false as const, error: "Choisissez une question et écrivez une réponse à tester." };
   }
   try {

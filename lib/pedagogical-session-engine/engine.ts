@@ -147,7 +147,7 @@ export async function submitStudentResponse(
 ): Promise<PedagogicalTransition> {
   const { question, runtime } = currentDefinition(definition, state);
   const attemptNumber = runtime.attemptNumber + 1;
-  if (attemptNumber > MAX_PEDAGOGICAL_ATTEMPTS) throw new Error("Le maximum de cinq tentatives est déjà atteint.");
+  if (attemptNumber > MAX_PEDAGOGICAL_ATTEMPTS) throw new Error("Le maximum de trois tentatives est déjà atteint.");
   const response: StudentResponse = {
     sessionId: state.sessionId, activityId: state.activityId, questionId: question.id, notionId: question.notionId,
     primaryOperationId: question.primaryOperationId, operationIds: [...question.operationIds], historicalKnowledgeIds: [...question.historicalKnowledgeIds], documentIds: [...question.documentIds],

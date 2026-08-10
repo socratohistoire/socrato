@@ -1,4 +1,4 @@
-export const MAX_PEDAGOGICAL_ATTEMPTS = 5 as const;
+export const MAX_PEDAGOGICAL_ATTEMPTS = 3 as const;
 export const MAX_EXPLICIT_HINT_LEVEL = 2 as const;
 
 export type HintLevel = 0 | 1 | 2;
