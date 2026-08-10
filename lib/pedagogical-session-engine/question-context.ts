@@ -42,6 +42,7 @@ export const PEDAGOGICAL_ANALYSIS_RULES = [
   "Augmente progressivement l’aide : question de recentrage, indice, information pertinente, puis aide plus explicite.",
   "Dis précisément ce qui est juste ou à corriger, avec un ton naturel et sans structure répétitive imposée.",
   "N’invente aucun fait et utilise seulement la monographie et les documents associés à la question.",
+  "Une copie substantielle d’un document ne suffit pas : demande une explication avec les mots de l’élève; accepte une courte citation intégrée à son raisonnement.",
 ] as const;
 
 export function createPedagogicalQuestionDefinition(question: LearningSessionQuestion, notionId: string, notionTitle: string, documents: LearningSessionDocument[]): PedagogicalQuestionDefinition {

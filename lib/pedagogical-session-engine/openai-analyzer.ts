@@ -156,6 +156,51 @@ function pedagogicalContext(response: StudentResponse, question: PedagogicalQues
   };
 }
 
+function normalizedWords(value: string) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().match(/[a-z0-9]+/g) ?? [];
+}
+
+function longestSharedWordRun(responseWords: string[], documentWords: string[]) {
+  let longest = 0;
+  let previous = new Array(documentWords.length + 1).fill(0) as number[];
+  for (const responseWord of responseWords) {
+    const current = new Array(documentWords.length + 1).fill(0) as number[];
+    for (let index = 1; index <= documentWords.length; index += 1) {
+      if (responseWord === documentWords[index - 1]) {
+        current[index] = previous[index - 1] + 1;
+        longest = Math.max(longest, current[index]);
+      }
+    }
+    previous = current;
+  }
+  return longest;
+}
+
+export function substantiallyCopiesApprovedDocument(response: string, question: PedagogicalQuestionDefinition) {
+  const responseWords = normalizedWords(response);
+  if (responseWords.length < 12) return false;
+  return (question.evaluationContext?.approvedDocuments ?? []).some(({ content }) =>
+    longestSharedWordRun(responseWords, normalizedWords(content)) >= Math.min(18, responseWords.length),
+  );
+}
+
+function requirePersonalExplanation(analysis: StructuredResponseAnalysis, response: StudentResponse, question: PedagogicalQuestionDefinition): StructuredResponseAnalysis {
+  if (analysis.pedagogicalOutcome !== "satisfactory" || !substantiallyCopiesApprovedDocument(response.content, question)) return analysis;
+  return {
+    ...analysis,
+    pedagogicalOutcome: "partially_satisfactory",
+    historicalAccuracy: analysis.historicalAccuracy === "not_assessed" ? "not_assessed" : "partial",
+    documentUse: "partial",
+    justificationQuality: "not_demonstrated",
+    primaryOperationPerformance: "partial",
+    demonstratedKnowledgeIds: [],
+    observedOperationIds: [],
+    observedStrengths: ["Tu as trouvé le passage pertinent dans le document."],
+    missingElements: ["Avec tes propres mots, quelle idée du document répond directement à la question?"],
+    nextAction: "request_revision",
+  };
+}
+
 export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
   private readonly apiKey: string;
   private readonly model: string;
@@ -188,14 +233,14 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
       return JSON.parse(extractOutputText(await apiResponse.json())) as unknown;
     };
 
-    const analyzeOnce = async (instructions: string, forceSubstantive = false) => validateStructuredAnalysis(
+    const analyzeOnce = async (instructions: string, forceSubstantive = false) => requirePersonalExplanation(validateStructuredAnalysis(
       await requestStructuredOutput(
         instructions,
         forceSubstantive ? analysisSchemaForSubstantiveResponse() : ANALYSIS_SCHEMA,
         "socrato_pedagogical_analysis",
       ),
       question,
-    );
+    ), response, question);
 
     const initial = await analyzeOnce(this.instructions);
     const isIntentionalNonAnswer = isExplicitHelpRequest(response.content)
