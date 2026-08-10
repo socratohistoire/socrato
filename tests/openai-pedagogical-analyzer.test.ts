@@ -10,6 +10,7 @@ const question = {
     questionPrompt: "Explique une conséquence politique de l’Acte d’Union.", instruction: "Appuie-toi sur le document.",
     notionTitle: "Acte d’union", primaryOperationLabel: "Déterminer des causes et des conséquences",
     successCriteria: ["Identifie une conséquence et l’explique."],
+    evaluationGuide: { expectedAnswer: "L’Acte d’Union réunit les deux Canadas.", commonErrors: ["Confondre union et séparation."] },
     referenceMonograph: { id: "historical-record:acte-union", title: "Monographie de l’Acte d’Union", scope: "Acte d’Union", scopeBoundary: "Gouvernement responsable traité ailleurs.", sections: [{ id: "mono-1", title: "Union", paragraphs: [{ id: "p-1", text: "L’Acte d’Union réunit les deux Canadas.", sourceIds: ["source-1"] }] }] },
     pedagogicalRules: ["Une réponse partielle reçoit une question ciblée."],
     approvedDocuments: [{ id: "document-1", title: "Acte d’Union", typeLabel: "Extrait", attribution: "Parlement britannique · 1840", content: "Les revenus sont réunis pour les besoins publics." }],
@@ -48,6 +49,7 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.input), /L’Acte d’Union réunit les deux Canadas/);
   assert.match(String(requestBody?.input), /Une réponse partielle reçoit une question ciblée/);
   assert.match(String(requestBody?.instructions), /dossier pédagogique approuvé/);
+  assert.match(String(requestBody?.instructions), /grille conceptuelle/);
   assert.match(String(requestBody?.instructions), /toute affirmation historique compréhensible/);
   assert.match(String(requestBody?.instructions), /même si elle est très courte, incomplète/);
   assert.match(String(requestBody?.instructions), /substantive ne doit jamais produire pedagogicalOutcome=non_exploitable/);
@@ -126,8 +128,8 @@ test("réanalyse une idée clairement liée avant de la déclarer non exploitabl
   const relatedResponse = { ...response, content: "La conséquence politique concerne les documents et les revenus réunis." };
   assert.deepEqual(await analyzer.analyze(relatedResponse, question), validAnalysis);
   assert.equal(calls, 2);
-  assert.match(secondInstructions, /Révision obligatoire/);
-  assert.match(secondInstructions, /responseDisposition=substantive/);
+  assert.match(secondInstructions, /Seconde lecture indépendante obligatoire/);
+  assert.match(secondInstructions, /responseDisposition doit être substantive/);
 });
 
 test("ne réanalyse pas une réponse réellement hors sujet", async () => {
@@ -144,7 +146,7 @@ test("ne réanalyse pas une réponse réellement hors sujet", async () => {
     return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(nonExploitable) }] }] }), { status: 200 });
   } });
   assert.deepEqual(await analyzer.analyze({ ...response, content: "J’aime beaucoup les jeux vidéo modernes." }, question), nonExploitable);
-  assert.equal(calls, 1);
+  assert.equal(calls, 2);
 });
 
 test("empêche un faux rejet répété pour une idée manifestement liée", async () => {

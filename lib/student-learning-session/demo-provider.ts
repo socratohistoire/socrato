@@ -49,6 +49,7 @@ export function createCatalogLearningSessionQuestions(questionIds: readonly stri
       initialMessages: [{ id: `published-test-welcome-${index}`, author: "socrato", content: question.format === "short-answer" ? "J’attends ta réponse…" : question.format === "document-interpretation" ? "Bonjour, consulte les sources puis réponds à la question." : "J’attends ta réponse…" }],
       answerOptions: question.answerOptions,
       answerExplanation: question.expectedAnswer,
+      evaluationGuide: { expectedAnswer: question.expectedAnswer, commonErrors: [...question.commonErrors] },
       timelineInteraction: question.timelineInteraction,
       associationInteraction: question.associationInteraction,
     };

@@ -61,7 +61,9 @@ export function createPedagogicalQuestionDefinition(question: LearningSessionQue
     evaluationContext: {
       questionPrompt: question.prompt, instruction: question.instruction, notionTitle,
       primaryOperationLabel: question.intellectualOperations.find(({ id }) => id === question.primaryOperationId)?.label ?? question.primaryOperationId,
-      successCriteria: successCriteria(question), referenceMonograph: referenceMonograph(notionId),
+      successCriteria: successCriteria(question),
+      evaluationGuide: question.evaluationGuide ?? { expectedAnswer: question.answerExplanation ?? "", commonErrors: [] },
+      referenceMonograph: referenceMonograph(notionId),
       pedagogicalRules: [...PEDAGOGICAL_ANALYSIS_RULES],
       approvedDocuments: documentIds.flatMap((id) => {
         const document = documentsById.get(id);
