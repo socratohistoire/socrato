@@ -210,8 +210,13 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
     const needsAdjudication = initial.confidence === "low" || (initial.pedagogicalOutcome === "non_exploitable" && !isIntentionalNonAnswer);
     if (!needsAdjudication) return initial;
     const relationIsClear = hasClearPedagogicalRelation(response, question);
-    const revised = await analyzeOnce(`${PEDAGOGICAL_ANALYSIS_INSTRUCTIONS}\n\nSeconde lecture indépendante obligatoire : vérifie d’abord si la réponse exprime, même maladroitement, un élément de evaluationGuide, de la question ou des documents. Une seule idée juste répondant à un volet suffit pour substantive et généralement partially_satisfactory. Ne confirme non_exploitable que si aucun contenu historique pertinent n’est réellement évaluable. ${relationIsClear ? "La protection lexicale a aussi détecté un lien direct : responseDisposition doit être substantive." : "Ne suppose ni réussite ni échec à partir de la seule longueur."}`);
-    return revised.pedagogicalOutcome === "non_exploitable" && relationIsClear ? relatedResponseFallback(question) : revised;
+    try {
+      const revised = await analyzeOnce(`${PEDAGOGICAL_ANALYSIS_INSTRUCTIONS}\n\nSeconde lecture indépendante obligatoire : vérifie d’abord si la réponse exprime, même maladroitement, un élément de evaluationGuide, de la question ou des documents. Une seule idée juste répondant à un volet suffit pour substantive et généralement partially_satisfactory. Ne confirme non_exploitable que si aucun contenu historique pertinent n’est réellement évaluable. ${relationIsClear ? "La protection lexicale a aussi détecté un lien direct : responseDisposition doit être substantive." : "Ne suppose ni réussite ni échec à partir de la seule longueur."}`);
+      return revised.pedagogicalOutcome === "non_exploitable" && relationIsClear ? relatedResponseFallback(question) : revised;
+    } catch (error) {
+      if (relationIsClear) return relatedResponseFallback(question);
+      throw error;
+    }
   }
 }
 

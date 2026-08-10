@@ -173,6 +173,43 @@ test("empêche un faux rejet répété pour une idée manifestement liée", asyn
   assert.match(analysis.missingElements[0], /Dans « Acte d’Union »/);
 });
 
+test("conserve une réponse liée lorsque la seconde lecture technique échoue", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  const fundQuestion = {
+    ...question,
+    evaluationContext: {
+      ...question.evaluationContext,
+      questionPrompt: "À l’aide du document, explique ce qu’est le fonds consolidé et indique à quoi il sert dans la Province du Canada.",
+      evaluationGuide: {
+        expectedAnswer: "Le fonds consolidé réunit les revenus des deux Canadas pour payer les dépenses publiques et les dettes.",
+        commonErrors: ["Ne mentionner que les dettes sans expliquer la mise en commun des revenus."],
+      },
+    },
+  } satisfies PedagogicalQuestionDefinition;
+  const nonExploitable = {
+    ...validAnalysis, responseDisposition: "incomprehensible", pedagogicalOutcome: "non_exploitable",
+    historicalAccuracy: "not_assessed", documentUse: "not_assessed", justificationQuality: "not_assessed",
+    primaryOperationPerformance: "not_assessed", demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [],
+    observedStrengths: [], missingElements: ["Reformule."], nextAction: "handle_non_exploitable",
+  } as const;
+  let calls = 0;
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
+    calls += 1;
+    if (calls === 2) return new Response(JSON.stringify({ error: { message: "temporary failure" } }), { status: 500 });
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(nonExploitable) }] }] }), { status: 200 });
+  } });
+
+  const analysis = await analyzer.analyze({
+    ...response,
+    content: "Le fonds consolidé fusionne les argents des deux Canadas.",
+  }, fundQuestion);
+
+  assert.equal(calls, 2);
+  assert.equal(analysis.responseDisposition, "substantive");
+  assert.equal(analysis.pedagogicalOutcome, "insufficient");
+  assert.equal(analysis.nextAction, "offer_hint");
+});
+
 test("reconnaît l’usage juste du fonds consolidé comme une réponse partielle", async () => {
   const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
   const fundQuestion = {
