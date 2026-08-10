@@ -12,6 +12,7 @@ test("protège l’analyse IA derrière la session et l’activité assignée", 
   assert.match(source, /DatabaseStudentLearningSessionProvider/);
   assert.match(source, /questions\.find/);
   assert.match(source, /createConfiguredOpenAIPedagogicalAnalyzer/);
+  assert.match(source, /\(\?:\[-:\]\[a-z0-9\]\+\)\*/);
   assert.doesNotMatch(source, /console\.(?:log|info|debug|warn|error)/);
 });
 
