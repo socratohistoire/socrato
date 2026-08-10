@@ -24,7 +24,7 @@ function validIdentifier(value: unknown, maximumLength = 120): value is string {
 
 function validRequest(value: AnalysisRequest) {
   return validIdentifier(value.activityId) && validIdentifier(value.questionId)
-    && Number.isInteger(value.attemptNumber) && value.attemptNumber >= 1 && value.attemptNumber <= 3
+    && Number.isInteger(value.attemptNumber) && value.attemptNumber >= 1 && value.attemptNumber <= 5
     && [0, 1, 2].includes(value.hintLevel)
     && typeof value.content === "string" && value.content.trim().length > 0 && value.content.length <= 10_000
     && validPriorTurn(value.priorTurn);
