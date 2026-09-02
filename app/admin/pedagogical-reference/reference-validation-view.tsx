@@ -14,7 +14,6 @@ import {
   type HistoricalRecordReviewDraft,
 } from "@/lib/pedagogical-reference";
 
-const STORAGE_KEY = "socrato:historical-record-review:acte-union:v4";
 const LEGACY_STORAGE_KEYS = ["socrato:historical-record-review:acte-union:v3", "socrato:historical-record-review:acte-union:v2"] as const;
 const CLAIM_KIND_LABELS = { fact: "Fait", interpretation: "Interprétation", nuance: "Nuance" } as const;
 const EDITORIAL_REVISION_LOG = [
@@ -27,10 +26,12 @@ const EDITORIAL_REVISION_LOG = [
   { id: "source-audit", area: "Sources", date: "1er août 2026", summary: "Vérification et regroupement des sources de la monographie et de la banque documentaire dans un catalogue commun, sans source manquante." },
   { id: "navigation", area: "Navigation", date: "1er août 2026", summary: "Ajout de l’onglet Questions, retrait de l’onglet Sources redondant, réduction des boutons et correction de l’espace créé par l’ouverture d’une période." },
 ] as const;
+function storageKey(record: HistoricalRecord) { return `socrato:historical-record-review:${record.knowledgeHeadingId}:v4`; }
 function readStoredReview(record: HistoricalRecord) {
   const empty = createHistoricalRecordReviewDraft(record);
   try {
-    const candidates = [STORAGE_KEY, ...LEGACY_STORAGE_KEYS].flatMap((key) => {
+    const keys = record.knowledgeHeadingId === "acte-union" ? [storageKey(record), ...LEGACY_STORAGE_KEYS] : [storageKey(record)];
+    const candidates = keys.flatMap((key) => {
       const stored = window.localStorage.getItem(key);
       if (!stored) return [];
       const parsed = JSON.parse(stored) as Partial<HistoricalRecordReviewDraft>;
@@ -95,7 +96,7 @@ export function ReferenceValidationView({ record, initialSection = "lecture" }: 
     const timeoutId = window.setTimeout(() => { setReview(readStoredReview(record)); setHydrated(true); }, 0);
     return () => window.clearTimeout(timeoutId);
   }, [record]);
-  useEffect(() => { if (hydrated) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(review)); }, [hydrated, review]);
+  useEffect(() => { if (hydrated) window.localStorage.setItem(storageKey(record), JSON.stringify(review)); }, [hydrated, record, review]);
 
   const progress = useMemo(() => countHistoricalRecordReview(record, review), [record, review]);
   const canApprove = canApproveHistoricalRecord(record, review);
@@ -170,7 +171,7 @@ export function ReferenceValidationView({ record, initialSection = "lecture" }: 
 
   return <main id="reference-top" className="reference-admin">
     <header className="reference-admin__header">
-      <div><p>Administration · Référentiel pédagogique</p><h1>Acte d’Union</h1><span>1840-1896 · La formation du régime fédéral canadien</span></div>
+      <div><p>Administration · Référentiel pédagogique</p><h1>{record.knowledgeHeadingId === "gouvernement-responsable" ? "Gouvernement responsable" : "Acte d’Union"}</h1><span>1840-1896 · La formation du régime fédéral canadien</span></div>
       <div className="reference-admin__header-actions"><Link href="/admin/pedagogical-reference">Toutes les périodes</Link><Link href="/teacher">Espace enseignant</Link></div>
     </header>
 
@@ -185,6 +186,7 @@ export function ReferenceValidationView({ record, initialSection = "lecture" }: 
     <nav className="review-tabs" aria-label="Sections du dossier">
       <button type="button" aria-pressed={activeSection === "lecture"} onClick={() => setActiveSection("lecture")}>Monographie</button>
       <Link href={`/admin/pedagogical-reference/documents/${record.knowledgeHeadingId}`}>Documents historiques</Link>
+      <Link href={`/admin/pedagogical-reference/questions?notion=${record.knowledgeHeadingId}`}>Questions</Link>
       {[["structure", "Structure pédagogique"], ["operations", "Opérations intellectuelles"], ["appropriation", "Approbation"]].map(([id, label]) => <button key={id} type="button" aria-pressed={activeSection === id} onClick={() => setActiveSection(id as typeof activeSection)}>{label}</button>)}
     </nav>
 

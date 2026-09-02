@@ -11,7 +11,7 @@ const question = {
     notionTitle: "Acte d’union", primaryOperationLabel: "Déterminer des causes et des conséquences",
     successCriteria: ["Identifie une conséquence et l’explique."],
     evaluationGuide: { expectedAnswer: "L’Acte d’Union réunit les deux Canadas.", commonErrors: ["Confondre union et séparation."] },
-    referenceMonograph: { id: "historical-record:acte-union", title: "Monographie de l’Acte d’Union", scope: "Acte d’Union", scopeBoundary: "Gouvernement responsable traité ailleurs.", sections: [{ id: "mono-1", title: "Union", paragraphs: [{ id: "p-1", text: "L’Acte d’Union réunit les deux Canadas.", sourceIds: ["source-1"] }] }] },
+    referenceMonograph: { id: "historical-record:acte-union", title: "Monographie de l’Acte d’Union", scope: "Acte d’Union", scopeBoundary: "Gouvernement responsable traité ailleurs.", sections: [{ id: "mono-1", title: "Union", paragraphs: [{ id: "p-1", text: "L’Acte d’Union réunit les deux Canadas.", sourceIds: ["source-1"] }, { id: "p-unrelated", text: "Ce passage sans rapport porte uniquement sur une campagne militaire outre-mer.", sourceIds: ["source-2"] }] }] },
     pedagogicalRules: ["Une réponse partielle reçoit une question ciblée."],
     approvedDocuments: [{ id: "document-1", title: "Acte d’Union", typeLabel: "Extrait", attribution: "Parlement britannique · 1840", content: "Les revenus sont réunis pour les besoins publics." }],
   },
@@ -59,14 +59,25 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(String(requestBody?.input), /Explique une conséquence politique/);
   assert.match(String(requestBody?.input), /Les revenus sont réunis/);
   assert.match(String(requestBody?.input), /L’Acte d’Union réunit les deux Canadas/);
-  assert.match(String(requestBody?.input), /Une réponse partielle reçoit une question ciblée/);
+  assert.doesNotMatch(String(requestBody?.input), /campagne militaire outre-mer/);
+  assert.doesNotMatch(String(requestBody?.input), /referenceMonograph|pedagogicalRules/);
   const instructions = String(requestBody?.instructions);
   assert.match(instructions, /Tu es Socrato, un tuteur d’histoire/);
   assert.match(instructions, /Comprends ce que l’élève essaie réellement de dire/);
   assert.match(instructions, /ne redemande jamais un élément déjà démontré/);
-  assert.match(instructions, /Choisis le moins d’aide nécessaire/);
+  assert.match(instructions, /Choisis une aide proportionnée/);
   assert.match(instructions, /affirmation liée à la question est substantive/);
   assert.match(instructions, /dialogue est cumulatif et peut compter jusqu’à trois réponses/);
+  assert.match(instructions, /n’exige pas une phrase de synthèse supplémentaire/);
+  assert.match(instructions, /liste fermée des obligations explicitement formulées/);
+  assert.match(instructions, /Il est interdit de transformer un détail supplémentaire/);
+  assert.match(instructions, /une reformulation fidèle d’une information pertinente constitue déjà une preuve documentaire/);
+  assert.match(instructions, /réunir les colonies sous une seule législature/);
+  assert.match(instructions, /Ne combine jamais plusieurs demandes/);
+  assert.match(instructions, /sans nommer toi-même les faits manquants/);
+  assert.match(instructions, /réussite conceptuelle en nouvelle tentative/);
+  assert.match(instructions, /ne doit jamais pouvoir recevoir seulement « oui » ou « non »/);
+  assert.match(instructions, /qu’est-ce qui montre/);
   assert.match(instructions, /Adapte toujours ton intervention au message réel/);
   assert.doesNotMatch(instructions, /patate|oignon|atchoum|article 41/);
 });
@@ -94,12 +105,34 @@ test("transmet les acquis structurés du tour précédent sans conserver son tex
   assert.doesNotMatch(input, /texte précédent de l’élève/i);
 });
 
-test("refuse les identifiants inventés par le modèle", async () => {
+test("écarte les identifiants inventés après une tentative de réparation", async () => {
   const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
   const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => new Response(JSON.stringify({
     output: [{ content: [{ type: "output_text", text: JSON.stringify({ ...validAnalysis, demonstratedKnowledgeIds: ["invented"] }) }] }],
   }), { status: 200 }) });
-  await assert.rejects(() => analyzer.analyze(response, question), /non autorisé/);
+  const result = await analyzer.analyze(response, question);
+  assert.deepEqual(result.demonstratedKnowledgeIds, []);
+});
+
+test("répare une sortie structurée invalide pour toutes les questions", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  let calls = 0;
+  let repairInstructions = "";
+  const invalid = { ...validAnalysis, demonstratedKnowledgeIds: ["identifiant-invente"] };
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({
+    apiKey: "test-key", model: "test-model",
+    fetch: async (_input, init) => {
+      calls += 1;
+      repairInstructions = String((JSON.parse(String(init?.body)) as { instructions?: string }).instructions);
+      const output = calls === 1 ? invalid : validAnalysis;
+      return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(output) }] }] }), { status: 200 });
+    },
+  });
+  const result = await analyzer.analyze(response, question);
+  assert.equal(calls, 2);
+  assert.deepEqual(result.demonstratedKnowledgeIds, validAnalysis.demonstratedKnowledgeIds);
+  assert.match(repairInstructions, /Utilise exclusivement les identifiants fournis/);
+  assert.match(repairInstructions, /cohérence exacte entre responseDisposition, pedagogicalOutcome et nextAction/);
 });
 
 test("réanalyse une idée clairement liée avant de la déclarer non exploitable", async () => {
@@ -112,19 +145,16 @@ test("réanalyse une idée clairement liée avant de la déclarer non exploitabl
   };
   let calls = 0;
   let secondInstructions = "";
-  let thirdInstructions = "";
   const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async (_input, init) => {
     calls += 1;
     if (calls === 2) secondInstructions = String((JSON.parse(String(init?.body)) as { instructions?: string }).instructions);
-    if (calls === 3) thirdInstructions = String((JSON.parse(String(init?.body)) as { instructions?: string }).instructions);
-    const analysis = calls === 1 ? nonExploitable : calls === 2 ? historicalIntent : validAnalysis;
+    const analysis = calls === 1 ? nonExploitable : validAnalysis;
     return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(analysis) }] }] }), { status: 200 });
   } });
   const relatedResponse = { ...response, content: "La conséquence politique concerne les documents et les revenus réunis." };
   assert.deepEqual(await analyzer.analyze(relatedResponse, question), validAnalysis);
-  assert.equal(calls, 3);
-  assert.match(secondInstructions, /nature du message/);
-  assert.match(thirdInstructions, /lecture spécialisée indépendante/);
+  assert.equal(calls, 2);
+  assert.match(secondInstructions, /Réévalue directement le même message/);
 });
 
 test("réévalue directement un fragment compréhensible dans le dialogue socratique", async () => {
@@ -159,13 +189,8 @@ test("réévalue directement un fragment compréhensible dans le dialogue socrat
   assert.match(result.observedStrengths[0], /usage pertinent/);
 });
 
-test("réévalue cumulativement le troisième essai avant de consolider", async () => {
+test("évalue cumulativement le troisième essai en un seul appel", async () => {
   const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
-  const partial = {
-    ...validAnalysis,
-    observedStrengths: ["Oui, tu ajoutes le gouvernement exécutif commun."],
-    missingElements: ["Un élément demeure à préciser."],
-  };
   const satisfactory = {
     ...validAnalysis,
     pedagogicalOutcome: "satisfactory",
@@ -176,7 +201,7 @@ test("réévalue cumulativement le troisième essai avant de consolider", async 
     nextAction: "complete_question",
     confidence: "high",
   };
-  const outputs = [partial, satisfactory];
+  const outputs = [satisfactory];
   const instructions: string[] = [];
   const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async (_input, init) => {
     const request = JSON.parse(String(init?.body)) as { instructions: string };
@@ -194,8 +219,8 @@ test("réévalue cumulativement le troisième essai avant de consolider", async 
       missingElements: ["Que devient le gouvernement exécutif?"],
     },
   }, question);
-  assert.equal(instructions.length, 2);
-  assert.match(instructions[1], /contrôle final cumulatif du troisième essai/);
+  assert.equal(instructions.length, 1);
+  assert.match(instructions[0], /contrôle final cumulatif du troisième essai/);
   assert.equal(result.pedagogicalOutcome, "satisfactory");
   assert.equal(result.nextAction, "complete_question");
   assert.deepEqual(result.observedStrengths, [
@@ -204,7 +229,7 @@ test("réévalue cumulativement le troisième essai avant de consolider", async 
   ]);
 });
 
-test("ne réanalyse pas une réponse réellement hors sujet", async () => {
+test("limite à deux appels la réévaluation d’une réponse réellement hors sujet", async () => {
   const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
   const nonExploitable = {
     ...validAnalysis, responseDisposition: "off_topic", pedagogicalOutcome: "non_exploitable",
@@ -215,7 +240,7 @@ test("ne réanalyse pas une réponse réellement hors sujet", async () => {
   let calls = 0;
   const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
     calls += 1;
-    const result = calls === 1 ? nonExploitable : nonHistoricalIntent;
+    const result = nonExploitable;
     return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(result) }] }] }), { status: 200 });
   } });
   assert.deepEqual(await analyzer.analyze({ ...response, content: "J’aime beaucoup les jeux vidéo modernes." }, question), nonExploitable);
@@ -248,7 +273,7 @@ test("empêche un faux rejet répété pour une idée manifestement liée", asyn
   assert.equal(analysis.missingElements[0], "Précise la conséquence.");
 });
 
-test("signale l’échec technique de la réévaluation directe", async () => {
+test("ne dépasse jamais deux appels lorsque la réévaluation échoue", async () => {
   const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
   const fundQuestion = {
     ...question,
@@ -270,14 +295,14 @@ test("signale l’échec technique de la réévaluation directe", async () => {
   let calls = 0;
   const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () => {
     calls += 1;
-    if (calls === 2) return new Response(JSON.stringify({ error: { message: "temporary failure" } }), { status: 500 });
+    if (calls >= 2) return new Response(JSON.stringify({ error: { message: "temporary failure" } }), { status: 500 });
     return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(nonExploitable) }] }] }), { status: 200 });
   } });
 
   await assert.rejects(() => analyzer.analyze({
     ...response,
     content: "Le fonds consolidé fusionne les argents des deux Canadas.",
-  }, fundQuestion), /L’analyse OpenAI a échoué/);
+  }, fundQuestion), /L’analyse OpenAI a échoué \(500\)/);
 
   assert.equal(calls, 2);
 });
@@ -431,14 +456,77 @@ test("ne force pas la réanalyse d’une demande d’aide explicite", async () =
   assert.equal(calls, 1);
 });
 
-test("présente une relance chaleureuse sans code interne ni consigne répétée", async () => {
+test("préserve la piste personnalisée et remplace les codes internes", async () => {
   const { createPedagogicalFeedback } = await import("../lib/pedagogical-session-engine/feedback.ts");
   const feedback = createPedagogicalFeedback({
     ...validAnalysis,
     missingElements: ["Ajoute une revendication précise, puis relie-la au refus : que demande le document document-1 au sujet du Conseil législatif?"],
   }, question, 0);
-  assert.equal(feedback.studentFacingText, "Un lien historique pertinent est amorcé. Que demande le document Acte d’Union au sujet du Conseil législatif?");
-  assert.doesNotMatch(feedback.studentFacingText, /document-1|Observe un document autorisé|Ajoute une revendication/);
+  assert.equal(feedback.studentFacingText, "Un lien historique pertinent est amorcé. Ajoute une revendication précise, puis relie-la au refus : que demande le document Acte d’Union au sujet du Conseil législatif?");
+  assert.doesNotMatch(feedback.studentFacingText, /document-1|Observe un document autorisé/);
+});
+
+test("demande seulement une reformulation personnelle après une copie substantielle", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  const { createPedagogicalFeedback } = await import("../lib/pedagogical-session-engine/feedback.ts");
+  const copiedText = "Après l’Union, les proclamations et les documents électoraux doivent être produits officiellement en anglais, tandis que les traductions françaises ne possèdent pas la même valeur officielle.";
+  const copiedQuestion = {
+    ...question,
+    evaluationContext: {
+      ...question.evaluationContext,
+      approvedDocuments: [{ ...question.evaluationContext.approvedDocuments[0], content: copiedText }],
+    },
+  } satisfies PedagogicalQuestionDefinition;
+  const copiedAnalysis = {
+    ...validAnalysis,
+  } satisfies StructuredResponseAnalysis;
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({ apiKey: "test-key", model: "test-model", fetch: async () =>
+    new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(copiedAnalysis) }] }] }), { status: 200 }),
+  });
+  const result = await analyzer.analyze({ ...response, content: copiedText }, copiedQuestion);
+  const feedback = createPedagogicalFeedback(result, copiedQuestion, 0);
+  assert.equal(result.pedagogicalOutcome, "partially_satisfactory");
+  assert.deepEqual(result.missingElements, []);
+  assert.equal(feedback.studentFacingText, "Tu as repéré le passage pertinent, mais tu dois formuler ton idée dans tes mots.");
+});
+
+test("corrige une attribution ponctuelle sans redemander un raisonnement déjà complet", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  let instructions = "";
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({
+    apiKey: "test-key", model: "test-model",
+    fetch: async (_input, init) => {
+      instructions = String((JSON.parse(String(init?.body)) as { instructions?: string }).instructions);
+      return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(validAnalysis) }] }] }), { status: 200 });
+    },
+  });
+  await analyzer.analyze(response, question);
+  assert.match(instructions, /attribue à Russell des recommandations qu’il identifie correctement comme celles de Durham/);
+  assert.match(instructions, /complete_question/);
+  assert.match(instructions, /Ne présente jamais une affirmation fausse comme un acquis/);
+  assert.match(instructions, /À la troisième tentative, observedStrengths doit corriger brièvement le contresens central/);
+});
+
+test("répond à une salutation légère sans dépendre de l’analyse distante", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  let called = false;
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({
+    apiKey: "test-key", model: "test-model",
+    fetch: async () => {
+      called = true;
+      throw new Error("Le service distant ne devrait pas être appelé.");
+    },
+  });
+  const result = await analyzer.analyze({ ...response, content: "coucou" }, question);
+  assert.equal(called, false);
+  assert.equal(result.responseDisposition, "playful_diversion");
+  assert.equal(result.pedagogicalOutcome, "non_exploitable");
+  assert.equal(result.observedStrengths[0], "Coucou!");
+  assert.match(result.missingElements[0] ?? "", /\?$/);
+  const wellbeing = await analyzer.analyze({ ...response, content: "comment vastu" }, question);
+  assert.equal(called, false);
+  assert.equal(wellbeing.responseDisposition, "playful_diversion");
+  assert.equal(wellbeing.observedStrengths[0], "Je vais bien, merci!");
 });
 
 test("permet de revenir temporairement au contrat v1 sans modifier le moteur", async () => {
@@ -461,7 +549,25 @@ test("échoue fermé lorsque la configuration est absente", async () => {
   assert.throws(() => createConfiguredOpenAIPedagogicalAnalyzer({}), /OPENAI_API_KEY/);
 });
 
-test("utilise Sol par défaut pour toutes les analyses pédagogiques", async () => {
+test("annule réellement un appel d’analyse qui dépasse le délai serveur", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  let aborted = false;
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({
+    apiKey: "test-key",
+    model: "test-model",
+    requestTimeoutMs: 5,
+    fetch: async (_input, init) => new Promise<Response>((_resolve, reject) => {
+      init?.signal?.addEventListener("abort", () => {
+        aborted = true;
+        reject(new DOMException("aborted", "AbortError"));
+      });
+    }),
+  });
+  await assert.rejects(() => analyzer.analyze(response, question), /délai maximal/);
+  assert.equal(aborted, true);
+});
+
+test("utilise Terra par défaut pour les analyses pédagogiques interactives", async () => {
   const { createConfiguredOpenAIPedagogicalAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
   let requestBody: Record<string, unknown> | undefined;
   const analyzer = createConfiguredOpenAIPedagogicalAnalyzer({ OPENAI_API_KEY: "test-key" }, async (_input, init) => {
@@ -469,5 +575,36 @@ test("utilise Sol par défaut pour toutes les analyses pédagogiques", async () 
     return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(validAnalysis) }] }] }), { status: 200 });
   });
   await analyzer.analyze(response, question);
-  assert.equal(requestBody?.model, "gpt-5.6-sol");
+  assert.equal(requestBody?.model, "gpt-5.6-terra");
+});
+
+test("reprend une analyse 429 sans dépasser deux appels IA", async () => {
+  const { OpenAIPedagogicalResponseAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  let calls = 0;
+  const analyzer = new OpenAIPedagogicalResponseAnalyzer({
+    apiKey: "test-key", model: "test-model", retryBaseDelayMs: 0,
+    fetch: async () => {
+      calls += 1;
+      return calls === 1
+        ? new Response("indisponible", { status: 429 })
+        : new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(validAnalysis) }] }] }), { status: 200 });
+    },
+  });
+  assert.deepEqual(await analyzer.analyze(response, question), validAnalysis);
+  assert.equal(calls, 2);
+});
+
+test("utilise la configuration pédagogique avant l’ancien réglage Sol", async () => {
+  const { createConfiguredOpenAIPedagogicalAnalyzer } = await import("../lib/pedagogical-session-engine/openai-analyzer.ts");
+  let requestBody: Record<string, unknown> | undefined;
+  const analyzer = createConfiguredOpenAIPedagogicalAnalyzer({
+    OPENAI_API_KEY: "test-key",
+    SOCRATO_PEDAGOGICAL_AI_MODEL: "gpt-5.6-terra",
+    SOCRATO_SOL_AI_MODEL: "gpt-5.6-sol",
+  }, async (_input, init) => {
+    requestBody = JSON.parse(String(init?.body));
+    return new Response(JSON.stringify({ output: [{ content: [{ type: "output_text", text: JSON.stringify(validAnalysis) }] }] }), { status: 200 });
+  });
+  await analyzer.analyze(response, question);
+  assert.equal(requestBody?.model, "gpt-5.6-terra");
 });

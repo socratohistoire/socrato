@@ -39,7 +39,7 @@ export function getLearningSessionProgress(data: StudentLearningSessionData) {
 export function getLearningSessionHeading(data: StudentLearningSessionData) {
   const isTeacherAssigned = data.origin === "teacher_assigned";
   return {
-    primaryTitle: isTeacherAssigned ? data.activityTitle : data.notionTitle,
-    contextualNotion: isTeacherAssigned ? data.notionTitle : null,
+    primaryTitle: data.consolidationStrategyLabel ? `Consolidation — ${data.consolidationStrategyLabel}` : isTeacherAssigned ? data.activityTitle : data.notionTitle,
+    contextualNotion: isTeacherAssigned || data.consolidationStrategyLabel ? data.notionTitle : null,
   };
 }

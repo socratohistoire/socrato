@@ -16,7 +16,7 @@ export default async function TeacherApiTestPage() {
     persistProgress={false}
     teacherPreviewExitHref="/teacher"
     data={{
-      id: "teacher-api-test", activityId: "teacher-api-test", activityTitle: "Banc d’essai de Sol — Acte d’Union",
+      id: "teacher-api-test", activityId: "teacher-api-test", activityTitle: `Révision complète des ${catalog.questions.length} questions — Acte d’Union`,
       origin: "teacher_assigned", notionId: "acte-union", notionTitle: "Acte d’Union",
       historicalPeriod: { startYear: 1840, endYear: 1896 }, currentQuestionIndex: 0,
       questions: catalog.questions, documentCatalog: catalog.documents, dashboardHref: "/teacher",

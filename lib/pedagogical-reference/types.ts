@@ -254,6 +254,7 @@ export interface ApprovedQuestion {
       title: string;
       description: string;
       imageUrl: string;
+      imageUrls?: readonly string[];
       imageAlt: string;
       credit: string;
     }[];
@@ -262,6 +263,9 @@ export interface ApprovedQuestion {
     documentId: string;
     items: readonly { id: string; label: string }[];
     targets: readonly { id: string; description: string; correctItemId: string }[];
+  };
+  causalChainInteraction?: {
+    steps: readonly { id: string; date: string; prompt: string; placeholder: string; acceptedAnswers: readonly string[]; expectedAnswer: string }[];
   };
   review: {
     documented: boolean;

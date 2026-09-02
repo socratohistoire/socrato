@@ -9,7 +9,7 @@ export const DASHBOARD_LABELS = {
 } as const;
 
 export const PROGRESS_STATUS_LABELS: Record<ProgressStatus, string> = {
-  mastered: "Maîtrisée", consolidate: "À consolider", needs_work: "À travailler", not_assessed: "Non travaillée",
+  mastered: "Maîtrisée", consolidate: "Maîtrisée avec l’aide de Socrato", needs_work: "À travailler", covered: "Abordée", not_assessed: "Non travaillée",
 };
 
 export const ACTIVITY_STATUS_LABELS: Record<ActivityStatus, string> = {

@@ -74,7 +74,7 @@ test("n’affiche que des opérations et connaissances réellement travaillées 
   assert.ok(data.operations.length > 0 && data.operations.every(({ label }) => approvedOperations.has(label as never)));
   assert.ok(data.historicalKnowledge.length > 0 && data.historicalKnowledge.every(({ label }) => approvedKnowledge.has(label as never)));
   assert.ok([...data.operations, ...data.historicalKnowledge].every(({ status }) => status !== ("not_assessed" as never)));
-  assert.deepEqual(TEACHER_STUDENT_RESULT_LABELS, { mastered: "Maîtrisée", consolidate: "À consolider", needs_work: "À travailler" });
+  assert.deepEqual(TEACHER_STUDENT_RESULT_LABELS, { mastered: "Maîtrisée", consolidate: "Maîtrisée avec l’aide de Socrato", needs_work: "À travailler" });
   assert.doesNotMatch(JSON.stringify(data), /Non travaill/i);
 });
 
@@ -84,7 +84,7 @@ test("rend la hiérarchie, les actions et le contenu pédagogique attendus", () 
   assert.match(viewSource, /Synthèse de Socrato/);
   assert.match(viewSource, /Bilan pédagogique/);
   assert.match(viewSource, /Opérations intellectuelles travaillées/);
-  assert.match(viewSource, /Connaissances historiques travaillées/);
+  assert.doesNotMatch(viewSource, /Connaissances historiques travaillées/);
   assert.ok(viewSource.indexOf("student-socrato-card") < viewSource.indexOf("student-overview-card"));
   assert.match(viewSource, /disabled aria-disabled="true" title="Fonction à venir">Créer une activité de consolidation/);
   assert.doesNotMatch(viewSource, /href="#"/);

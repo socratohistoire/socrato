@@ -10,6 +10,7 @@ export function getGroupsEligibleForSynthesis(activity: TeacherActivitySummary) 
 export function formatGlobalCompletionMessage(activity: TeacherActivitySummary) {
   const completed = activity.completedStudentCount;
   const targeted = activity.targetedStudentCount;
+  if (completed === 0) return "J’ai assigné l’activité aux élèves. Je vous tiens au courant lorsque la majorité des élèves aura terminé l’activité.";
   const completedLabel = completed === 1 ? "1 élève" : `${completed} élèves`;
   const verb = completed === 1 ? "a terminé" : "ont terminé";
   return `Bonjour, pour l’instant, ${completedLabel} sur ${targeted} ${verb} l’activité.`;

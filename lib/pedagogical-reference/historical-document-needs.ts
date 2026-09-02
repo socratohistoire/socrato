@@ -420,6 +420,44 @@ export const PATRIOTES_MINERVE_INDEPENDENCE_DOCUMENT = {
   approvedAt: "2026-08-01T00:00:00.000-04:00",
 } as const satisfies HistoricalDocumentRecord;
 
+export const PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT = {
+  schemaVersion: 1,
+  id: "PAT-T-007",
+  title: "Du refus britannique à la résistance",
+  kind: "newspaper",
+  status: "approved",
+  periodIds: ["1840-1896"],
+  knowledgeHeadingIds: ["acte-union"],
+  operationIds: ["causes_and_consequences", "relationships_between_facts", "causal_connections"],
+  historicalDate: "25 mai 1837",
+  creator: "Louis-Joseph Papineau, discours reproduit dans La Minerve",
+  holdingInstitution: "Bibliothèque et Archives nationales du Québec (BAnQ)",
+  sourceUrl: "https://collections.banq.qc.ca/ark:/52327/279253",
+  sourceLocator: "La Minerve, Montréal, 25 mai 1837; discours de Louis-Joseph Papineau à l’assemblée de Saint-Laurent du 15 mai 1837, passages sur les résolutions Russell et la résistance.",
+  assetUrl: "https://archive.org/details/cihm_21619",
+  rightsStatement: "Journal et discours de 1837 appartenant au domaine public. L’orthographe et la ponctuation ont été modernisées; les coupures entre les passages sont signalées par […].",
+  transcription: "Le Parlement britannique prend parti contre nous. Le ministre ne compte pour rien les justes plaintes du peuple. […] Le gouvernement repousse toutes et chacune des réformes que vous avez demandées et veut enlever à vos représentants le contrôle de votre argent. […] S’ils marchent dans la voie de l’illégalité et de l’injustice, marchons dans celle de la résistance.",
+  accessibleDescription: "Extrait d’un discours de Papineau publié dans La Minerve qui relie le rejet britannique des réformes demandées, la perte du contrôle des revenus publics et l’appel à la résistance.",
+  historicalContext: "Après l’arrivée au Bas-Canada des résolutions Russell, les Patriotes organisent des assemblées publiques pour dénoncer la réponse britannique aux 92 Résolutions. À Saint-Laurent, Papineau présente le refus des réformes et l’utilisation des revenus sans le consentement de l’Assemblée comme des injustices auxquelles il faut résister.",
+  observationGuide: [
+    "Identifier ce que le gouvernement britannique refuse aux Patriotes.",
+    "Relever le pouvoir financier retiré aux représentants élus.",
+    "Établir le lien entre ces décisions et l’appel à la résistance.",
+  ],
+  interpretationCautions: [
+    "Le passage présente le point de vue engagé de Papineau lors d’une assemblée patriote; il ne représente pas l’opinion de toute la population.",
+    "Le mot « résistance » témoigne d’une radicalisation politique, mais ne désigne pas à lui seul un appel immédiat et explicite à l’insurrection armée.",
+    "L’extrait réunit trois passages du même discours; les coupures sont indiquées par […].",
+  ],
+  pedagogicalUses: [
+    "Relier directement les résolutions Russell au mécontentement patriote.",
+    "Expliquer le passage des revendications parlementaires à la résistance politique.",
+    "Construire une chaîne causale nuancée menant aux Rébellions de 1837-1838.",
+  ],
+  version: "1.0",
+  approvedAt: "2026-08-14T00:00:00.000-04:00",
+} as const satisfies HistoricalDocumentRecord;
+
 export const ACTE_UNION_BERMUDA_EXILE_DOCUMENT = {
   schemaVersion: 1,
   id: "AU-T-007",
@@ -512,15 +550,17 @@ export const ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT = {
   sourceLocator: "Chambre des communes du Royaume-Uni, débat « Canada », 3 juin 1839, vol. 47, colonnes 1274-1275.",
   assetUrl: "https://primarydocuments.ca/uk-hc-canada-vol-47-1839-cols-1254-90-3-june-1839/",
   rightsStatement: "Débat parlementaire britannique de 1839 dans le domaine public; traduction-adaptation française rédigée par Socrato à partir de la transcription anglaise.",
-  transcription: "Selon moi, l’union législative du Haut-Canada et du Bas-Canada permettra de leur donner des institutions représentatives communes et de favoriser la prospérité de la nouvelle province.",
-  accessibleDescription: "Adaptation française d’un passage dans lequel Lord John Russell défend devant la Chambre des communes une union législative fondée sur un gouvernement représentatif commun.",
+  transcription: "Selon moi, les difficultés politiques et commerciales des deux Canadas découlent de leur séparation. […] Leur union législative permettrait de donner aux populations du Haut-Canada et du Bas-Canada des institutions libres et représentatives communes, et de favoriser la prospérité des deux provinces. […] La politique du Royaume-Uni devrait aussi donner un caractère britannique à l’ensemble de la nouvelle province et permettre aux lois et aux institutions britanniques de s’y développer, sans opprimer la population française ni lui causer d’injustice.",
+  accessibleDescription: "Adaptation française de passages dans lesquels Lord John Russell présente la séparation des deux Canadas comme une cause de leurs difficultés et défend une union législative dotée d’institutions représentatives communes, mais orientée vers le renforcement du caractère britannique de la nouvelle province.",
   historicalContext: "Après les Rébellions de 1837-1838 et le rapport Durham, le gouvernement britannique cherche une nouvelle organisation politique pour les Canadas. Le 3 juin 1839, Lord John Russell présente à la Chambre des communes une résolution favorable à leur union législative.",
   observationGuide: [
     "Identifier l’union législative comme la solution proposée par Russell.",
     "Relever les institutions représentatives communes et la prospérité comme avantages annoncés.",
+    "Observer que Russell souhaite aussi renforcer le caractère britannique, les lois et les institutions britanniques dans la province unie.",
     "Distinguer le point de vue du gouvernement britannique de celui des opposants à l’Union.",
   ],
   interpretationCautions: [
+    "Traduction et adaptation pédagogique de passages du discours de Lord John Russell, 3 juin 1839.",
     "Présenter ce passage comme le point de vue d’un ministre britannique favorable à l’Union, et non comme une opinion partagée par toute la population.",
     "Indiquer clairement que le texte montré à l’élève est une traduction-adaptation française du débat anglais.",
     "Ne pas confondre cette proposition de 1839 avec le texte définitif de l’Acte d’Union adopté en 1840.",

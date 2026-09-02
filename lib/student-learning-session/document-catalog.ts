@@ -1,10 +1,15 @@
 import type { LearningSessionDocument } from "./types.ts";
-import { ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_CONSOLIDATED_REVENUE_FUND_DOCUMENT, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT, ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT, ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT, ACTE_UNION_MAP_ADAPTATION_DRAFT, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT, PATRIOTES_MINERVE_INDEPENDENCE_DOCUMENT, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT } from "../pedagogical-reference/historical-document-needs.ts";
+import { ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_CONSOLIDATED_REVENUE_FUND_DOCUMENT, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT, ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT, ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT, ACTE_UNION_MAP_ADAPTATION_DRAFT, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT, PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT } from "../pedagogical-reference/historical-document-needs.ts";
 import { ACTE_UNION_DURHAM_DOCUMENT, ACTE_UNION_DURHAM_PRESENTATIONS } from "../pedagogical-reference/historical-document-presentations.ts";
 import { ACTE_UNION_DEBT_COMPARISON_CHART, ACTE_UNION_POPULATION_COMPARISON_CHART } from "../pedagogical-reference/historical-comparison-charts.ts";
-import { ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM, ACTE_UNION_STUDENT_TIMELINE } from "../pedagogical-reference/responsible-government-iconography.ts";
+import { ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM, ACTE_UNION_STUDENT_TIMELINE, RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS, RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE } from "../pedagogical-reference/responsible-government-iconography.ts";
+import { RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT } from "../pedagogical-reference/responsible-government-primary-documents.ts";
+import { RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION } from "../pedagogical-reference/responsible-government-electoral-law.ts";
 
 const PUBLIC_DOMAIN_RIGHTS = "Texte original de 1840 dans le domaine public.";
+const RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_IMAGE = RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.find(({ id }) => id === "GR-I-002")!;
+const RESPONSIBLE_GOVERNMENT_MAN_FIRED_PARLIAMENT_CARTOON = RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.find(({ id }) => id === "GR-I-006")!;
+const RESPONSIBLE_GOVERNMENT_HERE_WE_GO_CARTOON = RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.find(({ id }) => id === "GR-I-007")!;
 
 const REBELLION_DOCUMENT_TYPE_LABELS: Record<string, string> = {
   "AU-T-006": "Suspension du régime représentatif",
@@ -45,6 +50,68 @@ export const ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENTS: LearningSessionDocument
 }));
 
 export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
+  {
+    id: RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.id,
+    title: RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.title,
+    typeLabel: RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.typeLabel,
+    dateLabel: RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.dateLabel,
+    authorLabel: RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.authorLabel,
+    institutionLabel: RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_DOCUMENT.holdingInstitution,
+    originalDocumentLabel: RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.originalDocumentLabel,
+    sourceLabel: RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.sourceLabel,
+    sourceUrls: [...RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.sourceUrls],
+    rightsLabel: RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.rightsLabel,
+    editorialNote: RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.editorialNote,
+    content: { kind: "historical_excerpt", excerpt: RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.studentText },
+    historicalKnowledgeIds: ["gouvernement-responsable", "role-des-femmes", "droit-de-vote"],
+    intellectualOperationIds: [...RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.operationIds],
+  },
+  {
+    id: RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_IMAGE.id,
+    title: RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_IMAGE.title,
+    typeLabel: "Lithographie historique",
+    dateLabel: RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_IMAGE.historicalDate,
+    authorLabel: RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_IMAGE.creator,
+    institutionLabel: RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_IMAGE.holdingInstitution,
+    sourceLabel: RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_IMAGE.sourceLocator,
+    sourceUrls: [RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_IMAGE.sourceUrl],
+    rightsLabel: RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_IMAGE.rightsStatement,
+    editorialNote: RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_IMAGE.interpretationCautions[0],
+    content: { kind: "historical_image", localSrc: RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_IMAGE.assetUrl, alt: RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_IMAGE.accessibleDescription, description: RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_IMAGE.historicalContext },
+    historicalKnowledgeIds: ["gouvernement-responsable", "loi-indemnisation", "incendie-parlement-montreal"],
+    intellectualOperationIds: [...RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_IMAGE.operationIds],
+  },
+  {
+    id: RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.id,
+    title: RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.title,
+    typeLabel: "Extrait d’un journal",
+    dateLabel: RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.historicalDate,
+    authorLabel: RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.creator,
+    institutionLabel: RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.holdingInstitution,
+    originalDocumentLabel: "Le Canadien — Lettre XXXVII",
+    sourceLabel: RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.sourceLocator,
+    sourceUrls: [RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.sourceUrl, RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.assetUrl],
+    rightsLabel: RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.rightsStatement,
+    editorialNote: RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.interpretationCautions[0],
+    content: { kind: "historical_excerpt", excerpt: RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.transcription },
+    historicalKnowledgeIds: ["gouvernement-responsable", "loi-indemnisation", "incendie-parlement-montreal"],
+    intellectualOperationIds: [...RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.operationIds],
+  },
+  ...[RESPONSIBLE_GOVERNMENT_MAN_FIRED_PARLIAMENT_CARTOON, RESPONSIBLE_GOVERNMENT_HERE_WE_GO_CARTOON].map((document) => ({
+    id: document.id,
+    title: document.title,
+    typeLabel: "Caricature politique",
+    dateLabel: document.historicalDate,
+    authorLabel: document.creator,
+    institutionLabel: document.holdingInstitution,
+    sourceLabel: document.sourceLocator,
+    sourceUrls: [document.sourceUrl],
+    rightsLabel: document.rightsStatement,
+    editorialNote: document.interpretationCautions[0],
+    content: { kind: "historical_image" as const, localSrc: document.assetUrl, alt: document.accessibleDescription, description: document.historicalContext },
+    historicalKnowledgeIds: ["gouvernement-responsable", "loi-indemnisation", "incendie-parlement-montreal"],
+    intellectualOperationIds: [...document.operationIds],
+  })),
   {
     id: ACTE_UNION_DEBT_COMPARISON_CHART.id, title: ACTE_UNION_DEBT_COMPARISON_CHART.title, typeLabel: ACTE_UNION_DEBT_COMPARISON_CHART.typeLabel, dateLabel: ACTE_UNION_DEBT_COMPARISON_CHART.dateLabel,
     sourceLabel: ACTE_UNION_DEBT_COMPARISON_CHART.sourceLabel, sourceUrls: [ACTE_UNION_DEBT_COMPARISON_CHART.sourceUrl], rightsLabel: "Présentation Socrato fondée sur des données historiques du domaine public.", editorialNote: ACTE_UNION_DEBT_COMPARISON_CHART.methodology,
@@ -100,6 +167,12 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
     sourceLabel: "Ligne du temps pédagogique Socrato composée à partir des sources indiquées pour chaque événement.", sourceUrls: ACTE_UNION_STUDENT_TIMELINE.entries.map(({ sourceUrl }) => sourceUrl), rightsLabel: ACTE_UNION_STUDENT_TIMELINE.rightsStatement, editorialNote: ACTE_UNION_STUDENT_TIMELINE.interpretationCautions[0],
     content: { kind: "historical_timeline", entries: ACTE_UNION_STUDENT_TIMELINE.entries.map(({ date, phase, title, description, imageUrl, imageAlt, credit }) => ({ date, phase, title, description, imageUrl, imageAlt, credit })) },
     historicalKnowledgeIds: ["acte-union", "gouvernement-responsable"], intellectualOperationIds: [...ACTE_UNION_STUDENT_TIMELINE.operationIds],
+  },
+  {
+    id: RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.id, title: RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.title, typeLabel: "Ligne du temps", dateLabel: RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.periodLabel, authorLabel: RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.creator,
+    sourceLabel: "Ligne du temps pédagogique Socrato composée à partir des sources indiquées pour chaque événement.", sourceUrls: RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.entries.map(({ sourceUrl }) => sourceUrl), rightsLabel: RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.rightsStatement, editorialNote: RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.interpretationCautions[0],
+    content: { kind: "historical_timeline", entries: RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.entries.map(({ date, phase, title, description, imageUrl, imageAlt, credit }) => ({ date, phase, title, description, imageUrl, imageAlt, credit })) },
+    historicalKnowledgeIds: ["gouvernement-responsable"], intellectualOperationIds: [...RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.operationIds],
   },
   ...ACTE_UNION_DURHAM_EXCERPT_DOCUMENTS,
   ...ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENTS,
@@ -232,5 +305,5 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
 export const ACTE_UNION_CAUSAL_PILOT_DOCUMENTS: LearningSessionDocument[] = [
   { id: PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT.id, title: PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT.title, typeLabel: "Extrait d’un texte parlementaire", dateLabel: PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT.historicalDate, authorLabel: PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT.creator, institutionLabel: PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT.holdingInstitution, sourceLabel: PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT.sourceLocator, sourceUrls: [PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT.sourceUrl, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT.assetUrl], rightsLabel: PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT.rightsStatement, editorialNote: PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT.interpretationCautions[1], content: { kind: "historical_excerpt", excerpt: PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT.transcription }, historicalKnowledgeIds: ["contexte-acte-union", "causes-acte-union"], intellectualOperationIds: ["causal_connections"] },
   { id: PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT.id, title: PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT.title, typeLabel: "Extrait d’un texte parlementaire", dateLabel: PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT.historicalDate, authorLabel: PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT.creator, institutionLabel: PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT.holdingInstitution, sourceLabel: PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT.sourceLocator, sourceUrls: [PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT.sourceUrl, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT.assetUrl], rightsLabel: PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT.rightsStatement, editorialNote: PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT.interpretationCautions[1], content: { kind: "historical_excerpt", excerpt: PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT.transcription }, historicalKnowledgeIds: ["contexte-acte-union", "causes-acte-union"], intellectualOperationIds: ["causal_connections"] },
-  { id: PATRIOTES_MINERVE_INDEPENDENCE_DOCUMENT.id, title: PATRIOTES_MINERVE_INDEPENDENCE_DOCUMENT.title, typeLabel: "Extrait d’un article de journal", dateLabel: PATRIOTES_MINERVE_INDEPENDENCE_DOCUMENT.historicalDate, authorLabel: PATRIOTES_MINERVE_INDEPENDENCE_DOCUMENT.creator, institutionLabel: PATRIOTES_MINERVE_INDEPENDENCE_DOCUMENT.holdingInstitution, publicationLabel: "La Minerve", sourceLabel: PATRIOTES_MINERVE_INDEPENDENCE_DOCUMENT.sourceLocator, sourceUrls: [PATRIOTES_MINERVE_INDEPENDENCE_DOCUMENT.sourceUrl], rightsLabel: PATRIOTES_MINERVE_INDEPENDENCE_DOCUMENT.rightsStatement, editorialNote: PATRIOTES_MINERVE_INDEPENDENCE_DOCUMENT.interpretationCautions[0], content: { kind: "historical_excerpt", excerpt: PATRIOTES_MINERVE_INDEPENDENCE_DOCUMENT.transcription }, historicalKnowledgeIds: ["contexte-acte-union", "causes-acte-union"], intellectualOperationIds: ["causal_connections"] },
+  { id: PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.id, title: PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.title, typeLabel: "Extrait d’un discours publié dans un journal", dateLabel: PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.historicalDate, authorLabel: PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.creator, institutionLabel: PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.holdingInstitution, publicationLabel: "La Minerve", sourceLabel: PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.sourceLocator, sourceUrls: [PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.sourceUrl, PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.assetUrl], rightsLabel: PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.rightsStatement, editorialNote: PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.interpretationCautions[1], content: { kind: "historical_excerpt", excerpt: PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.transcription }, historicalKnowledgeIds: ["contexte-acte-union", "causes-acte-union"], intellectualOperationIds: ["causal_connections"] },
 ];

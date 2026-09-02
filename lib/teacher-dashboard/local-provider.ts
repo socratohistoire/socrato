@@ -2,11 +2,12 @@ import type { TeacherDashboardProvider } from "./provider.ts";
 import type { TeacherDashboardData } from "./types.ts";
 
 import { LOCAL_TEACHER_ID } from "../academic-context/local-context.ts";
+import { isTeacherAuthenticationEnabled } from "../supabase/config.ts";
 
 export const LOCAL_DEMO_TEACHER_ID = LOCAL_TEACHER_ID;
 
 export function isLocalTeacherDashboardEnabled(environment = process.env.NODE_ENV) {
-  return environment !== "production";
+  return environment !== "production" || isTeacherAuthenticationEnabled();
 }
 
 export function createLocalTeacherDashboardData(): TeacherDashboardData {

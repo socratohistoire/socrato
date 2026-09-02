@@ -18,11 +18,14 @@ function questionDefinition(question: LearningSessionQuestion, notionId: string)
   return {
     id: question.id,
     notionId,
+    questionPrompt: question.prompt,
+    instruction: question.instruction,
     primaryOperationId: question.primaryOperationId,
     operationIds: question.intellectualOperations.map(({ id }) => id),
     historicalKnowledgeIds: [...question.historicalKnowledgeIds],
     documentIds: question.documentRelations.map(({ documentId }) => documentId),
     requiredDocumentIds: question.requiredDocumentIds ?? question.documentRelations.map(({ documentId }) => documentId),
+    maxAttempts: question.maxAttempts,
     hintSequence: createHintSequence(question),
   };
 }

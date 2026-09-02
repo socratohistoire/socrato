@@ -111,9 +111,9 @@ const runtimeGlobal = globalThis as typeof globalThis & {
 };
 
 export function getStudentAccessRuntime(): StudentAccessRuntime {
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL) {
     throw new Error(
-      "Student access requires a production repository and managed lookup key.",
+      "Student access requires the database repository in production.",
     );
   }
 

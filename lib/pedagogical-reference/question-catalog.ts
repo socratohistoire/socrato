@@ -1,13 +1,16 @@
 import type { ApprovedQuestion } from "./types.ts";
 import { ACTE_UNION_HISTORICAL_RECORD } from "./records/acte-union.ts";
-import { ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM, ACTE_UNION_STUDENT_TIMELINE } from "./responsible-government-iconography.ts";
+import { RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD } from "./records/responsible-government.ts";
+import { ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM, ACTE_UNION_STUDENT_TIMELINE, RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS, RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE } from "./responsible-government-iconography.ts";
 import { ACTE_UNION_DEBT_COMPARISON_CHART, ACTE_UNION_POPULATION_COMPARISON_CHART } from "./historical-comparison-charts.ts";
 import { ACTE_UNION_DOCUMENT_SOURCE_CATALOG } from "./acte-union-document-source-catalog.ts";
-import { ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_CONSOLIDATED_REVENUE_FUND_DOCUMENT, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT, ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT, ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT, ACTE_UNION_MAP_ADAPTATION_DRAFT, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT, ACTE_UNION_SPECIAL_COUNCIL_RESOLUTIONS_DOCUMENT, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT } from "./historical-document-needs.ts";
-import { ACTE_UNION_DURHAM_ANGLICIZATION_PRESENTATION, ACTE_UNION_DURHAM_CONTINUITIES_PRESENTATION, ACTE_UNION_DURHAM_DOCUMENT, ACTE_UNION_DURHAM_FINANCES_PRESENTATION, ACTE_UNION_DURHAM_RESPONSIBLE_GOVERNMENT_PRESENTATION, ACTE_UNION_DURHAM_UNION_PRESENTATION } from "./historical-document-presentations.ts";
+import { ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT, ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT, ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT, ACTE_UNION_MAP_ADAPTATION_DRAFT, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT, ACTE_UNION_SPECIAL_COUNCIL_RESOLUTIONS_DOCUMENT, PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT } from "./historical-document-needs.ts";
+import { ACTE_UNION_DURHAM_ADVANCEMENT_ANGLICIZATION_PRESENTATION, ACTE_UNION_DURHAM_ANGLICIZATION_PRESENTATION, ACTE_UNION_DURHAM_CONTINUITIES_PRESENTATION, ACTE_UNION_DURHAM_DOCUMENT, ACTE_UNION_DURHAM_FINANCES_PRESENTATION, ACTE_UNION_DURHAM_RESPONSIBLE_GOVERNMENT_PRESENTATION, ACTE_UNION_DURHAM_UNION_PRESENTATION } from "./historical-document-presentations.ts";
+import { RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_GREY_MINISTRY_LETTER_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_MINISTRY_APPOINTMENTS_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_NON_INTERVENTION_DOCUMENT, RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT, RESPONSIBLE_GOVERNMENT_METCALFE_RESIGNATION_DOCUMENT } from "./responsible-government-primary-documents.ts";
+import { RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION } from "./responsible-government-electoral-law.ts";
 
 const PILOT_SOURCE_IDS = ["lower-canada-92-resolutions-1834-primary", "uk-russell-resolutions-1837-primary"] as const;
-const pilotSources = ACTE_UNION_HISTORICAL_RECORD.sourceCatalog.filter(({ id }) => PILOT_SOURCE_IDS.includes(id as typeof PILOT_SOURCE_IDS[number]));
+const pilotSources = [...ACTE_UNION_HISTORICAL_RECORD.sourceCatalog.filter(({ id }) => PILOT_SOURCE_IDS.includes(id as typeof PILOT_SOURCE_IDS[number])), ...ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.id}`)];
 const officialActSource = ACTE_UNION_HISTORICAL_RECORD.sourceCatalog.filter(({ id }) => id === "union-act-1840-official");
 const durhamSource = ACTE_UNION_HISTORICAL_RECORD.sourceCatalog.filter(({ id }) => id === "durham-report-1839");
 const sydenhamSource = ACTE_UNION_HISTORICAL_RECORD.sourceCatalog.filter(({ id }) => id === "dbc-sydenham");
@@ -23,6 +26,8 @@ const durhamActOppositionSources = ACTE_UNION_HISTORICAL_RECORD.sourceCatalog.fi
 const unionSolutionInjusticeSources = ACTE_UNION_HISTORICAL_RECORD.sourceCatalog.filter(({ id }) => id === "durham-report-1839" || id === "anq-special-council-1838-1841" || id === "dbc-lafontaine");
 const debtStructureSourceIds = [`document-source:${ACTE_UNION_DEBT_COMPARISON_CHART.id}`, `document-source:${ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM.id}`];
 const debtStructureSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => debtStructureSourceIds.includes(id));
+const debtPopulationSourceIds = [`document-source:${ACTE_UNION_DEBT_COMPARISON_CHART.id}`, `document-source:${ACTE_UNION_POPULATION_COMPARISON_CHART.id}`];
+const debtPopulationSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => debtPopulationSourceIds.includes(id));
 const mapActSources = [...officialActSource, ...ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${ACTE_UNION_MAP_ADAPTATION_DRAFT.id}`)];
 const wyldMapSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${ACTE_UNION_MAP_ADAPTATION_DRAFT.id}`);
 const rebellionConsequenceDocumentIds = [ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT.id, ACTE_UNION_BERMUDA_EXILE_DOCUMENT.id, ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT.id];
@@ -33,8 +38,38 @@ const causesConsequencesDevelopmentDocumentIds = [PATRIOTES_NINETY_TWO_RESOLUTIO
 const causesConsequencesDevelopmentSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => causesConsequencesDevelopmentDocumentIds.some((documentId) => id === `document-source:${documentId}`));
 const coalitionShortAnswerDocumentIds = [ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM.id, ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT.id];
 const coalitionShortAnswerSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => coalitionShortAnswerDocumentIds.some((documentId) => id === `document-source:${documentId}`));
+const responsibleRecordSources = RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD.sourceCatalog;
+const responsibleTimelineSources = RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.entries.map((entry, index) => ({
+  id: `responsible-government-timeline-source-${index + 1}`,
+  kind: index === 0 || index === 5 ? "museum-or-archive" as const : "other" as const,
+  title: entry.title,
+  publisher: entry.credit,
+  url: entry.sourceUrl,
+  locator: entry.credit,
+  rightsNote: RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.rightsStatement,
+  verificationStatus: "verified" as const,
+}));
+const responsibleFunctioningSources = responsibleRecordSources.filter(({ id }) => id === "anq-gouvernement-responsable" || id === "anq-province-canada");
+const responsibleElginAppointmentSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${RESPONSIBLE_GOVERNMENT_ELGIN_MINISTRY_APPOINTMENTS_DOCUMENT.id}`);
+const responsibleElginGreyLetterSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${RESPONSIBLE_GOVERNMENT_ELGIN_GREY_MINISTRY_LETTER_DOCUMENT.id}`);
+const responsibleGeorgeBrownCoalitionSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT.id}`);
+const responsibleComparisonDocumentIds = [RESPONSIBLE_GOVERNMENT_METCALFE_RESIGNATION_DOCUMENT.id, RESPONSIBLE_GOVERNMENT_ELGIN_NON_INTERVENTION_DOCUMENT.id];
+const responsibleComparisonSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => responsibleComparisonDocumentIds.some((documentId) => id === `document-source:${documentId}`));
+const responsibleInstabilitySources = responsibleRecordSources.filter(({ id }) => id === "anq-gouvernement-responsable" || id === "anq-province-canada");
+const responsibleElectoralLawSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === "document-source:GR-T-001");
+const parliamentFireDocument = RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.find(({ id }) => id === "GR-I-002")!;
+const manFiredParliamentCartoon = RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.find(({ id }) => id === "GR-I-006")!;
+const hereWeGoCartoon = RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.find(({ id }) => id === "GR-I-007")!;
+const parliamentFireSources = [...responsibleFunctioningSources, ...ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.id}`), {
+  id: `document-source:${parliamentFireDocument.id}`, kind: "museum-or-archive" as const, title: parliamentFireDocument.title,
+  creator: parliamentFireDocument.creator, publisher: parliamentFireDocument.holdingInstitution, publicationYear: 1849,
+  url: parliamentFireDocument.sourceUrl, locator: parliamentFireDocument.sourceLocator,
+  rightsNote: parliamentFireDocument.rightsStatement, verificationStatus: "verified" as const,
+}];
+const rebellionLossesConsequencesDocumentIds = [RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.id, manFiredParliamentCartoon.id, hereWeGoCartoon.id];
+const rebellionLossesConsequencesSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => rebellionLossesConsequencesDocumentIds.some((documentId) => id === `document-source:${documentId}`));
+const responsibleGovernmentReadyReview = { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null } as const;
 const languageArticleSources = [...officialActSource, ...ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT.id}`)];
-const consolidatedRevenueFundSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${ACTE_UNION_CONSOLIDATED_REVENUE_FUND_DOCUMENT.id}`);
 const timelineSources = ACTE_UNION_STUDENT_TIMELINE.entries.map((entry, index) => ({
   id: `acte-union-timeline-source-${index + 1}`,
   kind: index === 0 ? "museum-or-archive" as const : index === 2 ? "government" as const : "other" as const,
@@ -56,14 +91,14 @@ export const ACTE_UNION_CAUSAL_PILOT_QUESTION = {
   historicalRecordId: "historical-record:acte-union",
   status: "approved",
   format: "document-interpretation",
-  prompt: "À l’aide des documents sur les 92 Résolutions et les résolutions Russell, explique pourquoi la réponse britannique contribue au déclenchement des Rébellions de 1837-1838.",
-  instruction: "Appuie ta réponse sur une revendication des 92 Résolutions, sur la réponse formulée dans les résolutions Russell et sur l’indice de radicalisation présenté dans La Minerve.",
-  expectedAnswer: "Les Patriotes réclament notamment un Conseil législatif électif, un exécutif responsable et un contrôle réel des revenus publics par l’Assemblée. Les résolutions Russell refusent les principales réformes institutionnelles et permettent au gouverneur d’utiliser certains revenus sans le consentement de l’Assemblée. Cette réponse ferme la voie aux réformes parlementaires réclamées et accentue le mécontentement. L’extrait de La Minerve montre que, devant une situation jugée désespérante, certains envisagent désormais une rupture avec l’Angleterre et l’indépendance. La réponse britannique contribue donc à la radicalisation qui mène vers la rébellion, sans constituer à elle seule l’unique cause des Rébellions.",
-  historicalDocumentIds: ["PAT-T-002", "PAT-T-003", "PAT-T-006"],
+  prompt: "À l’aide des documents, explique pourquoi la réponse britannique contribue au déclenchement des Rébellions de 1837-1838.",
+  instruction: "Appuie ta réponse sur une revendication des 92 Résolutions, sur la réponse formulée dans les résolutions Russell et sur le passage du refus des réformes à la résistance présenté dans La Minerve.",
+  expectedAnswer: "Les Patriotes réclament notamment un Conseil législatif électif, un exécutif responsable et le contrôle des revenus publics par l’Assemblée. Les résolutions Russell refusent les principales réformes et permettent au gouverneur d’utiliser certains revenus sans le consentement des élus. Dans le discours publié par La Minerve, Papineau affirme que le gouvernement britannique repousse les réformes demandées et retire aux représentants le contrôle de l’argent public; il appelle alors à opposer la résistance à ce qu’il présente comme de l’illégalité et de l’injustice. Le refus britannique discrédite donc les moyens parlementaires et favorise la radicalisation politique qui contribue au déclenchement des Rébellions, sans en être l’unique cause.",
+  historicalDocumentIds: ["PAT-T-002", "PAT-T-003", PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.id],
   commonErrors: ["Présenter les résolutions Russell comme l’unique cause des Rébellions.", "Confondre les 92 Résolutions avec les résolutions Russell.", "Affirmer que les revendications patriotes ont été accordées."],
   distractors: [],
   operationId: "causal_connections",
-  sourceIds: [...PILOT_SOURCE_IDS],
+  sourceIds: pilotSources.map(({ id }) => id),
   sourceCatalog: pilotSources,
   rationale: "La question vérifie si l’élève peut relier des revendications politiques, une réponse britannique documentée et la radicalisation de 1837 dans une chaîne causale nuancée.",
   review: { documented: true, historicallyVerified: true, pedagogicallyVerified: true, biasAndLanguageReviewed: true, approvedBy: "David Hinse", approvedVersion: "1.0", approvedAt: "2026-08-02T00:00:00.000-04:00" },
@@ -79,16 +114,16 @@ export const ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION = {
   historicalRecordId: "historical-record:acte-union",
   status: "approved",
   format: "interactive-timeline",
-  prompt: "Replace les cinq événements dans l’ordre chronologique en associant chaque image et sa description à la bonne date.",
-  instruction: "Sélectionne une carte, puis choisis sa date. Sur ordinateur, tu peux aussi la faire glisser. Vérifie tes réponses lorsque les cinq cartes sont placées.",
-  expectedAnswer: "1837-1838 — Rébellions dans les deux Canadas; 1839 — Publication du rapport Durham; 1840 — Adoption de l’Acte d’Union; 1841 — Naissance de la Province du Canada; 1848 — Avènement du gouvernement responsable.",
+  prompt: "Replace les six événements dans l’ordre chronologique.",
+  instruction: "Associe chaque image et sa description à la bonne date. Sélectionne une carte, puis choisis sa date; sur ordinateur, tu peux aussi la faire glisser. Lorsque les six cartes sont placées, vérifie tes réponses.",
+  expectedAnswer: "1837-1838 — Rébellions dans les deux Canadas; 1839 — Publication du rapport Durham; 1840 — Adoption de l’Acte d’Union; 1841 — Naissance de la Province du Canada; 1843 — Crise Metcalfe et démission des ministres; 1848 — Avènement du gouvernement responsable.",
   historicalDocumentIds: [ACTE_UNION_STUDENT_TIMELINE.id],
   commonErrors: ["Confondre l’adoption de l’Acte d’Union en 1840 avec son entrée en vigueur en 1841.", "Placer le rapport Durham après l’Acte d’Union.", "Placer le gouvernement responsable au moment de la création de la Province du Canada."],
   distractors: [],
   operationId: "time_and_space",
   sourceIds: timelineSources.map(({ id }) => id),
   sourceCatalog: timelineSources,
-  rationale: "La manipulation oblige l’élève à distinguer cinq repères rapprochés et à relier chaque représentation iconographique à l’événement correspondant.",
+  rationale: "La manipulation oblige l’élève à distinguer six repères rapprochés et à relier chaque représentation iconographique à l’événement correspondant.",
   timelineInteraction: {
     documentId: ACTE_UNION_STUDENT_TIMELINE.id,
     dates: ACTE_UNION_STUDENT_TIMELINE.entries.map(({ date }) => date),
@@ -107,16 +142,16 @@ export const ACTE_UNION_TIMELINE_CAUSAL_DEVELOPMENT_QUESTION = {
   historicalRecordId: "historical-record:acte-union",
   status: "approved",
   format: "development-150",
-  prompt: "À l’aide de la ligne du temps, explique comment les Rébellions de 1837-1838 entraînent une succession de transformations politiques qui mène à l’obtention du gouvernement responsable en 1848.",
-  instruction: "Rédige une réponse d’environ 150 mots. Établis un lien entre chacune des cinq étapes : les Rébellions, le rapport Durham, l’adoption de l’Acte d’Union, la création de la Province du Canada et l’avènement du gouvernement responsable.",
-  expectedAnswer: "Les Rébellions de 1837-1838 révèlent l’ampleur de la crise politique dans les colonies et poussent le gouvernement britannique à enquêter sur ses causes. Dans son rapport publié en 1839, lord Durham recommande notamment l’union du Haut et du Bas-Canada ainsi que l’instauration d’un gouvernement responsable pour les affaires coloniales. Le Parlement britannique adopte ensuite l’Acte d’Union en 1840. Son entrée en vigueur, en 1841, crée la Province du Canada, mais ne rend pas immédiatement l’exécutif responsable devant l’Assemblée. Sous ce nouveau régime, les réformistes de La Fontaine et de Baldwin développent une alliance capable d’obtenir l’appui d’une majorité de députés. En 1848, le gouverneur Elgin accepte de choisir ses ministres parmi cette majorité élue. Le gouvernement responsable résulte donc d’une succession de réactions, de réformes institutionnelles et de luttes politiques; chaque étape contribue à rendre possible la suivante sans en être l’unique cause.",
+  prompt: "À l’aide de la ligne du temps, explique comment les Rébellions de 1837-1838 entraînent une succession de transformations politiques qui mène à l’obtention du gouvernement responsable en 1848 (150 mots).",
+  instruction: "Rédige une réponse d’environ 150 mots. Établis un lien entre chacune des six étapes : les Rébellions, le rapport Durham, l’adoption de l’Acte d’Union, la création de la Province du Canada, la crise ministérielle de 1843 et l’avènement du gouvernement responsable.",
+  expectedAnswer: "Les Rébellions de 1837-1838 révèlent l’ampleur de la crise politique et poussent le gouvernement britannique à enquêter. Dans son rapport de 1839, Durham recommande notamment l’union des deux Canadas et le gouvernement responsable. Le Parlement britannique adopte l’Acte d’Union en 1840, puis son entrée en vigueur crée la Province du Canada en 1841 sans rendre immédiatement l’exécutif responsable devant l’Assemblée. En 1843, La Fontaine, Baldwin et presque tous les ministres démissionnent lorsque le gouverneur Metcalfe refuse de suivre leurs avis, ce qui provoque une crise et démontre l’instabilité du régime. Les réformistes poursuivent alors leur alliance et obtiennent une majorité. En 1848, le gouverneur Elgin accepte de choisir ses ministres parmi cette majorité élue. Le gouvernement responsable résulte donc d’une succession de crises, de réformes et de luttes politiques, et non d’une seule cause.",
   historicalDocumentIds: [ACTE_UNION_STUDENT_TIMELINE.id],
   commonErrors: ["Énumérer les événements sans expliquer les liens qui les unissent.", "Affirmer que l’Acte d’Union accorde immédiatement le gouvernement responsable.", "Présenter chaque événement comme la cause unique et directe du suivant."],
   distractors: [],
   operationId: "causal_connections",
   sourceIds: timelineSources.map(({ id }) => id),
   sourceCatalog: timelineSources,
-  rationale: "La réponse développée permet de vérifier une chaîne causale nuancée reliant les cinq repères de la ligne du temps, plutôt qu’une simple récitation chronologique.",
+  rationale: "La réponse développée permet de vérifier une chaîne causale nuancée reliant les six repères de la ligne du temps, notamment l’instabilité ministérielle qui sépare l’Union du gouvernement responsable.",
   review: { documented: true, historicallyVerified: true, pedagogicallyVerified: true, biasAndLanguageReviewed: true, approvedBy: "David Hinse", approvedVersion: "1.0", approvedAt: "2026-08-02T00:00:00.000-04:00" },
 } as const satisfies ApprovedQuestion;
 
@@ -246,16 +281,16 @@ export const ACTE_UNION_PROVINCE_SECTIONS_SHORT_ANSWER_QUESTION = {
   historicalRecordId: "historical-record:acte-union",
   status: "approved",
   format: "short-answer",
-  prompt: "Quel territoire politique est créé par l’entrée en vigueur de l’Acte d’Union en 1841, et quelles sont ses deux sections?",
-  instruction: "Réponds en une ou deux phrases en nommant le nouveau territoire et ses deux sections.",
-  expectedAnswer: "La Province du Canada est créée. Elle est composée du Canada-Est, qui correspond à l’ancien Bas-Canada, et du Canada-Ouest, qui correspond à l’ancien Haut-Canada.",
+  prompt: "Quel territoire politique est créé par l’entrée en vigueur de l’Acte d’Union en 1841?",
+  instruction: "Réponds en une phrase en nommant le nouveau territoire politique.",
+  expectedAnswer: "La Province du Canada est créée.",
   historicalDocumentIds: [],
-  commonErrors: ["Répondre Canada sans nommer la Province du Canada.", "Inverser le Canada-Est et le Canada-Ouest.", "Confondre la Province du Canada avec la fédération canadienne créée en 1867."],
+  commonErrors: ["Répondre Canada sans nommer la Province du Canada.", "Confondre la Province du Canada avec la fédération canadienne créée en 1867."],
   distractors: [],
   operationId: "establish_facts",
   sourceIds: provinceNamesSources.map(({ id }) => id),
   sourceCatalog: provinceNamesSources,
-  rationale: "La question vérifie en une réponse brève la création de la Province du Canada et la correspondance territoriale entre les anciennes et les nouvelles appellations.",
+  rationale: "La question vérifie en une réponse brève la création de la Province du Canada.",
   review: { documented: true, historicallyVerified: true, pedagogicallyVerified: true, biasAndLanguageReviewed: true, approvedBy: "David Hinse", approvedVersion: "1.0", approvedAt: "2026-08-02T00:00:00.000-04:00" },
 } as const satisfies ApprovedQuestion;
 
@@ -292,16 +327,16 @@ export const ACTE_UNION_SHARED_DEBT_SHORT_ANSWER_QUESTION = {
   historicalRecordId: "historical-record:acte-union",
   status: "approved",
   format: "short-answer",
-  prompt: "Quelle conséquence financière l’Acte d’Union entraîne-t-il pour les dettes du Haut-Canada et du Bas-Canada?",
-  instruction: "Réponds en une ou deux phrases en précisant ce que deviennent les dettes et quelle ancienne colonie est particulièrement avantagée.",
-  expectedAnswer: "Les dettes des deux anciennes colonies sont réunies et deviennent à la charge de la Province du Canada. Cette mesure avantage notamment l’ancien Haut-Canada, dont la dette est alors beaucoup plus élevée.",
-  historicalDocumentIds: [],
-  commonErrors: ["Affirmer que les dettes demeurent entièrement séparées.", "Dire que le Bas-Canada possède la dette la plus élevée au moment de l’Union.", "Confondre la mise en commun des dettes avec leur annulation."],
+  prompt: "À l’aide des deux tableaux, compare la population et la dette du Haut-Canada et du Bas-Canada au moment de l’Union, puis explique pourquoi la mise en commun des dettes avantage particulièrement le Haut-Canada.",
+  instruction: "Utilise une donnée de chaque tableau, puis établis le lien entre les écarts de population et de dette et l’effet de la mise en commun des dettes.",
+  expectedAnswer: "Au moment de l’Union, le Bas-Canada compte environ 650 000 habitants et une dette d’environ 133 000 £, tandis que le Haut-Canada compte environ 450 000 habitants et une dette d’environ 1 540 000 £. Les dettes deviennent une responsabilité commune de la Province du Canada. Le Haut-Canada est donc particulièrement avantagé : bien qu’il soit moins peuplé, sa dette beaucoup plus élevée est désormais partagée avec le Bas-Canada.",
+  historicalDocumentIds: [ACTE_UNION_DEBT_COMPARISON_CHART.id, ACTE_UNION_POPULATION_COMPARISON_CHART.id],
+  commonErrors: ["Décrire un seul des deux tableaux sans les mettre en relation.", "Inverser les populations ou les niveaux de dette des deux anciennes colonies.", "Confondre la mise en commun des dettes avec leur annulation."],
   distractors: [],
   operationId: "causes_and_consequences",
-  sourceIds: unionDebtSources.map(({ id }) => id),
-  sourceCatalog: unionDebtSources,
-  rationale: "La question vérifie une conséquence économique de l’Union et la capacité de l’élève à expliquer brièvement l’effet inégal de la mise en commun des dettes.",
+  sourceIds: debtPopulationSources.map(({ id }) => id),
+  sourceCatalog: debtPopulationSources,
+  rationale: "La question vérifie la capacité de l’élève à croiser des données démographiques et financières pour expliquer l’effet inégal de la mise en commun des dettes.",
   review: { documented: true, historicallyVerified: true, pedagogicallyVerified: true, biasAndLanguageReviewed: true, approvedBy: "David Hinse", approvedVersion: "1.0", approvedAt: "2026-08-02T00:00:00.000-04:00" },
 } as const satisfies ApprovedQuestion;
 
@@ -386,7 +421,7 @@ export const ACTE_UNION_RUSSELL_LAFONTAINE_COMPARISON_QUESTION = {
   format: "document-interpretation",
   prompt: "À l’aide du texte de lord John Russell et de celui de Louis-Hippolyte La Fontaine, compare leur point de vue sur l’union du Haut-Canada et du Bas-Canada.",
   instruction: "Indique la position de chaque auteur et relève un argument utilisé par chacun pour justifier son point de vue.",
-  expectedAnswer: "Lord John Russell est favorable à l’Union. Il affirme qu’elle permettra de donner aux deux Canadas des institutions représentatives communes et qu’elle favorisera la prospérité de la nouvelle province. Louis-Hippolyte La Fontaine s’oppose à l’Union. Il la présente comme une mesure imposée sans consentement et dénonce notamment la sous-représentation du Bas-Canada, la restriction de l’usage du français et la mise en commun des dettes.",
+  expectedAnswer: "Lord John Russell est favorable à l’Union. Il présente la séparation des deux Canadas comme une cause de leurs difficultés politiques et commerciales. Selon lui, l’Union leur donnera des institutions représentatives communes, favorisera leur prospérité et renforcera le caractère britannique, les lois et les institutions britanniques de la nouvelle province. Louis-Hippolyte La Fontaine s’oppose à l’Union. Il la présente comme une mesure imposée sans consentement et dénonce notamment la sous-représentation du Bas-Canada, la restriction de l’usage du français et la mise en commun des dettes. Les deux auteurs défendent donc des points de vue opposés : Russell voit l’Union comme une solution avantageuse et La Fontaine comme une injustice imposée aux Canadiens français.",
   historicalDocumentIds: [ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT.id, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT.id],
   commonErrors: ["Attribuer le même point de vue aux deux auteurs.", "Nommer leur position sans relever un argument dans chaque document.", "Confondre le projet défendu par Russell avec les critiques formulées par La Fontaine."],
   distractors: [],
@@ -411,7 +446,7 @@ export const ACTE_UNION_DURHAM_ACT_COMPARISON_QUESTION = {
   instruction: "Pour chaque élément, appuie ta réponse sur une information provenant des documents.",
   expectedAnswer: "L’Acte d’Union applique la recommandation de réunir le Haut-Canada et le Bas-Canada sous une seule législature. Cependant, la loi n’instaure pas immédiatement le gouvernement responsable recommandé par Durham. Le gouverneur conserve le contrôle de l’exécutif, qui n’est pas encore obligé d’obtenir la confiance de l’Assemblée élue.",
   historicalDocumentIds: [ACTE_UNION_DURHAM_UNION_PRESENTATION.id, ACTE_UNION_DURHAM_RESPONSIBLE_GOVERNMENT_PRESENTATION.id, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT.id, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.id],
-  commonErrors: ["Affirmer que toutes les recommandations de Durham sont intégrées immédiatement à la loi.", "Oublier de distinguer l’union législative du gouvernement responsable.", "Présenter le rapport Durham comme le texte même de l’Acte d’Union."],
+  commonErrors: ["Affirmer que toutes les recommandations de Durham sont intégrées immédiatement à la loi.", "Oublier de distinguer l’union législative du gouvernement responsable.", "Attribuer les recommandations à Russell plutôt qu’à Durham.", "Présenter le rapport Durham comme le texte même de l’Acte d’Union."],
   distractors: [],
   operationId: "differences_and_similarities",
   sourceIds: durhamActSources.map(({ id }) => id),
@@ -453,16 +488,16 @@ export const ACTE_UNION_DEBT_OPPOSITION_CAUSAL_QUESTION = {
   historicalRecordId: "historical-record:acte-union",
   status: "approved",
   format: "document-interpretation",
-  prompt: "À l’aide des deux documents, explique pourquoi la mise en commun des dettes peut susciter de l’opposition au Canada-Est.",
-  instruction: "Utilise une donnée du graphique de la dette et un élément du schéma de la structure politique pour construire ton explication.",
-  expectedAnswer: "Le graphique montre que la dette du Haut-Canada est beaucoup plus élevée que celle du Bas-Canada. La mise en commun des finances oblige donc le Canada-Est à participer au paiement d’une dette principalement contractée dans l’ancien Haut-Canada. Le schéma montre que le Canada-Est et le Canada-Ouest possèdent le même nombre de députés et que les conseils demeurent nommés. Le Canada-Est ne peut donc pas contrôler seul les décisions politiques et financières. Cette situation peut être perçue comme injuste et susciter de l’opposition.",
-  historicalDocumentIds: [ACTE_UNION_DEBT_COMPARISON_CHART.id, ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM.id],
-  commonErrors: ["Mentionner l’écart de dette sans expliquer pourquoi il provoque de l’opposition.", "Affirmer que le Canada-Est contrôle seul l’Assemblée ou les conseils.", "Présenter la mise en commun comme une annulation des dettes."],
+  prompt: "À l’aide des deux documents, explique pourquoi la mise en commun des dettes peut susciter de l’opposition au Bas-Canada.",
+  instruction: "Utilise une donnée du graphique de la dette et une donnée du tableau des populations pour construire ton explication.",
+  expectedAnswer: "Le graphique montre que le Haut-Canada possède une dette beaucoup plus élevée que celle du Bas-Canada, même si le tableau montre que le Bas-Canada est alors plus peuplé. Avec la mise en commun des dettes, les habitants du Canada-Est doivent participer au paiement d’obligations surtout contractées par l’ancien Haut-Canada. Cette situation peut être perçue comme injuste et susciter de l’opposition au Canada-Est.",
+  historicalDocumentIds: [ACTE_UNION_DEBT_COMPARISON_CHART.id, ACTE_UNION_POPULATION_COMPARISON_CHART.id],
+  commonErrors: ["Mentionner l’écart de dette sans expliquer pourquoi il provoque de l’opposition.", "Inverser les populations ou les niveaux de dette des deux anciennes colonies.", "Présenter la mise en commun comme une annulation des dettes."],
   distractors: [],
   operationId: "causal_connections",
-  sourceIds: debtStructureSources.map(({ id }) => id),
-  sourceCatalog: debtStructureSources,
-  rationale: "La question exige une chaîne causale reliant l’inégalité financière initiale, la représentation politique égale des sections et la perception d’injustice au Canada-Est.",
+  sourceIds: debtPopulationSources.map(({ id }) => id),
+  sourceCatalog: debtPopulationSources,
+  rationale: "La question exige une chaîne causale reliant l’écart de dette, l’écart de population et la perception d’un partage financier injuste au Canada-Est.",
   review: { documented: true, historicallyVerified: true, pedagogicallyVerified: true, biasAndLanguageReviewed: true, approvedBy: "David Hinse", approvedVersion: "1.0", approvedAt: "2026-08-02T00:00:00.000-04:00" },
 } as const satisfies ApprovedQuestion;
 
@@ -522,16 +557,16 @@ export const ACTE_UNION_DURHAM_ASSIMILATION_CAUSAL_QUESTION = {
   historicalRecordId: "historical-record:acte-union",
   status: "approved",
   format: "document-interpretation",
-  prompt: "À l’aide de l’extrait sur le projet d’anglicisation, explique comment lord Durham souhaite assimiler les Canadiens français.",
-  instruction: "Relève deux moyens proposés dans l’extrait, puis explique comment chacun peut favoriser l’assimilation culturelle ou politique.",
-  expectedAnswer: "Durham souhaite établir au Bas-Canada une population anglaise ainsi que des lois, une langue et une législature anglaises. L’adoption de la langue et des institutions anglaises réduirait progressivement la place de la culture et des institutions canadiennes-françaises. Ces mesures participent donc à un projet d’assimilation culturelle et politique.",
-  historicalDocumentIds: [ACTE_UNION_DURHAM_ANGLICIZATION_PRESENTATION.id],
-  commonErrors: ["Nommer des moyens sans expliquer leur effet sur l’assimilation.", "Présenter les jugements hiérarchisants de Durham comme des faits objectifs.", "Affirmer que l’assimilation est immédiatement et complètement réalisée en 1841."],
+  prompt: "À l’aide des deux extraits sur le projet d’anglicisation, nomme deux moyens proposés par lord Durham et explique comment chacun contribuerait à assimiler les Canadiens français.",
+  instruction: "Choisis deux moyens clairement présentés dans les extraits — la progression de l’anglais, l’union qui crée une majorité anglaise, l’immigration anglaise ou l’avantage que procure l’anglais pour accéder aux fonctions politiques — puis explique l’effet de chacun.",
+  expectedAnswer: "Plusieurs combinaisons sont acceptées. Durham compte sur la progression de l’anglais pour réduire graduellement l’usage du français. Il propose aussi l’union des deux Canadas afin de créer une majorité anglaise, puis l’immigration anglaise pour renforcer cette majorité. Le second extrait présente un autre moyen : comme la connaissance de l’anglais facilite l’accès aux fonctions politiques importantes, les francophones souhaitant progresser seraient incités à apprendre l’anglais et à adopter graduellement une identité anglophone. Deux moyens correctement relevés et deux liens de cause à effet suffisent pour une réponse complète.",
+  historicalDocumentIds: [ACTE_UNION_DURHAM_ANGLICIZATION_PRESENTATION.id, ACTE_UNION_DURHAM_ADVANCEMENT_ANGLICIZATION_PRESENTATION.id],
+  commonErrors: ["Nommer des moyens sans expliquer leur effet sur l’assimilation.", "Affirmer que Durham veut simplement interdire immédiatement le français ou l’accès à la justice.", "Présenter le raisonnement assimilationniste de Durham comme un résultat inévitable ou comme un fait objectif."],
   distractors: [],
   operationId: "causal_connections",
   sourceIds: durhamSource.map(({ id }) => id),
   sourceCatalog: durhamSource,
-  rationale: "Un seul extrait explicite permet à l’élève d’identifier deux moyens d’anglicisation et d’expliquer leur effet possible sans devoir inférer une intention absente d’un second document.",
+  rationale: "Les deux extraits exposent des mécanismes démographiques, linguistiques et politiques du projet d’anglicisation afin que l’élève puisse construire deux liens de cause à effet directement appuyés sur les documents.",
   review: { documented: true, historicallyVerified: true, pedagogicallyVerified: true, biasAndLanguageReviewed: true, approvedBy: "David Hinse", approvedVersion: "1.0", approvedAt: "2026-08-02T00:00:00.000-04:00" },
 } as const satisfies ApprovedQuestion;
 
@@ -592,15 +627,15 @@ export const ACTE_UNION_WYLD_TERRITORIAL_TRANSFORMATION_QUESTION = {
   status: "approved",
   format: "document-interpretation",
   prompt: "À l’aide de la carte modifiée de Wyld et de l’extrait de l’Acte d’Union, explique comment l’organisation territoriale du Haut-Canada et du Bas-Canada est transformée en 1841.",
-  instruction: "Utilise les deux documents. Tu peux formuler ta réponse dans tes propres mots; nomme la nouvelle colonie et établis la correspondance entre les anciens et les nouveaux territoires.",
-  expectedAnswer: "Réponse flexible : l’élève doit faire ressortir que le Haut-Canada et le Bas-Canada sont réunis dans une seule colonie, la Province du Canada, et que les deux anciens territoires deviennent respectivement le Canada-Ouest et le Canada-Est. Toute formulation équivalente et historiquement juste est acceptée. La précision selon laquelle ils demeurent deux sections territoriales sous un gouvernement commun bonifie la réponse, mais n’est pas obligatoire.",
+  instruction: "Utilise les deux documents. Dans tes propres mots, nomme la nouvelle colonie et explique ce que deviennent les deux anciens territoires.",
+  expectedAnswer: "Réponse flexible : l’élève doit faire ressortir que le Haut-Canada et le Bas-Canada sont réunis dans une seule colonie, la Province du Canada, et qu’ils deviennent les deux sections appelées Canada-Ouest et Canada-Est. Cette réponse est complète même si l’élève ne précise pas explicitement lequel des deux anciens Canadas correspond à chaque nouvelle section. La correspondance Haut-Canada–Canada-Ouest et Bas-Canada–Canada-Est constitue un enrichissement facultatif; elle ne doit pas provoquer une relance si la transformation essentielle est déjà expliquée. Une correspondance explicitement inversée demeure toutefois une erreur à corriger.",
   historicalDocumentIds: [ACTE_UNION_MAP_ADAPTATION_DRAFT.id, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT.id],
   commonErrors: ["Inverser le Canada-Est et le Canada-Ouest.", "Confondre la Province du Canada de 1841 avec la Confédération de 1867.", "Utiliser un seul document sans relier la carte au changement annoncé par la loi."],
   distractors: [],
   operationId: "time_and_space",
   sourceIds: mapActSources.map(({ id }) => id),
   sourceCatalog: mapActSources,
-  rationale: "La question croise une représentation cartographique et un texte législatif tout en permettant plusieurs formulations exactes de la transformation territoriale.",
+  rationale: "La question croise une représentation cartographique et un texte législatif pour expliquer l’unification et le renommage des territoires, sans exiger une précision géographique que la question visible ne demande pas explicitement.",
   review: { documented: true, historicallyVerified: true, pedagogicallyVerified: true, biasAndLanguageReviewed: true, approvedBy: "David Hinse", approvedVersion: "1.0", approvedAt: "2026-08-02T00:00:00.000-04:00" },
 } as const satisfies ApprovedQuestion;
 
@@ -614,17 +649,17 @@ export const ACTE_UNION_WYLD_TERRITORIES_MULTIPLE_CHOICE_QUESTION = {
   historicalRecordId: "historical-record:acte-union",
   status: "approved",
   format: "multiple-choice",
-  prompt: "Selon la carte modifiée de Wyld, quelle affirmation décrit correctement l’organisation territoriale de la Province du Canada?",
+  prompt: "Selon la carte modifiée de Wyld, quelle affirmation décrit correctement l’organisation territoriale de la Province du Canada en 1842?",
   instruction: "Observe les territoires et leurs étiquettes sur la carte, puis choisis la bonne réponse.",
-  expectedAnswer: "C. Le Canada-Est correspond à l’ancien Bas-Canada et le Canada-Ouest à l’ancien Haut-Canada.",
+  expectedAnswer: "C. La Province du Canada réunit l’ancien Haut-Canada et l’ancien Bas-Canada sous une même organisation politique.",
   historicalDocumentIds: [ACTE_UNION_MAP_ADAPTATION_DRAFT.id],
-  commonErrors: ["Inverser le Canada-Est et le Canada-Ouest.", "Inclure la Terre de Rupert dans la Province du Canada.", "Inclure le Nouveau-Brunswick dans le Canada-Est."],
-  distractors: ["Le Canada-Est correspond à l’ancien Haut-Canada.", "La Terre de Rupert forme une troisième section de la Province du Canada.", "Le Nouveau-Brunswick fait partie du Canada-Est."],
+  commonErrors: ["Affirmer que les deux anciennes colonies demeurent politiquement séparées.", "Inclure la Terre de Rupert dans la Province du Canada.", "Confondre l’Acte d’Union de 1840 avec l’Acte de l’Amérique du Nord britannique de 1867."],
+  distractors: ["Le Haut-Canada et le Bas-Canada demeurent deux colonies séparées possédant chacune leur propre législature.", "La Terre de Rupert et le Nouveau-Brunswick sont intégrés à la Province du Canada.", "L’Acte de l’Amérique du Nord britannique crée la Province du Canada en réunissant toutes les colonies britanniques."],
   answerOptions: [
-    { label: "A", text: "Le Canada-Est correspond à l’ancien Haut-Canada.", correct: false },
-    { label: "B", text: "La Terre de Rupert forme une troisième section de la Province du Canada.", correct: false },
-    { label: "C", text: "Le Canada-Est correspond à l’ancien Bas-Canada et le Canada-Ouest à l’ancien Haut-Canada.", correct: true },
-    { label: "D", text: "Le Nouveau-Brunswick fait partie du Canada-Est.", correct: false },
+    { label: "A", text: "Le Haut-Canada et le Bas-Canada demeurent deux colonies séparées possédant chacune leur propre législature.", correct: false },
+    { label: "B", text: "La Terre de Rupert et le Nouveau-Brunswick sont intégrés à la Province du Canada.", correct: false },
+    { label: "C", text: "La Province du Canada réunit l’ancien Haut-Canada et l’ancien Bas-Canada sous une même organisation politique.", correct: true },
+    { label: "D", text: "L’Acte de l’Amérique du Nord britannique crée la Province du Canada en réunissant toutes les colonies britanniques.", correct: false },
   ],
   operationId: "time_and_space",
   sourceIds: wyldMapSources.map(({ id }) => id),
@@ -656,52 +691,6 @@ export const ACTE_UNION_REBELLION_CONSEQUENCES_DOCUMENT_QUESTION = {
   review: { documented: true, historicallyVerified: true, pedagogicallyVerified: true, biasAndLanguageReviewed: true, approvedBy: "David Hinse", approvedVersion: "1.0", approvedAt: "2026-08-02T00:00:00.000-04:00" },
 } as const satisfies ApprovedQuestion;
 
-export const ACTE_UNION_WYLD_CHANGE_CONTINUITY_QUESTION = {
-  schemaVersion: 1,
-  id: "question:acte-union:document-interpretation-012",
-  scope: "notional",
-  knowledgeHeadingId: "acte-union",
-  relatedKnowledgeHeadingIds: ["acte-union"],
-  referenceCardId: "reference-card:acte-union",
-  historicalRecordId: "historical-record:acte-union",
-  status: "approved",
-  format: "document-interpretation",
-  prompt: "En te référant à la carte modifiée de Wyld et à l’extrait de l’Acte d’Union, indique un changement et une continuité dans l’organisation territoriale des Canadas après 1841.",
-  instruction: "Appuie le changement et la continuité sur les deux documents. Tu peux répondre dans tes propres mots.",
-  expectedAnswer: "Réponse flexible : comme changement, l’élève doit faire ressortir que le Haut-Canada et le Bas-Canada sont réunis pour former une seule colonie, la Province du Canada. Comme continuité, l’élève peut expliquer que les deux anciens territoires demeurent reconnaissables comme sections distinctes : le Bas-Canada devient le Canada-Est et le Haut-Canada devient le Canada-Ouest. Toute formulation équivalente et correctement appuyée sur les documents est acceptée.",
-  historicalDocumentIds: [ACTE_UNION_MAP_ADAPTATION_DRAFT.id, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT.id],
-  commonErrors: ["Donner deux changements sans relever une continuité.", "Affirmer que les anciennes divisions territoriales disparaissent entièrement.", "Inverser le Canada-Est et le Canada-Ouest."],
-  distractors: [],
-  operationId: "changes_and_continuities",
-  sourceIds: mapActSources.map(({ id }) => id),
-  sourceCatalog: mapActSources,
-  rationale: "La confrontation du texte législatif à la carte permet de distinguer l’unification politique de la continuité des deux grandes sections territoriales.",
-  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: true, biasAndLanguageReviewed: true, approvedBy: "David Hinse", approvedVersion: "1.0", approvedAt: "2026-08-02T00:00:00.000-04:00" },
-} as const satisfies ApprovedQuestion;
-
-export const ACTE_UNION_IMPRISONMENT_DEPORTATION_DOCUMENT_QUESTION = {
-  schemaVersion: 1,
-  id: "question:acte-union:document-interpretation-013",
-  scope: "notional",
-  knowledgeHeadingId: "acte-union",
-  relatedKnowledgeHeadingIds: ["acte-union"],
-  referenceCardId: "reference-card:acte-union",
-  historicalRecordId: "historical-record:acte-union",
-  status: "approved",
-  format: "document-interpretation",
-  prompt: "À l’aide des deux documents, nomme deux formes de répression utilisées après les Rébellions de 1837-1838 et explique ce que les données montrent sur l’ampleur de cette répression.",
-  instruction: "Utilise un élément précis de chaque document. Toute formulation historiquement juste qui explique l’ampleur et la sévérité de la répression est acceptée.",
-  expectedAnswer: "Réponse flexible : le texte de BAnQ montre l’ampleur de la répression puisque 512 Patriotes emprisonnés ont été repérés dans les registres montréalais. Le second document en montre la sévérité : 58 prisonniers condamnés à mort ont vu leur peine transformée en déportation pénale vers l’Australie. Toute réponse équivalente utilisant les emprisonnements nombreux et l’éloignement forcé comme preuves est acceptée.",
-  historicalDocumentIds: [ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT.id, ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT.id],
-  commonErrors: ["Affirmer que les 512 personnes ont toutes été condamnées.", "Confondre emprisonnement et déportation.", "Décrire les documents sans expliquer ce qu’ils révèlent sur la répression."],
-  distractors: [],
-  operationId: "causes_and_consequences",
-  sourceIds: imprisonmentDeportationSources.map(({ id }) => id),
-  sourceCatalog: imprisonmentDeportationSources,
-  rationale: "La question croise un indicateur de l’ampleur des emprisonnements et un exemple de peine sévère afin de caractériser la répression après les Rébellions.",
-  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: true, biasAndLanguageReviewed: true, approvedBy: "David Hinse", approvedVersion: "1.0", approvedAt: "2026-08-02T00:00:00.000-04:00" },
-} as const satisfies ApprovedQuestion;
-
 export const ACTE_UNION_CAUSES_CONSEQUENCES_DEVELOPMENT_QUESTION = {
   schemaVersion: 1,
   id: "question:acte-union:development-002",
@@ -712,7 +701,7 @@ export const ACTE_UNION_CAUSES_CONSEQUENCES_DEVELOPMENT_QUESTION = {
   historicalRecordId: "historical-record:acte-union",
   status: "approved",
   format: "development-150",
-  prompt: "À l’aide des documents, explique comment la réponse britannique aux revendications des Patriotes contribue au déclenchement des Rébellions de 1837-1838, puis analyse deux conséquences de ces Rébellions au Bas-Canada.",
+  prompt: "À l’aide des documents, explique comment la réponse britannique aux revendications des Patriotes contribue au déclenchement des Rébellions de 1837-1838, puis analyse deux conséquences de ces Rébellions au Bas-Canada (150 mots).",
   instruction: "1. Relie une revendication des 92 Résolutions à la réponse formulée dans les résolutions Russell. 2. Explique une conséquence politique et une conséquence humaine des Rébellions en t’appuyant sur les documents.",
   expectedAnswer: "Dans une réponse d’environ 150 mots, l’élève relie une revendication des 92 Résolutions — par exemple l’élection du Conseil législatif, la responsabilité de l’exécutif ou le contrôle des revenus — au refus exprimé dans les résolutions Russell, qui permettent notamment au gouverneur d’utiliser certains revenus sans le consentement de l’Assemblée. Cette fermeture politique accentue le mécontentement et contribue à la radicalisation, sans constituer l’unique cause des Rébellions. L’élève explique ensuite une conséquence politique, comme la suspension de la Constitution et de l’Assemblée élue au profit du Conseil spécial, ainsi qu’une conséquence humaine, comme l’emprisonnement : BAnQ repère 512 Patriotes dans les registres montréalais. Toute réponse historiquement juste, nuancée et appuyée sur les documents est acceptée.",
   historicalDocumentIds: causesConsequencesDevelopmentDocumentIds,
@@ -735,7 +724,7 @@ export const ACTE_UNION_DURHAM_ACT_DEVELOPMENT_QUESTION = {
   historicalRecordId: "historical-record:acte-union",
   status: "approved",
   format: "development-150",
-  prompt: "Compare les recommandations formulées dans le rapport Durham avec les mesures adoptées dans l’Acte d’Union. Explique une similitude et une différence entre les deux. Consulte les documents pour appuyer ta réponse.",
+  prompt: "Compare les recommandations formulées dans le rapport Durham avec les mesures adoptées dans l’Acte d’Union. Explique une similitude et une différence entre les deux. Consulte les documents pour appuyer ta réponse (150 mots).",
   instruction: "Commençons par la ressemblance : quelle recommandation de Durham reconnais-tu dans l’Acte d’Union?",
   expectedAnswer: "Dans une réponse d’environ 150 mots, l’élève explique comme similitude que Durham recommande l’union législative du Haut-Canada et du Bas-Canada et que l’Acte d’Union réunit effectivement les deux colonies dans la Province du Canada. Comme différence, l’élève peut montrer que Durham recommande aussi un gouvernement responsable, tandis que l’Acte d’Union de 1840 ne l’établit pas : le Conseil exécutif demeure nommé et n’est pas encore responsable devant l’Assemblée élue. Toute comparaison équivalente, historiquement juste et appuyée sur les documents est acceptée.",
   historicalDocumentIds: [ACTE_UNION_DURHAM_UNION_PRESENTATION.id, ACTE_UNION_DURHAM_RESPONSIBLE_GOVERNMENT_PRESENTATION.id, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT.id, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT.id],
@@ -758,7 +747,7 @@ export const ACTE_UNION_DEBT_REPRESENTATION_DEVELOPMENT_QUESTION = {
   historicalRecordId: "historical-record:acte-union",
   status: "approved",
   format: "development-150",
-  prompt: "À l’aide des trois documents, explique comment la mise en commun des dettes et la représentation politique égale sont liées à l’opposition envers l’Acte d’Union au Canada-Est.",
+  prompt: "À l’aide des trois documents, explique comment la mise en commun des dettes et la représentation politique égale sont liées à l’opposition envers l’Acte d’Union au Canada-Est (150 mots).",
   instruction: "Éléments à considérer : la dette des deux colonies, leur population et la représentation des députés.",
   expectedAnswer: "Dans une réponse d’environ 150 mots, l’élève établit que le Haut-Canada possède une dette nettement plus élevée que le Bas-Canada avant l’Union. La mise en commun oblige donc les habitants du Canada-Est à participer au remboursement d’une dette surtout contractée par le Haut-Canada, ce qui peut être perçu comme injuste. L’élève relie aussi l’opposition à la représentation égale : le Canada-Est et le Canada-Ouest obtiennent chacun 42 députés, même si le tableau démographique montre que le Canada-Est est alors plus peuplé. Cette combinaison — partage d’une dette inégale et nombre égal de députés malgré l’écart de population — alimente l’impression que l’Union désavantage politiquement et financièrement le Canada-Est. Toute réponse historiquement juste et appuyée sur les trois documents est acceptée.",
   historicalDocumentIds: [ACTE_UNION_DEBT_COMPARISON_CHART.id, ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM.id, ACTE_UNION_POPULATION_COMPARISON_CHART.id],
@@ -781,7 +770,7 @@ export const ACTE_UNION_DURHAM_OPPOSITION_CAUSAL_DEVELOPMENT_QUESTION = {
   historicalRecordId: "historical-record:acte-union",
   status: "approved",
   format: "development-150",
-  prompt: "Explique comment les objectifs formulés par Durham influencent certaines mesures de l’Acte d’Union et contribuent à l’opposition politique au Canada-Est. Appuie ta réponse en te référant à des documents.",
+  prompt: "Explique comment les objectifs formulés par Durham influencent certaines mesures de l’Acte d’Union et contribuent à l’opposition politique au Canada-Est. Appuie ta réponse en te référant à des documents (150 mots).",
   instruction: "Consulte les quatre documents pour construire et appuyer ta réponse.",
   expectedAnswer: "Dans une réponse d’environ 150 mots, l’élève explique que Durham recommande l’union du Haut-Canada et du Bas-Canada et souhaite favoriser l’assimilation de la population canadienne-française. L’Acte d’Union reprend l’unification politique en créant la Province du Canada. La représentation égale accordée au Canada-Est et au Canada-Ouest, malgré la population alors plus nombreuse du Canada-Est, ainsi que la volonté de réduire l’influence politique des Canadiens français peuvent être reliées à ces objectifs. Ces mesures contribuent à l’opposition au Canada-Est, notamment celle exprimée par LaFontaine, parce qu’elles sont perçues comme injustes et menaçantes pour la représentation politique de la population canadienne-française. Toute réponse causale, nuancée et correctement appuyée sur les documents est acceptée.",
   historicalDocumentIds: [ACTE_UNION_DURHAM_ANGLICIZATION_PRESENTATION.id, ACTE_UNION_DURHAM_UNION_PRESENTATION.id, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT.id, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT.id],
@@ -833,7 +822,7 @@ export const RESPONSIBLE_GOVERNMENT_COALITION_SHORT_ANSWER_QUESTION = {
   historicalRecordId: "historical-record:gouvernement-responsable",
   status: "approved",
   format: "short-answer",
-  prompt: "À l’aide des deux documents, explique comment la représentation égale du Canada-Est et du Canada-Ouest favorise une alliance politique entre les réformistes des deux sections.",
+  prompt: "Explique une contrainte qui a poussé Baldwin et La Fontaine à créer une alliance.",
   instruction: "Appuie ta réponse sur le schéma de l’Assemblée et sur la lettre de Francis Hincks à Louis-Hippolyte La Fontaine.",
   expectedAnswer: "La représentation égale accorde 42 députés à chaque section dans une même Assemblée. Pour obtenir une majorité et défendre des réformes communes, les réformistes du Canada-Est et du Canada-Ouest ont intérêt à collaborer. La lettre de Hincks à La Fontaine montre qu’ils considèrent leur aide mutuelle comme nécessaire; cette stratégie prépare l’alliance politique associée ensuite à La Fontaine et Baldwin.",
   historicalDocumentIds: coalitionShortAnswerDocumentIds,
@@ -844,6 +833,270 @@ export const RESPONSIBLE_GOVERNMENT_COALITION_SHORT_ANSWER_QUESTION = {
   sourceCatalog: coalitionShortAnswerSources,
   rationale: "La question met directement en relation la représentation égale dans l’Assemblée commune et la stratégie d’alliance transsectionnelle qui devient centrale dans la lutte pour le gouvernement responsable.",
   review: { documented: true, historicallyVerified: true, pedagogicallyVerified: true, biasAndLanguageReviewed: true, approvedBy: "David Hinse", approvedVersion: "1.0", approvedAt: "2026-08-02T00:00:00.000-04:00" },
+} as const satisfies ApprovedQuestion;
+
+export const RESPONSIBLE_GOVERNMENT_TIMELINE_SHORT_ANSWER_QUESTION = {
+  schemaVersion: 1, id: "question:gouvernement-responsable:timeline-001", scope: "notional", knowledgeHeadingId: "gouvernement-responsable", relatedKnowledgeHeadingIds: ["gouvernement-responsable"], referenceCardId: "reference-card:gouvernement-responsable", historicalRecordId: "historical-record:gouvernement-responsable", status: "ready-for-review", format: "interactive-timeline",
+  prompt: "Place en ordre chronologique les événements suivants.",
+  instruction: "Place les sept cartes de gauche à droite, de 1841 à 1864, en distinguant l’instabilité ministérielle de la Grande Coalition qui cherche à résoudre l’impasse.",
+  expectedAnswer: "1841 — entrée en vigueur de l’Acte d’Union et développement de l’alliance La Fontaine–Baldwin; 1842-1843 — formation du ministère réformiste puis crise Metcalfe et démission des ministres; 1848 — obtention du gouvernement responsable avec Elgin; 1849 — sanction de la loi d’indemnisation et mise à l’épreuve du nouveau principe; 1854-1864 — instabilité ministérielle; 1864 — Grande Coalition pour sortir de l’impasse.",
+  historicalDocumentIds: [RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.id], commonErrors: ["Commencer avant 1841 plutôt qu’avec l’entrée en vigueur de l’Acte d’Union.", "Placer la crise Metcalfe après 1848.", "Confondre la Grande Coalition de 1864 avec la Confédération de 1867."], distractors: [], operationId: "time_and_space", sourceIds: responsibleTimelineSources.map(({ id }) => id), sourceCatalog: responsibleTimelineSources,
+  rationale: "La question vérifie la maîtrise de la séquence complète de la notion, de 1841 à 1864, avant que l’élève n’explique les relations entre les événements.", review: responsibleGovernmentReadyReview,
+  timelineInteraction: {
+    documentId: RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.id,
+    dates: RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.entries.map(({ date }) => date),
+    entries: RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.entries.map((entry, index) => ({ id: `responsible-timeline-entry-${index + 1}`, date: entry.date, title: entry.title, description: `${entry.description} Rôle : ${entry.role}`, imageUrl: entry.imageUrl, imageUrls: "imageUrls" in entry ? entry.imageUrls : undefined, imageAlt: entry.imageAlt, credit: entry.credit })),
+  },
+} as const satisfies ApprovedQuestion;
+
+export const RESPONSIBLE_GOVERNMENT_TIMELINE_CAUSAL_DEVELOPMENT_QUESTION = {
+  schemaVersion: 1,
+  id: "question:gouvernement-responsable:development-001",
+  scope: "notional",
+  knowledgeHeadingId: "gouvernement-responsable",
+  relatedKnowledgeHeadingIds: ["gouvernement-responsable"],
+  referenceCardId: "reference-card:gouvernement-responsable",
+  historicalRecordId: "historical-record:gouvernement-responsable",
+  status: "ready-for-review",
+  format: "development-150",
+  prompt: "À l’aide de la ligne du temps, explique comment la lutte pour le gouvernement responsable entraîne une succession de transformations et de crises politiques qui mène à la formation de la Grande Coalition en 1864 (150 mots).",
+  instruction: "Rédige une réponse d’environ 150 mots. Établis un lien entre chacune des sept étapes : l’entrée en vigueur de l’Acte d’Union, l’alliance La Fontaine–Baldwin, la crise Metcalfe, l’obtention du gouvernement responsable, la loi d’indemnisation et l’incendie du Parlement, l’instabilité ministérielle et la Grande Coalition.",
+  expectedAnswer: "L’entrée en vigueur de l’Acte d’Union en 1841 réunit le Canada-Est et le Canada-Ouest dans une même législature sans instaurer le gouvernement responsable. Pour former une majorité et faire avancer leurs réformes, La Fontaine et Baldwin développent alors une alliance. En 1843, la crise Metcalfe et la démission des ministres montrent qu’un ministère ne peut être responsable devant l’Assemblée si le gouverneur agit sans suivre ses avis. Les réformistes poursuivent leur lutte et obtiennent une majorité. En 1848, Elgin appelle La Fontaine et Baldwin à former un ministère soutenu par les élus, ce qui marque l’obtention du gouvernement responsable. En 1849, Elgin respecte ce principe en sanctionnant la loi d’indemnisation malgré l’opposition, qui réagit par des émeutes et l’incendie du Parlement. De 1854 à 1864, les divisions entre les deux sections rendent toutefois les coalitions fragiles et provoquent une instabilité ministérielle. La Grande Coalition est donc formée en 1864 pour sortir de cette impasse et rechercher une nouvelle solution constitutionnelle.",
+  historicalDocumentIds: [RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.id],
+  commonErrors: ["Énumérer les événements sans expliquer les liens qui les unissent.", "Affirmer que l’Acte d’Union accorde immédiatement le gouvernement responsable.", "Présenter la Grande Coalition comme une conséquence directe de l’incendie du Parlement.", "Confondre la Grande Coalition de 1864 avec la Confédération de 1867."],
+  distractors: [],
+  operationId: "causal_connections",
+  sourceIds: responsibleTimelineSources.map(({ id }) => id),
+  sourceCatalog: responsibleTimelineSources,
+  rationale: "La réponse développée permet de vérifier une chaîne causale nuancée reliant les sept repères de la ligne du temps, de la lutte pour le gouvernement responsable à la recherche d’une sortie de l’impasse politique en 1864.",
+  review: responsibleGovernmentReadyReview,
+} as const satisfies ApprovedQuestion;
+
+export const RESPONSIBLE_GOVERNMENT_CAUSAL_CHAIN_QUESTION = {
+  schemaVersion: 1, id: "question:gouvernement-responsable:short-answer-007", scope: "notional", knowledgeHeadingId: "gouvernement-responsable", relatedKnowledgeHeadingIds: ["gouvernement-responsable"], referenceCardId: "reference-card:gouvernement-responsable", historicalRecordId: "historical-record:gouvernement-responsable", status: "ready-for-review", format: "short-answer",
+  prompt: "Complète la chaîne de causalité.", instruction: "Complète les six réponses courtes de gauche à droite pour relier le gouvernement responsable à la Grande Coalition.",
+  expectedAnswer: "1848 : gouvernement responsable; 1849 : loi d’indemnisation; 1849 : émeutes et incendie du Parlement; 1854-1864 : instabilité ministérielle; cause : coalitions fragiles et difficulté de conserver la double majorité; 1864 : Grande Coalition.",
+  historicalDocumentIds: [], commonErrors: ["Confondre la loi d’indemnisation avec l’incendie du Parlement.", "Présenter l’instabilité ministérielle comme une conséquence immédiate de 1849.", "Confondre la Grande Coalition de 1864 avec la Confédération de 1867."], distractors: [], operationId: "causal_connections", sourceIds: responsibleInstabilitySources.map(({ id }) => id), sourceCatalog: responsibleInstabilitySources,
+  rationale: "La chaîne fait construire six liens successifs et présente explicitement la Grande Coalition comme une réponse politique à l’instabilité ministérielle.", review: responsibleGovernmentReadyReview,
+  causalChainInteraction: { steps: [
+    { id: "gr-chain-1848", date: "1848", prompt: "Nomme un accomplissement important de l’alliance réformiste La Fontaine–Baldwin.", placeholder: "Réponse courte", acceptedAnswers: ["gouvernement responsable", "obtention du gouvernement responsable"], expectedAnswer: "Le gouvernement responsable" },
+    { id: "gr-chain-1849-law", date: "1849", prompt: "Quelle loi controversée le ministère réformiste fait-il adopter?", placeholder: "Quelques mots", acceptedAnswers: ["loi d’indemnisation", "loi d'indemnisation", "loi d’indemnisation des pertes", "loi d'indemnisation des pertes"], expectedAnswer: "La loi d’indemnisation" },
+    { id: "gr-chain-1849-result", date: "1849", prompt: "Quelle réaction violente suit la sanction de cette loi?", placeholder: "Réponse courte", acceptedAnswers: ["incendie du parlement", "incendie du parlement de montréal", "émeutes de montréal", "émeutes et incendie du parlement"], expectedAnswer: "Les émeutes et l’incendie du Parlement de Montréal" },
+    { id: "gr-chain-instability", date: "1854–1864", prompt: "Quel problème politique marque cette période?", placeholder: "Quelques mots", acceptedAnswers: ["instabilité ministérielle", "instabilite ministerielle"], expectedAnswer: "L’instabilité ministérielle" },
+    { id: "gr-chain-cause", date: "1854–1864", prompt: "Pourquoi les ministères tombent-ils fréquemment?", placeholder: "Réponse courte", acceptedAnswers: ["coalitions fragiles", "double majorité", "difficile de conserver la majorité", "perte de confiance"], expectedAnswer: "Les coalitions sont fragiles et conservent difficilement la double majorité" },
+    { id: "gr-chain-1864", date: "1864", prompt: "Quelle solution politique est formée pour sortir de l’impasse?", placeholder: "Quelques mots", acceptedAnswers: ["grande coalition", "la grande coalition"], expectedAnswer: "La Grande Coalition" },
+  ] },
+} as const satisfies ApprovedQuestion;
+
+export const RESPONSIBLE_GOVERNMENT_FUNCTIONING_SHORT_ANSWER_QUESTION = {
+  schemaVersion: 1, id: "question:gouvernement-responsable:short-answer-003", scope: "notional", knowledgeHeadingId: "gouvernement-responsable", relatedKnowledgeHeadingIds: ["gouvernement-responsable"], referenceCardId: "reference-card:gouvernement-responsable", historicalRecordId: "historical-record:gouvernement-responsable", status: "ready-for-review", format: "short-answer",
+  prompt: "Comment fonctionne le gouvernement responsable? Explique les liens entre l’Assemblée, le ministère et le gouverneur.",
+  instruction: "Réponds en reliant les trois institutions et en utilisant les expressions confiance parlementaire, ministère et gouverneur.",
+  expectedAnswer: "L’Assemblée élue accorde ou retire sa confiance au ministère. Le ministère dirige les affaires intérieures tant qu’il conserve l’appui de la majorité. Le gouverneur nomme officiellement les ministres, mais choisit normalement des personnes capables d’obtenir cette confiance et suit leurs avis. Si le ministère perd un vote de confiance, il doit normalement démissionner ou demander des élections.",
+  historicalDocumentIds: [], commonErrors: ["Affirmer que l’Assemblée nomme directement les ministres.", "Présenter le gouverneur comme dépourvu de toute fonction.", "Oublier les conséquences d’une perte de confiance."], distractors: [], operationId: "relationships_between_facts", sourceIds: responsibleFunctioningSources.map(({ id }) => id), sourceCatalog: responsibleFunctioningSources,
+  rationale: "La question oblige l’élève à mettre en relation l’Assemblée, le ministère et le gouverneur plutôt qu’à réciter une définition isolée.", review: responsibleGovernmentReadyReview,
+} as const satisfies ApprovedQuestion;
+
+export const RESPONSIBLE_GOVERNMENT_LIMITED_POLITICAL_PARTICIPATION_QUESTION = {
+  schemaVersion: 1,
+  id: "question:gouvernement-responsable:document-interpretation-003",
+  scope: "notional",
+  knowledgeHeadingId: "gouvernement-responsable",
+  relatedKnowledgeHeadingIds: ["gouvernement-responsable"],
+  referenceCardId: "reference-card:gouvernement-responsable",
+  historicalRecordId: "historical-record:gouvernement-responsable",
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Explique pourquoi, malgré l’instauration du gouvernement responsable, toute la population ne participe pas à la vie politique.",
+  instruction: "À l’aide de l’extrait de la loi électorale de 1849, distingue le fonctionnement du gouvernement responsable des conditions qui limitent l’accès au vote.",
+  expectedAnswer: "Le gouvernement responsable oblige le ministère à conserver la confiance de l’Assemblée élue, mais il ne donne pas le droit de vote à toute la population. La loi électorale de 1849 exige notamment d’être sujet britannique, d’avoir au moins 21 ans et exclut explicitement toutes les femmes du vote. D’autres conditions, dont la propriété, limitent aussi le corps électoral. Une grande partie de la population ne peut donc pas choisir les députés même si le ministère est désormais responsable devant l’Assemblée.",
+  historicalDocumentIds: [RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.id],
+  commonErrors: ["Affirmer que le gouvernement responsable accorde automatiquement le suffrage universel.", "Dire que les femmes peuvent voter en 1849 malgré l’interdiction explicite de la loi.", "Décrire seulement l’exclusion sans distinguer droit de vote et responsabilité ministérielle."],
+  distractors: [],
+  operationId: "relationships_between_facts",
+  sourceIds: responsibleElectoralLawSources.map(({ id }) => id),
+  sourceCatalog: responsibleElectoralLawSources,
+  rationale: "La question met en relation une avancée du parlementarisme et les limites concrètes du corps électoral afin d’éviter de confondre gouvernement responsable et participation politique universelle.",
+  review: responsibleGovernmentReadyReview,
+} as const satisfies ApprovedQuestion;
+
+export const RESPONSIBLE_GOVERNMENT_LOSS_OF_CONFIDENCE_MULTIPLE_CHOICE_QUESTION = {
+  schemaVersion: 1,
+  id: "question:gouvernement-responsable:multiple-choice-001",
+  scope: "notional",
+  knowledgeHeadingId: "gouvernement-responsable",
+  relatedKnowledgeHeadingIds: ["gouvernement-responsable"],
+  referenceCardId: "reference-card:gouvernement-responsable",
+  historicalRecordId: "historical-record:gouvernement-responsable",
+  status: "ready-for-review",
+  format: "multiple-choice",
+  prompt: "À partir de 1848, dans la Province du Canada, que peut-il arriver lorsqu’un ministère perd la confiance de la majorité des députés?",
+  instruction: "Choisis la réponse qui présente les deux conséquences constitutionnelles possibles.",
+  expectedAnswer: "C. Le ministère peut démissionner ou demander la dissolution du Parlement, ce qui déclenche des élections.",
+  historicalDocumentIds: [],
+  commonErrors: [
+    "Affirmer que le ministère peut rester automatiquement au pouvoir malgré la perte de confiance.",
+    "Présenter le gouverneur comme celui qui choisit seul la nouvelle majorité parlementaire.",
+    "Confondre la dissolution du Parlement avec l’abolition définitive de l’Assemblée.",
+  ],
+  distractors: [
+    "Le ministère demeure automatiquement au pouvoir jusqu’à la fin de son mandat.",
+    "Le gouverneur congédie les députés opposés au ministère et les remplace.",
+    "L’Assemblée est abolie et le gouverneur dirige seul la colonie.",
+  ],
+  answerOptions: [
+    { label: "A", text: "Le ministère demeure automatiquement au pouvoir jusqu’à la fin de son mandat.", correct: false },
+    { label: "B", text: "Le gouverneur congédie les députés opposés au ministère et les remplace.", correct: false },
+    { label: "C", text: "Le ministère peut démissionner ou demander la dissolution du Parlement, ce qui déclenche des élections.", correct: true },
+    { label: "D", text: "L’Assemblée est abolie et le gouverneur dirige seul la colonie.", correct: false },
+  ],
+  operationId: "causes_and_consequences",
+  sourceIds: responsibleFunctioningSources.map(({ id }) => id),
+  sourceCatalog: responsibleFunctioningSources,
+  rationale: "La question vérifie que l’élève distingue les deux issues constitutionnelles d’une perte de confiance : la démission du ministère ou un appel aux électeurs par la dissolution du Parlement.",
+  review: responsibleGovernmentReadyReview,
+} as const satisfies ApprovedQuestion;
+
+export const RESPONSIBLE_GOVERNMENT_ELGIN_ROLE_SHORT_ANSWER_QUESTION = {
+  schemaVersion: 1,
+  id: "question:gouvernement-responsable:short-answer-008",
+  scope: "notional",
+  knowledgeHeadingId: "gouvernement-responsable",
+  relatedKnowledgeHeadingIds: ["gouvernement-responsable"],
+  referenceCardId: "reference-card:gouvernement-responsable",
+  historicalRecordId: "historical-record:gouvernement-responsable",
+  status: "ready-for-review",
+  format: "short-answer",
+  prompt: "Quel rôle lord Elgin joue-t-il dans l’obtention du gouvernement responsable en 1848?",
+  instruction: "Réponds brièvement en reliant la majorité réformiste, le ministère La Fontaine–Baldwin et la décision du gouverneur.",
+  expectedAnswer: "Après la victoire électorale des réformistes en 1848, lord Elgin demande à La Fontaine et Baldwin de former un ministère soutenu par la majorité de l’Assemblée. Il accepte ensuite de suivre normalement les avis de ce ministère dans les affaires intérieures. En reconnaissant ainsi que le gouvernement doit conserver la confiance des élus, Elgin contribue à la mise en pratique du gouvernement responsable dans la Province du Canada.",
+  historicalDocumentIds: [RESPONSIBLE_GOVERNMENT_ELGIN_MINISTRY_APPOINTMENTS_DOCUMENT.id],
+  commonErrors: ["Affirmer qu’Elgin crée seul le gouvernement responsable.", "Oublier le rôle de la majorité réformiste et du ministère La Fontaine–Baldwin.", "Affirmer qu’Elgin abandonne tous les pouvoirs du gouverneur."],
+  distractors: [],
+  operationId: "causal_connections",
+  sourceIds: responsibleElginAppointmentSources.map(({ id }) => id),
+  sourceCatalog: responsibleElginAppointmentSources,
+  rationale: "La question vérifie directement le rôle d’Elgin dans la reconnaissance pratique d’un ministère soutenu par la majorité élue en 1848.",
+  review: responsibleGovernmentReadyReview,
+} as const satisfies ApprovedQuestion;
+
+export const RESPONSIBLE_GOVERNMENT_ELGIN_GREY_DOCUMENT_INTERPRETATION_QUESTION = {
+  schemaVersion: 1,
+  id: "question:gouvernement-responsable:document-interpretation-004",
+  scope: "notional",
+  knowledgeHeadingId: "gouvernement-responsable",
+  relatedKnowledgeHeadingIds: ["gouvernement-responsable"],
+  referenceCardId: "reference-card:gouvernement-responsable",
+  historicalRecordId: "historical-record:gouvernement-responsable",
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "À partir de cet extrait, explique comment lord Elgin contribue à la mise en place du gouvernement responsable en 1848.",
+  instruction: "Appuie ta réponse sur le document.",
+  expectedAnswer: "Après la démission des anciens ministres, lord Elgin fait venir La Fontaine et Baldwin, les dirigeants de la majorité réformiste, pour qu’ils forment une nouvelle administration. Celle-ci doit obtenir et conserver la confiance du Parlement, particulièrement celle de la majorité à l’Assemblée élue. Elgin promet de lui accorder son soutien constitutionnel plutôt que de diriger lui-même les affaires selon ses préférences. Il contribue ainsi à la mise en pratique du gouvernement responsable, dans lequel le ministère gouverne avec la confiance des élus tout en étant officiellement nommé et soutenu par le gouverneur.",
+  historicalDocumentIds: [RESPONSIBLE_GOVERNMENT_ELGIN_GREY_MINISTRY_LETTER_DOCUMENT.id],
+  commonErrors: ["Répondre seulement qu’Elgin nomme La Fontaine et Baldwin sans expliquer la confiance parlementaire.", "Affirmer que le Parlement nomme directement les ministres.", "Présenter Elgin comme l’unique responsable de l’obtention du gouvernement responsable."],
+  distractors: [],
+  operationId: "relationships_between_facts",
+  sourceIds: responsibleElginGreyLetterSources.map(({ id }) => id),
+  sourceCatalog: responsibleElginGreyLetterSources,
+  rationale: "La question fait interpréter les relations entre le gouverneur, les chefs du ministère et la majorité parlementaire à partir du témoignage privé d’Elgin.",
+  review: responsibleGovernmentReadyReview,
+} as const satisfies ApprovedQuestion;
+
+export const RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_INTERPRETATION_QUESTION = {
+  schemaVersion: 1,
+  id: "question:gouvernement-responsable:document-interpretation-005",
+  scope: "notional",
+  knowledgeHeadingId: "gouvernement-responsable",
+  relatedKnowledgeHeadingIds: ["gouvernement-responsable"],
+  referenceCardId: "reference-card:gouvernement-responsable",
+  historicalRecordId: "historical-record:gouvernement-responsable",
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Pourquoi d’anciens adversaires politiques forment-ils la Grande Coalition en 1864?",
+  instruction: "Explique le problème politique auquel la coalition cherche à répondre.",
+  expectedAnswer: "Les gouvernements de la Province du Canada se succèdent sans parvenir à conserver durablement l’appui nécessaire dans le Canada-Est et le Canada-Ouest. Les élections et les crises ministérielles répétées ne permettent pas de résoudre cette impasse. George Brown et d’anciens adversaires politiques acceptent donc de dépasser leurs divisions partisanes et de former la Grande Coalition. Ils cherchent ainsi à stabiliser le gouvernement et à élaborer une nouvelle solution constitutionnelle qui tienne compte des intérêts des deux sections.",
+  historicalDocumentIds: [RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT.id],
+  commonErrors: ["Présenter la coalition comme une alliance formée uniquement pour obtenir des postes.", "Oublier les difficultés entre le Canada-Est et le Canada-Ouest.", "Affirmer que la Grande Coalition crée immédiatement la Confédération en 1864."],
+  distractors: [],
+  operationId: "causal_connections",
+  sourceIds: responsibleGeorgeBrownCoalitionSources.map(({ id }) => id),
+  sourceCatalog: responsibleGeorgeBrownCoalitionSources,
+  rationale: "La question amène l’élève à interpréter le discours de Brown comme une justification causale de la coalition face à l’impasse ministérielle et aux divisions sectionnelles.",
+  review: responsibleGovernmentReadyReview,
+} as const satisfies ApprovedQuestion;
+
+export const RESPONSIBLE_GOVERNMENT_METCALFE_ELGIN_COMPARISON_QUESTION = {
+  schemaVersion: 1, id: "question:gouvernement-responsable:short-answer-004", scope: "notional", knowledgeHeadingId: "gouvernement-responsable", relatedKnowledgeHeadingIds: ["gouvernement-responsable"], referenceCardId: "reference-card:gouvernement-responsable", historicalRecordId: "historical-record:gouvernement-responsable", status: "ready-for-review", format: "document-interpretation",
+  prompt: "Compare la crise Metcalfe de 1843 et la décision d’Elgin de sanctionner la loi d’indemnisation en 1849. Que révèlent ces événements sur l’évolution du pouvoir du gouverneur?",
+  instruction: "À l’aide des deux documents, présente une différence entre l’attitude des deux gouverneurs, puis un élément de continuité dans leur fonction.",
+  expectedAnswer: "En 1843, Metcalfe refuse de suivre l’avis de ses ministres pour les nominations, ce qui provoque leur démission. En 1849, Elgin sanctionne une loi soutenue par le ministère et la majorité même s’il fait face à une forte opposition. Le gouverneur conserve ses pouvoirs formels et sanctionne toujours les lois, mais leur exercice change : il suit désormais normalement l’avis d’un ministère responsable devant l’Assemblée.",
+  historicalDocumentIds: responsibleComparisonDocumentIds, commonErrors: ["Affirmer qu’Elgin renonce à tous les pouvoirs du gouverneur.", "Présenter Metcalfe comme un défenseur du gouvernement responsable.", "Comparer les événements sans expliquer le changement politique."], distractors: [], operationId: "changes_and_continuities", sourceIds: responsibleComparisonSources.map(({ id }) => id), sourceCatalog: responsibleComparisonSources,
+  rationale: "La comparaison fait ressortir le changement de pratique constitutionnelle tout en maintenant les continuités formelles de la fonction de gouverneur.", review: responsibleGovernmentReadyReview,
+} as const satisfies ApprovedQuestion;
+
+export const RESPONSIBLE_GOVERNMENT_INSTABILITY_SHORT_ANSWER_QUESTION = {
+  schemaVersion: 1, id: "question:gouvernement-responsable:short-answer-005", scope: "notional", knowledgeHeadingId: "gouvernement-responsable", relatedKnowledgeHeadingIds: ["gouvernement-responsable"], referenceCardId: "reference-card:gouvernement-responsable", historicalRecordId: "historical-record:gouvernement-responsable", status: "ready-for-review", format: "short-answer",
+  prompt: "Pourquoi le gouvernement responsable entraîne-t-il une instabilité ministérielle entre 1854 et 1864, et comment cette instabilité contribue-t-elle à la formation de la Grande Coalition?",
+  instruction: "Établis une chaîne causale qui relie la double majorité, les coalitions fragiles, les défaites en Chambre et la Grande Coalition.",
+  expectedAnswer: "Pour gouverner durablement, un ministère cherche souvent l’appui d’une majorité dans l’ensemble de l’Assemblée et dans chacune des deux sections. Les intérêts différents du Canada-Est et du Canada-Ouest rendent ces coalitions fragiles. Des défaites importantes en Chambre entraînent des démissions et la succession rapide de ministères. En 1864, cette impasse pousse des adversaires politiques à former la Grande Coalition afin de rechercher une nouvelle solution constitutionnelle.",
+  historicalDocumentIds: [], commonErrors: ["Présenter le gouvernement responsable comme la garantie d’un gouvernement stable.", "Confondre double majorité et représentation égale.", "Affirmer que la Confédération existe déjà en 1864."], distractors: [], operationId: "causal_connections", sourceIds: responsibleInstabilitySources.map(({ id }) => id), sourceCatalog: responsibleInstabilitySources,
+  rationale: "La question vérifie l’explication causale de la principale difficulté du régime entre 1854 et 1864 et prépare la transition vers la notion suivante.", review: responsibleGovernmentReadyReview,
+} as const satisfies ApprovedQuestion;
+
+export const RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_DOCUMENT_QUESTION = {
+  schemaVersion: 1, id: "question:gouvernement-responsable:document-interpretation-001", scope: "notional", knowledgeHeadingId: "gouvernement-responsable", relatedKnowledgeHeadingIds: ["gouvernement-responsable"], referenceCardId: "reference-card:gouvernement-responsable", historicalRecordId: "historical-record:gouvernement-responsable", status: "ready-for-review", format: "document-interpretation",
+  prompt: "Quelle décision politique a provoqué les émeutes de Montréal et l’incendie du Parlement en 1849?",
+  instruction: "Décris un élément visible dans l’image, puis relie la loi d’indemnisation, la décision d’Elgin et la réaction des opposants.",
+  expectedAnswer: "La lithographie montre le Parlement de Montréal en flammes, une foule et l’intervention des pompiers. L’incendie survient après qu’Elgin a sanctionné la loi d’indemnisation adoptée par la majorité et soutenue par le ministère La Fontaine–Baldwin. Des opposants rejettent cette décision et recourent à la violence. En suivant l’avis de son ministère malgré la controverse, Elgin applique le principe du gouvernement responsable; l’incendie montre l’intensité de l’opposition provoquée par cette nouvelle pratique.",
+  historicalDocumentIds: [parliamentFireDocument.id, RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.id], commonErrors: ["Présenter l’incendie comme un accident.", "Affirmer qu’Elgin s’oppose à la loi d’indemnisation en refusant de la sanctionner.", "Décrire uniquement l’image sans établir de lien avec le gouvernement responsable."], distractors: [], operationId: "causal_connections", sourceIds: parliamentFireSources.map(({ id }) => id), sourceCatalog: parliamentFireSources,
+  rationale: "La question associe l’interprétation d’une source iconographique à une chaîne causale qui met en évidence l’épreuve politique de 1849.", review: responsibleGovernmentReadyReview,
+} as const satisfies ApprovedQuestion;
+
+export const RESPONSIBLE_GOVERNMENT_REBELLION_LOSSES_CONSEQUENCE_SHORT_ANSWER_QUESTION = {
+  schemaVersion: 1,
+  id: "question:gouvernement-responsable:short-answer-006",
+  scope: "notional",
+  knowledgeHeadingId: "gouvernement-responsable",
+  relatedKnowledgeHeadingIds: ["gouvernement-responsable"],
+  referenceCardId: "reference-card:gouvernement-responsable",
+  historicalRecordId: "historical-record:gouvernement-responsable",
+  status: "ready-for-review",
+  format: "short-answer",
+  prompt: "Nomme une conséquence de la sanction de la loi d’indemnisation en 1849.",
+  instruction: "Réponds en nommant une conséquence précise.",
+  expectedAnswer: "La sanction de la loi provoque notamment des émeutes à Montréal, l’attaque contre lord Elgin et l’incendie du Parlement. Une seule de ces conséquences suffit.",
+  historicalDocumentIds: [],
+  commonErrors: ["Présenter la sanction de la loi comme une conséquence plutôt que comme la cause.", "Nommer un événement sans lien avec les troubles de 1849.", "Affirmer que l’incendie est accidentel."],
+  distractors: [],
+  operationId: "causes_and_consequences",
+  sourceIds: parliamentFireSources.map(({ id }) => id),
+  sourceCatalog: parliamentFireSources,
+  rationale: "La question courte vérifie que l’élève peut nommer une conséquence directe de la sanction de la loi d’indemnisation.",
+  review: responsibleGovernmentReadyReview,
+} as const satisfies ApprovedQuestion;
+
+export const RESPONSIBLE_GOVERNMENT_REBELLION_LOSSES_CONSEQUENCES_DOCUMENT_QUESTION = {
+  schemaVersion: 1,
+  id: "question:gouvernement-responsable:document-interpretation-002",
+  scope: "notional",
+  knowledgeHeadingId: "gouvernement-responsable",
+  relatedKnowledgeHeadingIds: ["gouvernement-responsable"],
+  referenceCardId: "reference-card:gouvernement-responsable",
+  historicalRecordId: "historical-record:gouvernement-responsable",
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Quelles ont été les conséquences de l’adoption de la loi d’indemnisation en 1849?",
+  instruction: "À l’aide des trois documents, relève les principales conséquences immédiates et politiques de cette décision.",
+  expectedAnswer: "L’adoption et la sanction de la loi d’indemnisation provoquent une forte réaction des opposants : lord Elgin est attaqué, une foule envahit et incendie le Parlement de Montréal, et La Fontaine est accusé de façon satirique d’être responsable de la crise. À la suite des troubles, Montréal perd son rôle de capitale et le gouvernement se déplace vers Toronto.",
+  historicalDocumentIds: rebellionLossesConsequencesDocumentIds,
+  commonErrors: ["Affirmer que La Fontaine a matériellement incendié le Parlement.", "Présenter l’incendie comme un accident.", "Oublier le déplacement du gouvernement hors de Montréal.", "Décrire les caricatures sans expliquer les conséquences de la loi."],
+  distractors: [],
+  operationId: "causes_and_consequences",
+  sourceIds: rebellionLossesConsequencesSources.map(({ id }) => id),
+  sourceCatalog: rebellionLossesConsequencesSources,
+  rationale: "Les trois sources permettent de distinguer les violences immédiates, l’accusation partisane dirigée contre La Fontaine et la conséquence politique durable du déplacement du gouvernement.",
+  review: responsibleGovernmentReadyReview,
 } as const satisfies ApprovedQuestion;
 
 export const ACTE_UNION_SYDENHAM_ROLE_MULTIPLE_CHOICE_QUESTION = {
@@ -944,12 +1197,6 @@ export const ACTE_UNION_ADOPTION_SEQUENCE_MULTIPLE_CHOICE_QUESTION = {
   review: { documented: true, historicallyVerified: true, pedagogicallyVerified: true, biasAndLanguageReviewed: true, approvedBy: "David Hinse", approvedVersion: "1.0", approvedAt: "2026-08-02T00:00:00.000-04:00" },
 } as const satisfies ApprovedQuestion;
 
-export const ACTE_UNION_CONSOLIDATED_FUND_SHORT_ANSWER_QUESTION = {
-  schemaVersion: 1, id: "question:acte-union:short-answer-006", scope: "notional", knowledgeHeadingId: "acte-union", relatedKnowledgeHeadingIds: ["acte-union"], referenceCardId: "reference-card:acte-union", historicalRecordId: "historical-record:acte-union", status: "approved", format: "short-answer",
-  prompt: "À l’aide du document, explique ce qu’est le fonds consolidé et indique à quoi il sert dans la Province du Canada.", instruction: "Formule une réponse courte qui précise l’origine des sommes et leur utilisation.", expectedAnswer: "Le fonds consolidé réunit les revenus publics du Canada-Est et du Canada-Ouest dans un compte commun. Il sert à payer les dépenses et les charges communes de la Province du Canada, notamment l’intérêt sur les dettes.",
-  historicalDocumentIds: [ACTE_UNION_CONSOLIDATED_REVENUE_FUND_DOCUMENT.id], commonErrors: ["Présenter le fonds consolidé comme un impôt particulier.", "Affirmer qu’il appartient uniquement au Canada-Ouest.", "Confondre la réunion des revenus avec l’effacement des dettes."], distractors: [], operationId: "establish_facts", sourceIds: consolidatedRevenueFundSources.map(({ id }) => id), sourceCatalog: consolidatedRevenueFundSources, rationale: "La question vérifie la compréhension du mécanisme financier commun créé par l’Acte d’Union et de sa fonction dans le paiement des charges provinciales à partir des articles 50 et 56 du texte législatif primaire.", review: { documented: true, historicallyVerified: true, pedagogicallyVerified: true, biasAndLanguageReviewed: true, approvedBy: "David Hinse", approvedVersion: "1.0", approvedAt: "2026-08-02T00:00:00.000-04:00" },
-} as const satisfies ApprovedQuestion;
-
 export const ACTE_UNION_LANGUAGE_SCOPE_SHORT_ANSWER_QUESTION = {
   schemaVersion: 1, id: "question:acte-union:short-answer-007", scope: "notional", knowledgeHeadingId: "acte-union", relatedKnowledgeHeadingIds: ["acte-union"], referenceCardId: "reference-card:acte-union", historicalRecordId: "historical-record:acte-union", status: "approved", format: "short-answer",
   prompt: "À l’aide de l’extrait de l’Acte d’Union, indique comment la nouvelle législation a un impact significatif pour les Canadiens français.", instruction: "Repère la disposition linguistique et explique concrètement ce qu’elle change pour la place du français dans les institutions politiques.", expectedAnswer: "Une réponse est suffisante dès qu’elle indique que l’Acte d’Union impose l’anglais comme langue des documents officiels de la législature, ce qui réduit la reconnaissance institutionnelle du français et désavantage les Canadiens français. Une réponse peut préciser que des traductions françaises demeurent possibles, mais qu’elles n’ont pas la même valeur officielle. Il n’est pas nécessaire d’énumérer toutes les catégories de documents.",
@@ -958,7 +1205,7 @@ export const ACTE_UNION_LANGUAGE_SCOPE_SHORT_ANSWER_QUESTION = {
 
 // Source unique de toutes les questions, quel que soit leur point d’entrée.
 // Les vues par notion et la vue transversale filtrent ce même catalogue.
-export const PEDAGOGICAL_QUESTION_CATALOG: readonly ApprovedQuestion[] = [ACTE_UNION_CAUSAL_PILOT_QUESTION, ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION, ACTE_UNION_TIMELINE_CAUSAL_DEVELOPMENT_QUESTION, ACTE_UNION_DEFINITION_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_DURHAM_DEFINITION_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_EQUAL_REPRESENTATION_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_LANGUAGE_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_PROVINCE_SECTIONS_SHORT_ANSWER_QUESTION, ACTE_UNION_RESPONSIBLE_GOVERNMENT_SHORT_ANSWER_QUESTION, ACTE_UNION_SHARED_DEBT_SHORT_ANSWER_QUESTION, ACTE_UNION_LAFONTAINE_OPPOSITION_SHORT_ANSWER_QUESTION, ACTE_UNION_1840_1841_SHORT_ANSWER_QUESTION, ACTE_UNION_POLITICAL_TRANSFORMATION_DOCUMENT_QUESTION, ACTE_UNION_RUSSELL_LAFONTAINE_COMPARISON_QUESTION, ACTE_UNION_DURHAM_ACT_COMPARISON_QUESTION, ACTE_UNION_DEBT_STRUCTURE_RELATIONSHIP_QUESTION, ACTE_UNION_DEBT_OPPOSITION_CAUSAL_QUESTION, ACTE_UNION_SOLUTION_INJUSTICE_DOCUMENT_QUESTION, ACTE_UNION_DURHAM_RECOMMENDATIONS_DOCUMENT_QUESTION, ACTE_UNION_DURHAM_ASSIMILATION_CAUSAL_QUESTION, ACTE_UNION_DURHAM_CONTINUITY_DOCUMENT_QUESTION, ACTE_UNION_DURHAM_FINANCIAL_CAUSES_CONSEQUENCES_QUESTION, ACTE_UNION_WYLD_TERRITORIAL_TRANSFORMATION_QUESTION, ACTE_UNION_WYLD_TERRITORIES_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_REBELLION_CONSEQUENCES_DOCUMENT_QUESTION, ACTE_UNION_WYLD_CHANGE_CONTINUITY_QUESTION, ACTE_UNION_IMPRISONMENT_DEPORTATION_DOCUMENT_QUESTION, ACTE_UNION_CAUSES_CONSEQUENCES_DEVELOPMENT_QUESTION, ACTE_UNION_DURHAM_ACT_DEVELOPMENT_QUESTION, ACTE_UNION_DEBT_REPRESENTATION_DEVELOPMENT_QUESTION, ACTE_UNION_DURHAM_OPPOSITION_CAUSAL_DEVELOPMENT_QUESTION, ACTE_UNION_REPRESSION_DOCUMENT_MULTIPLE_CHOICE_QUESTION, RESPONSIBLE_GOVERNMENT_COALITION_SHORT_ANSWER_QUESTION, ACTE_UNION_SYDENHAM_ROLE_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_POLITICAL_INSTITUTIONS_ASSOCIATION_QUESTION, ACTE_UNION_ADOPTION_SEQUENCE_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_CONSOLIDATED_FUND_SHORT_ANSWER_QUESTION, ACTE_UNION_LANGUAGE_SCOPE_SHORT_ANSWER_QUESTION];
+export const PEDAGOGICAL_QUESTION_CATALOG: readonly ApprovedQuestion[] = [ACTE_UNION_CAUSAL_PILOT_QUESTION, ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION, ACTE_UNION_TIMELINE_CAUSAL_DEVELOPMENT_QUESTION, ACTE_UNION_DEFINITION_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_DURHAM_DEFINITION_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_EQUAL_REPRESENTATION_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_LANGUAGE_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_PROVINCE_SECTIONS_SHORT_ANSWER_QUESTION, ACTE_UNION_RESPONSIBLE_GOVERNMENT_SHORT_ANSWER_QUESTION, ACTE_UNION_SHARED_DEBT_SHORT_ANSWER_QUESTION, ACTE_UNION_LAFONTAINE_OPPOSITION_SHORT_ANSWER_QUESTION, ACTE_UNION_1840_1841_SHORT_ANSWER_QUESTION, ACTE_UNION_POLITICAL_TRANSFORMATION_DOCUMENT_QUESTION, ACTE_UNION_RUSSELL_LAFONTAINE_COMPARISON_QUESTION, ACTE_UNION_DURHAM_ACT_COMPARISON_QUESTION, ACTE_UNION_DEBT_STRUCTURE_RELATIONSHIP_QUESTION, ACTE_UNION_DEBT_OPPOSITION_CAUSAL_QUESTION, ACTE_UNION_SOLUTION_INJUSTICE_DOCUMENT_QUESTION, ACTE_UNION_DURHAM_RECOMMENDATIONS_DOCUMENT_QUESTION, ACTE_UNION_DURHAM_ASSIMILATION_CAUSAL_QUESTION, ACTE_UNION_DURHAM_CONTINUITY_DOCUMENT_QUESTION, ACTE_UNION_DURHAM_FINANCIAL_CAUSES_CONSEQUENCES_QUESTION, ACTE_UNION_WYLD_TERRITORIAL_TRANSFORMATION_QUESTION, ACTE_UNION_WYLD_TERRITORIES_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_REBELLION_CONSEQUENCES_DOCUMENT_QUESTION, ACTE_UNION_CAUSES_CONSEQUENCES_DEVELOPMENT_QUESTION, ACTE_UNION_DURHAM_ACT_DEVELOPMENT_QUESTION, ACTE_UNION_DEBT_REPRESENTATION_DEVELOPMENT_QUESTION, ACTE_UNION_DURHAM_OPPOSITION_CAUSAL_DEVELOPMENT_QUESTION, ACTE_UNION_REPRESSION_DOCUMENT_MULTIPLE_CHOICE_QUESTION, RESPONSIBLE_GOVERNMENT_COALITION_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_TIMELINE_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_TIMELINE_CAUSAL_DEVELOPMENT_QUESTION, RESPONSIBLE_GOVERNMENT_CAUSAL_CHAIN_QUESTION, RESPONSIBLE_GOVERNMENT_FUNCTIONING_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_LIMITED_POLITICAL_PARTICIPATION_QUESTION, RESPONSIBLE_GOVERNMENT_LOSS_OF_CONFIDENCE_MULTIPLE_CHOICE_QUESTION, RESPONSIBLE_GOVERNMENT_ELGIN_ROLE_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_ELGIN_GREY_DOCUMENT_INTERPRETATION_QUESTION, RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_INTERPRETATION_QUESTION, RESPONSIBLE_GOVERNMENT_METCALFE_ELGIN_COMPARISON_QUESTION, RESPONSIBLE_GOVERNMENT_INSTABILITY_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_DOCUMENT_QUESTION, RESPONSIBLE_GOVERNMENT_REBELLION_LOSSES_CONSEQUENCE_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_REBELLION_LOSSES_CONSEQUENCES_DOCUMENT_QUESTION, ACTE_UNION_SYDENHAM_ROLE_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_POLITICAL_INSTITUTIONS_ASSOCIATION_QUESTION, ACTE_UNION_ADOPTION_SEQUENCE_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_LANGUAGE_SCOPE_SHORT_ANSWER_QUESTION];
 
 export function getQuestionsForKnowledgeHeading(knowledgeHeadingId: string) {
   return PEDAGOGICAL_QUESTION_CATALOG.filter(({ relatedKnowledgeHeadingIds }) => relatedKnowledgeHeadingIds.includes(knowledgeHeadingId));

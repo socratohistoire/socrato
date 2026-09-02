@@ -8,6 +8,7 @@ const viewSource = readFileSync("app/teacher/activities/[activityId]/groups/[gro
 const cssSource = readFileSync("app/teacher/activities/[activityId]/groups/[groupId]/teacher-group-detail.css", "utf8");
 const providerSource = readFileSync("lib/teacher-group-detail/local-provider.ts", "utf8");
 const storedStudentRouteSource = readFileSync("app/teacher/groups/[groupId]/students/[studentId]/page.tsx", "utf8");
+const accessCodesRouteSource = readFileSync("app/teacher/groups/[groupId]/codes/page.tsx", "utf8");
 const storedGroupsServerSource = readFileSync("lib/server/teacher-groups.ts", "utf8");
 
 async function localViewModel() {
@@ -80,16 +81,53 @@ test("n’active aucun faux lien vers un élève", async () => {
 
 test("relie les vrais élèves à une fiche individuelle protégée", () => {
   assert.match(storedGroupsServerSource, /studentDetailHref: `\/teacher\/groups\/\$\{encodeURIComponent\(groupId\)\}\/students\/\$\{encodeURIComponent\(student\.id\)\}`/);
-  assert.match(viewSource, /className="group-student-name" href=\{student\.studentDetailHref\}/);
+  assert.match(viewSource, /if \(student\.studentDetailHref\) return <Link className="group-student-detail" href=\{student\.studentDetailHref\}/);
   assert.match(storedStudentRouteSource, /requireTeacherActor\(\)/);
   assert.match(storedStudentRouteSource, /getStoredTeacherStudentDetail\(teacher, groupId, studentId\)/);
   assert.match(storedGroupsServerSource, /g\.teacher_id = \$\{teacher\.id\}/);
   assert.match(storedGroupsServerSource, /s\.id = \$\{studentId\} and g\.id = \$\{groupId\}/);
-  assert.match(storedStudentRouteSource, /Aucun résultat individuel n’est disponible pour le moment/);
+  assert.match(storedStudentRouteSource, /Bilan et recommandations de Socrato/);
+  assert.match(storedStudentRouteSource, /Ce que tu as bien réussi/);
+  assert.match(storedStudentRouteSource, /Aucun point fort confirmé pour cette activité/);
+  assert.match(storedStudentRouteSource, /Éléments à consolider/);
+  assert.match(storedStudentRouteSource, /function TeacherStrategyEntry/);
+  assert.match(storedStudentRouteSource, /parts\.indexOf\("Question"\)/);
+  assert.match(storedStudentRouteSource, /parts\.indexOf\("À vérifier"\)/);
+  assert.match(storedStudentRouteSource, /<b>Pour progresser<\/b>/);
+  assert.match(storedStudentRouteSource, /Opérations intellectuelles/);
+  assert.doesNotMatch(storedStudentRouteSource, /<h2[^>]*>Connaissances historiques<\/h2>/);
+  assert.match(storedGroupsServerSource, /sp\.operation_results, sp\.historical_knowledge_results/);
+});
+
+test("résume la raison du suivi dans la liste et évite une consolidation redondante dans la fiche", () => {
+  assert.match(storedGroupsServerSource, /const priorityLabel = \(primaryTarget \?\? readingAdvice\)\?\.split\("\\n", 1\)\[0\]/);
+  assert.match(storedGroupsServerSource, /`À retravailler : \$\{priorityLabel\}\.`/);
+  assert.doesNotMatch(storedStudentRouteSource, /Préparer une activité de consolidation|stored-consolidation-form|assignPersonalizedConsolidation/);
+});
+
+test("ne crée pas une priorité enseignante sans stratégie pédagogique concrète", () => {
+  assert.match(storedGroupsServerSource, /const assessment = primaryTarget \|\| readingAdvice/);
+  assert.match(storedGroupsServerSource, /Aucune intervention prioritaire n’est requise pour le moment/);
+});
+
+test("ouvre le créateur complet pour une consolidation assignée à un seul élève", () => {
+  assert.match(viewSource, /Bilan<\/th><th scope="col">Assigner une activité/);
+  assert.match(viewSource, />Assigner une activité <span aria-hidden="true">→<\/span>/);
+  assert.match(viewSource, /new URLSearchParams\(\{ consolidationStudent: student\.id, consolidationGroup: groupId \}\)/);
+  assert.match(viewSource, /new URLSearchParams\(\{ student: student\.id, group: groupId \}\)/);
+  assert.match(viewSource, /Activité de révision/);
+  assert.match(viewSource, /Guidage d’une opération intellectuelle/);
+  assert.match(viewSource, /displayData\.source === "server" \? <StudentConsolidationAction/);
 });
 
 test("ne mélange jamais les résultats du navigateur avec une activité persistée au serveur", () => {
   assert.match(viewSource, /data\.source === "server" \|\| !\/\^activity-local-/);
+});
+
+test("charge la page des codes sans calculer tout le portrait pédagogique du groupe", () => {
+  assert.match(accessCodesRouteSource, /getStoredTeacherGroupIdentity\(teacher\.id, groupId\)/);
+  assert.doesNotMatch(accessCodesRouteSource, /getStoredTeacherGroupDetail/);
+  assert.match(storedGroupsServerSource, /select g\.id, g\.display_name as name[\s\S]*where g\.id = \$\{groupId\} and g\.teacher_id = \$\{teacherId\}/);
 });
 
 test("rend le contrat principal accessible, thémable et responsive", () => {

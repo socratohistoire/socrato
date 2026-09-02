@@ -78,11 +78,11 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Accès enseignant */}
-        <footer className="absolute inset-x-6 bottom-7 z-10 flex items-center gap-6 sm:inset-x-10 lg:inset-x-16">
+        {/* Accès professionnels */}
+        <footer className="absolute inset-x-6 bottom-7 z-10 flex items-center gap-4 sm:inset-x-10 lg:inset-x-16">
           <div className="h-px flex-1 bg-slate-300/90" />
 
-          <a
+          <Link
             href="/teacher"
             className="group flex shrink-0 flex-col items-center gap-1 text-sm text-slate-600 transition hover:text-[#0d2945]"
           >
@@ -108,9 +108,19 @@ export default function Home() {
             </svg>
 
             <span className="underline decoration-slate-400 underline-offset-4 group-hover:decoration-[#0d2945]">
-              Accès enseignant
+              Enseignant
             </span>
-          </a>
+          </Link>
+
+          <Link href="/admin/pedagogical-reference" className="group flex shrink-0 flex-col items-center gap-1 text-sm text-slate-600 transition hover:text-[#0d2945]">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.7"><path d="M4 20h16M6 20V9l6-5 6 5v11M9 13h6M9 16h6" /></svg>
+            <span className="underline decoration-slate-400 underline-offset-4 group-hover:decoration-[#0d2945]">Administration</span>
+          </Link>
+
+          <Link href="/politique-de-confidentialite" className="group flex shrink-0 flex-col items-center gap-1 text-sm text-slate-600 transition hover:text-[#0d2945]">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.7"><path d="M12 3 5 6v5c0 4.7 2.8 8.1 7 10 4.2-1.9 7-5.3 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-5"/></svg>
+            <span className="underline decoration-slate-400 underline-offset-4 group-hover:decoration-[#0d2945]">Politique de confidentialité</span>
+          </Link>
 
           <div className="h-px flex-1 bg-slate-300/90" />
         </footer>

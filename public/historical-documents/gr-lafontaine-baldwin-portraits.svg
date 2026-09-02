@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img" aria-labelledby="title description">
+  <title id="title">Portraits de Louis-Hippolyte La Fontaine et Robert Baldwin</title>
+  <desc id="description">Les portraits historiques de La Fontaine et Baldwin sont présentés côte à côte pour illustrer leur alliance politique.</desc>
+  <defs>
+    <clipPath id="left"><rect width="590" height="700" rx="24" /></clipPath>
+    <clipPath id="right"><rect x="610" width="590" height="700" rx="24" /></clipPath>
+    <linearGradient id="caption" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#15293f" stop-opacity="0" />
+      <stop offset="1" stop-color="#15293f" stop-opacity="0.92" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="700" rx="24" fill="#e9e1d3" />
+  <image href="gr-lafontaine-portrait.jpg" width="590" height="700" preserveAspectRatio="xMidYMid slice" clip-path="url(#left)" />
+  <image href="gr-baldwin-portrait.jpg" x="610" width="590" height="700" preserveAspectRatio="xMidYMid slice" clip-path="url(#right)" />
+  <rect y="525" width="590" height="175" fill="url(#caption)" clip-path="url(#left)" />
+  <rect x="610" y="525" width="590" height="175" fill="url(#caption)" clip-path="url(#right)" />
+  <text x="295" y="635" fill="white" font-family="Georgia, serif" font-size="38" text-anchor="middle">La Fontaine</text>
+  <text x="905" y="635" fill="white" font-family="Georgia, serif" font-size="38" text-anchor="middle">Baldwin</text>
+</svg>

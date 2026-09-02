@@ -1,9 +1,10 @@
 import type { TeacherStudentDetailRecord, TeacherStudentDetailViewModel, TeacherStudentResultStatus } from "./types.ts";
+import { PROGRESS_STATUS_LABELS } from "../student-dashboard/presentation.ts";
 
 export const TEACHER_STUDENT_RESULT_LABELS: Record<TeacherStudentResultStatus, string> = {
-  mastered: "Maîtrisée",
-  consolidate: "À consolider",
-  needs_work: "À travailler",
+  mastered: PROGRESS_STATUS_LABELS.mastered,
+  consolidate: PROGRESS_STATUS_LABELS.consolidate,
+  needs_work: PROGRESS_STATUS_LABELS.needs_work,
 };
 
 export function createTeacherStudentDetailViewModel(record: TeacherStudentDetailRecord): TeacherStudentDetailViewModel {

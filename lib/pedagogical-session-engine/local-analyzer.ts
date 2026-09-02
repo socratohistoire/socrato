@@ -77,7 +77,6 @@ export class LocalDeterministicResponseAnalyzer implements ResponseAnalyzer {
     if (scenario) return scenario;
     if (!content) return nonExploitable("too_short");
     if (/^[\p{P}\p{S}\p{N}\s]+$/u.test(content)) return nonExploitable("nonsense_or_spam");
-
     return {
       responseDisposition: "substantive",
       pedagogicalOutcome: "partially_satisfactory",

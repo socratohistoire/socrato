@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ACTE_UNION_HISTORICAL_RECORD, getSecondaryFourKnowledgeHeading, getSecondaryFourPeriod } from "@/lib/pedagogical-reference";
+import { ACTE_UNION_HISTORICAL_RECORD, RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD, getSecondaryFourKnowledgeHeading, getSecondaryFourPeriod } from "@/lib/pedagogical-reference";
 import { NotionTabs, type NotionSectionId, NOTION_SECTIONS } from "../../notion-tabs";
 import { ReferenceValidationView } from "../../reference-validation-view";
 import "../../pedagogical-reference.css";
@@ -12,8 +12,9 @@ export default async function PedagogicalReferenceNotionPage({ params, searchPar
   const [{ notionId }, query] = await Promise.all([params, searchParams]);
   const heading = getSecondaryFourKnowledgeHeading(notionId);
   const period = heading ? getSecondaryFourPeriod(heading.periodId) : undefined;
-  const section = isNotionSection(query.section) && query.section !== "documents" ? query.section : "lecture";
+  const section = isNotionSection(query.section) && query.section !== "documents" && query.section !== "questions" ? query.section : "lecture";
   if (notionId === "acte-union") return <ReferenceValidationView record={ACTE_UNION_HISTORICAL_RECORD} initialSection={section} />;
+  if (notionId === "gouvernement-responsable") return <ReferenceValidationView record={RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD} initialSection={section} />;
   const notionLabel = heading?.officialLabel ?? notionId;
   return <main className="reference-admin">
     <header className="reference-admin__header"><div><p>Administration · Référentiel pédagogique</p><h1>{notionLabel}</h1><span>{period ? `${period.officialPeriodLabel} · ${period.officialSocialReality}` : "Notion historique"}</span></div><div className="reference-admin__header-actions"><Link href="/admin/pedagogical-reference">Toutes les périodes</Link><Link href="/teacher">Espace enseignant</Link></div></header>

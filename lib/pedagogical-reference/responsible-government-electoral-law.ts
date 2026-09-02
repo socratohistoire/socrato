@@ -2,7 +2,7 @@ import type { HistoricalDocumentRecord, HistoricalDocumentStudentPresentation } 
 
 export const RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_DOCUMENT = {
   schemaVersion: 1, id: "GR-T-001", title: "Les femmes exclues du droit de vote", kind: "law-or-official-text", status: "ready-for-review",
-  periodIds: ["1840-1896"], knowledgeHeadingIds: ["gouvernement-responsable"], operationIds: ["establish_facts", "changes_and_continuities", "relationships_between_facts"],
+  periodIds: ["1840-1896"], knowledgeHeadingIds: ["role-des-femmes"], operationIds: ["establish_facts", "changes_and_continuities", "relationships_between_facts"],
   historicalDate: "30 mai 1849", creator: "Parlement de la Province du Canada", holdingInstitution: "British North American Legislative Database, Université du Nouveau-Brunswick",
   sourceUrl: "https://bnald.lib.unb.ca/legislation/act-repeal-certain-acts-therein-mentioned-and-amend-consolidate-and-reduce-one-act",
   sourceLocator: "12 Victoria, chapitre 27, articles XLII, XLIV et XLVI, pages 188-189 de la loi imprimée.", assetUrl: "https://bnald.lib.unb.ca/sites/default/files/UnC.1849.ch_.27_0.pdf",
@@ -18,7 +18,7 @@ export const RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_DOCUMENT = {
 
 export const RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION = {
   schemaVersion: 1, id: "GR-T-001-P1", documentId: "GR-T-001", title: "Les femmes exclues du droit de vote", kind: "excerpt", status: "ready-for-review", contentSelectionStatus: "retained",
-  periodIds: ["1840-1896"], knowledgeHeadingIds: ["gouvernement-responsable"], operationIds: ["establish_facts", "changes_and_continuities", "relationships_between_facts"],
+  periodIds: ["1840-1896"], knowledgeHeadingIds: ["role-des-femmes"], operationIds: ["establish_facts", "changes_and_continuities", "relationships_between_facts"],
   typeLabel: "Extrait d’une loi électorale", dateLabel: "30 mai 1849", authorLabel: "Parlement de la Province du Canada", originalDocumentLabel: "Loi électorale de la Province du Canada, 12 Victoria, chapitre 27",
   studentText: "Toute personne qui vote sans posséder les qualifications exigées par la loi s’expose à une amende et son vote est annulé. La loi exige notamment d’être sujet britannique et d’avoir au moins 21 ans. Toutefois, aucune femme ne peut voter lors d’une élection, que ce soit dans un comté, une circonscription, une cité ou une ville.",
   sourceLabel: "Parlement de la Province du Canada, loi électorale du 30 mai 1849", sourceUrls: ["https://bnald.lib.unb.ca/sites/default/files/UnC.1849.ch_.27_0.pdf"], sourceSegmentLocators: ["Article XLII", "Article XLIV", "Article XLVI"],

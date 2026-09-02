@@ -66,7 +66,7 @@ export function applyStoredStudentActivityOutcomes(data: StudentDashboardData, s
         summary: {
           state: "local_demo_structured" as const,
           strengths: outcome.strengths.length ? outcome.strengths : ["Tu as mené l’activité jusqu’à son terme et mobilisé les démarches demandées."],
-          consolidationTargets: outcome.consolidationTargets.length ? outcome.consolidationTargets : ["Poursuis la justification de tes réponses avec des faits historiques précis."],
+          consolidationTargets: outcome.consolidationTargets,
           recommendation: outcome.recommendation?.label ?? null,
           consolidationActivity: outcome.recommendation?.label ?? null,
           consolidationProgress: null,

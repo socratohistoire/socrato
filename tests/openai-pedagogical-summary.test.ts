@@ -42,9 +42,12 @@ test("Sol rédige le bilan sans pouvoir modifier les niveaux calculés", async (
   assert.deepEqual(personalized.historicalKnowledgeResults, base.historicalKnowledgeResults);
   assert.deepEqual(personalized.recommendation?.targetHistoricalKnowledgeIds, ["acte-union"]);
   assert.match(personalized.encouragement, /persévéré/);
+  assert.deepEqual(personalized.strengths, base.strengths);
+  assert.deepEqual(personalized.consolidationTargets, base.consolidationTargets);
   assert.match(requestBody, /"store":false/);
   assert.match(requestBody, /avec ses propres mots/);
   assert.match(requestBody, /ne demande jamais de retrouver un passage exact/);
+  assert.match(requestBody, /Ne supprime, ne généralise et ne modifie jamais les exemples de questions/);
   assert.doesNotMatch(requestBody, /studentResponse|conversation|transcription/);
 });
 
@@ -66,7 +69,7 @@ test("branche le rédacteur seulement à la fin d’une activité serveur", asyn
   assert.doesNotMatch(action, /studentResponse|conversation|transcription/);
 });
 
-test("utilise Sol par défaut pour rédiger le bilan final", async () => {
+test("utilise Terra par défaut pour rédiger le bilan final", async () => {
   let requestBody: Record<string, unknown> | undefined;
   await createConfiguredOpenAISummaryWriter(base, { OPENAI_API_KEY: "test-key" }, async (_input, init) => {
     requestBody = JSON.parse(String(init?.body));
@@ -75,5 +78,21 @@ test("utilise Sol par défaut pour rédiger le bilan final", async () => {
       consolidationTargets: base.consolidationTargets, recommendationLabel: "Reprends une courte comparaison ciblée.",
     });
   });
-  assert.equal(requestBody?.model, "gpt-5.6-sol");
+  assert.equal(requestBody?.model, "gpt-5.6-terra");
+});
+
+test("reprend progressivement un bilan après une réponse 429", async () => {
+  let calls = 0;
+  const result = await writePersonalizedSummary(base, {
+    apiKey: "test-key", model: "test-model", retryBaseDelayMs: 0,
+    fetch: async () => {
+      calls += 1;
+      return calls === 1 ? new Response("indisponible", { status: 429 }) : responseWith({
+        encouragement: "Bravo pour ton travail.", strengths: base.strengths,
+        consolidationTargets: base.consolidationTargets, recommendationLabel: "Reprends une comparaison ciblée.",
+      });
+    },
+  });
+  assert.equal(calls, 2);
+  assert.match(result.encouragement, /Bravo/);
 });

@@ -3,7 +3,6 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   createLocalActivityPreview,
-  createSolSummaryPilotConfiguration,
   getActivityQuestionSelection,
   getActivityQuestionCategory,
   getEligibleActivityQuestions,
@@ -51,6 +50,28 @@ test("rend les trois cartes dans l’ordre et aucune étape numérotée", () => 
   assert.doesNotMatch(viewSource, /<Icon name="groups"\/>Groupes/);
 });
 
+test("offre un mode classe projetable sans assignation aux élèves", () => {
+  assert.match(routeSource, /classroomMode=\{requested\.mode === "classroom"\}/);
+  assert.match(viewSource, /Activité animée en classe — non assignée/);
+  assert.match(viewSource, /Aucune assignation aux comptes élèves/);
+  assert.match(viewSource, /Lancer en classe →/);
+  assert.match(viewSource, /title: "Activité en classe"/);
+  assert.match(viewSource, /target=\{classroomMode \? undefined : "_blank"\}/);
+  assert.match(viewSource, /consolidationTarget \|\| classroomMode/);
+  assert.match(viewSource, /classroomMode \? "&classroom=1"/);
+  assert.match(viewSource, /!classroomMode && showPublishReview/);
+  assert.match(studentPreviewSource, /persistProgress=\{published === "1"\}/);
+  assert.match(studentPreviewSource, /classroomMode=\{classroom === "1"\}/);
+  assert.match(studentPreviewSource, /teacherPreview=\{classroom !== "1"/);
+  assert.doesNotMatch(studentPreviewSource, /classroom-presentation-banner/);
+  assert.match(studentPreviewSource, /<StudentLearningSessionView[^>]*teacherApiTest(?:\s|>)/);
+});
+
+test("exclut les questions interactives des activités individuelles de consolidation", () => {
+  assert.match(routeSource, /consolidationTarget \? \{[\s\S]*format !== "interactive-timeline" && format !== "interactive-association"/);
+  assert.match(routeSource, /\.\.\.activityCatalog/);
+});
+
 test("sélectionne tous les groupes et Révision par défaut", async () => {
   const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
   assert.match(viewSource, /selectedGroupIds: catalog\.groups\.map/);
@@ -61,19 +82,8 @@ test("sélectionne tous les groupes et Révision par défaut", async () => {
   assert.ok(catalog.groups.every(({ name }) => /fictif/.test(name)));
 });
 
-test("prépare en un clic une activité pilote complète pour le bilan Sol", async () => {
-  const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
-  const config = createSolSummaryPilotConfiguration(catalog, [catalog.groups[0].id]);
-  const questions = getActivityQuestionSelection(config, catalog);
-
-  assert.equal(config.title, "Activité pilote — bilan Sol");
-  assert.equal(config.questionCount, 10);
-  assert.deepEqual(config.notionIds, ["acte-union"]);
-  assert.deepEqual(config.selectedGroupIds, [catalog.groups[0].id]);
-  assert.equal(questions.length, 10);
-  assert.equal(new Set(questions.map(({ operationId }) => operationId)).size >= 4, true);
-  assert.equal(new Set(questions.map(({ format }) => getActivityQuestionCategory(format))).size, 3);
-  assert.match(viewSource, /Préparer l’activité pilote/);
+test("retire entièrement l’ancien test personnalisé de Sol du créateur", () => {
+  assert.doesNotMatch(viewSource, /Tester le bilan personnalisé de Sol|Préparer l’activité pilote|prepareSolSummaryPilot/);
 });
 
 test("remplace les groupes de démonstration par les groupes enregistrés de l’enseignant", () => {
@@ -85,12 +95,12 @@ test("remplace les groupes de démonstration par les groupes enregistrés de l�
   assert.match(viewSource, /selectedGroupIds\.length > 0 \? selectedGroupIds : catalog\.groups\.map/);
 });
 
-test("propose uniquement un nombre de questions de 1 à 20", () => {
+test("propose uniquement un nombre de questions de 1 à 24", () => {
   assert.match(viewSource, /durationMinutes: null/);
   assert.match(viewSource, /questionCount: 1/);
   assert.doesNotMatch(viewSource, />Durée<select/);
   assert.doesNotMatch(viewSource, /Aucune durée|Aucun maximum/);
-  assert.match(viewSource, /Array\.from\(\{ length: 20 \}, \(_, index\) => index \+ 1\)/);
+  assert.match(viewSource, /Array\.from\(\{ length: 24 \}, \(_, index\) => index \+ 1\)/);
 });
 
 test("place les deux types de travail dans la carte format", async () => {
@@ -158,8 +168,9 @@ test("applique les trois contrats de progression", () => {
 
 test("retire les durées et borne le nombre de questions", () => {
   assert.doesNotMatch(viewSource, /DURATION_OPTIONS/);
-  assert.match(viewSource, /Array\.from\(\{ length: 20 \}, \(_, index\) => index \+ 1\)/);
-  assert.match(validateActivityConfiguration({ ...baseConfig, questionCount: 21 }).format ?? "", /entre 1 et 20/);
+  assert.match(viewSource, /Array\.from\(\{ length: 24 \}, \(_, index\) => index \+ 1\)/);
+  assert.equal(validateActivityConfiguration({ ...baseConfig, questionCount: 24 }).format, undefined);
+  assert.match(validateActivityConfiguration({ ...baseConfig, questionCount: 25 }).format ?? "", /entre 1 et 24/);
 });
 
 test("une question à développement accepte plusieurs notions et une opération aléatoire", () => {
@@ -179,7 +190,7 @@ test("présente 150 mots comme cible souple sans validation quantitative", () =>
   assert.doesNotMatch(viewSource, /wordCount|minWords|maxWords|split\([^)]*\)\.length/);
 });
 
-test("réserve les questions de 150 mots au mode développement", async () => {
+test("rend les questions de 150 mots accessibles en développement et en révision", async () => {
   const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
   const developmentConfig = { ...baseConfig, workType: "development" as const, operationId: "causes_and_consequences" as const };
   const development = createLocalActivityPreview(developmentConfig, catalog, 0);
@@ -189,8 +200,9 @@ test("réserve les questions de 150 mots au mode développement", async () => {
   const enrichmentQuestions = getEligibleActivityQuestions({ ...baseConfig, workType: "enrichment" }, catalog);
   assert.ok(revisionQuestions.length > 0);
   assert.ok(enrichmentQuestions.length > 0);
-  assert.equal(revisionQuestions.some(({ format }) => format === "development-150"), false);
+  assert.equal(revisionQuestions.some(({ format }) => format === "development-150"), true);
   assert.equal(enrichmentQuestions.some(({ format }) => format === "development-150"), false);
+  assert.equal(catalog.questions.filter(({ format }) => format === "development-150").every(({ prompt }) => prompt.endsWith("(150 mots).")), true);
   const allDevelopment = Array.from({ length: 5 }, (_, variant) => createLocalActivityPreview({ ...developmentConfig, operationId: null }, catalog, variant));
   assert.equal(new Set(allDevelopment.map(({ question }) => question)).size, 5);
   const timelineQuestion = allDevelopment.find(({ question }) => question.startsWith("À l’aide de la ligne du temps"));
@@ -209,9 +221,15 @@ test("compose une activité équilibrée et diversifie les opérations", async (
   assert.equal(fourQuestions[0]?.format, "interactive-timeline");
   assert.deepEqual(fourQuestions.map(({ format }) => getActivityQuestionCategory(format)), ["document-interpretation", "multiple-choice", "short-answer", "document-interpretation"]);
   assert.deepEqual(fiveQuestions.map(({ format }) => getActivityQuestionCategory(format)), ["document-interpretation", "multiple-choice", "short-answer", "document-interpretation", "short-answer"]);
-  assert.deepEqual(sixQuestions.map(({ format }) => getActivityQuestionCategory(format)), ["document-interpretation", "multiple-choice", "short-answer", "document-interpretation", "short-answer", "multiple-choice"]);
+  assert.deepEqual(sixQuestions.map(({ format }) => getActivityQuestionCategory(format)), ["document-interpretation", "multiple-choice", "short-answer", "document-interpretation", "short-answer", "document-interpretation"]);
   assert.equal(new Set(fiveQuestions.map(({ operationId }) => operationId)).size >= 3, true);
-  assert.equal(fiveQuestions.some(({ format }) => format === "development-150"), false);
+  assert.equal(new Set(fiveQuestions.map(({ id }) => id)).size, fiveQuestions.length);
+  for (const questionCount of [5, 10, 20]) {
+    const questions = getActivityQuestionSelection({ ...baseConfig, questionCount }, catalog);
+    const multipleChoiceQuestions = questions.filter(({ format }) => getActivityQuestionCategory(format) === "multiple-choice");
+    assert.equal(multipleChoiceQuestions.length, Math.round(questionCount * 0.2));
+  }
+  assert.equal(getEligibleActivityQuestions(baseConfig, catalog).some(({ format }) => format === "development-150"), true);
   assert.match(viewSource, /`\$\{currentQuestionNumber\} sur \$\{activityQuestionCount\}`/);
   assert.doesNotMatch(viewSource, /Question \$\{currentQuestionNumber\} sur \$\{eligibleQuestionCount\}/);
 });
@@ -224,28 +242,30 @@ test("évite de répéter un document historique dans une même activité de ré
   assert.equal(new Set(documentIds).size, documentIds.length);
 });
 
-test("évite les répétitions entre pratiques sauf pour une révision de période", async () => {
+test("permet de réutiliser toutes les questions en révision et évite les répétitions en enrichissement", async () => {
   const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
-  const config = { ...baseConfig, questionCount: 5 };
+  const config = { ...baseConfig, workType: "enrichment" as const, questionCount: 5 };
   const firstPractice = getActivityQuestionSelection(config, catalog);
   const secondPractice = getActivityQuestionSelection(config, catalog, firstPractice.map(({ id }) => id));
   assert.equal(firstPractice[0]?.format, "interactive-timeline");
   assert.equal(secondPractice.some(({ id }) => firstPractice.some((question) => question.id === id)), false);
   assert.notEqual(secondPractice[0]?.format, "interactive-timeline");
-  const firstPeriodId = catalog.notions[0]?.periodId;
-  const periodNotionIds = catalog.notions.filter(({ periodId }) => periodId === firstPeriodId).map(({ id }) => id);
-  const periodReview = getActivityQuestionSelection({ ...config, notionIds: periodNotionIds }, catalog, firstPractice.map(({ id }) => id));
-  assert.equal(periodReview[0]?.format, "interactive-timeline");
+  const revision = getActivityQuestionSelection({ ...baseConfig, questionCount: 5 }, catalog, firstPractice.map(({ id }) => id));
+  assert.equal(revision[0]?.format, "interactive-timeline");
 });
 
-test("laisse Changer parcourir toute la banque admissible malgré la composition proposée", async () => {
+test("laisse Changer parcourir la banque admissible sans reproposer une question déjà choisie", async () => {
   const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
   const fiveQuestionConfig = { ...baseConfig, questionCount: 5 };
   const eligible = getEligibleActivityQuestions(fiveQuestionConfig, catalog);
   const previews = Array.from({ length: eligible.length }, (_, variant) => createLocalActivityPreview(fiveQuestionConfig, catalog, variant));
   assert.equal(new Set(previews.map(({ questionId }) => questionId)).size, eligible.length);
-  assert.equal(previews.some(({ format }) => format === "development-150"), false);
+  assert.equal(previews.some(({ format }) => format === "development-150"), true);
   assert.equal(previews.some(({ format }) => format === "interactive-timeline" || format === "interactive-association"), true);
+  assert.match(viewSource, /const replacement = orderedCandidates\[0\]/);
+  assert.match(viewSource, /id !== currentActivityQuestion\.id && !selectedQuestionIds\.has\(id\)/);
+  assert.doesNotMatch(viewSource, /replacementActivityIndex/);
+  assert.doesNotMatch(viewSource, /sameCategory\(candidate\).*avoidsRepeatedDocuments/);
 });
 
 test("génère un aperçu déterministe depuis les documents approuvés", async () => {
@@ -253,8 +273,9 @@ test("génère un aperçu déterministe depuis les documents approuvés", async 
   const first = createLocalActivityPreview(unlimitedRevisionConfig, catalog);
   const second = createLocalActivityPreview(unlimitedRevisionConfig, catalog);
   assert.deepEqual(first, second);
-  assert.deepEqual(first.documents.map(({ id }) => id), ["PAT-T-002", "PAT-T-003", "PAT-T-006"]);
-  assert.equal(catalog.questions.length, 38);
+  assert.deepEqual(first.documents.map(({ id }) => id), ["PAT-T-002", "PAT-T-003", "PAT-T-007"]);
+  assert.equal(catalog.questions.length, 49);
+  assert.equal(catalog.questions.some(({ id }) => id === "question:acte-union:document-interpretation-005"), false);
   assert.equal(first.operationLabel, "Établir des liens de causalité");
   assert.equal(first.question, catalog.questions[0]?.prompt);
   assert.match(first.question, /réponse britannique.*Rébellions/);
@@ -279,8 +300,10 @@ test("Socrato invite à consulter les sources pour toutes les interprétations d
     .map((question, index) => ({ question, index }))
     .filter(({ question }) => question.format === "document-interpretation");
   assert.ok(documentQuestionIndexes.length > 0);
-  for (const { index } of documentQuestionIndexes) {
-    assert.equal(createLocalActivityPreview(unlimitedRevisionConfig, catalog, index).guidance[0], "Bonjour, consulte les sources puis réponds à la question.");
+  for (const { question, index } of documentQuestionIndexes) {
+    const guidance = createLocalActivityPreview(unlimitedRevisionConfig, catalog, index).guidance[0];
+    if (question.id === "question:acte-union:understand-causes-consequences") assert.match(guidance, /comprendre comment déterminer une cause et une conséquence/);
+    else assert.equal(guidance, "Bonjour, consulte les sources puis réponds à la question.");
   }
 });
 
@@ -311,7 +334,7 @@ test("raccorde les deux questions interactives à l’aperçu élève", async ()
   const eligible = Array.from({ length: catalog.questions.length }, (_, variant) => createLocalActivityPreview(unlimitedRevisionConfig, catalog, variant));
   const timeline = eligible.find(({ format }) => format === "interactive-timeline");
   const association = eligible.find(({ format }) => format === "interactive-association");
-  assert.equal(timeline?.timelineInteraction?.entries.length, 5);
+  assert.equal(timeline?.timelineInteraction?.entries.length, 6);
   assert.equal(association?.associationInteraction?.items.length, 5);
   assert.match(studentPreviewSource, /preview\.format === "interactive-timeline" \? "interactive_timeline"/);
   assert.match(studentPreviewSource, /preview\.format === "interactive-association" \? "interactive_association"/);
@@ -325,7 +348,7 @@ test("raccorde les deux questions interactives à l’aperçu élève", async ()
 
 test("permet de fermer le test complet sans alourdir l’aperçu intégré", () => {
   assert.match(viewSource, /singlePreviewHref = `[^`]+&embedded=1`/);
-  assert.match(studentPreviewSource, /teacherPreview=\{embedded !== "1" && published !== "1"\}/);
+  assert.match(studentPreviewSource, /teacherPreview=\{classroom !== "1" && embedded !== "1" && published !== "1"\}/);
   assert.match(sessionViewSource, /Fermer l’aperçu/);
   assert.match(sessionViewSource, /window\.close\(\)/);
   assert.match(sessionViewSource, /teacherPreviewExitHref = "\/teacher\/activities\/new"/);
@@ -333,21 +356,22 @@ test("permet de fermer le test complet sans alourdir l’aperçu intégré", () 
   assert.match(studentPreviewCssSource, /\.teacher-preview-navigation \.teacher-preview-close/);
 });
 
-test("publie seulement une simulation locale et ferme le fournisseur en production", async () => {
+test("ferme le fournisseur local en production et publie par l’action serveur", async () => {
   assert.equal(isLocalActivityCreatorEnabled("production"), false);
   await assert.rejects(() => new LocalActivityCreatorProvider("production").getCatalog(), /disabled in production/);
   assert.match(routeSource, /if \(!isLocalActivityCreatorEnabled\(\)\) notFound\(\)/);
-  assert.doesNotMatch(providerSource + viewSource, /fetch\(|axios|openai|anthropic|prisma|supabase|firebase|indexedDB|sessionStorage/);
+  assert.doesNotMatch(providerSource, /fetch\(|axios|openai|anthropic|prisma|firebase|indexedDB|sessionStorage/);
+  assert.match(viewSource, /publishActivityToSupabase\(publishedActivity/);
   assert.match(viewSource, /repository\.savePublishedActivity\(publishedActivity\)/);
   assert.doesNotMatch(viewSource.match(/function confirmLocalPublication[\s\S]*?\n  \}/)?.[0] ?? "", /window\.open|published=1/);
-  assert.match(viewSource, /window\.location\.assign\(`\/teacher\?activity=\$\{encodeURIComponent\(publishedActivity\.id\)\}`\)/);
+  assert.match(viewSource, /window\.location\.assign\(consolidationTarget[\s\S]*`\/teacher\?activity=\$\{encodeURIComponent\(publishedActivity\.id\)\}`\)/);
 });
 
 test("couvre accessibilité, thèmes et responsive sans défilement horizontal imposé", () => {
   assert.match(viewSource, /aria-live="polite"/);
   assert.match(viewSource, /aria-pressed=/);
   assert.match(viewSource, /aria-current="page"/);
-  assert.match(viewSource, /className="student-view-link"[\s\S]*target="_blank"/);
+  assert.match(viewSource, /className="student-view-link"[\s\S]*target=\{classroomMode \? undefined : "_blank"\}/);
   assert.match(cssSource, /data-theme="light"/);
   assert.match(cssSource, /focus-visible/);
   assert.match(cssSource, /min-height:44px/);
@@ -389,6 +413,9 @@ test("clarifie l’aperçu, la validation et la progression des champs", () => {
   assert.match(viewSource, /Question précédente/);
   assert.match(viewSource, /Question suivante/);
   assert.match(viewSource, /className="change-question"[^>]*>Changer</);
+  assert.match(viewSource, /!selectedQuestionIds\.has\(id\)/);
+  assert.match(viewSource, /disabled=\{availableReplacementQuestions\.length < 2\}/);
+  assert.doesNotMatch(viewSource, /replacementActivityIndex/);
   assert.match(cssSource, /\.live-preview\{[^}]*height:100dvh[^}]*grid-template-rows:auto minmax\(0,1fr\) auto/);
   assert.doesNotMatch(cssSource, /\.live-preview\{[^}]*position:sticky/);
   assert.ok(viewSource.indexOf("Télécharger le fichier Word") < viewSource.indexOf("Tester l’activité complète comme un élève"));
@@ -398,14 +425,13 @@ test("clarifie l’aperçu, la validation et la progression des champs", () => {
   assert.ok(viewSource.indexOf("Question suivante →") < viewSource.indexOf(">Publier →</"));
   assert.doesNotMatch(viewSource, /Garder et passer à la suivante/);
   assert.match(cssSource, /\.live-preview \.creator-footer \.sequence-question-button\{[^}]*border:1px solid/);
-  assert.match(viewSource, /className="publish-button" onClick=\{\(\) => setShowPublishReview\(true\)\}>Publier →<\/button>/);
-  assert.doesNotMatch(viewSource, /className="publish-button" disabled=/);
+  assert.match(viewSource, /className="publish-button" disabled=\{!readyToPublish\} onClick=\{\(\) => setShowPublishReview\(true\)\}>Publier →<\/button>/);
   assert.doesNotMatch(viewSource, /Vérifier et publier|Dernière vérification/);
   assert.match(viewSource, /Publier cette activité/);
   assert.match(viewSource, /questions et les opérations laissées en mode aléatoire seront attribuées automatiquement/);
   assert.match(cssSource, /\.creator-footer \.publish-button,\.creator-footer\.is-pending>\.publish-button\{opacity:1/);
   assert.doesNotMatch(viewSource, /creator-footer-summary/);
-  assert.match(viewSource, /creator-footer \$\{complete \? "is-ready" : "is-pending"\}/);
+  assert.match(viewSource, /creator-footer \$\{readyToPublish \? "is-ready" : "is-pending"\}/);
   assert.match(cssSource, /\.creator-footer\{position:static/);
   assert.doesNotMatch(viewSource, /className="preview-actions"/);
   assert.match(viewSource, /<footer className=\{`creator-footer[\s\S]*className="sequence-question-button"[\s\S]*<\/footer>\s*<\/section>/);
@@ -452,5 +478,12 @@ test("enregistre automatiquement le brouillon et le retire après publication", 
   assert.match(viewSource, /createConfiguredDataRepository\(window\.localStorage\)\.saveDraft\(createTeacherActivityDraft\(config, questionOverrides, previewVariant\)\)/);
   assert.match(viewSource, /repository\.clearActiveDraft\(\)/);
   assert.match(activityDraftSource, /TEACHER_ACTIVITY_DRAFT_VERSION/);
-  assert.match(viewSource, /if \(!draftReady \|\| !draftTouched\) return/);
+  assert.match(viewSource, /if \(!draftReady \|\| !draftTouched \|\| consolidationTarget \|\| classroomMode\) return/);
+});
+
+test("prévisualise une consolidation individuelle avant de l’assigner", () => {
+  assert.match(viewSource, /initialUnderstandingOperationId \? "Guidage individuel" : "Activité de consolidation"/);
+  assert.match(viewSource, /Vérifiez le guidage avant de l’assigner uniquement à cet élève/);
+  assert.match(viewSource, /publishActivityToSupabase\(publishedActivity, consolidationTarget \? \{ groupId: consolidationTarget\.groupId, studentId: consolidationTarget\.studentId \} : undefined\)/);
+  assert.match(viewSource, /Assigner l’activité à l’élève/);
 });

@@ -28,10 +28,14 @@ export function createPedagogicalFeedback(
   nonExploitableCount: number,
   questionClosing = false,
   helpRequest: HelpRequestKind | false = false,
+  activityClosing = false,
 ): PedagogicalFeedback {
+  const closingAssessment = activityClosing
+    ? "Nous garderons cette question à retravailler dans ton bilan."
+    : "Nous allons poursuivre avec la prochaine question et garder celle-ci à retravailler.";
   if (analysis.responseDisposition === "inappropriate") {
     const assessment = questionClosing
-      ? "Nous allons poursuivre avec la prochaine question et garder celle-ci à retravailler."
+      ? closingAssessment
       : "Revenons calmement à la question d’histoire.";
     return { assessment, studentFacingText: assessment, relatedRuleIds: ["PED-NONEXP-011", "PED-NONEXP-012"] };
   }
@@ -50,7 +54,7 @@ export function createPedagogicalFeedback(
       };
     }
     if (questionClosing) {
-      const assessment = "Nous allons poursuivre avec la prochaine question et garder celle-ci à retravailler.";
+      const assessment = closingAssessment;
       return { assessment, studentFacingText: assessment, relatedRuleIds: ["PED-NONEXP-003", "PED-NONEXP-005"] };
     }
     if (["playful_diversion", "off_topic", "nonsense_or_spam"].includes(analysis.responseDisposition)) {
@@ -69,9 +73,15 @@ export function createPedagogicalFeedback(
         relatedRuleIds: ["PED-NONEXP-003", "PED-NONEXP-004", "PED-NONEXP-005"],
       };
     }
-    const assessment = nonExploitableCount <= 1
-      ? "Je n’arrive pas encore à interpréter cette réponse comme une idée historique."
-      : nonExploitableCount === 2
+    if (nonExploitableCount <= 1) {
+      const assessment = "Est-ce que tu pourrais développer davantage ton idée ?";
+      return {
+        assessment,
+        studentFacingText: assessment,
+        relatedRuleIds: ["PED-NONEXP-003", "PED-NONEXP-004", "PED-NONEXP-005"],
+      };
+    }
+    const assessment = nonExploitableCount === 2
         ? "Appuie-toi sur un document précis et formule une idée historique."
         : "Utilise une structure simple : un fait, puis le lien que tu établis.";
     const priorityPrompt = nonExploitableCount < 3 ? "Peux-tu reformuler une seule idée liée à la question?" : undefined;
@@ -86,7 +96,7 @@ export function createPedagogicalFeedback(
   const acknowledgement = replaceDocumentIds(analysis.observedStrengths[0], question);
   const missingElement = replaceDocumentIds(analysis.missingElements[0], question);
   if (questionClosing && analysis.pedagogicalOutcome !== "satisfactory") {
-    const assessment = "Tu as fait trois essais sérieux. Il reste un élément historique à préciser; nous garderons ce point à consolider.";
+    const assessment = "Tu as fait trois essais sérieux. Ce point reste à consolider et sera pris en compte dans ton bilan pour déterminer la prochaine étape la plus utile.";
     return {
       acknowledgement,
       assessment,
@@ -103,19 +113,27 @@ export function createPedagogicalFeedback(
       relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-006", "PED-AI-009"],
     };
   }
+  if (acknowledgement && !missingElement && analysis.pedagogicalOutcome !== "satisfactory") {
+    return {
+      acknowledgement,
+      assessment: acknowledgement,
+      studentFacingText: acknowledgement,
+      relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-006", "PED-FDBK-009"],
+    };
+  }
   if (analysis.pedagogicalOutcome === "satisfactory") {
     const assessment = "Bravo, ta réponse est réussie.";
-    const conciseEnrichment = missingElement?.replace(/^\s*précision\s*:\s*/i, "");
+    const conciseEnrichment = missingElement?.replace(/^\s*précision(?:\s+facultative)?\s*:\s*/i, "");
     const enrichment = conciseEnrichment ? `À retenir aussi : ${conciseEnrichment}` : undefined;
     return { acknowledgement, assessment, missingElement, studentFacingText: joinParts([acknowledgement, assessment, enrichment]), relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-011"] };
   }
-  const tailoredQuestion = missingElement?.includes("?") ? keepOnlyQuestion(missingElement) : undefined;
-  const priorityPrompt = tailoredQuestion ?? (analysis.pedagogicalOutcome === "partially_satisfactory"
+  const tailoredGuidance = missingElement?.includes("?") ? missingElement : undefined;
+  const priorityPrompt = tailoredGuidance ?? (analysis.pedagogicalOutcome === "partially_satisfactory"
     ? "Quel fait précis permet de justifier le lien que tu proposes?"
     : "Quel élément du document peux-tu d’abord établir comme fait?");
   return {
     acknowledgement, assessment: acknowledgement ?? "Poursuivons ensemble.", missingElement, priorityPrompt,
-    studentFacingText: joinParts([acknowledgement, tailoredQuestion ? undefined : missingElement, priorityPrompt]),
+    studentFacingText: joinParts([acknowledgement, tailoredGuidance ? undefined : missingElement, priorityPrompt]),
     relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-006", "PED-FDBK-009"],
   };
 }

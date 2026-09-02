@@ -7,7 +7,7 @@ import { INTELLECTUAL_OPERATIONS } from "../pedagogical-reference/intellectual-o
 export const DEMO_INTELLECTUAL_OPERATIONS = INTELLECTUAL_OPERATIONS.map(({ id, officialLabel }) => ({ id, label: officialLabel }));
 
 const PERIOD = { startYear: 1840, endYear: 1896 } as const;
-const STATUSES: ProgressStatus[] = ["mastered", "consolidate", "needs_work", "not_assessed"];
+const STATUSES: ProgressStatus[] = ["mastered", "consolidate", "needs_work", "covered", "not_assessed"];
 
 function operations(offset: number) {
   return DEMO_INTELLECTUAL_OPERATIONS.map((operation, index) => ({
@@ -58,7 +58,7 @@ function createActivities(): StudentActivity[] {
       progressPercentage: 35,
       activityStatus: "in_progress",
       origin: "teacher_assigned",
-      isRecent: true,
+      isRecent: false,
       actionHref: getLearningSessionUrl("demo-activity-acte-union", ACTE_UNION_NOTION_ID, "teacher-assigned"),
       operations: operations(0),
       historicalKnowledge: knowledge(assignedKnowledge, 0),

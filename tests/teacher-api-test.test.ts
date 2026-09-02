@@ -8,7 +8,7 @@ import { createCatalogLearningSessionQuestions } from "../lib/student-learning-s
 test("expose les questions de l’Acte d’Union avec leur vrai contexte Sol", () => {
   const approved = getQuestionsForKnowledgeHeading("acte-union");
   const catalog = createCatalogLearningSessionQuestions(approved.map(({ id }) => id));
-  assert.equal(catalog.questions.length, 37);
+  assert.equal(catalog.questions.length, 34);
   for (const [index, question] of catalog.questions.entries()) {
     assert.equal(question.localHint, approved[index]?.instruction);
     assert.equal(question.evaluationGuide?.expectedAnswer, approved[index]?.expectedAnswer);
@@ -26,14 +26,28 @@ test("expose les questions de l’Acte d’Union avec leur vrai contexte Sol", (
   }
 });
 
-test("centre la question d’assimilation sur le seul extrait qui explicite l’intention de Durham", () => {
+test("ignore une question retirée dans une activité déjà publiée", () => {
+  const catalog = createCatalogLearningSessionQuestions([
+    "question:acte-union:short-answer-006",
+    "question:acte-union:001",
+  ]);
+  assert.deepEqual(catalog.questions.map(({ id }) => id), ["question:acte-union:001"]);
+  assert.equal(catalog.questions[0]?.number, 1);
+});
+
+test("ajoute un second extrait sur l’avancement politique à la question d’assimilation", () => {
   const approved = getQuestionsForKnowledgeHeading("acte-union");
   const question = approved.find(({ id }) => id === "question:acte-union:document-interpretation-009");
   assert.ok(question);
-  assert.deepEqual(question.historicalDocumentIds, ["historical-presentation:acte-union:durham-anglicisation"]);
-  assert.match(question.prompt, /extrait sur le projet d’anglicisation/);
+  assert.deepEqual(question.historicalDocumentIds, ["historical-presentation:acte-union:durham-anglicisation", "historical-presentation:acte-union:durham-anglicisation-avancement"]);
+  assert.match(question.prompt, /deux extraits sur le projet d’anglicisation/);
+  assert.match(question.prompt, /nomme deux moyens proposés par lord Durham/);
+  assert.match(question.prompt, /explique comment chacun contribuerait/);
   assert.doesNotMatch(question.prompt, /union législative/);
-  assert.match(question.instruction, /deux moyens proposés dans l’extrait/);
+  assert.match(question.instruction, /progression de l’anglais/);
+  assert.match(question.instruction, /immigration anglaise/);
+  assert.match(question.instruction, /accéder aux fonctions politiques/);
+  assert.match(question.expectedAnswer, /Deux moyens correctement relevés et deux liens de cause à effet suffisent/);
 });
 
 test("distingue les titres visibles des documents 3 et 4 de la question 28", () => {
@@ -73,6 +87,13 @@ test("formule le premier indice Durham–Acte d’Union comme une question chale
   assert.doesNotMatch(question.instruction, /^1\.|\b2\./);
 });
 
+test("signale la confusion entre Russell et Durham dans la comparaison de la question 15", () => {
+  const question = getQuestionsForKnowledgeHeading("acte-union")
+    .find(({ id }) => id === "question:acte-union:document-interpretation-004");
+  assert.ok(question);
+  assert.ok(question.commonErrors.includes("Attribuer les recommandations à Russell plutôt qu’à Durham."));
+});
+
 test("ajoute le tableau démographique comme troisième document de la question 30", () => {
   const question = getQuestionsForKnowledgeHeading("acte-union")
     .find(({ id }) => id === "question:acte-union:development-004");
@@ -86,6 +107,46 @@ test("ajoute le tableau démographique comme troisième document de la question 
   assert.equal(populationDocument?.content.kind, "comparison_table");
 });
 
+test("ajoute les tableaux des dettes et des populations à la question 10", () => {
+  const question = getQuestionsForKnowledgeHeading("acte-union")
+    .find(({ id }) => id === "question:acte-union:short-answer-003");
+  assert.ok(question);
+  assert.deepEqual(question.historicalDocumentIds, ["AU-G-001", "AU-G-002"]);
+  assert.match(question.prompt, /compare la population et la dette/);
+  assert.match(question.prompt, /avantage particulièrement le Haut-Canada/);
+  const catalog = createCatalogLearningSessionQuestions([question.id]);
+  const debtDocument = catalog.documents.find(({ id }) => id === "AU-G-001");
+  assert.equal(debtDocument?.content.kind, "comparison_table");
+  assert.deepEqual(debtDocument?.content.kind === "comparison_table" ? debtDocument.content.rows : [], [
+    { label: "Bas-Canada", value: "≈ 133 000 £" },
+    { label: "Haut-Canada", value: "≈ 1 540 000 £" },
+  ]);
+  const populationDocument = catalog.documents.find(({ id }) => id === "AU-G-002");
+  assert.equal(populationDocument?.content.kind, "comparison_table");
+  assert.deepEqual(populationDocument?.content.kind === "comparison_table" ? populationDocument.content.rows : [], [
+    { label: "Bas-Canada", value: "≈ 650 000" },
+    { label: "Haut-Canada", value: "≈ 450 000" },
+  ]);
+});
+
+test("remplace le schéma politique par le tableau des populations à la question 17", () => {
+  const question = getQuestionsForKnowledgeHeading("acte-union")
+    .find(({ id }) => id === "question:acte-union:document-interpretation-006");
+  assert.ok(question);
+  assert.deepEqual(question.historicalDocumentIds, ["AU-G-001", "AU-G-002"]);
+  assert.match(question.instruction, /tableau des populations/);
+  assert.doesNotMatch(question.instruction, /schéma de la structure politique/);
+});
+
+test("n’exige pas une relance géographique après une transformation territoriale complète", () => {
+  const question = getQuestionsForKnowledgeHeading("acte-union")
+    .find(({ id }) => id === "question:acte-union:document-interpretation-010");
+  assert.ok(question);
+  assert.match(question.expectedAnswer, /Cette réponse est complète même si l’élève ne précise pas explicitement/);
+  assert.match(question.expectedAnswer, /constitue un enrichissement facultatif/);
+  assert.doesNotMatch(question.instruction, /établis la correspondance/);
+});
+
 test("réserve le banc d’essai à l’enseignant et ne touche pas à la progression élève", async () => {
   const page = await readFile(new URL("../app/teacher/api-test/page.tsx", import.meta.url), "utf8");
   const action = await readFile(new URL("../app/teacher/api-test/actions.ts", import.meta.url), "utf8");
@@ -96,6 +157,8 @@ test("réserve le banc d’essai à l’enseignant et ne touche pas à la progre
   assert.match(action, /createConfiguredOpenAIPedagogicalAnalyzer/);
   assert.doesNotMatch(action, /student-progress|saveProgress|transitionStudentProgress/);
   assert.match(dashboard, /href="\/teacher\/api-test"/);
+  assert.match(dashboard, /Réviser les questions/);
+  assert.match(page, /Révision complète des \$\{catalog\.questions\.length\} questions/);
   assert.match(page, /StudentLearningSessionView/);
   assert.match(page, /teacherPreview/);
   assert.match(page, /teacherApiTest/);
@@ -105,4 +168,6 @@ test("réserve le banc d’essai à l’enseignant et ne touche pas à la progre
   assert.match(studentView, /InteractiveTimelineQuestion/);
   assert.match(studentView, /InteractiveAssociationQuestion/);
   assert.match(action, /attemptNumber: request\.attemptNumber/);
+  assert.match(action, /analyzeWithFallback\(response, definition, analyzer, new LocalDeterministicResponseAnalyzer\(\)\)/);
+  assert.doesNotMatch(action, /catch \{[\s\S]*analyzer\.analyze\(response, definition\)/);
 });

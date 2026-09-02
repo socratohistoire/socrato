@@ -1,6 +1,7 @@
 import type { StudentActivity, StudentDashboardData } from "../student-dashboard/types.ts";
 import type { LocalPublishedActivity } from "./store.ts";
 import { LOCAL_STUDENT_GROUP_ID } from "../academic-context/local-context.ts";
+import { prioritizeDashboardActivities } from "../student-dashboard/selection.ts";
 
 export const LOCAL_DEMO_STUDENT_GROUP_ID = LOCAL_STUDENT_GROUP_ID;
 
@@ -54,11 +55,13 @@ export function applyLocalPublishedActivitiesToStudentDashboard(
 ): StudentDashboardData {
   const assigned = activities
     .filter(({ targetedGroupIds, questionIds, publicationStatus }) => (publicationStatus ?? "published") === "published" && targetedGroupIds.includes(groupId) && questionIds.length > 0)
-    .map((activity) => toStudentActivity(activity, data));
+    .sort((left, right) => new Date(right.publishedAt).getTime() - new Date(left.publishedAt).getTime())
+    .map((activity, index) => ({ ...toStudentActivity(activity, data), isRecent: index === 0 }));
   const activityIds = new Set(assigned.map(({ id }) => id));
-  const mergedActivities = [...assigned, ...data.activities.filter(({ id }) => !activityIds.has(id))];
+  const mergedActivities = prioritizeDashboardActivities([...assigned, ...data.activities.filter(({ id }) => !activityIds.has(id))]);
+  const defaultActivityId = mergedActivities[0]?.id ?? data.defaultActivityId;
   const selectedActivityId = requestedActivityId && mergedActivities.some(({ id }) => id === requestedActivityId)
     ? requestedActivityId
-    : data.selectedActivityId;
-  return { ...data, activities: mergedActivities, selectedActivityId };
+    : defaultActivityId;
+  return { ...data, defaultActivityId, activities: mergedActivities, selectedActivityId };
 }

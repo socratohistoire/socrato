@@ -51,7 +51,7 @@ export type LearningSessionMessage = {
 
 export type LearningSessionQuestion = {
   id: string;
-  type: "question_with_documents" | "question_without_documents" | "multiple_choice" | "interactive_timeline" | "interactive_association";
+  type: "question_with_documents" | "question_without_documents" | "multiple_choice" | "interactive_timeline" | "interactive_association" | "interactive_causal_chain";
   format?: "multiple-choice" | "short-answer" | "document-interpretation" | "interactive-timeline" | "interactive-association" | "development-150";
   number: number;
   prompt: string;
@@ -64,6 +64,8 @@ export type LearningSessionQuestion = {
   requiredDocumentIds?: string[];
   localHint: string;
   initialMessages: LearningSessionMessage[];
+  /** null réserve une conversation sans limite aux parcours de guidage explicites. */
+  maxAttempts?: number | null;
   answerOptions?: readonly { label: "A" | "B" | "C" | "D"; text: string; correct: boolean }[];
   answerExplanation?: string;
   evaluationGuide?: {
@@ -79,6 +81,7 @@ export type LearningSessionQuestion = {
       title: string;
       description: string;
       imageUrl: string;
+      imageUrls?: readonly string[];
       imageAlt: string;
       credit: string;
     }[];
@@ -88,12 +91,24 @@ export type LearningSessionQuestion = {
     items: readonly { id: string; label: string }[];
     targets: readonly { id: string; description: string; correctItemId: string }[];
   };
+  causalChainInteraction?: {
+    steps: readonly { id: string; date: string; prompt: string; placeholder: string; acceptedAnswers: readonly string[]; expectedAnswer: string }[];
+  };
 };
 
 export type StudentLearningSessionData = {
   id: string;
   activityId: string;
   activityTitle: string;
+  consolidationStrategyLabel?: string;
+  consolidationStrategyAdvice?: string;
+  consolidationContext?: {
+    parentActivityId: string;
+    strategyKey: string;
+    strategyLabel: string;
+    targetOperationId?: string;
+    source?: "socrato_proposed" | "teacher_assigned";
+  };
   origin: "teacher_assigned" | "student_selected";
   notionId: string;
   notionTitle: string;

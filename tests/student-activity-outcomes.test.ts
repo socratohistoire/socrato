@@ -41,3 +41,18 @@ test("restaure une activité terminée et son bilan depuis le stockage persistan
   assert.equal(activity?.operations[0]?.status, "mastered");
   assert.equal(activity?.historicalKnowledge[0]?.status, "consolidate");
 });
+
+test("n’invente aucun élément à consolider lorsque le bilan n’en contient pas", () => {
+  const storage = new MemoryStorage();
+  saveStudentActivityOutcome(storage, {
+    ...summary,
+    consolidationTargets: [],
+    operationResults: [{ id: "establish_facts", status: "mastered" }],
+    historicalKnowledgeResults: [{ id: "acte-union", status: "mastered" }],
+    recommendation: undefined,
+  });
+  const restored = applyStoredStudentActivityOutcomes(createDemoStudentDashboard(), storage);
+  const activity = restored.activities.find(({ id }) => id === summary.activityId);
+  assert.deepEqual(activity?.summary.consolidationTargets, []);
+  assert.equal(activity?.summary.recommendation, null);
+});

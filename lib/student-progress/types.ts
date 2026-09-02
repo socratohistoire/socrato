@@ -13,6 +13,11 @@ export type StudentQuestionRuntimeProgress = {
   nonExploitableCount: number;
   status: "presented" | "awaiting_response" | "completed";
   lastAnalysis?: import("../pedagogical-session-engine/types.ts").StructuredResponseAnalysis;
+  instructionOmissionObserved?: boolean;
+  omittedInstructionElements?: string[];
+  observedDifficulties?: string[];
+  questionPrompt?: string;
+  skippedWithoutEvaluation?: boolean;
 };
 
 type StudentProgressContractBase = {

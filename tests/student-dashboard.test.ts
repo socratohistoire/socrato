@@ -9,14 +9,17 @@ import { getHistoricalPeriodLabel } from "../lib/student-dashboard/historical-pe
 import { getKnowledgeScrollState, getNextKnowledgeScrollTop } from "../lib/student-dashboard/knowledge-scroll.ts";
 import { ACTIVITY_STATUS_LABELS, ACTIVITY_TYPE_LABELS, getActivityActionLabel, getWorkedHistoricalKnowledge, getWorkedOperations } from "../lib/student-dashboard/presentation.ts";
 import type { StudentDashboardProvider } from "../lib/student-dashboard/provider.ts";
-import { getActivityDashboardUrl, getLearningSessionUrl, getSelectedActivity } from "../lib/student-dashboard/selection.ts";
+import { getActivityDashboardUrl, getConsolidationStrategyKey, getLearningSessionUrl, getSelectedActivity, prioritizeDashboardActivities } from "../lib/student-dashboard/selection.ts";
 import type { StudentDashboardData } from "../lib/student-dashboard/types.ts";
 
 const viewSource = readFileSync("app/eleve/tableau-de-bord/dashboard-view.tsx", "utf8");
 const cssSource = readFileSync("app/eleve/tableau-de-bord/dashboard.css", "utf8");
 const pageSource = readFileSync("app/eleve/tableau-de-bord/page.tsx", "utf8");
 const providerSource = readFileSync("lib/student-dashboard/demo-provider.ts", "utf8");
+const databaseProviderSource = readFileSync("lib/student-dashboard/database-provider.ts", "utf8");
 const knowledgeScrollSource = readFileSync("app/eleve/tableau-de-bord/knowledge-scroll-region.tsx", "utf8");
+const databaseSource = readFileSync("lib/server/database.ts", "utf8");
+const sessionViewSource = readFileSync("app/eleve/activite/[activityId]/session-view.tsx", "utf8");
 
 class TestSessions implements StudentSessionRepository {
   constructor(private active: boolean) {}
@@ -42,6 +45,16 @@ test("protège le tableau de bord avec la session élève", async () => {
 test("isole les résultats persistés au serveur des anciennes données du navigateur", () => {
   assert.match(viewSource, /if \(data\.source === "server"\)[\s\S]*setDashboardData\(data\)/);
   assert.doesNotMatch(viewSource, /applyStoredStudentActivityOutcomes|applyStoredStudentProgress/);
+});
+
+test("considère comme réussie une consolidation terminée avec l’aide de Socrato", () => {
+  assert.match(sessionViewSource, /successful: Boolean\(result && result\.status !== "to_work_on"\)/);
+  assert.match(viewSource, /savedConsolidationProgress\?\.state === "continue" && targetOperationMastered/);
+});
+
+test("garde la connexion Supabase ouverte entre les interactions élève", () => {
+  assert.match(databaseSource, /connect_timeout: 30/);
+  assert.match(databaseSource, /idle_timeout: 300/);
 });
 
 test("affiche par défaut l’activité récente avec son titre personnalisé", () => {
@@ -73,7 +86,7 @@ test("présente Commencer, Poursuivre et Voir mon bilan selon l’état", () => 
 });
 
 test("remplace Nouvelle activité disponible une fois terminée", () => {
-  assert.match(viewSource, /completed \? "Activité terminée" : "Nouvelle activité disponible"/);
+  assert.match(viewSource, /completed \? "Activité complétée" : "Nouvelle activité disponible"/);
   assert.match(viewSource, /Bravo ! Tu as terminé cette activité de révision !/);
   assert.match(viewSource, /completed \? "Bravo/);
 });
@@ -98,7 +111,7 @@ test("présente un bilan explicatif avant la fin", () => {
   const activity = getSelectedActivity(createDemoStudentDashboard());
   assert.equal(activity.summary.state, "pending");
   assert.deepEqual(activity.summary.strengths, []);
-  assert.match(viewSource, /Lorsque tu auras terminé cette activité, Socrato préparera un bilan personnalisé/);
+  assert.match(viewSource, /Les résultats apparaîtront ici après le début de l’activité/);
 });
 
 test("présente un bilan structuré après la fin sans avertissement local dans l’interface", () => {
@@ -110,6 +123,37 @@ test("présente un bilan structuré après la fin sans avertissement local dans 
   assert.doesNotMatch(viewSource, /aucune analyse pédagogique réelle/);
 });
 
+test("propose une consolidation seulement pour une difficulté persistante", () => {
+  assert.doesNotMatch(viewSource, /title: "Les connaissances travaillées"/);
+  assert.match(viewSource, /consolidationStatuses = new Set\(\["needs_work"\]\)/);
+  assert.match(viewSource, /hasActionableConsolidation \? getConsolidationSessionUrl/);
+  assert.match(viewSource, /hasActionableConsolidation \? \[\{ kind: "recommend", title: "Activité de consolidation"/);
+  assert.match(viewSource, /Commencer l’activité de consolidation/);
+  assert.match(cssSource, /\.consolidation-action\{/);
+});
+
+test("présente une seule stratégie prioritaire avec un ton direct", () => {
+  assert.match(viewSource, /\[\.\.\.new Set\(consolidationTargets\)\]\.slice\(0, 1\)/);
+  assert.match(viewSource, /<b>Pour progresser<\/b>/);
+  assert.doesNotMatch(viewSource, /<b>À vérifier<\/b>/);
+});
+
+test("conserve une identité précise pour la stratégie qui associe les dates aux événements", () => {
+  assert.equal(getConsolidationStrategyKey("Associer chaque date à son événement\nQuestion\nUne question\nÀ vérifier\nUne date\nComment progresser\nUn conseil"), "date-event");
+});
+
+test("ne propose aucune consolidation sans stratégie concrète", () => {
+  assert.match(viewSource, /const hasActionableConsolidation = confirmedTargets\.length > 0 && consolidationEntries\.length > 0/);
+  assert.match(viewSource, /const consolidationHref = hasActionableConsolidation \?/);
+  assert.match(viewSource, /entry === "Aucune stratégie prioritaire pour le moment\."/);
+});
+
+test("révèle progressivement le bilan après le lien de fin de séance", () => {
+  assert.match(viewSource, /searchParams\.get\("reveal"\) === "bilan"/);
+  assert.match(cssSource, /@keyframes bilan-writing/);
+  assert.match(cssSource, /prefers-reduced-motion:reduce/);
+});
+
 test("intègre la progression d’une consolidation sans effacer le bilan précédent", () => {
   const completed = createDemoStudentDashboard().activities.find(({ activityStatus }) => activityStatus === "completed");
   assert.ok(completed?.summary.consolidationProgress);
@@ -119,7 +163,7 @@ test("intègre la progression d’une consolidation sans effacer le bilan préc�
   assert.equal(completed.operations.find(({ id }) => id === "establish_facts")?.status, "mastered");
   assert.equal(completed.operations.find(({ id }) => id === "causes_and_consequences")?.status, "consolidate");
   assert.equal(completed.historicalKnowledge[0].status, "mastered");
-  assert.match(viewSource, /Progression après consolidation/);
+  assert.match(viewSource, /Stratégie réussie/);
   assert.match(viewSource, /Assignée par l’enseignant/);
   assert.match(cssSource, /\.consolidation-progress\{[^}]*display:grid[^}]*border:1px solid/);
 });
@@ -179,7 +223,83 @@ test("préserve les modes clair et sombre avec la palette approuvée", () => {
 test("renforce le contraste du bilan Socrato en thème clair", () => {
   assert.match(cssSource, /\[data-theme="light"\] \.summary-panel \{[^}]*background:linear-gradient\(145deg,#173b57,#254b66\); color:#fffaf2/);
   assert.match(cssSource, /\[data-theme="light"\] \.summary-item p \{ color:#f1f4f6; \}/);
-  assert.match(cssSource, /\[data-theme="light"\] \.summary-recommend \{ color:#e8b8ff; \}/);
+  assert.match(cssSource, /\[data-theme="light"\] \.summary-recommend\{color:#78c7ee\}/);
+  assert.match(cssSource, /\.consolidation-action\{border-color:#78c7ee;background:#176b9c;color:#fff/);
+});
+
+test("intègre le conseil de lecture et les éléments oubliés dans les éléments à consolider", () => {
+  assert.match(viewSource, /consolidationEntries = \[\.\.\.new Set\(consolidationTargets\)\]\.slice\(0, 1\)/);
+  assert.match(viewSource, /confirmedTargets\.length \? activity\.summary\.consolidationTargets\.filter/);
+  assert.doesNotMatch(viewSource, /confirmedTargets\.map\(\(\{ label \}\) => label\)/);
+  assert.match(viewSource, /\^Décomposer la consigne/);
+  assert.match(viewSource, /title: "Ma stratégie pour progresser", entries: consolidationEntries/);
+  assert.doesNotMatch(viewSource, /<p className="summary-reading-advice"/);
+  assert.doesNotMatch(viewSource, /unansweredElementExample/);
+});
+
+test("garde l’activité de consolidation sous forme de synthèse générale", () => {
+  assert.match(viewSource, /const formatStrategy = item\.kind === "consolidate"/);
+  assert.match(viewSource, /if \(!formatStrategy\)[\s\S]*return body \? <div className="summary-entry"><strong>\{title\}<\/strong><p>\{body\}<\/p><\/div> : <p>\{entry\}<\/p>/);
+  assert.match(viewSource, /kind: "recommend", title: "Activité de consolidation", entries: \[nextStep\]/);
+});
+
+test("compacte le bilan et annonce les notions abordées", () => {
+  assert.match(viewSource, /Notions abordées dans cette activité/);
+  assert.doesNotMatch(viewSource, /Notions traitées dans cette activité/);
+  assert.match(cssSource, /\.summary-panel\{padding:24px 28px 26px\}/);
+  assert.match(cssSource, /\.summary-item>span\{width:40px;height:40px/);
+  assert.match(cssSource, /\.summary-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\);margin-top:22px;gap:26px 34px\}/);
+  assert.match(cssSource, /\.summary-item p,\.summary-item ul\{margin-top:6px;font-size:14px;line-height:1.5\}/);
+});
+
+test("retire le cercle décoratif de la carte d’activité", () => {
+  assert.doesNotMatch(cssSource, /\.main-activity-card::after/);
+  assert.doesNotMatch(cssSource, /#c9a15e33/);
+});
+
+test("réserve l’étoile de Mes activités à la dernière activité publiée", () => {
+  assert.match(viewSource, /activity\.isRecent \? "★" : ""/);
+  assert.match(viewSource, /activity-row-icon-empty/);
+  assert.match(cssSource, /\.activity-row-icon-empty\{visibility:hidden\}/);
+  assert.doesNotMatch(viewSource, /className="activity-row-icon" aria-hidden="true">★/);
+  assert.match(databaseProviderSource, /\.map\(\(row, index\) => \(\{ \.\.\.toStudentActivity\(row\), isRecent: index === 0 \}\)\)/);
+});
+
+test("place une activité assignée non terminée dans la carte principale avant la dernière activité complétée", () => {
+  const completed = createDemoStudentDashboard().activities.find(({ activityStatus }) => activityStatus === "completed")!;
+  const assigned = createDemoStudentDashboard().activities.find(({ activityStatus }) => activityStatus === "not_started")!;
+  const ordered = prioritizeDashboardActivities([completed, assigned]);
+
+  assert.equal(ordered[0]?.id, assigned.id);
+  assert.equal(ordered[1]?.id, completed.id);
+});
+
+test("présente le bilan dans une grille de deux colonnes", () => {
+  assert.match(viewSource, /kind: "recommend", title: "Activité de consolidation"/);
+  assert.doesNotMatch(viewSource, /kind: "workbook"|À revoir dans ton cahier/);
+  assert.match(viewSource, /operations=\{activity\.operations\}/);
+  assert.match(viewSource, /kind: "operations", title: "Mes opérations intellectuelles"/);
+  assert.ok(viewSource.indexOf('kind: "strength"') < viewSource.indexOf('kind: "consolidate"'));
+  assert.ok(viewSource.indexOf('kind: "consolidate"') < viewSource.indexOf('kind: "operations"'));
+  assert.ok(viewSource.indexOf('kind: "operations"') < viewSource.indexOf('kind: "recommend"'));
+  assert.match(viewSource, /className="summary-operations summary-item"><span aria-hidden="true"><ReasoningIcon/);
+  assert.match(viewSource, /className="summary-column"/);
+  assert.match(viewSource, /kind === "strength" \|\| kind === "operations"/);
+  assert.match(cssSource, /\.summary-column\{min-width:0;display:flex;flex-direction:column;gap:26px\}/);
+  assert.match(viewSource, /function SummaryEntry/);
+  assert.doesNotMatch(viewSource, /À essayer dès la prochaine question|summary-entry-priority/);
+  assert.match(cssSource, /\.summary-consolidate \{ color:#f2c94c; \}/);
+  assert.match(viewSource, /Pour mieux structurer ta comparaison/);
+  assert.match(viewSource, /Pour rendre ton raisonnement plus clair/);
+  assert.match(viewSource, /summary-entry--structured/);
+  assert.match(viewSource, /const verificationIndex = bodyParts\.indexOf\("À vérifier"\)/);
+  assert.match(viewSource, /<b>Pour progresser<\/b>/);
+  assert.match(cssSource, /\.summary-entry>strong\{display:block/);
+  assert.match(cssSource, /\.summary-operations\{margin:0;border-top:0;padding:0;color:#78c7ee\}/);
+  assert.match(cssSource, /\.summary-operations>span\{color:#fff\}/);
+  assert.match(cssSource, /\.summary-operations \.results-list\{grid-template-columns:1fr;gap:0\}/);
+  assert.match(cssSource, /border:0;border-bottom:1px solid #ffffff1f;border-radius:0/);
+  assert.match(cssSource, /background:transparent/);
 });
 
 test("rend la page responsive, zoomable et accessible", () => {
@@ -192,10 +312,10 @@ test("rend la page responsive, zoomable et accessible", () => {
   assert.match(viewSource, /aria-label="Activité sélectionnée"/);
 });
 
-test("conserve une région compacte accessible pour les connaissances", () => {
-  assert.match(viewSource, /<KnowledgeScrollRegion total=\{workedItems\.length\}>/);
+test("conserve une région compacte accessible pour les opérations", () => {
+  assert.match(viewSource, /<OperationResults items=\{operations\}/);
   assert.match(cssSource, /\.results-panel \{[^}]*height:380px/);
-  assert.match(cssSource, /\.knowledge-list \{[^}]*height:100%[^}]*overflow-y:auto/);
+  assert.match(cssSource, /\.results-list \{[^}]*overflow-y:auto/);
 });
 
 test("aligne les connaissances à la suite sans étirer les rangées", () => {
@@ -293,24 +413,24 @@ test("filtre les opérations et connaissances non travaillées dans la présenta
 
 test("conserve visibles les trois statuts réellement travaillés", () => {
   const statuses = new Set(getWorkedOperations(getSelectedActivity(createDemoStudentDashboard("demo-activity-acte-union")).operations).map(({ status }) => status));
-  assert.deepEqual(statuses, new Set(["mastered", "consolidate", "needs_work"]));
+  assert.deepEqual(statuses, new Set(["mastered", "consolidate", "needs_work", "covered"]));
 });
 
-test("affiche les deux états vides fixes lorsque rien n’est travaillé", () => {
+test("affiche l’état vide des opérations lorsque rien n’est travaillé", () => {
   const unstarted = getSelectedActivity(createDemoStudentDashboard("demo-activity-industrialisation"));
   assert.equal(getWorkedOperations(unstarted.operations).length, 0);
   assert.equal(getWorkedHistoricalKnowledge(unstarted.historicalKnowledge).length, 0);
   assert.match(viewSource, /Tes résultats apparaîtront ici après le début de l’activité/);
-  assert.match(viewSource, /Tes connaissances travaillées apparaîtront ici au fil de l’activité/);
+  assert.doesNotMatch(viewSource, /Tes connaissances travaillées apparaîtront ici au fil de l’activité/);
 });
 
 test("la carte annonce les notions tandis que le bilan conserve les connaissances évaluées", () => {
   const activity = getSelectedActivity(createDemoStudentDashboard("demo-activity-acte-union"));
   assert.equal(activity.historicalKnowledgeIds.length, 4);
   assert.equal(activity.historicalKnowledge.length, 4);
-  assert.equal(getWorkedHistoricalKnowledge(activity.historicalKnowledge).length, 3);
+  assert.equal(getWorkedHistoricalKnowledge(activity.historicalKnowledge).length, 4);
   assert.match(viewSource, /coveredNotions\.length/);
-  assert.match(viewSource, /<KnowledgeResults items=\{activity\.historicalKnowledge\}/);
+  assert.doesNotMatch(viewSource, /<KnowledgeResults/);
   assert.doesNotMatch(viewSource, /showCompletePortrait/);
   assert.doesNotMatch(viewSource, /activity\.historicalKnowledgeIds\.length/);
 });
@@ -333,7 +453,7 @@ test("conserve l’identité visuelle et la hiérarchie du modèle", () => {
   assert.match(viewSource, /Nouvelle activité disponible/);
   assert.match(viewSource, /DASHBOARD_LABELS\.summary/);
   assert.match(viewSource, /DASHBOARD_LABELS\.operations/);
-  assert.match(viewSource, /DASHBOARD_LABELS\.knowledge/);
+  assert.doesNotMatch(viewSource, /DASHBOARD_LABELS\.knowledge/);
   assert.match(viewSource, /DASHBOARD_LABELS\.activities/);
   assert.match(cssSource, /\.main-activity-card\.activity-teacher_assigned \{[^}]*border-width:3px[^}]*box-shadow:/);
 });

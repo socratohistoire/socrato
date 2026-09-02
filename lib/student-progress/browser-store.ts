@@ -1,4 +1,5 @@
 import type { PedagogicalSessionState, ResultStatus } from "../pedagogical-session-engine/types.ts";
+import { produceLocalStructuredSummary } from "../pedagogical-session-engine/summary.ts";
 import type { StudentDashboardData } from "../student-dashboard/types.ts";
 import { LEGACY_STUDENT_PROGRESS_CONTRACT_VERSION, STUDENT_PROGRESS_CONTRACT_VERSION, STUDENT_PROGRESS_CONVERSATION_VERSION, type StudentProgressContract, type StudentQuestionRuntimeProgress } from "./types.ts";
 import { LOCAL_STUDENT_GROUP_ID, LOCAL_STUDENT_ID } from "../academic-context/local-context.ts";
@@ -27,7 +28,8 @@ function isStudentProgressContract(value: unknown): value is StudentProgressCont
     return typeof item.questionId === "string" && Number.isInteger(item.attemptNumber) && Number(item.attemptNumber) >= 0 && Number(item.attemptNumber) <= 3
       && [0, 1, 2].includes(Number(item.hintLevel)) && Number.isInteger(item.hintRequestCount) && Number(item.hintRequestCount) >= 0
       && Number.isInteger(item.nonExploitableCount) && Number(item.nonExploitableCount) >= 0
-      && ["presented", "awaiting_response", "completed"].includes(String(item.status));
+      && ["presented", "awaiting_response", "completed"].includes(String(item.status))
+      && (item.skippedWithoutEvaluation === undefined || typeof item.skippedWithoutEvaluation === "boolean");
   });
   return (record.schemaVersion === LEGACY_STUDENT_PROGRESS_CONTRACT_VERSION || record.schemaVersion === STUDENT_PROGRESS_CONTRACT_VERSION || record.schemaVersion === STUDENT_PROGRESS_CONVERSATION_VERSION)
     && ["studentId", "groupId", "activityId", "sessionId", "notionId", "startedAt", "updatedAt"].every((key) => typeof record[key] === "string")
@@ -59,11 +61,12 @@ export function createStudentProgressContract(
   state: PedagogicalSessionState,
   now = new Date(),
 ): Extract<StudentProgressContract, { schemaVersion: typeof STUDENT_PROGRESS_CONVERSATION_VERSION }> {
-  const completedQuestions = state.questionStates.filter(({ status, result }) => status === "completed" && result);
+  const completedQuestions = state.questionStates.filter(({ status }) => status === "completed");
+  const assessedCompletedQuestions = completedQuestions.filter(({ result }) => Boolean(result));
   const hasStarted = state.currentQuestionIndex > 0 || state.questionStates.some(({ attemptNumber, hintRequestCount, status }) => attemptNumber > 0 || hintRequestCount > 0 || status !== "presented");
-  const operationResults = completedQuestions.flatMap(({ result }) => result!.operationAssessments
+  const operationResults = assessedCompletedQuestions.flatMap(({ result }) => result!.operationAssessments
     ?? result!.operationIds.map((id) => ({ id, status: result!.status })));
-  const historicalKnowledgeResults = completedQuestions.flatMap(({ result }) => result!.historicalKnowledgeAssessments
+  const historicalKnowledgeResults = assessedCompletedQuestions.flatMap(({ result }) => result!.historicalKnowledgeAssessments
     ?? result!.historicalKnowledgeIds.map((id) => ({ id, status: result!.status })));
   const timestamp = now.toISOString();
   return {
@@ -77,8 +80,12 @@ export function createStudentProgressContract(
     currentQuestionIndex: state.currentQuestionIndex,
     totalQuestions: state.questionStates.length,
     completedQuestionIds: completedQuestions.map(({ questionId }) => questionId),
-    questionRuntime: state.questionStates.map(({ questionId, attemptNumber, hintLevel, hintRequestCount, nonExploitableCount, status, lastAnalysis }) => ({
+    questionRuntime: state.questionStates.map(({ questionId, attemptNumber, hintLevel, hintRequestCount, nonExploitableCount, status, lastAnalysis, instructionOmissionObserved, omittedInstructionElements, observedDifficulties, skippedWithoutEvaluation, result }) => ({
       questionId, attemptNumber, hintLevel, hintRequestCount, nonExploitableCount, status, ...(lastAnalysis ? { lastAnalysis } : {}),
+      ...(instructionOmissionObserved ? { instructionOmissionObserved, omittedInstructionElements: [...(omittedInstructionElements ?? [])] } : {}),
+      ...(observedDifficulties?.length ? { observedDifficulties: [...observedDifficulties] } : {}),
+      ...(skippedWithoutEvaluation ? { skippedWithoutEvaluation: true } : {}),
+      ...(result?.questionPrompt ? { questionPrompt: result.questionPrompt } : {}),
     })),
     operationResults: state.summary?.operationResults ?? resultEntries(operationResults),
     historicalKnowledgeResults: state.summary?.historicalKnowledgeResults ?? resultEntries(historicalKnowledgeResults),
@@ -145,8 +152,11 @@ export function restoreStudentProgress(state: PedagogicalSessionState, progress:
       nonExploitableCount: runtime.nonExploitableCount,
       status: runtime.status,
       ...(runtime.lastAnalysis ? { lastAnalysis: runtime.lastAnalysis } : {}),
+      ...(runtime.instructionOmissionObserved ? { instructionOmissionObserved: true, omittedInstructionElements: [...(runtime.omittedInstructionElements ?? [])] } : {}),
+      ...(runtime.observedDifficulties?.length ? { observedDifficulties: [...runtime.observedDifficulties] } : {}),
     } : question;
     if (!completedIds.has(question.questionId)) return restoredQuestion;
+    if (runtime?.skippedWithoutEvaluation) return { ...restoredQuestion, status: "completed" as const, skippedWithoutEvaluation: true };
     const status = operationStatuses.get(question.primaryOperationId)
       ?? question.historicalKnowledgeIds.map((id) => knowledgeStatuses.get(id)).find(Boolean)
       ?? "to_consolidate";
@@ -159,11 +169,26 @@ export function restoreStudentProgress(state: PedagogicalSessionState, progress:
         historicalKnowledgeIds: question.historicalKnowledgeIds, documentIds: question.documentIds,
         attemptNumber: Math.max(1, question.attemptNumber), hintLevel: question.hintLevel, status,
         advancedMastery: false, demonstratedKnowledgeIds: [], demonstratedOperationIds: [], observedStrengths: [], consolidationTargets: [],
+        instructionOmissionObserved: restoredQuestion.instructionOmissionObserved,
+        questionPrompt: runtime?.questionPrompt,
+        omittedInstructionElements: [...(restoredQuestion.omittedInstructionElements ?? [])],
+        observedDifficulties: [...(restoredQuestion.observedDifficulties ?? [])],
         completedAt: progress.updatedAt,
       },
     };
   });
   const firstUnfinished = questionStates.findIndex(({ status }) => status !== "completed");
   const currentQuestionIndex = firstUnfinished === -1 ? questionStates.length - 1 : firstUnfinished;
-  return { ...state, currentQuestionIndex: Math.max(0, currentQuestionIndex), questionStates };
+  const restoredState = { ...state, currentQuestionIndex: Math.max(0, currentQuestionIndex), questionStates };
+  if (firstUnfinished !== -1) return restoredState;
+  const completedState = { ...restoredState, status: "completed" as const };
+  const summary = produceLocalStructuredSummary(completedState, [], progress.completedAt ?? progress.updatedAt);
+  return {
+    ...completedState,
+    summary: {
+      ...summary,
+      operationResults: progress.operationResults,
+      historicalKnowledgeResults: progress.historicalKnowledgeResults,
+    },
+  };
 }

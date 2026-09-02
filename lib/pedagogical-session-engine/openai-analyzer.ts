@@ -1,8 +1,10 @@
 import type { ResponseAnalyzer } from "./ports.ts";
 import type { PedagogicalQuestionDefinition, StructuredResponseAnalysis, StudentResponse } from "./types.ts";
-import { validateStructuredAnalysis } from "./validation.ts";
+import { discardUnknownPedagogicalIds, InvalidAnalysisError, validateStructuredAnalysis } from "./validation.ts";
 import { isExplicitHelpRequest } from "./help-request.ts";
 import { PEDAGOGICAL_ANALYSIS_CONTRACT_V2 } from "./pedagogical-contract-v2.ts";
+import { recordAICall } from "./ai-call-tracking.ts";
+import { runQueuedAnalysis } from "./analysis-queue.ts";
 
 type FetchLike = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
 
@@ -12,7 +14,18 @@ export type OpenAIPedagogicalAnalyzerOptions = {
   fetch?: FetchLike;
   endpoint?: string;
   contractVersion?: "v1" | "v2";
+  requestTimeoutMs?: number;
+  retryBaseDelayMs?: number;
 };
+
+const DEFAULT_REQUEST_TIMEOUT_MS = 25_000;
+const MAX_AI_CALLS_PER_STUDENT_RESPONSE = 2;
+
+class OpenAIRequestError extends Error {
+  constructor(readonly status: number) {
+    super(`L’analyse OpenAI a échoué (${status}).`);
+  }
+}
 
 const ANALYSIS_SCHEMA = {
   type: "object",
@@ -40,23 +53,6 @@ const ANALYSIS_SCHEMA = {
   },
 } as const;
 
-const INTENT_SCHEMA = {
-  type: "object",
-  additionalProperties: false,
-  required: ["isHistoricalProposition", "responseDisposition", "confidence"],
-  properties: {
-    isHistoricalProposition: { type: "boolean" },
-    responseDisposition: { type: "string", enum: ["substantive", "too_short", "help_request", "answer_request", "playful_diversion", "off_topic", "incomprehensible", "nonsense_or_spam", "inappropriate"] },
-    confidence: { type: "string", enum: ["low", "medium", "high"] },
-  },
-} as const;
-
-const INTENT_ANALYSIS_INSTRUCTIONS = `
-Détermine uniquement la nature du message de l’élève dans le contexte de la question d’histoire fourni.
-isHistoricalProposition doit être true dès que le message affirme, nie, suppose, compare ou explique quelque chose au sujet d’un fait, d’un concept, d’un acteur, d’une date ou d’un document lié à la tâche. La proposition demeure historique même si elle est fausse, très courte, imprécise, mal orthographiée ou incomplète. Dans ce cas, responseDisposition doit être substantive.
-isHistoricalProposition doit être false pour une demande d’aide ou de réponse, une diversion, un message hors sujet, incompréhensible, vide de sens ou inapproprié. Ne juge ni l’exactitude ni la qualité de la réponse à cette étape.
-`.trim();
-
 function analysisSchemaForSubstantiveResponse() {
   return {
     ...ANALYSIS_SCHEMA,
@@ -70,6 +66,8 @@ function analysisSchemaForSubstantiveResponse() {
 }
 
 const PEDAGOGICAL_ANALYSIS_CONTRACT_V1 = `
+RÈGLE PRIORITAIRE DE JUSTESSE DE L’ÉVALUATION : avant de choisir pedagogicalOutcome, dresse mentalement la liste fermée des obligations explicitement formulées dans question.prompt et question.instruction. Si la réponse de l’élève satisfait chacune de ces obligations avec des faits historiquement justes et accomplit l’opération demandée, tu dois choisir satisfactory et complete_question dès cette tentative. Il est interdit de transformer un détail supplémentaire de expectedAnswer, de la monographie ou des documents en nouvelle obligation. Une précision seulement souhaitable peut enrichir la rétroaction finale, mais ne doit jamais provoquer une relance.
+
 Tu analyses une réponse d’élève en histoire du Québec et du Canada à partir de quatre autorités distinctes du dossier pédagogique approuvé fourni : referenceMonograph est la référence historique de fond; approvedDocuments contient uniquement les documents historiques associés à la question; evaluationGuide précise les éléments acceptables et les erreurs fréquentes propres à cette question; pedagogicalRules fixe la manière d’accompagner l’élève. Respecte leur rôle et leur portée.
 Utilise evaluationGuide comme une grille conceptuelle, jamais comme une réponse à recopier. Accepte les synonymes, les paraphrases, les formulations d’élèves, les fautes et tout raisonnement historiquement équivalent. Ne demande pas un détail absent de questionPrompt et successCriteria simplement parce qu’il figure dans expectedAnswer.
 
@@ -94,9 +92,11 @@ N’exige jamais un numéro d’article, une date exacte, le titre officiel d’
 
 Lorsqu’une question demande de justifier à l’aide d’un ou plusieurs documents, une reformulation fidèle d’un élément pertinent de chaque document constitue une justification complète. N’exige ni citation textuelle, ni passage exact, ni titre du document, sauf si questionPrompt ou instruction demande explicitement de « citer ». Si toutes les réponses demandées sont nommées et chacune est expliquée fidèlement avec le contenu pertinent, produis satisfactory et complete_question dès cette tentative.
 
-À partir de la deuxième tentative, priorTurn résume les acquis reconnus et l’élément qui manquait au tour précédent. Construis un dialogue socratique cumulatif pouvant aller jusqu’à trois réponses d’élève. Conserve dans observedStrengths les acquis conceptuels déjà reconnus, en les fusionnant avec le nouvel acquis sans recopier la conversation. Ne demande pas à l’élève de redémontrer un acquis reconnu et ne suppose jamais qu’un élément manquant est acquis sans preuve dans sa nouvelle réponse.
+À partir de la deuxième tentative, priorTurn résume les acquis reconnus et l’élément qui manquait au tour précédent. Construis un dialogue socratique cumulatif pouvant aller jusqu’à trois réponses d’élève. Conserve dans observedStrengths les acquis conceptuels déjà reconnus, en les fusionnant avec le nouvel acquis sans recopier la conversation. Ne demande pas à l’élève de redémontrer un acquis reconnu et ne suppose jamais qu’un élément manquant est acquis sans preuve dans sa nouvelle réponse. À la troisième tentative non réussie, observedStrengths doit rappeler uniquement l’acquis réellement démontré, sans inventer de réussite; missingElements[0] doit devenir un constat déclaratif qui nomme explicitement l’information exacte manquante, l’erreur à corriger ou la relation à établir. Ce constat ne doit jamais être une question ni une consigne générique.
 
-Pour une réponse partielle, suis toujours ce rythme : reconnais précisément l’acquis, corrige au plus une confusion, puis pose dans missingElements[0] une seule question courte portant sur le prochain élément essentiel. Adapte cette question à la réponse réelle et au chemin déjà parcouru; n’utilise pas une relance générique. Dès que la nouvelle réponse apporte le dernier élément essentiel manquant, évalue l’ensemble cumulé comme satisfactory et complete_question. Ne demande jamais à l’élève de réunir ou reformuler tous ses acquis dans une phrase finale. L’objectif est de construire la réponse avec lui, sans lui dicter la réponse.
+Pour une réponse partielle avant la troisième tentative, suis toujours ce rythme : reconnais précisément l’acquis, corrige au plus une confusion, puis pose dans missingElements[0] une seule question courte portant sur le prochain élément essentiel. Adapte cette question à la réponse réelle et au chemin déjà parcouru; n’utilise pas une relance générique. Dès que la nouvelle réponse apporte le dernier élément essentiel manquant, évalue l’ensemble cumulé comme satisfactory et complete_question. Ne demande jamais à l’élève de réunir ou reformuler tous ses acquis dans une phrase finale. L’objectif est de construire la réponse avec lui, sans lui dicter la réponse. À la troisième tentative non réussie, applique plutôt la règle du constat déclaratif précis définie ci-dessus.
+
+Lorsqu’une connaissance est fausse, ne révèle pas immédiatement la formulation attendue. Signale d’abord la contradiction observable et dirige l’élève vers le passage, la date, l’acteur ou le fait pertinent. Utilise un choix guidé seulement après l’échec d’un indice plus léger. À la troisième tentative, corrige explicitement toute erreur factuelle restante avant de fermer la question; ne laisse jamais une affirmation historique fausse sans correction dans la rétroaction finale.
 
 Réserve pedagogicalOutcome=non_exploitable et nextAction=handle_non_exploitable aux réponses dont responseDisposition n’est pas substantive.
 
@@ -113,7 +113,7 @@ Exemples de décision :
 - une playful_diversion est non_exploitable avec handle_non_exploitable. Place dans missingElements[0] une seule question historique ciblée et courte permettant de reprendre exactement la tâche courante.
 - pour playful_diversion, off_topic ou nonsense_or_spam, formule dans observedStrengths[0] une réaction très brève, chaleureuse et adaptée au message réel, sans jugement ni supposition d’intention. Place dans missingElements[0] une seule question historique ciblée sur la tâche courante. N’emploie pas une formule parlant d’un « mot » si l’élève a écrit une phrase.
 
-Adresse-toi directement à l’élève avec un ton chaleureux, encourageant et naturel. Commence observedStrengths[0] par une reconnaissance brève comme « Oui, », « Bien vu, » ou « Bonne piste : », puis explique précisément en quoi l’élément donné contribue à la question. Évite les formulations vagues comme « tu as repéré », « tu mobilises un élément » ou « ta réponse est liée à la question ». Ne recopie jamais la réponse de l’élève. Lorsque la réponse est partielle ou insuffisante, missingElements[0] doit être une seule question d’aide courte, de 22 mots au maximum, fondée sur le document historique associé le plus pertinent. N’ajoute ni consigne avant cette question ni seconde question. N’utilise jamais l’identifiant interne d’un document (par exemple PAT-T-002); nomme-le uniquement par son title fourni dans approvedDocuments. Lorsque la réponse est satisfactory, missingElements peut contenir une seule précision historique brève tirée de referenceMonograph, mais aucune question. Évite les conseils génériques comme « précise ta réponse » et ne fournis jamais la réponse complète à la place de l’élève.
+Adresse-toi directement à l’élève avec un ton chaleureux, encourageant et naturel. Commence observedStrengths[0] par une reconnaissance brève comme « Oui, », « Bien vu, » ou « Bonne piste : », puis explique précisément en quoi l’élément donné contribue à la question. Évite les formulations vagues comme « tu as repéré », « tu mobilises un élément » ou « ta réponse est liée à la question ». Ne recopie jamais la réponse de l’élève. Avant la troisième tentative, lorsque la réponse est partielle ou insuffisante, missingElements[0] doit être une seule question d’aide courte, de 22 mots au maximum, fondée sur le document historique associé le plus pertinent. N’ajoute ni consigne avant cette question ni seconde question. À la troisième tentative non réussie, missingElements[0] est plutôt un constat déclaratif précis conformément à la règle précédente. N’utilise jamais l’identifiant interne d’un document (par exemple PAT-T-002); nomme-le uniquement par son title fourni dans approvedDocuments. Lorsque la réponse est satisfactory, missingElements peut contenir une seule précision historique brève tirée de referenceMonograph, mais aucune question. Évite les conseils génériques comme « précise ta réponse » et ne fournis jamais la réponse complète à la place de l’élève avant la rétroaction finale. Relis chaque phrase avant de répondre et emploie un français grammatical et idiomatique; évite notamment les calques et les tournures comme « faire avantage ».
 `.trim();
 
 function required(value: string, name: string) {
@@ -138,22 +138,58 @@ function extractOutputText(payload: unknown) {
 }
 
 function pedagogicalContext(response: StudentResponse, question: PedagogicalQuestionDefinition) {
+  const evaluation = question.evaluationContext;
   return {
     question: {
       id: question.id,
-      notionId: question.notionId,
-      primaryOperationId: question.primaryOperationId,
-      operationIds: question.operationIds,
-      historicalKnowledgeIds: question.historicalKnowledgeIds,
-      documentIds: question.documentIds,
-      requiredDocumentIds: question.requiredDocumentIds,
-      evaluationContext: question.evaluationContext,
+      prompt: evaluation?.questionPrompt ?? question.questionPrompt ?? "",
+      instruction: evaluation?.instruction ?? question.instruction ?? "",
+      intellectualOperation: {
+        id: question.primaryOperationId,
+        label: evaluation?.primaryOperationLabel ?? question.primaryOperationId,
+      },
+      targetedHistoricalKnowledge: {
+        ids: question.historicalKnowledgeIds,
+        expectedAnswer: evaluation?.evaluationGuide?.expectedAnswer ?? "",
+        relevantMonographPassages: selectRelevantMonographPassages(question),
+      },
+      successCriteria: evaluation?.successCriteria ?? [],
+      gradingBoundary: {
+        required: "Seulement ce qui est explicitement demandé dans prompt et instruction.",
+        optional: "Les autres précisions de expectedAnswer, des documents ou de la monographie sont des enrichissements facultatifs.",
+        completionRule: "Lorsque toutes les demandes explicites sont satisfaites correctement, conclure satisfactory et complete_question sans demander de reformulation.",
+      },
+      relevantCommonErrors: evaluation?.evaluationGuide?.commonErrors ?? [],
+      associatedDocuments: evaluation?.approvedDocuments ?? [],
     },
     attemptNumber: response.attemptNumber,
     hintLevel: response.hintLevel,
     priorTurn: response.priorTurn,
     studentResponse: response.content,
   };
+}
+
+export function selectRelevantMonographPassages(question: PedagogicalQuestionDefinition) {
+  const evaluation = question.evaluationContext;
+  if (!evaluation) return [];
+  const queryWords = new Set(normalizedWords([
+    evaluation.questionPrompt,
+    evaluation.instruction,
+    evaluation.evaluationGuide?.expectedAnswer ?? "",
+    ...question.historicalKnowledgeIds,
+    ...evaluation.approvedDocuments.map(({ title }) => title),
+  ].join(" ")).filter((word) => word.length >= 5));
+  return evaluation.referenceMonograph.sections
+    .flatMap((section) => section.paragraphs.map((paragraph) => ({
+      id: paragraph.id,
+      sectionTitle: section.title,
+      text: paragraph.text,
+      score: normalizedWords(paragraph.text).reduce((total, word) => total + (queryWords.has(word) ? 1 : 0), 0),
+    })))
+    .filter(({ score }) => score >= 2)
+    .sort((left, right) => right.score - left.score)
+    .slice(0, 3)
+    .map(({ id, sectionTitle, text }) => ({ id, sectionTitle, text }));
 }
 
 function normalizedWords(value: string) {
@@ -184,8 +220,33 @@ export function substantiallyCopiesApprovedDocument(response: string, question: 
   );
 }
 
+function lightweightGreetingAnalysis(content: string): StructuredResponseAnalysis | null {
+  const normalized = content.trim().toLocaleLowerCase("fr")
+    .replace(/[’'!?.,-]/gu, " ")
+    .replace(/\s+/gu, " ")
+    .trim();
+  const isGreeting = /^(bonjour|bonsoir|salut|coucou|allo|allô|hello|hey|yo)(?:\s+socrato)?$/u.test(normalized);
+  const asksHowSocratoIs = /^(?:comment (?:va?s ?tu|tu vas|allez ?vous)|(?:ça|ca) va|va?s ?tu bien|quoi de neuf)(?:\s+socrato)?$/u.test(normalized);
+  if (!isGreeting && !asksHowSocratoIs) return null;
+  return {
+    responseDisposition: "playful_diversion",
+    pedagogicalOutcome: "non_exploitable",
+    historicalAccuracy: "not_assessed",
+    documentUse: "not_assessed",
+    justificationQuality: "not_assessed",
+    primaryOperationPerformance: "not_assessed",
+    demonstratedKnowledgeIds: [],
+    observedOperationIds: [],
+    usedDocumentIds: [],
+    observedStrengths: [asksHowSocratoIs ? "Je vais bien, merci!" : "Coucou!"],
+    missingElements: ["Quelle idée historique peux-tu proposer pour répondre à la question?"],
+    nextAction: "handle_non_exploitable",
+    confidence: "high",
+  };
+}
+
 function requirePersonalExplanation(analysis: StructuredResponseAnalysis, response: StudentResponse, question: PedagogicalQuestionDefinition): StructuredResponseAnalysis {
-  if (analysis.pedagogicalOutcome !== "satisfactory" || !substantiallyCopiesApprovedDocument(response.content, question)) return analysis;
+  if (analysis.pedagogicalOutcome === "non_exploitable" || !substantiallyCopiesApprovedDocument(response.content, question)) return analysis;
   return {
     ...analysis,
     pedagogicalOutcome: "partially_satisfactory",
@@ -195,8 +256,8 @@ function requirePersonalExplanation(analysis: StructuredResponseAnalysis, respon
     primaryOperationPerformance: "partial",
     demonstratedKnowledgeIds: [],
     observedOperationIds: [],
-    observedStrengths: ["Tu as trouvé le passage pertinent dans le document."],
-    missingElements: ["Avec tes propres mots, quelle idée du document répond directement à la question?"],
+    observedStrengths: ["Tu as repéré le passage pertinent, mais tu dois formuler ton idée dans tes mots."],
+    missingElements: [],
     nextAction: "request_revision",
   };
 }
@@ -216,74 +277,105 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
   private readonly fetcher: FetchLike;
   private readonly endpoint: string;
   private readonly instructions: string;
+  private readonly requestTimeoutMs: number;
+  private readonly retryBaseDelayMs: number;
 
   constructor(options: OpenAIPedagogicalAnalyzerOptions) {
     this.apiKey = required(options.apiKey, "OPENAI_API_KEY");
-    this.model = required(options.model, "SOCRATO_SOL_AI_MODEL");
+    this.model = required(options.model, "SOCRATO_PEDAGOGICAL_AI_MODEL");
     this.fetcher = options.fetch ?? fetch;
     this.endpoint = options.endpoint ?? "https://api.openai.com/v1/responses";
     this.instructions = options.contractVersion === "v1" ? PEDAGOGICAL_ANALYSIS_CONTRACT_V1 : PEDAGOGICAL_ANALYSIS_CONTRACT_V2;
+    this.requestTimeoutMs = options.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+    this.retryBaseDelayMs = options.retryBaseDelayMs ?? 300;
   }
 
   async analyze(response: StudentResponse, question: PedagogicalQuestionDefinition): Promise<StructuredResponseAnalysis> {
+    const greeting = lightweightGreetingAnalysis(response.content);
+    if (greeting) return greeting;
+    let callCount = 0;
+    let retryAfterRateLimit = false;
     const requestStructuredOutput = async (instructions: string, schema: object, name: string) => {
-      const apiResponse = await this.fetcher(this.endpoint, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: this.model,
-        store: false,
-        instructions,
-        input: JSON.stringify(pedagogicalContext(response, question)),
-        text: { format: { type: "json_schema", name, strict: true, schema } },
-      }),
+      if (callCount >= MAX_AI_CALLS_PER_STUDENT_RESPONSE) throw new Error("Le budget maximal de deux appels IA est épuisé.");
+      callCount += 1;
+      if (retryAfterRateLimit) {
+        await new Promise((resolve) => setTimeout(resolve, this.retryBaseDelayMs * (2 ** (callCount - 2))));
+        retryAfterRateLimit = false;
+      }
+      return runQueuedAnalysis(async (waitDurationMs) => {
+        recordAICall({ model: this.model, callType: "pedagogical_analysis", activityId: response.activityId, questionId: response.questionId, waitDurationMs });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.requestTimeoutMs);
+        try {
+          const apiResponse = await this.fetcher(this.endpoint, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: this.model,
+              store: false,
+              instructions,
+              input: JSON.stringify(pedagogicalContext(response, question)),
+              text: { format: { type: "json_schema", name, strict: true, schema } },
+            }),
+            signal: controller.signal,
+          });
+          if (!apiResponse.ok) {
+            retryAfterRateLimit = apiResponse.status === 429;
+            throw new OpenAIRequestError(apiResponse.status);
+          }
+          return JSON.parse(extractOutputText(await apiResponse.json())) as unknown;
+        } catch (error) {
+          if (controller.signal.aborted) throw new Error("L’analyse pédagogique a dépassé le délai maximal.", { cause: error });
+          throw error;
+        } finally {
+          clearTimeout(timeoutId);
+        }
       });
-      if (!apiResponse.ok) throw new Error(`L’analyse OpenAI a échoué (${apiResponse.status}).`);
-      return JSON.parse(extractOutputText(await apiResponse.json())) as unknown;
     };
 
-    const analyzeOnce = async (instructions: string, forceSubstantive = false) => preserveCumulativeStrengths(
-      requirePersonalExplanation(validateStructuredAnalysis(
-        await requestStructuredOutput(
-          instructions,
-          forceSubstantive ? analysisSchemaForSubstantiveResponse() : ANALYSIS_SCHEMA,
-          "socrato_pedagogical_analysis",
-        ),
-        question,
-      ), response, question),
-      response,
-    );
+    const analyzeOnce = async (instructions: string, forceSubstantive = false) => {
+      const schema = forceSubstantive ? analysisSchemaForSubstantiveResponse() : ANALYSIS_SCHEMA;
+      const validateCandidate = (candidate: unknown) => validateStructuredAnalysis(candidate, question);
+      let validated: StructuredResponseAnalysis;
+      try {
+        validated = validateCandidate(await requestStructuredOutput(instructions, schema, "socrato_pedagogical_analysis"));
+      } catch (error) {
+        if (!(error instanceof InvalidAnalysisError) && !(error instanceof SyntaxError)) throw error;
+        const repairInstructions = `${instructions}\n\nTa sortie précédente n’a pas respecté le contrat structuré. Reprends l’analyse du même message et retourne une nouvelle sortie valide. Utilise exclusivement les identifiants fournis dans historicalKnowledgeIds, operationIds et documentIds; n’en invente aucun. Assure la cohérence exacte entre responseDisposition, pedagogicalOutcome et nextAction. Ne change pas l’évaluation historique uniquement pour réparer le format.`;
+        const repaired = await requestStructuredOutput(repairInstructions, schema, "socrato_pedagogical_analysis_repair");
+        try {
+          validated = validateCandidate(repaired);
+        } catch {
+          validated = validateCandidate(discardUnknownPedagogicalIds(repaired, question));
+        }
+      }
+      return preserveCumulativeStrengths(requirePersonalExplanation(validated, response, question), response);
+    };
 
-    const initial = await analyzeOnce(this.instructions);
+    const finalAttemptInstructions = response.attemptNumber >= 3
+      ? `${this.instructions}\n\nCeci est le contrôle final cumulatif du troisième essai. Évalue dès maintenant la réponse actuelle avec tous les acquis de priorTurn. Si l’ensemble cumulé répond à la question, choisis satisfactory et complete_question. Sinon, identifie précisément ce qui demeure à consolider. Il s’agit du verdict final : ne demande aucune seconde analyse.`
+      : this.instructions;
+    let initial: StructuredResponseAnalysis;
+    try {
+      initial = await analyzeOnce(finalAttemptInstructions);
+    } catch (error) {
+      if (callCount >= MAX_AI_CALLS_PER_STUDENT_RESPONSE || (error instanceof OpenAIRequestError && error.status !== 429)) throw error;
+      initial = await analyzeOnce(`${finalAttemptInstructions}\n\nLe premier appel n’a produit aucune analyse exploitable. Réévalue le même message et retourne une sortie structurée valide.`);
+    }
     const isIntentionalNonAnswer = isExplicitHelpRequest(response.content)
       || ["help_request", "answer_request", "playful_diversion", "nonsense_or_spam", "inappropriate"].includes(initial.responseDisposition);
     if (initial.pedagogicalOutcome !== "non_exploitable" || isIntentionalNonAnswer) {
-      if (response.attemptNumber >= 3 && initial.responseDisposition === "substantive" && initial.pedagogicalOutcome !== "satisfactory") {
-        return analyzeOnce(`${this.instructions}\n\nCeci est le contrôle final cumulatif du troisième essai. Réévalue la réponse actuelle avec tous les acquis de priorTurn et les critères essentiels explicitement demandés. Si la réponse actuelle apporte l’élément demandé au tour précédent et que l’ensemble cumulé répond à la question, choisis obligatoirement satisfactory et complete_question. Ne maintiens pas un verdict partiel pour une précision facultative, un enrichissement ou parce que les acquis sont répartis entre plusieurs messages.`, true);
-      }
       return initial;
     }
 
-    if (["too_short", "incomprehensible"].includes(initial.responseDisposition)) {
-      return analyzeOnce(`${this.instructions}\n\nLe premier passage n’a pas réussi à évaluer ce message. Traite-le maintenant comme une proposition de l’élève à propos de la tâche courante : détermine ce qu’elle apporte réellement, corrige-la si nécessaire et poursuis le dialogue socratique. Ne la déclare pas non exploitable simplement parce qu’elle est courte, maladroite ou formulée comme un fragment de phrase.`, true);
-    }
-
-    let intent: { isHistoricalProposition?: unknown; responseDisposition?: unknown; confidence?: unknown };
-    try {
-      intent = await requestStructuredOutput(INTENT_ANALYSIS_INSTRUCTIONS, INTENT_SCHEMA, "socrato_student_response_intent") as typeof intent;
-    } catch {
-      return initial;
-    }
-    if (intent.isHistoricalProposition !== true || intent.responseDisposition !== "substantive") return initial;
-
-    return analyzeOnce(`${this.instructions}\n\nUne lecture spécialisée indépendante a établi que le message contient une proposition historique liée à la tâche. Évalue maintenant son exactitude et sa contribution réelle, même si cette proposition est fausse, courte ou incomplète. Ne la traite ni comme une diversion ni comme un message non exploitable.`, true);
+    return analyzeOnce(`${this.instructions}\n\nLe premier passage n’a pas produit une analyse exploitable. Réévalue directement le même message comme une possible proposition historique liée à la tâche, même si elle est fausse, courte, maladroite ou incomplète. Évalue son exactitude et poursuis le dialogue socratique; ne la classe non exploitable que si elle ne contient réellement aucune proposition historique pertinente.`, true);
   }
 }
 
 export function createConfiguredOpenAIPedagogicalAnalyzer(environment: Record<string, string | undefined> = process.env, fetcher?: FetchLike) {
   return new OpenAIPedagogicalResponseAnalyzer({
     apiKey: environment.OPENAI_API_KEY ?? "",
-    model: environment.SOCRATO_SOL_AI_MODEL ?? "gpt-5.6-sol",
+    model: environment.SOCRATO_PEDAGOGICAL_AI_MODEL ?? environment.SOCRATO_SOL_AI_MODEL ?? "gpt-5.6-terra",
     fetch: fetcher,
     contractVersion: environment.SOCRATO_PEDAGOGICAL_CONTRACT === "v1" ? "v1" : "v2",
   });

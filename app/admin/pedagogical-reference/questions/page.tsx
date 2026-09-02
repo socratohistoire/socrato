@@ -12,7 +12,7 @@ type QuestionBankQuery = { notion?: string; scope?: string };
 
 const QUESTION_CATEGORIES = [
   { format: "multiple-choice", label: "Choix de réponse", description: "Questions proposant plusieurs réponses possibles." },
-  { format: "short-answer", label: "Réponse courte", description: "Réponses brèves formulées en quelques mots ou quelques phrases." },
+  { format: "short-answer", label: "Réponse courte", description: "Réponses brèves formulées en quelques mots ou quelques phrases, incluant les chaînes interactives." },
   { formats: ["document-interpretation", "interactive-timeline", "interactive-association"], format: "document-interpretation", label: "Interprétation de documents", description: "Analyse de documents historiques, incluant les lignes du temps, classements et associations interactives." },
   { format: "development-150", label: "Questions à développement · 150 mots", description: "Réponses développées d’environ 150 mots mobilisant une opération intellectuelle." },
 ] as const;
@@ -66,8 +66,9 @@ export default async function PedagogicalQuestionBankPage({ searchParams }: { se
               <dl><div><dt>Notion</dt><dd>{getSecondaryFourKnowledgeHeading(question.knowledgeHeadingId)?.officialLabel ?? question.knowledgeHeadingId}</dd></div><div><dt>Opération</dt><dd>{getIntellectualOperation(question.operationId).officialLabel}</dd></div>{question.historicalDocumentIds.length > 0 ? <div className="question-documents-link"><dt>Documents</dt><dd>{question.historicalDocumentIds.map((documentId, index) => <Link key={documentId} href={`/admin/pedagogical-reference/documents/${question.knowledgeHeadingId}#${documentId}`} aria-label={`Voir le document historique ${index + 1}`}>Document {index + 1} →</Link>)}</dd></div> : null}</dl>
               <h3>{question.prompt}</h3>
               {question.answerOptions ? <ol className="question-answer-options">{question.answerOptions.map((option) => <li key={option.label}><strong>{option.label}</strong><span>{option.text}</span></li>)}</ol> : null}
-              {question.format === "interactive-timeline" ? <Link href="/eleve/activite/demo-activity-timeline?notion=acte-union&mode=teacher-assigned">Essayer la question interactive →</Link> : null}
+              {question.format === "interactive-timeline" ? <Link href={`/eleve/activite/demo-activity-timeline?notion=${question.knowledgeHeadingId}&mode=teacher-assigned`}>Essayer la question interactive →</Link> : null}
               {question.format === "interactive-association" ? <Link href="/eleve/activite/demo-activity-association?notion=acte-union&mode=teacher-assigned">Essayer la question interactive →</Link> : null}
+              {question.causalChainInteraction ? <Link href="/preview/gouvernement-responsable-chaine-causale">Essayer la question interactive →</Link> : null}
               <footer><span>{question.status === "approved" ? `Approuvée · version ${question.review.approvedVersion}` : "Brouillon · à essayer et à approuver"}</span><strong>{question.scope === "transversal" ? "Transversale" : "Notionnelle"}</strong></footer>
             </article>)}</div> : <div className="question-category-empty">Aucune question dans cette catégorie pour le moment.</div>}
           </section>;

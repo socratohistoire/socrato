@@ -4,6 +4,7 @@ import type { DashboardMode } from "../student-dashboard/types.ts";
 import { createCatalogLearningSessionQuestions } from "./demo-provider.ts";
 import type { StudentLearningSessionProvider } from "./provider.ts";
 import type { StudentLearningSessionData } from "./types.ts";
+import { activityTitleWithoutStudentIdentity } from "../activity-title.ts";
 
 type AssignedActivityRow = {
   title: string;
@@ -21,6 +22,7 @@ type AssignedActivityRow = {
   started_at: Date | null;
   updated_at: Date | null;
   completed_at: Date | null;
+  personal_assignment: boolean;
 };
 
 const notionTitles: Record<string, string> = { "acte-union": "Acte d’union", industrialisation: "Industrialisation" };
@@ -44,7 +46,7 @@ export class DatabaseStudentLearningSessionProvider implements StudentLearningSe
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(activityId) || activityId.length > 100) return null;
     const sql = getSocratoDatabase();
     const rows = await sql<AssignedActivityRow[]>`
-      select a.title, a.notion_ids, a.question_ids, g.id as group_id, p.session_id, p.progress_state,
+      select a.title, a.notion_ids, a.question_ids, g.id as group_id, (aga.id like 'personal-%') as personal_assignment, p.session_id, p.progress_state,
         p.current_question_index, p.total_questions, p.completed_question_ids, p.operation_results,
         p.historical_knowledge_results, p.question_runtime, p.started_at, p.updated_at, p.completed_at
       from socrato.group_memberships gm
@@ -59,6 +61,7 @@ export class DatabaseStudentLearningSessionProvider implements StudentLearningSe
         order by updated_at desc limit 1
       ) p on true
       where gm.student_id = ${anonymousStudentId} and gm.active = true and a.id = ${activityId}
+        and (aga.id not like 'personal-%' or aga.id = 'personal-' || a.id || '-' || ${anonymousStudentId})
       order by a.published_at desc
       limit 1
     `;
@@ -68,6 +71,18 @@ export class DatabaseStudentLearningSessionProvider implements StudentLearningSe
     if (!catalogSession.questions.length) return null;
     const notionId = requestedNotionId && activity.notion_ids.includes(requestedNotionId) ? requestedNotionId : activity.notion_ids[0] ?? "acte-union";
     const mode: DashboardMode = requestedMode === "notion-review" ? "notion-review" : "teacher-assigned";
+    const firstQuestion = catalogSession.questions[0];
+    const firstOperation = firstQuestion?.intellectualOperations.find(({ id }) => id === firstQuestion.primaryOperationId);
+    const teacherConsolidation = activity.personal_assignment && firstQuestion && firstOperation ? {
+      consolidationStrategyLabel: firstOperation.label,
+      consolidationContext: {
+        parentActivityId: activityId,
+        strategyKey: "teacher-guided",
+        strategyLabel: firstOperation.label,
+        targetOperationId: firstQuestion.primaryOperationId,
+        source: "teacher_assigned" as const,
+      },
+    } : {};
     const progress = activity.session_id && activity.progress_state && activity.total_questions && activity.started_at && activity.updated_at ? {
       schemaVersion: 3 as const,
       studentId: anonymousStudentId,
@@ -89,7 +104,7 @@ export class DatabaseStudentLearningSessionProvider implements StudentLearningSe
     return {
       id: `session-${anonymousStudentId}-${activityId}`,
       activityId,
-      activityTitle: activity.title,
+      activityTitle: activityTitleWithoutStudentIdentity(activity.title),
       origin: mode === "notion-review" ? "student_selected" : "teacher_assigned",
       notionId,
       notionTitle: notionTitles[notionId] ?? notionId,
@@ -101,6 +116,7 @@ export class DatabaseStudentLearningSessionProvider implements StudentLearningSe
       localDemoNotice: "",
       documentCatalog: catalogSession.documents,
       questions: catalogSession.questions,
+      ...teacherConsolidation,
     };
   }
 }

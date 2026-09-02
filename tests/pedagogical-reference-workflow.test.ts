@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   acceptHistoricalRecordReviewItems,
   ACTE_UNION_HISTORICAL_RECORD,
+  RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD,
   ACTE_UNION_CAUSAL_PILOT_QUESTION,
   ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION,
   ACTE_UNION_TIMELINE_CAUSAL_DEVELOPMENT_QUESTION,
@@ -28,6 +29,35 @@ import {
   createHistoricalRecordReviewDraft,
   getHistoricalRecordReviewItems,
 } from "../lib/pedagogical-reference/index.ts";
+
+test("documente la monographie du gouvernement responsable sans l’approuver", () => {
+  const record = RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD;
+  assert.equal(record.id, "historical-record:gouvernement-responsable");
+  assert.equal(record.status, "draft");
+  assert.ok(record.manual.sections.length >= 7);
+  assert.ok(record.manual.sections.flatMap(({ paragraphs }) => paragraphs).length >= 20);
+  assert.deepEqual(record.chronologicalMarkers.map(({ sortYear }) => sortYear), [1841, 1842, 1843, 1848, 1849, 1864]);
+  assert.ok(record.knowledgePrecisions.every(({ coverageStatus, linkedStatementIds }) => coverageStatus === "complete" && linkedStatementIds.length > 0));
+  assert.ok(record.misconceptions.some(({ misconception }) => /indépendant/.test(misconception)));
+  assert.ok(record.expectedLearning.some(({ text }) => /La Fontaine-Baldwin/.test(text)));
+  assert.deepEqual(record.knowledgePrecisions.map(({ officialLabel }) => officialLabel), [
+    "Alliance des Réformistes",
+    "Fonctionnement du gouvernement responsable",
+    "Instabilité ministérielle",
+  ]);
+  assert.ok(record.manual.sections.some(({ id }) => id === "gr-mono-instability"));
+  assert.deepEqual(record.manual.sections.map(({ id }) => id), [
+    "gr-mono-definition",
+    "gr-mono-union",
+    "gr-mono-alliance",
+    "gr-mono-crises",
+    "gr-mono-1848",
+    "gr-mono-effects",
+    "gr-mono-instability",
+    "gr-mono-limits",
+  ]);
+  assert.deepEqual(validateHistoricalRecord(record), {});
+});
 
 test("sépare formellement le dossier, la fiche et la question", () => {
   const record = createEmptyHistoricalRecord("acte-union");
@@ -99,23 +129,52 @@ test("empêche l’approbation d’un dossier ou d’une question non documenté
   assert.ok(Object.keys(validateApprovedQuestion(question)).length > 0);
 });
 
-test("prépare trois dossiers pilotes et trente-huit questions approuvées", () => {
+test("prépare trois dossiers pilotes, trente-cinq questions approuvées et quatorze questions du gouvernement responsable à valider", () => {
   assert.deepEqual(PEDAGOGICAL_REFERENCE_PILOTS.map(({ knowledgeHeadingId }) => knowledgeHeadingId), [
     "acte-union",
     "premiere-phase-d-industrialisation",
     "revolution-tranquille",
   ]);
   assert.ok(PEDAGOGICAL_REFERENCE_PILOTS.every(({ questionDraft }) => questionDraft.status === "not-started" && !questionDraft.prompt));
-  assert.equal(PEDAGOGICAL_QUESTION_CATALOG.length, 38);
-  assert.ok(PEDAGOGICAL_QUESTION_CATALOG.every((question) => question.status === "approved" && Object.keys(validateApprovedQuestion(question)).length === 0));
-  assert.equal(getQuestionsForKnowledgeHeading("acte-union").length, 37);
-  assert.equal(getQuestionsForKnowledgeHeading("gouvernement-responsable").length, 1);
+  assert.equal(PEDAGOGICAL_QUESTION_CATALOG.length, 49);
+  assert.equal(PEDAGOGICAL_QUESTION_CATALOG.filter(({ status }) => status === "approved").length, 35);
+  assert.ok(PEDAGOGICAL_QUESTION_CATALOG.every((question) => Object.keys(validateApprovedQuestion(question)).length === 0));
+  assert.equal(getQuestionsForKnowledgeHeading("acte-union").length, 34);
+  assert.equal(getQuestionsForKnowledgeHeading("gouvernement-responsable").length, 15);
+  assert.ok(getQuestionsForKnowledgeHeading("gouvernement-responsable").some(({ prompt }) => /incendie du Parlement/.test(prompt)));
+  const responsibleTimeline = getQuestionsForKnowledgeHeading("gouvernement-responsable").find(({ format }) => format === "interactive-timeline");
+  assert.ok(responsibleTimeline?.timelineInteraction);
+  assert.deepEqual(responsibleTimeline.timelineInteraction.dates, ["1841", "1841-1842", "1843", "1848", "1849", "1854-1864", "1864"]);
+  assert.equal(responsibleTimeline.timelineInteraction.entries.length, 7);
+  const responsibleDevelopment = getQuestionsForKnowledgeHeading("gouvernement-responsable").find(({ format }) => format === "development-150");
+  assert.equal(responsibleDevelopment?.operationId, "causal_connections");
+  assert.deepEqual(responsibleDevelopment?.historicalDocumentIds, ["GR-D-001"]);
+  assert.match(responsibleDevelopment?.prompt ?? "", /Grande Coalition en 1864 \(150 mots\)/);
+  assert.deepEqual(validateApprovedQuestion(responsibleDevelopment!), {});
+  const elginRole = getQuestionsForKnowledgeHeading("gouvernement-responsable").find(({ prompt }) => prompt === "Quel rôle lord Elgin joue-t-il dans l’obtention du gouvernement responsable en 1848?");
+  assert.equal(elginRole?.format, "short-answer");
+  assert.equal(elginRole?.operationId, "causal_connections");
+  const elginLetterInterpretation = getQuestionsForKnowledgeHeading("gouvernement-responsable").find(({ id }) => id === "question:gouvernement-responsable:document-interpretation-004");
+  assert.equal(elginLetterInterpretation?.operationId, "relationships_between_facts");
+  assert.deepEqual(elginLetterInterpretation?.historicalDocumentIds, ["GR-T-006"]);
+  const coalitionInterpretation = getQuestionsForKnowledgeHeading("gouvernement-responsable").find(({ id }) => id === "question:gouvernement-responsable:document-interpretation-005");
+  assert.equal(coalitionInterpretation?.prompt, "Pourquoi d’anciens adversaires politiques forment-ils la Grande Coalition en 1864?");
+  assert.deepEqual(coalitionInterpretation?.historicalDocumentIds, ["GR-T-007"]);
+  const causalChain = getQuestionsForKnowledgeHeading("gouvernement-responsable").find(({ causalChainInteraction }) => causalChainInteraction);
+  assert.equal(causalChain?.format, "short-answer");
+  assert.equal(causalChain?.causalChainInteraction?.steps.length, 6);
+  assert.equal(causalChain?.causalChainInteraction?.steps.at(-1)?.expectedAnswer, "La Grande Coalition");
+  const limitedParticipation = getQuestionsForKnowledgeHeading("gouvernement-responsable").find(({ prompt }) => /toute la population ne participe pas/.test(prompt));
+  assert.deepEqual(limitedParticipation?.historicalDocumentIds, ["GR-T-001-P1"]);
+  assert.match(limitedParticipation?.expectedAnswer ?? "", /exclut explicitement toutes les femmes du vote/);
+  assert.ok(responsibleTimeline.timelineInteraction.entries.some(({ date, title }) => date === "1848" && /gouvernement responsable/i.test(title)));
+  assert.ok(responsibleTimeline.sourceCatalog.every(({ verificationStatus }) => verificationStatus === "verified"));
   assert.equal(ACTE_UNION_CAUSAL_PILOT_QUESTION.status, "approved");
-  assert.deepEqual(ACTE_UNION_CAUSAL_PILOT_QUESTION.historicalDocumentIds, ["PAT-T-002", "PAT-T-003", "PAT-T-006"]);
+  assert.deepEqual(ACTE_UNION_CAUSAL_PILOT_QUESTION.historicalDocumentIds, ["PAT-T-002", "PAT-T-003", "PAT-T-007"]);
   assert.deepEqual(validateApprovedQuestion(ACTE_UNION_CAUSAL_PILOT_QUESTION), {});
   assert.equal(ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION.status, "approved");
   assert.deepEqual(validateApprovedQuestion(ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION), {});
-  assert.equal(ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION.timelineInteraction.entries.length, 5);
+  assert.equal(ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION.timelineInteraction.entries.length, 6);
   assert.equal(ACTE_UNION_TIMELINE_CAUSAL_DEVELOPMENT_QUESTION.format, "development-150");
   assert.deepEqual(validateApprovedQuestion(ACTE_UNION_TIMELINE_CAUSAL_DEVELOPMENT_QUESTION), {});
   assert.deepEqual(validateApprovedQuestion(ACTE_UNION_DEFINITION_MULTIPLE_CHOICE_QUESTION), {});
@@ -209,15 +268,15 @@ test("expose le module local Administration → Référentiel pédagogique", () 
   assert.doesNotMatch(view, />Banque de documents historiques<\/Link>/);
   assert.match(view, /Structure pédagogique/);
   assert.match(view, /\["appropriation", "Approbation"\]/);
-  assert.doesNotMatch(view, /\["questions", "Questions"\]/);
+  assert.match(view, />Questions<\/Link>/);
   assert.doesNotMatch(view, /\["appropriation", "Appropriation"\]/);
   assert.doesNotMatch(view, /\["sources", "Sources"\]/);
   assert.doesNotMatch(view, /activeSection === "sources"/);
   assert.match(view, /aucune source manquante/);
   assert.match(view, /Valider la vérification des sources/);
-  assert.doesNotMatch(view, /activeSection === "questions"/);
   const notionTabs = readFileSync("app/admin/pedagogical-reference/notion-tabs.tsx", "utf8");
-  assert.doesNotMatch(notionTabs, /\["questions", "Questions"\]/);
+  assert.match(notionTabs, /\["questions", "Questions"\]/);
+  assert.match(notionTabs, /questions\?notion=/);
   const questionBankPage = readFileSync("app/admin/pedagogical-reference/questions/page.tsx", "utf8");
   assert.match(questionBankPage, /Un seul catalogue, organisé selon les quatre périodes/);
   assert.match(questionBankPage, /PEDAGOGICAL_QUESTION_CATALOG/);

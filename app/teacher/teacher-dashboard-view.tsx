@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ThemeToggle } from "../eleve/tableau-de-bord/theme-toggle";
-import { composeTeacherPedagogicalSummary, formatGlobalCompletionMessage, formatTeacherGreeting, getGroupsEligibleForSynthesis, LocalTeacherPedagogicalSummaryProvider, type TeacherDashboardViewModel } from "@/lib/teacher-dashboard";
+import { composeTeacherPedagogicalSummary, formatGlobalCompletionMessage, formatTeacherGreeting, getGroupsEligibleForSynthesis, LocalTeacherPedagogicalSummaryProvider, selectHighPriorityStudents, type TeacherDashboardViewModel } from "@/lib/teacher-dashboard";
 import { ScrollRegion } from "./scroll-region";
 import { TeacherGroupsDisclosure } from "./teacher-groups-disclosure";
 import { TypewriterMessage } from "./typewriter-message";
@@ -19,6 +19,7 @@ import { TeacherWelcomeWizard } from "./teacher-welcome-wizard";
 import type { StoredTeacherGroupSummary } from "@/lib/server/teacher-groups";
 import { createActivitySummaryMessageKey } from "@/lib/teacher-dashboard/message-view-store";
 import type { TeacherActivitySummary } from "@/lib/teacher-dashboard/types";
+import { setStoredActivityStatus } from "./activity-management-actions";
 
 type SectionIconName = "portrait" | "support";
 
@@ -145,7 +146,7 @@ export function TeacherDashboardView({ data, authenticatedTeacher, storedTeacher
   }, [highlightCreationAction]);
   const activityPickerAccessibleLabel = "Changer d’activité";
   const activitiesByPublication = useMemo(() => showConfigurationWelcome ? [] : [...activities].sort((left, right) => right.publishedAt.localeCompare(left.publishedAt)), [activities, showConfigurationWelcome]);
-  const displayedPriorityStudents = showConfigurationWelcome || usesStoredTeacherWorkspace ? [] : data.highPriorityStudents;
+  const displayedPriorityStudents = showConfigurationWelcome ? [] : selectHighPriorityStudents(activeActivity.highPriorityStudents);
   const displayedGroupPortraits = (showConfigurationWelcome || (usesStoredTeacherWorkspace && !hasCreatedActivity)) ? storedTeacherGroups.map((group) => ({ id: group.id, activityId: "", name: group.name, observation: "Aucune activité assignée pour le moment.", suggestion: "Créez une première activité pour commencer à suivre ce groupe.", completedStudentCount: 0, targetedStudentCount: group.studentCount, groupDetailHref: `/teacher/groups/${encodeURIComponent(group.id)}` })) : activeActivity.groupPortraits;
   const sidebarGroups = useMemo(() => {
     const groups = new Map<string, { id: string; name: string; studentCount: number; detailsHref?: string }>(usesStoredTeacherWorkspace ? [] : data.groups.map((group) => [group.id, { id: group.id, name: group.name, studentCount: group.studentCount }]));
@@ -158,6 +159,13 @@ export function TeacherDashboardView({ data, authenticatedTeacher, storedTeacher
     catch { setDataError("La modification n’a pas pu être enregistrée. Réessayez."); }
   }
 
+  async function changeStoredActivityStatus(activityId: string, status: LocalActivityPublicationStatus) {
+    if (status === "archived" && !window.confirm("Archiver cette activité? Elle ne sera plus proposée aux élèves, mais ses résultats seront conservés.")) return;
+    const result = await setStoredActivityStatus(activityId, status);
+    if (!result.ok) { setDataError(result.error); return; }
+    window.location.reload();
+  }
+
   async function deleteActivityDraft() {
     if (!window.confirm("Supprimer ce brouillon d’activité? Cette action ne peut pas être annulée.")) return;
     try { await createConfiguredDataRepository(window.localStorage).clearActiveDraft(); setActivityDraft(null); }
@@ -168,7 +176,7 @@ export function TeacherDashboardView({ data, authenticatedTeacher, storedTeacher
     <main className="teacher-dashboard">
       <TeacherWelcomeWizard initiallyOpen={!authenticatedTeacher.onboardingCompletedAt} teacherName={authenticatedTeacher.displayName.split(/\s+/)[0] || authenticatedTeacher.displayName} />
       <aside className="teacher-sidebar" aria-label="Navigation enseignante">
-        <Link className="teacher-brand" href="/teacher" aria-label="Accueil Socrato enseignant">
+        <Link className="teacher-brand" href="/teacher" aria-label="Retour à l’espace enseignant">
           <span className="teacher-brand-lockup">
             <span className="teacher-brand-symbol">
               <Image className="socrato-brand-logo" src="/logos/socrato-logo-blanc-recadre.png" width={486} height={696} alt="Logo Socrato" priority unoptimized />
@@ -180,6 +188,7 @@ export function TeacherDashboardView({ data, authenticatedTeacher, storedTeacher
           </span>
         </Link>
         <nav aria-label="Navigation principale">
+          <Link className="sidebar-nav-tile teacher-home-link" href="/"><span className="sidebar-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V8l8-5 8 5v11M9 19v-6h6v6" /></svg></span><span>Page d’accueil</span><span aria-hidden="true">→</span></Link>
           <TeacherGroupsDisclosure groups={sidebarGroups} />
           <Link className={`sidebar-create-action${highlightCreationAction ? " sidebar-create-action--welcome-attention" : ""}`} href="/teacher/activities/new" aria-label="Créer une activité">
             <svg className="sidebar-create-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path d="M13 5h27l11 11v40H13z" /><path d="M40 5v12h11M21 27h21M21 35h17M21 43h13" /><circle cx="15" cy="48" r="10" /><path d="M15 42v12M9 48h12" /></svg>
@@ -187,9 +196,19 @@ export function TeacherDashboardView({ data, authenticatedTeacher, storedTeacher
             <span className="sidebar-create-divider" aria-hidden="true" />
             <span className="sidebar-create-arrow" aria-hidden="true">→</span>
           </Link>
-          <Link className="sidebar-nav-tile" href="/teacher/api-test" aria-label="Tester Sol avec les questions de l’Acte d’Union">
+          <Link className="sidebar-nav-tile" href="/teacher/activities/intellectual-operations" aria-label="Comprendre les opérations intellectuelles">
+            <span className="sidebar-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="m14 10 6-6"/></svg></span>
+            <span>Comprendre les opérations</span>
+            <span aria-hidden="true">→</span>
+          </Link>
+          <Link className="sidebar-nav-tile sidebar-classroom-action" href="/teacher/activities/new?mode=classroom" aria-label="Préparer une activité en mode classe">
+            <span className="sidebar-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 5h18v12H3zM8 21h8M12 17v4M7 10h10M7 13h7" /></svg></span>
+            <span>Mode classe</span>
+            <span aria-hidden="true">→</span>
+          </Link>
+          <Link className="sidebar-nav-tile" href="/teacher/api-test" aria-label="Réviser toutes les questions de l’Acte d’Union">
             <span className="sidebar-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3M7.5 15h9" /></svg></span>
-            <span>Tester Sol</span>
+            <span>Réviser les questions</span>
             <span aria-hidden="true">→</span>
           </Link>
         </nav>
@@ -249,11 +268,10 @@ export function TeacherDashboardView({ data, authenticatedTeacher, storedTeacher
           <div className="scroll-card-header"><CardTitle className="analysis-section-title" icon="support" id="support-title" title="Élèves prioritaires" description="Élèves nécessitant une intervention prioritaire." /></div>
           {displayedPriorityStudents.length ? <ScrollRegion className={`support-scroll${displayedPriorityStudents.length > 3 ? " support-scroll--overflowing" : ""}`} label="Élèves prioritaires, faire défiler pour voir les autres élèves" hint="Faire défiler pour voir les autres élèves ↓" hintInsideViewport showHintControl={displayedPriorityStudents.length > 3}><ul className="priority-list">
             {displayedPriorityStudents.map((student) => <li key={student.id}>
-              <div className="student-summary"><strong>{student.displayLabel}</strong><small>{student.groupLabel}</small><p>{student.reasonLabel}</p></div>
-              <div className="priority-actions">
-                <span className="priority-pill">Priorité élevée</span>
-                <StudentPortraitControl student={student} />
-              </div>
+              <strong className="priority-student-name">{student.displayLabel}</strong>
+              <small className="priority-student-group">{student.groupLabel}</small>
+              <span className="priority-pill">Priorité élevée</span>
+              <StudentPortraitControl student={student} />
             </li>)}
           </ul></ScrollRegion> : <p className="empty-priority">Aucun élève prioritaire pour le moment.</p>}
         </section>
@@ -298,8 +316,8 @@ export function TeacherDashboardView({ data, authenticatedTeacher, storedTeacher
             const notStartedStudentCount = Math.max(0, activity.targetedStudentCount - startedStudentCount);
             const lifecycleLabel = activity.lifecycleStatus === "suspended" ? "Suspendue" : activity.lifecycleStatus === "archived" ? "Archivée" : null;
             const resultLabel = lifecycleLabel ?? (activity.resultAvailability === "available" ? "Résultats disponibles" : activity.resultAvailability === "partial" ? "Résultats partiels" : activity.startedStudentCount ? `${activity.startedStudentCount} en cours` : "En attente de résultats");
-            const isLocalActivity = activity.id.startsWith("activity-local-");
-            return <li key={activity.id} className={activity.id === activeActivity.id ? "all-activities-item--active" : undefined}><div className="all-activities-row"><button type="button" className="activity-select" onClick={() => setSelectedActivityId(activity.id)} aria-current={activity.id === activeActivity.id ? "true" : undefined}><span className="all-activities-date"><time dateTime={activity.publishedAt}>{formatPublishedAt(activity.publishedAt)}</time><small>{activityTypeLabel(activity.activityType)}</small></span><span className="all-activities-name"><strong>{activity.customTitle}</strong><small>{activity.targetedGroupIds.length} groupe{activity.targetedGroupIds.length > 1 ? "s" : ""} visé{activity.targetedGroupIds.length > 1 ? "s" : ""}</small></span><span className="all-activities-participation"><strong>{activity.targetedStudentCount ? `${participationPercentage} %` : "—"}</strong><small>{startedStudentCount} commencé · {activity.completedStudentCount} terminé · {notStartedStudentCount} non commencé</small></span><span className={`all-activities-status all-activities-status--${activity.lifecycleStatus ?? activity.resultAvailability}`}>{resultLabel}</span><span className="all-activities-arrow" aria-hidden="true">→</span></button>{isLocalActivity ? <div className="local-activity-actions" aria-label={`Gestion de ${activity.customTitle}`}>{activity.lifecycleStatus !== "published" ? <button type="button" onClick={() => changeLocalActivityStatus(activity.id, "published")}>Réactiver l’activité</button> : <button type="button" onClick={() => changeLocalActivityStatus(activity.id, "suspended")}>Suspendre l’activité</button>}{activity.lifecycleStatus !== "archived" ? <button type="button" onClick={() => changeLocalActivityStatus(activity.id, "archived")}>Archiver</button> : null}</div> : null}</div></li>;
+            const isLocalActivity = !usesStoredTeacherWorkspace && activity.id.startsWith("activity-local-");
+            return <li key={activity.id} className={activity.id === activeActivity.id ? "all-activities-item--active" : undefined}><div className="all-activities-row"><button type="button" className="activity-select" onClick={() => setSelectedActivityId(activity.id)} aria-current={activity.id === activeActivity.id ? "true" : undefined}><span className="all-activities-date"><time dateTime={activity.publishedAt}>{formatPublishedAt(activity.publishedAt)}</time><small>{activityTypeLabel(activity.activityType)}</small></span><span className="all-activities-name"><strong>{activity.customTitle}</strong><small>{activity.targetedGroupIds.length} groupe{activity.targetedGroupIds.length > 1 ? "s" : ""} visé{activity.targetedGroupIds.length > 1 ? "s" : ""}</small></span><span className="all-activities-participation"><strong>{activity.targetedStudentCount ? `${participationPercentage} %` : "—"}</strong><small>{startedStudentCount} commencé · {activity.completedStudentCount} terminé · {notStartedStudentCount} non commencé</small></span><span className={`all-activities-status all-activities-status--${activity.lifecycleStatus ?? activity.resultAvailability}`}>{resultLabel}</span><span className="all-activities-arrow" aria-hidden="true">→</span></button><div className="local-activity-actions" aria-label={`Gestion de ${activity.customTitle}`}><Link href={`/teacher/activities/new?edit=${encodeURIComponent(activity.id)}`}>Modifier</Link>{activity.lifecycleStatus === "published" ? <button type="button" onClick={() => isLocalActivity ? changeLocalActivityStatus(activity.id, "suspended") : changeStoredActivityStatus(activity.id, "suspended")}>Suspendre l’activité</button> : <button type="button" onClick={() => isLocalActivity ? changeLocalActivityStatus(activity.id, "published") : changeStoredActivityStatus(activity.id, "published")}>Réactiver l’activité</button>}{activity.lifecycleStatus !== "archived" ? <button type="button" onClick={() => isLocalActivity ? changeLocalActivityStatus(activity.id, "archived") : changeStoredActivityStatus(activity.id, "archived")}>Archiver</button> : null}</div></div></li>;
           })}</ol> : <p className="empty-priority">Aucune activité publiée pour le moment.</p>}
         </section>
         </div>

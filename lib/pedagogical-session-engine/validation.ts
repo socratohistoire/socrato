@@ -30,6 +30,20 @@ function ensureKnownIds(values: string[], allowed: readonly string[], label: str
   }
 }
 
+export function discardUnknownPedagogicalIds(candidate: unknown, question: PedagogicalQuestionDefinition) {
+  if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return candidate;
+  const record = candidate as Record<string, unknown>;
+  const keepKnown = (value: unknown, allowed: readonly string[]) => Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string" && allowed.includes(item))
+    : value;
+  return {
+    ...record,
+    demonstratedKnowledgeIds: keepKnown(record.demonstratedKnowledgeIds, question.historicalKnowledgeIds),
+    observedOperationIds: keepKnown(record.observedOperationIds, question.operationIds),
+    usedDocumentIds: keepKnown(record.usedDocumentIds, question.documentIds),
+  };
+}
+
 export function validateStructuredAnalysis(
   candidate: unknown,
   question: PedagogicalQuestionDefinition,
@@ -70,7 +84,13 @@ export function validateStructuredAnalysis(
     insufficient: "offer_hint",
     non_exploitable: "handle_non_exploitable",
   }[outcome];
-  if (nextAction !== expectedAction) throw new InvalidAnalysisError("La transition demandée ne correspond pas au résultat.");
+  if (nextAction !== expectedAction) {
+    if (["partially_satisfactory", "insufficient"].includes(outcome)
+      && ["request_revision", "offer_hint"].includes(nextAction)) {
+      return { ...record, nextAction: expectedAction } as StructuredResponseAnalysis;
+    }
+    throw new InvalidAnalysisError(`La transition ${nextAction} ne correspond pas au résultat ${outcome}; ${expectedAction} est attendu.`);
+  }
 
   return record as StructuredResponseAnalysis;
 }

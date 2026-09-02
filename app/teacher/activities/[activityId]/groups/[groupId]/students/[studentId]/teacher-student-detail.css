@@ -46,3 +46,4 @@
 @media (prefers-reduced-motion:reduce){.teacher-student-detail-page *{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 @media(max-width:1100px){.student-detail-first-row,.student-detail-second-row{grid-template-columns:1fr;align-items:start}.student-detail-first-row>.student-detail-card{padding-block:22px}.student-socrato-card{padding:24px}.student-pedagogical-card{order:1}.student-worked-results{order:2}}
 @media(max-width:620px){.student-detail-main{gap:16px}.student-detail-first-row,.student-detail-second-row,.student-worked-results{gap:16px}.student-detail-card{padding:18px}.student-socrato-card{grid-template-columns:58px minmax(0,1fr);gap:15px}.student-socrato-card img{width:58px;height:58px}.student-result-list li{align-items:flex-start;flex-direction:column;gap:7px}.student-overview-badges{flex-direction:column}}
+.student-worked-results{grid-template-rows:auto}

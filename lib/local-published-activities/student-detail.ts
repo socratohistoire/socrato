@@ -4,6 +4,7 @@ import { ACTE_UNION_HISTORICAL_KNOWLEDGE } from "../student-dashboard/historical
 import type { TeacherStudentDetailRecord, TeacherStudentResultStatus } from "../teacher-student-detail/types.ts";
 import type { LocalPublishedActivity } from "./store.ts";
 import { LOCAL_STUDENT_ID } from "../academic-context/local-context.ts";
+import { assessStudentPriority } from "../server/student-priority.ts";
 
 function resultStatus(status: ResultStatus): TeacherStudentResultStatus {
   return status === "mastered" ? "mastered" : status === "to_consolidate" ? "consolidate" : "needs_work";
@@ -29,6 +30,7 @@ export function applyLocalActivityToStudentDetail(
     return label ? [{ id, label, status: resultStatus(status) }] : [];
   });
   const requiresConsolidation = [...operations, ...historicalKnowledge].some(({ status }) => status !== "mastered");
+  const priorityAssessment = assessStudentPriority(outcome.operationResults, outcome.historicalKnowledgeResults);
   const strength = outcome.strengths[0] ?? "L’élève a mené l’activité jusqu’à son terme.";
   const difficulty = outcome.consolidationTargets[0] ?? "Aucune difficulté prioritaire n’a été dégagée.";
   const nextStep = outcome.recommendation?.label ?? (requiresConsolidation ? "Reprendre les éléments indiqués dans le bilan structuré." : "Poursuivre avec une nouvelle activité lorsque ce sera pertinent.");
@@ -39,7 +41,7 @@ export function applyLocalActivityToStudentDetail(
     studentId: LOCAL_STUDENT_ID,
     studentDisplayLabel: "Élève local (fictif)",
     studentFirstName: "Élève",
-    priorityLabel: requiresConsolidation ? "Priorité élevée" : "Suivi normal",
+    priorityLabel: priorityAssessment.level === "high" ? "Priorité élevée" : priorityAssessment.level === "medium" ? "À surveiller" : "Suivi normal",
     socratoSummary: `${outcome.encouragement} ${requiresConsolidation ? difficulty : strength}`,
     pedagogicalSummary: { strength, mainDifficulty: difficulty, consolidationPath: nextStep },
     consolidationProgress: {

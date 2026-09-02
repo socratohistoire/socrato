@@ -43,7 +43,7 @@ export const ACTE_UNION_DURHAM_DOCUMENT = {
   approvedAt: "2026-07-31T00:00:00.000-04:00",
 } as const satisfies HistoricalDocumentRecord;
 
-type PresentationInput = Pick<HistoricalDocumentStudentPresentation, "id" | "title" | "studentText" | "sourceSegmentLocators" | "operationIds" | "accessibleDescription" | "historicalContext" | "pointOfView" | "observationGuide" | "interpretationCautions" | "pedagogicalUses">;
+type PresentationInput = Pick<HistoricalDocumentStudentPresentation, "id" | "title" | "studentText" | "sourceSegmentLocators" | "operationIds" | "accessibleDescription" | "historicalContext" | "pointOfView" | "observationGuide" | "interpretationCautions" | "pedagogicalUses"> & Partial<Pick<HistoricalDocumentStudentPresentation, "editorialNote">>;
 
 function durhamPresentation(input: PresentationInput): HistoricalDocumentStudentPresentation {
   return {
@@ -85,15 +85,15 @@ export const ACTE_UNION_DURHAM_PRESENTATIONS = [
   durhamPresentation({
     id: "historical-presentation:acte-union:durham-anglicisation",
     title: "Le projet d’anglicisation",
-    studentText: "Le gouvernement britannique doit désormais chercher à établir au Bas-Canada une population anglaise, avec des lois et une langue anglaises, et confier le gouvernement à une législature résolument anglaise. […] Je souhaite donner aux Canadiens le caractère anglais afin de les sortir de ce que je considère comme une situation d’infériorité. […] La justice et la prudence exigent toutefois que, tant que la population utilise le français, le gouvernement ne la prive pas de la protection des lois.",
-    sourceSegmentLocators: ["p. 92", "p. 94", "p. 95"],
+    studentText: "Le premier objectif devrait être de faire du Bas-Canada une province anglaise. […] L’assimilation aux habitudes anglaises a déjà commencé : la langue anglaise gagne du terrain, puisqu’elle est celle des riches et des employeurs. […] L’union des deux provinces donnerait une nette majorité anglaise, qui augmenterait chaque année grâce à l’immigration anglaise. Une fois placés en minorité, les Canadiens français abandonneraient, selon moi, leurs espoirs de conserver leur nationalité.",
+    sourceSegmentLocators: ["p. 95", "p. 98"],
     operationIds: ["establish_facts", "relationships_between_facts", "changes_and_continuities"],
-    accessibleDescription: "Extrait reconstruit montrant que Durham propose d’angliciser le Bas-Canada tout en disant vouloir maintenir la protection légale de la population francophone durant la transition.",
+    accessibleDescription: "Extrait reconstruit montrant que Durham compte sur la progression de l’anglais, l’union législative et l’immigration pour placer les Canadiens français en minorité et favoriser leur assimilation.",
     historicalContext: "Durham cherche un moyen de mettre fin à la nationalité canadienne-française distincte qu’il juge incompatible avec l’avenir britannique de la colonie.",
     pointOfView: "Point de vue assimilationniste et hiérarchisant d’un représentant de l’Empire britannique.",
-    observationGuide: ["Relever les trois dimensions de l’anglicisation proposées.", "Repérer la limite que Durham affirme vouloir imposer à ce changement."],
-    interpretationCautions: ["Ne pas présenter les jugements d’infériorité de Durham comme des faits.", "Les segments proviennent de trois pages différentes et les raccords sont explicitement indiqués."],
-    pedagogicalUses: ["Expliquer l’objectif d’assimilation.", "Mettre en relation langue, lois, population et pouvoir politique."],
+    observationGuide: ["Relever les moyens sur lesquels Durham compte pour favoriser l’anglicisation.", "Expliquer comment une majorité anglaise croissante pourrait affaiblir la nationalité canadienne-française selon Durham."],
+    interpretationCautions: ["Présenter le raisonnement assimilationniste de Durham comme son point de vue, et non comme un résultat inévitable.", "Les segments proviennent de deux pages différentes et les raccords sont explicitement indiqués."],
+    pedagogicalUses: ["Expliquer l’objectif d’assimilation.", "Mettre en relation langue, union législative, immigration et rapport de majorité."],
   }),
   durhamPresentation({
     id: "historical-presentation:acte-union:durham-union-legislative",
@@ -147,6 +147,20 @@ export const ACTE_UNION_DURHAM_PRESENTATIONS = [
     interpretationCautions: ["Le passage formule une recommandation; il faut vérifier séparément les dispositions de l’Acte adopté.", "La continuité n’empêche pas la nouvelle législature de modifier ultérieurement les lois et institutions."],
     pedagogicalUses: ["Déterminer des continuités malgré l’Union.", "Éviter l’idée que toutes les lois deviennent immédiatement identiques."],
   }),
+  durhamPresentation({
+    id: "historical-presentation:acte-union:durham-anglicisation-avancement",
+    title: "L’anglais et l’avancement politique",
+    studentText: "L’explication de cette assimilation est évidente. Les Français de la Louisiane, lorsqu’ils furent constitués en État, furent incorporés à une grande nation dont ils ne formaient qu’une très petite partie. Les regards de tout homme ambitieux se tournèrent naturellement vers le grand centre des affaires fédérales et vers les hautes récompenses de l’ambition fédérale. […] Chaque homme aspirant chercha à fondre son caractère français et à adopter complètement une nationalité américaine. […] Ne parler qu’une langue étrangère à celle des États-Unis constituait donc un désavantage pour un candidat aux fonctions de sénateur ou de représentant; les Français se qualifièrent en apprenant l’anglais ou se soumirent aux avantages supérieurs de leurs concurrents anglais. […] Ce n’est que par les mêmes moyens — par un gouvernement populaire dans lequel une majorité anglaise prédominera en permanence — que le Bas-Canada pourra être gouverné paisiblement.",
+    sourceSegmentLocators: ["p. 98"],
+    operationIds: ["causal_connections", "relationships_between_facts"],
+    accessibleDescription: "Traduction abrégée d’un passage dans lequel Durham compare le Bas-Canada à la Louisiane et affirme que l’ambition politique, l’apprentissage de l’anglais et la domination permanente d’une majorité anglaise favoriseraient l’assimilation.",
+    historicalContext: "Durham présente la Louisiane comme un modèle d’assimilation graduelle qu’il souhaite appliquer au Bas-Canada après l’Union.",
+    pointOfView: "Administrateur impérial qui considère l’adoption de l’anglais et l’abandon d’une nationalité distincte comme des conséquences souhaitables de l’avancement politique.",
+    observationGuide: ["Relever ce qui désavantage les candidats francophones.", "Expliquer pourquoi le désir d’obtenir une fonction politique peut pousser une personne à apprendre l’anglais."],
+    interpretationCautions: ["L’exemple de la Louisiane sert d’argument à Durham; il ne prouve pas que l’assimilation du Bas-Canada était inévitable.", "Le passage conserve le point de vue et la voix de Durham; il s’agit d’une traduction française abrégée, dont les coupures sont signalées par […]."],
+    pedagogicalUses: ["Expliquer l’assimilation par les incitatifs liés à l’avancement politique.", "Distinguer une interdiction directe d’une pression sociale et politique favorisant l’anglais."],
+    editorialNote: "Traduction française abrégée et fidèle au passage de la p. 98 du rapport Durham. Les coupures sont signalées par […].",
+  }),
 ] as const satisfies readonly HistoricalDocumentStudentPresentation[];
 
 export const ACTE_UNION_DURHAM_UNION_PRESENTATION = ACTE_UNION_DURHAM_PRESENTATIONS[2];
@@ -154,3 +168,4 @@ export const ACTE_UNION_DURHAM_RESPONSIBLE_GOVERNMENT_PRESENTATION = ACTE_UNION_
 export const ACTE_UNION_DURHAM_ANGLICIZATION_PRESENTATION = ACTE_UNION_DURHAM_PRESENTATIONS[1];
 export const ACTE_UNION_DURHAM_CONTINUITIES_PRESENTATION = ACTE_UNION_DURHAM_PRESENTATIONS[5];
 export const ACTE_UNION_DURHAM_FINANCES_PRESENTATION = ACTE_UNION_DURHAM_PRESENTATIONS[3];
+export const ACTE_UNION_DURHAM_ADVANCEMENT_ANGLICIZATION_PRESENTATION = ACTE_UNION_DURHAM_PRESENTATIONS[6];

@@ -100,6 +100,18 @@ test("affiche seulement l’activité assignée au groupe de l’élève et ouvr
   assert.match(activity?.actionHref ?? "", /questionIds=question%3Aacte-union%3A001%2Cquestion%3Aacte-union%3Ashort-answer-001/);
 });
 
+test("place toujours la dernière activité publiée dans la carte principale", () => {
+  const ancienne = createLocalPublishedActivity({ title: "Ancienne activité", workType: "revision", targetedGroupIds: ["group-demo-401"], notionIds: ["acte-union"], operationId: null, questionIds: ["question:acte-union:001"] }, new Date("2026-08-04T14:30:00.000Z"));
+  const nouvelle = createLocalPublishedActivity({ title: "Nouvelle activité", workType: "revision", targetedGroupIds: ["group-demo-401"], notionIds: ["acte-union"], operationId: null, questionIds: ["question:acte-union:001"] }, new Date("2026-08-06T14:30:00.000Z"));
+  const dashboard = applyLocalPublishedActivitiesToStudentDashboard(createDemoStudentDashboard("demo-activity-completed"), [ancienne, nouvelle], "group-demo-401");
+
+  assert.equal(dashboard.defaultActivityId, nouvelle.id);
+  assert.equal(dashboard.selectedActivityId, nouvelle.id);
+  assert.equal(dashboard.activities[0]?.id, nouvelle.id);
+  assert.ok(dashboard.activities.some(({ id }) => id === ancienne.id));
+  assert.ok(dashboard.activities.some(({ id }) => id === "demo-activity-completed"));
+});
+
 test("fait remonter un bilan structuré au tableau de bord enseignant sans réponse textuelle", () => {
   const activity = createLocalPublishedActivity({
     title: "Activité avec résultat",
@@ -185,7 +197,7 @@ test("compose le portrait détaillé du groupe à partir du même bilan local", 
   assert.equal(detail.targetedStudentCount, 28);
   assert.equal(detail.students[0]?.displayLabel, "Élève local (fictif)");
   assert.equal(detail.students[0]?.activityState, "completed");
-  assert.equal(detail.students[0]?.priority, "high");
+  assert.equal(detail.students[0]?.priority, "normal");
   assert.match(detail.students[0]?.studentDetailHref ?? "", /local-anonymous-student-1$/);
 });
 
@@ -201,6 +213,6 @@ test("compose le bilan individuel local uniquement depuis le résumé structuré
   assert.equal(detail.operations[0]?.label, "Établir des faits");
   assert.equal(detail.operations[0]?.status, "mastered");
   assert.equal(detail.historicalKnowledge[0]?.status, "consolidate");
-  assert.equal(detail.priorityLabel, "Priorité élevée");
+  assert.equal(detail.priorityLabel, "Suivi normal");
   assert.doesNotMatch(JSON.stringify(detail), /conversation|transcript|studentResponse|messageHistory/i);
 });

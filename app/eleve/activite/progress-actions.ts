@@ -11,6 +11,10 @@ import { validateStudentProgressTransition, type PersistedProgressSnapshot, type
 
 const STATES = new Set(["not_started", "in_progress", "completed"]);
 const RESULT_STATUSES = new Set(["mastered", "to_consolidate", "to_work_on"]);
+const validIdentifier = (value: unknown, maximumLength = 120): value is string => typeof value === "string"
+  && value.length > 0 && value.length <= maximumLength && /^[a-z0-9]+(?:[-:][a-z0-9]+)*$/.test(value);
+const validPedagogicalId = (value: unknown): value is string => typeof value === "string"
+  && value.length > 0 && value.length <= 120 && /^[a-z0-9]+(?:[_-][a-z0-9]+)*$/.test(value);
 
 function validSummary(value: unknown): value is PedagogicalSummary {
   if (!value || typeof value !== "object") return false;
@@ -33,7 +37,8 @@ function validProgress(value: unknown): value is StudentProgressContract {
     return typeof question.questionId === "string" && Number.isInteger(question.attemptNumber) && Number(question.attemptNumber) >= 0 && Number(question.attemptNumber) <= 3
       && [0, 1, 2].includes(Number(question.hintLevel)) && Number.isInteger(question.hintRequestCount) && Number(question.hintRequestCount) >= 0
       && Number.isInteger(question.nonExploitableCount) && Number(question.nonExploitableCount) >= 0
-      && ["presented", "awaiting_response", "completed"].includes(String(question.status));
+      && ["presented", "awaiting_response", "completed"].includes(String(question.status))
+      && (question.skippedWithoutEvaluation === undefined || typeof question.skippedWithoutEvaluation === "boolean");
   });
   return (item.schemaVersion === 1 || item.schemaVersion === 2 || item.schemaVersion === 3) && typeof item.activityId === "string" && typeof item.notionId === "string"
     && STATES.has(String(item.state)) && Number.isInteger(item.currentQuestionIndex) && Number.isInteger(item.totalQuestions)
@@ -61,6 +66,7 @@ export async function saveStudentProgressToDatabase(progress: StudentProgressCon
         join socrato.activity_group_assignments aga on aga.group_id = g.id
         join socrato.activities a on a.id = aga.activity_id and a.publication_status = ${"published"}
         where gm.student_id = ${studentId} and gm.active = true and a.id = ${activityId}
+          and (aga.id not like 'personal-%' or aga.id = 'personal-' || a.id || '-' || ${studentId})
         limit 1
       `;
       return rows[0] ? { groupId: rows[0].group_id, notionIds: rows[0].notion_ids, questionIds: rows[0].question_ids } : null;
@@ -186,6 +192,7 @@ export async function saveStudentOutcomeToDatabase(summary: PedagogicalSummary) 
       join socrato.group_memberships gm on gm.group_id = ls.group_id and gm.student_id = ls.student_id and gm.active = true
       left join socrato.student_progress sp on sp.session_id = ls.id
       where ls.student_id = ${studentSession.anonymousStudentId} and ls.activity_id = ${summary.activityId}
+        and (aga.id not like 'personal-%' or aga.id = 'personal-' || a.id || '-' || ls.student_id)
       order by ls.started_at desc
       limit 1
     `;
@@ -199,5 +206,69 @@ export async function saveStudentOutcomeToDatabase(summary: PedagogicalSummary) 
     return { ok: true as const };
   } catch {
     return { ok: false as const, error: "Le bilan n’a pas pu être enregistré." };
+  }
+}
+
+type ConsolidationOutcomeRequest = {
+  activityId: string;
+  strategyKey: string;
+  strategyLabel: string;
+  targetOperationId?: string;
+  successful: boolean;
+  attemptNumber: number;
+  completedAt: string;
+  observation?: string;
+  source?: "socrato_proposed" | "teacher_assigned";
+};
+
+export async function saveConsolidationOutcomeToDatabase(request: ConsolidationOutcomeRequest) {
+  if (!validIdentifier(request.activityId) || !/^[a-z]+(?:-[a-z]+)*$/.test(request.strategyKey)
+    || typeof request.strategyLabel !== "string" || request.strategyLabel.length < 3 || request.strategyLabel.length > 120
+    || (request.targetOperationId !== undefined && !validPedagogicalId(request.targetOperationId))
+    || (request.observation !== undefined && (typeof request.observation !== "string" || !request.observation.trim() || request.observation.length > 600))
+    || (request.source !== undefined && !["socrato_proposed", "teacher_assigned"].includes(request.source))
+    || !Number.isInteger(request.attemptNumber) || request.attemptNumber < 1 || request.attemptNumber > 3
+    || !Number.isFinite(Date.parse(request.completedAt))) {
+    return { ok: false as const, error: "Le résultat de consolidation est invalide." };
+  }
+  const token = (await cookies()).get(STUDENT_SESSION_COOKIE)?.value;
+  const studentSession = token ? await getStudentAccessRuntime().sessions.findActiveByToken(token) : null;
+  if (!studentSession) return { ok: false as const, error: "La session élève n’est plus valide." };
+  try {
+    const sql = getSocratoDatabase();
+    const rows = await sql<{ session_id: string }[]>`
+      select outcomes.session_id
+      from socrato.student_outcomes outcomes
+      join socrato.learning_sessions ls on ls.id = outcomes.session_id and ls.student_id = outcomes.student_id
+      join socrato.activity_group_assignments aga on aga.activity_id = outcomes.activity_id and aga.group_id = ls.group_id
+      join socrato.group_memberships gm on gm.group_id = ls.group_id and gm.student_id = outcomes.student_id and gm.active = true
+      where outcomes.student_id = ${studentSession.anonymousStudentId} and outcomes.activity_id = ${request.activityId}
+        and (aga.id not like 'personal-%' or aga.id = 'personal-' || outcomes.activity_id || '-' || outcomes.student_id)
+      order by outcomes.completed_at desc
+      limit 1
+    `;
+    if (!rows[0]) return { ok: false as const, error: "Le bilan d’origine est introuvable." };
+    const progress = {
+      state: request.successful ? "consolidated" : "continue",
+      source: request.source ?? "socrato_proposed",
+      completedAt: request.completedAt,
+      previousLevel: "À consolider",
+      currentLevel: request.successful ? "Consolidée" : "À poursuivre",
+      observation: request.successful
+        ? request.observation?.trim() ?? `Tu as réussi à appliquer la stratégie « ${request.strategyLabel} » dans l’activité de consolidation.`
+        : `La stratégie « ${request.strategyLabel} » doit encore être retravaillée dans une prochaine activité.`,
+      strategyKey: request.strategyKey,
+      strategyLabel: request.strategyLabel,
+      attemptNumber: request.attemptNumber,
+      targetOperationId: request.targetOperationId,
+    };
+    await sql`
+      update socrato.student_outcomes
+      set summary = jsonb_set(summary, '{consolidationProgress}', ${sql.json(progress)}::jsonb, true)
+      where session_id = ${rows[0].session_id}
+    `;
+    return { ok: true as const };
+  } catch {
+    return { ok: false as const, error: "Le résultat de consolidation n’a pas pu être enregistré." };
   }
 }

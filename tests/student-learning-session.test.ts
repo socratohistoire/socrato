@@ -7,10 +7,66 @@ import { createDemoStudentLearningSession } from "../lib/student-learning-sessio
 import { getCurrentLearningQuestion, getInitialQuestionDocument, getLearningSessionHeading, getLearningSessionProgress, getQuestionDocuments } from "../lib/student-learning-session/presentation.ts";
 import type { StudentLearningSessionProvider } from "../lib/student-learning-session/provider.ts";
 import type { StudentLearningSessionData } from "../lib/student-learning-session/types.ts";
-import { getLearningSessionUrl } from "../lib/student-dashboard/selection.ts";
+import { getConsolidationSessionUrl, getConsolidationStrategyAdvice, getLearningSessionUrl } from "../lib/student-dashboard/selection.ts";
 
 const viewSource = readFileSync("app/eleve/activite/[activityId]/session-view.tsx", "utf8");
 const pageSource = readFileSync("app/eleve/activite/[activityId]/page.tsx", "utf8");
+const teacherPreviewPageSource = readFileSync("app/teacher/activities/new/student-preview/page.tsx", "utf8");
+
+test("utilise l’analyse IA dans tous les aperçus du créateur, y compris après publication", () => {
+  assert.match(teacherPreviewPageSource, /<StudentLearningSessionView[^>]*teacherApiTest(?:\s|>)/);
+  assert.doesNotMatch(teacherPreviewPageSource, /teacherApiTest=\{published !== "1"\}/);
+  assert.match(teacherPreviewPageSource, /publishedActivityId/);
+  assert.match(teacherPreviewPageSource, /activityId \|\| publishedActivityId/);
+});
+
+test("réaffiche le bilan lorsqu’une activité terminée est rouverte", () => {
+  assert.match(viewSource, /useState\(\(\) => Boolean\(initialEngineState\.summary\)\)/);
+  assert.match(viewSource, /engineState\.summary && finalFeedbackDelivered/);
+});
+
+test("la consolidation reprend en priorité une difficulté réellement rencontrée", () => {
+  assert.match(pageSource, /difficultyQuestionIds/);
+  assert.match(pageSource, /pedagogicalOutcome !== "satisfactory" \|\| attemptNumber > 1 \|\| hintLevel > 0 \|\| instructionOmissionObserved/);
+  assert.match(pageSource, /candidates\.find\(\(\{ id \}\) => difficultyQuestionIds\.has\(id\)\)/);
+  assert.doesNotMatch(pageSource, /find\(\(\{ id \}\) => !unsuccessfulIds\.has\(id\)\)/);
+});
+
+test("fait concorder la stratégie avec l’opération et la connaissance ciblées", () => {
+  assert.match(pageSource, /matchesRequestedTarget/);
+  assert.match(pageSource, /runtime\.find\(\(item\) => matchesRequestedTarget\(item\) && matchesStrategy\(item\)\)/);
+});
+
+test("la consolidation enseigne explicitement l’opération dans une seule activité ciblée", () => {
+  assert.match(pageSource, /consolidationStrategyAdvice:/);
+  assert.match(pageSource, /questions: \[\{ \.\.\.alternate, number: 1 \}\]/);
+  assert.doesNotMatch(pageSource, /const transfer = candidates\.find|Nouvelle tentative avec moins d’aide/);
+  assert.match(viewSource, /function consolidationOpeningMessage/);
+  assert.match(viewSource, /Nous allons consolider l’opération/);
+  assert.match(viewSource, /Voici le processus à appliquer/);
+  assert.match(viewSource, /successful: Boolean\(result && result\.status !== "to_work_on"\)/);
+  assert.doesNotMatch(viewSource, /feuille|cahier/iu);
+  assert.match(viewSource, /author: "socrato" as const/);
+  assert.doesNotMatch(viewSource, /<aside className="consolidation-strategy-reminder">/);
+});
+
+test("garde le conseil de consolidation lisible en thème clair", () => {
+  assert.match(cssSource, /\[data-theme="light"\] \.consolidation-strategy-reminder\{[^}]*background:#f1e2c2/);
+  assert.match(cssSource, /\[data-theme="light"\] \.consolidation-strategy-reminder p\{color:#102c45\}/);
+});
+
+test("conserve la question exacte pour personnaliser les points forts objectifs", () => {
+  assert.match(viewSource, /questionPrompt: question\.prompt/);
+});
+
+test("transmet seulement Comment progresser à la consolidation", () => {
+  const entry = "Croiser plusieurs documents\nQuestion\nÀ la question 4.\nÀ vérifier\nLe deuxième document manque.\nComment progresser\nNote l’idée utile de chaque document.";
+  const advice = getConsolidationStrategyAdvice(entry);
+  assert.equal(advice, "Note l’idée utile de chaque document.");
+  const url = getConsolidationSessionUrl("activity-1", "acte-union", undefined, undefined, "cross-documents", advice);
+  assert.match(url, /Note\+l%E2%80%99id%C3%A9e\+utile/);
+  assert.doesNotMatch(url, /%C3%80\+v%C3%A9rifier|Le\+deuxi%C3%A8me\+document/);
+});
 const cssSource = readFileSync("app/eleve/activite/[activityId]/session.css", "utf8");
 const dashboardSource = readFileSync("app/eleve/tableau-de-bord/dashboard-view.tsx", "utf8");
 
@@ -208,7 +264,7 @@ test("affiche uniquement l’opération principale explicitement définie près 
 });
 
 test("place les deux en-têtes hors des cartes dans une grille alignée", () => {
-  assert.match(viewSource, /<div className=\{`session-layout\$\{isInteractiveTimeline \|\| isInteractiveAssociation \? " session-layout--timeline" : ""\}[\s\S]*session-layout--choice-no-documents/);
+  assert.match(viewSource, /<div className=\{`session-layout\$\{isInteractiveTimeline \|\| isInteractiveAssociation \|\| isInteractiveCausalChain \? " session-layout--timeline" : ""\}[\s\S]*session-layout--choice-no-documents/);
   assert.match(viewSource, /<div className="question-heading">[\s\S]*?<section className="question-pane" aria-labelledby="question-section-title">\s*<div className="question-module">\s*<div className=\{`question-card\$\{isShortAnswerWithoutDocuments/);
   assert.match(viewSource, /<div className="documents-heading">[\s\S]*?<h2 id="documents-title"[\s\S]*?<DocumentsPane/);
   assert.doesNotMatch(viewSource, /className="session-progress"/);
@@ -226,7 +282,8 @@ test("place les deux en-têtes hors des cartes dans une grille alignée", () => 
 test("réserve la mise en page sans défilement aux choix multiples", () => {
   assert.match(viewSource, /questionDocuments\.length === 0 && isMultipleChoice \? " session-layout--choice-no-documents"/);
   assert.doesNotMatch(viewSource, /isMultipleChoice \|\| question\.type === "question_without_documents"/);
-  assert.match(cssSource, /\.session-layout--short-answer-no-documents \.message-list\{[^}]*max-height:150px!important[^}]*flex:none!important/);
+  assert.match(cssSource, /\.session-layout--short-answer-no-documents \.conversation\{[^}]*flex:1 1 auto!important[^}]*overflow:hidden!important/);
+  assert.match(cssSource, /\.session-layout--short-answer-no-documents \.message-list\{[^}]*max-height:none!important[^}]*flex:1 1 auto!important[^}]*overflow-anchor:none/);
   assert.match(cssSource, /\.message-list \{[^}]*overflow-y:auto/);
 });
 
@@ -267,11 +324,23 @@ test("retire les grands cadres extérieurs et partage le style des titres", () =
 
 test("transmet la réponse au moteur sans afficher d’avertissement technique local", () => {
   assert.match(viewSource, /setMessages/);
-  assert.match(viewSource, /submitStudentResponse\(engineDefinition, engineState, content, analyzer\)/);
+  assert.match(viewSource, /withResponseAnalysisTimeout\(submitStudentResponse\(engineDefinition, engineState, content, analyzer\)\)/);
   assert.doesNotMatch(viewSource, /LOCAL_ANALYZER_NOTICE|session-demo-notice/);
   assert.doesNotMatch(viewSource, /Démonstration locale : ta réponse n’est pas réellement évaluée|local-analysis-notice|setAnalysisNotice/);
   assert.doesNotMatch(readFileSync("lib/pedagogical-session-engine/feedback.ts", "utf8"), /technicalNotice:/);
   assert.doesNotMatch(viewSource, /author: "socrato"[\s\S]{0,180}technicalNotice/);
+});
+
+test("transmet le texte et la consigne au moteur du bilan", () => {
+  const definitionSource = readFileSync("lib/pedagogical-session-engine/demo-definition.ts", "utf8");
+  assert.match(definitionSource, /questionPrompt: question\.prompt/);
+  assert.match(definitionSource, /instruction: question\.instruction/);
+});
+
+test("ne répète pas automatiquement un appel d’analyse externe en échec", () => {
+  const actionSource = readFileSync("app/eleve/activite/analysis-actions.ts", "utf8");
+  assert.doesNotMatch(actionSource, /catch \{[\s\S]*analyzer\.analyze\(response, definition\)/);
+  assert.match(actionSource, /const analysis = validateStructuredAnalysis/);
 });
 
 test("envoie au clavier avec Entrée sans dupliquer la logique du formulaire", () => {
@@ -287,7 +356,23 @@ test("envoie au clavier avec Entrée sans dupliquer la logique du formulaire", (
   assert.match(sharedSender, /const content = response\.trim\(\)/);
   assert.match(sharedSender, /!content \|\| submitting \|\| submissionLockRef\.current/);
   assert.match(sharedSender, /engineState\.status === "completed"/);
-  assert.match(sharedSender, /activeQuestionState\.attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS/);
+  assert.match(sharedSender, /activeAttemptLimit !== null && activeQuestionState\.attemptNumber >= activeAttemptLimit/);
+});
+
+test("limite aussi les choix multiples à trois essais", () => {
+  assert.match(viewSource, /const nextAttempt = activeQuestionState\.attemptNumber \+ 1/);
+  assert.match(viewSource, /const exhausted = !correct && nextAttempt >= MAX_PEDAGOGICAL_ATTEMPTS/);
+  assert.match(viewSource, /await completeObjectiveQuestion\(false, nextAttempt\)/);
+  assert.match(viewSource, /recordObjectiveAttempt\(nextAttempt\)/);
+  assert.match(viewSource, /Tu as fait trois essais sérieux/);
+});
+
+test("réactive la réponse si l’analyse Socrato tarde trop longtemps", () => {
+  assert.match(viewSource, /const RESPONSE_ANALYSIS_TIMEOUT_MS = 35_000/);
+  assert.match(viewSource, /Promise\.race\(\[operation, timeout\]\)/);
+  assert.match(viewSource, /Socrato met trop de temps à répondre\. Ta réponse a été conservée; tu peux réessayer\./);
+  assert.match(viewSource, /catch \(error\)[\s\S]*setResponse\(content\)[\s\S]*finally \{\s*submissionLockRef\.current = false;\s*setSubmitting\(false\)/);
+  assert.match(viewSource, /transition\.feedback\?\.technicalNotice[\s\S]*filter\(\(\{ id \}\) => id !== optimisticMessageId\)[\s\S]*setResponse\(content\)/);
 });
 
 test("protège la composition, le double envoi et restaure le focus du champ", () => {
@@ -347,26 +432,46 @@ test("transpose la question approuvée avec ses trois documents ordonnés unique
   const data = createDemoStudentLearningSession(); assert.ok(data);
   const question = getCurrentLearningQuestion(data); assert.ok(question);
   assert.equal(question.type, "question_with_documents");
-  assert.equal(question.prompt, "À l’aide des documents sur les 92 Résolutions et les résolutions Russell, explique pourquoi la réponse britannique contribue au déclenchement des Rébellions de 1837-1838.");
-  assert.equal(question.instruction, "Appuie ta réponse sur une revendication des 92 Résolutions, sur la réponse formulée dans les résolutions Russell et sur l’indice de radicalisation présenté dans La Minerve.");
+  assert.equal(question.prompt, "À l’aide des documents, explique pourquoi la réponse britannique contribue au déclenchement des Rébellions de 1837-1838.");
+  assert.equal(question.instruction, "Appuie ta réponse sur une revendication des 92 Résolutions, sur la réponse formulée dans les résolutions Russell et sur le passage du refus des réformes à la résistance présenté dans La Minerve.");
   const documents = getQuestionDocuments(data);
   assert.equal(documents.length, 3);
   assert.deepEqual(documents.map(({ displayOrder }) => displayOrder), [1, 2, 3]);
   assert.equal(new Set(documents.map(({ id }) => id)).size, 3);
-  assert.deepEqual(documents.map(({ id }) => id), ["PAT-T-002", "PAT-T-003", "PAT-T-006"]);
+  assert.deepEqual(documents.map(({ id }) => id), ["PAT-T-002", "PAT-T-003", "PAT-T-007"]);
 });
 
 test("isole le prototype de ligne du temps sans modifier la question textuelle", () => {
   const data = createDemoStudentLearningSession("demo-activity-timeline", "acte-union", "teacher-assigned"); assert.ok(data);
   const question = getCurrentLearningQuestion(data); assert.ok(question);
   assert.equal(question.type, "interactive_timeline");
-  assert.equal(question.timelineInteraction?.entries.length, 5);
-  assert.deepEqual(question.timelineInteraction?.dates, ["1837-1838", "1839", "1840", "1841", "1848"]);
+  assert.equal(question.timelineInteraction?.entries.length, 6);
+  assert.deepEqual(question.timelineInteraction?.dates, ["1837-1838", "1839", "1840", "1841", "1843", "1848"]);
   assert.equal(question.documentRelations.length, 0);
   assert.equal(data.documentCatalog.length, 0);
   assert.match(viewSource, /InteractiveTimelineQuestion/);
   assert.match(viewSource, /Vérifier mes réponses/);
   assert.match(viewSource, /Placer ici sous/);
+  assert.match(viewSource, /classroomMode && !completed[\s\S]*Afficher la réponse/);
+  assert.match(viewSource, /Voici la réponse attendue/);
+  assert.match(viewSource, /"timeline-entry-1": "center 78%"/);
+  assert.match(viewSource, /"timeline-entry-2": "center 29%"/);
+  assert.match(viewSource, /"timeline-entry-5": "center 72%"/);
+  assert.match(viewSource, /"timeline-entry-6": "center 24%"/);
+  assert.match(cssSource, /\.classroom-session \.timeline-question__dates,\.classroom-session \.timeline-card-pool>div\{grid-template-columns:repeat\(6,minmax\(0,1fr\)\);gap:8px\}/);
+  assert.match(cssSource, /\.classroom-session \.timeline-empty-slot,\.classroom-session \.timeline-placed-card\{min-height:112px\}/);
+  assert.match(cssSource, /\.classroom-session \.timeline-card-pool>div>button\{min-height:128px\}/);
+});
+
+test("propose la chronologie interactive du gouvernement responsable de 1841 à 1864", () => {
+  const data = createDemoStudentLearningSession("demo-activity-timeline", "gouvernement-responsable", "teacher-assigned"); assert.ok(data);
+  const question = getCurrentLearningQuestion(data); assert.ok(question);
+  assert.equal(data.notionId, "gouvernement-responsable");
+  assert.equal(data.notionTitle, "Gouvernement responsable");
+  assert.equal(question.type, "interactive_timeline");
+  assert.deepEqual(question.timelineInteraction?.dates, ["1841", "1841-1842", "1843", "1848", "1849", "1854-1864", "1864"]);
+  assert.equal(question.timelineInteraction?.entries.length, 7);
+  assert.ok(question.timelineInteraction?.entries.some(({ date, description }) => date === "1848" && /confiance de l’Assemblée/.test(description)));
 });
 
 test("conserve tous les rattachements pédagogiques plusieurs-à-plusieurs", () => {
@@ -403,7 +508,7 @@ test("utilise le premier texte approuvé comme document initial", () => {
   const data = createDemoStudentLearningSession(); assert.ok(data);
   const question = getCurrentLearningQuestion(data); assert.ok(question);
   const document = getQuestionDocuments(data)[0];
-  assert.equal(question.prompt, "À l’aide des documents sur les 92 Résolutions et les résolutions Russell, explique pourquoi la réponse britannique contribue au déclenchement des Rébellions de 1837-1838.");
+  assert.equal(question.prompt, "À l’aide des documents, explique pourquoi la réponse britannique contribue au déclenchement des Rébellions de 1837-1838.");
   assert.equal(document.displayOrder, 1);
   assert.equal(document.id, "PAT-T-002");
   assert.equal(question.featuredDocumentId, document.id);
@@ -440,7 +545,7 @@ test("entoure uniquement les extraits historiques de guillemets français", () =
   assert.match(viewSource, /document\.content\.kind === "population_table" \? \([\s\S]*?<table>[\s\S]*?<\/table>[\s\S]*?\) : document\.content\.kind === "historical_image" \?[\s\S]*?: <blockquote>« \{document\.content\.excerpt\} »<\/blockquote>/);
   const data = createDemoStudentLearningSession(); assert.ok(data);
   const excerpts = getQuestionDocuments(data).filter(({ content }) => content.kind === "historical_excerpt");
-  assert.deepEqual(excerpts.map(({ id }) => id), ["PAT-T-002", "PAT-T-003", "PAT-T-006"]);
+  assert.deepEqual(excerpts.map(({ id }) => id), ["PAT-T-002", "PAT-T-003", "PAT-T-007"]);
 });
 
 test("permet sélection clavier et vue agrandie accessible avec retour du focus", () => {
@@ -524,7 +629,7 @@ test("neutralise les titres visibles et les noms accessibles des documents", () 
 
 test("présente les types neutres dans les vignettes", () => {
   const data = createDemoStudentLearningSession(); assert.ok(data);
-  assert.deepEqual(getQuestionDocuments(data).map(({ typeLabel }) => typeLabel), ["Extrait d’un texte parlementaire", "Extrait d’un texte parlementaire", "Extrait d’un article de journal"]);
+  assert.deepEqual(getQuestionDocuments(data).map(({ typeLabel }) => typeLabel), ["Extrait d’un texte parlementaire", "Extrait d’un texte parlementaire", "Extrait d’un discours publié dans un journal"]);
   assert.match(viewSource, /document\.content\.kind === "population_table" \|\| document\.content\.kind === "comparison_table" \? "Tableau statistique" : document\.typeLabel/);
   assert.match(viewSource, /<strong>Document \{document\.displayOrder\}<\/strong>[\s\S]*<span>\{getNeutralDocumentType\(document\)\}<\/span>/);
   assert.doesNotMatch(viewSource, /<span>\{document\.authorLabel\}<\/span>/);
@@ -609,13 +714,16 @@ test("empile tous les documents associés sans vignettes et adapte leur réparti
 test("affiche une identification sobre et place les métadonnées sous Détails", () => {
   assert.match(viewSource, /document\.authorLabel \?\? document\.institutionLabel \?\? document\.sourceLabel/);
   assert.match(viewSource, /document\.dateLabel/);
-  assert.match(viewSource, /Données démographiques utilisées dans le débat sur l’Union · 1840/);
+  assert.match(viewSource, /\[document\.sourceLabel, document\.dateLabel\]\.filter\(Boolean\)\.join\(" · "\)/);
   assert.match(viewSource, /<details className="document-details">\s*<summary>Détails<\/summary>/);
   assert.doesNotMatch(viewSource, /<details className="document-details"[^>]*\sopen(?:=|\s|>)/);
   assert.match(viewSource, /<dt>Source complète<\/dt>/);
   assert.match(viewSource, /document\.editorialNote/);
   assert.match(viewSource, /document\.sourceUrls/);
   assert.match(cssSource, /\.document-details\[open\] summary::before/);
+  assert.match(cssSource, /\.document-system-card--stacked\{position:relative/);
+  assert.match(cssSource, /\.stacked-document:has\(\.document-details\[open\]\)\{overflow:visible\}/);
+  assert.match(cssSource, /\.document-content-compact \.document-details\[open\]\{[^}]*display:block[^}]*overflow-y:auto[^}]*scrollbar-gutter:stable/);
 });
 
 test("place chaque attribution dans le même groupe que son document avant les actions", () => {

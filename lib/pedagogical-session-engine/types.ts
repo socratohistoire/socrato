@@ -88,12 +88,16 @@ export type WorkbookReference = {
 export type PedagogicalQuestionDefinition = {
   id: string;
   notionId: string;
+  questionPrompt?: string;
+  instruction?: string;
   primaryOperationId: string;
   operationIds: string[];
   historicalKnowledgeIds: string[];
   documentIds: string[];
   requiredDocumentIds: string[];
   hintSequence: Record<ExplicitHintLevel, string>;
+  /** undefined conserve la règle générale de trois essais; null poursuit le guidage jusqu’à son terme. */
+  maxAttempts?: number | null;
   evaluationContext?: {
     questionPrompt: string;
     instruction: string;
@@ -139,8 +143,15 @@ export type QuestionResult = PedagogicalIdentifiers & {
   demonstratedOperationIds: string[];
   operationAssessments?: PedagogicalResultEntry[];
   historicalKnowledgeAssessments?: PedagogicalResultEntry[];
+  requiredDocumentIds?: string[];
+  usedDocumentIds?: string[];
+  documentUse?: AssessmentLevel;
+  justificationQuality?: AssessmentLevel;
   observedStrengths: string[];
   consolidationTargets: string[];
+  instructionOmissionObserved?: boolean;
+  questionPrompt?: string;
+  omittedInstructionElements?: string[];
   completedAt: string;
 };
 
@@ -151,6 +162,10 @@ export type QuestionRuntimeState = PedagogicalIdentifiers & {
   nonExploitableCount: number;
   status: "presented" | "awaiting_response" | "completed";
   lastAnalysis?: StructuredResponseAnalysis;
+  instructionOmissionObserved?: boolean;
+  omittedInstructionElements?: string[];
+  observedDifficulties?: string[];
+  skippedWithoutEvaluation?: boolean;
   result?: QuestionResult;
 };
 
@@ -173,6 +188,7 @@ export type PedagogicalSummary = {
   encouragement: string;
   strengths: string[];
   consolidationTargets: string[];
+  readingAdvice?: string;
   operationResults: PedagogicalResultEntry[];
   historicalKnowledgeResults: PedagogicalResultEntry[];
   recommendation?: ConsolidationRecommendation;

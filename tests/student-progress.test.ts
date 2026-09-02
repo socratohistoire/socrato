@@ -62,6 +62,28 @@ test("restores the latest structured analysis without storing the raw answer", (
   assert.equal(JSON.stringify(progress).includes("réponse brute"), false);
 });
 
+test("preserves the description of an omitted instruction element", () => {
+  const progress = createStudentProgressContract(session(question({
+    attemptNumber: 1,
+    status: "awaiting_response",
+    instructionOmissionObserved: true,
+    omittedInstructionElements: ["Explique la conséquence oubliée."],
+  })));
+  const restored = restoreStudentProgress(session(), progress);
+  assert.equal(restored.questionStates[0].instructionOmissionObserved, true);
+  assert.deepEqual(restored.questionStates[0].omittedInstructionElements, ["Explique la conséquence oubliée."]);
+});
+
+test("preserves structured comprehension difficulties without storing the answer", () => {
+  const progress = createStudentProgressContract(session(question({
+    attemptNumber: 2,
+    status: "awaiting_response",
+    observedDifficulties: ["Expliquer le lien entre la cause et la conséquence."],
+  })));
+  const restored = restoreStudentProgress(session(), progress);
+  assert.deepEqual(restored.questionStates[0].observedDifficulties, ["Expliquer le lien entre la cause et la conséquence."]);
+});
+
 test("keeps version 1 progress readable without inventing runtime state", () => {
   const current = createStudentProgressContract(session(question({ attemptNumber: 2, hintLevel: 1, hintRequestCount: 1 })));
   const legacy = Object.fromEntries(Object.entries(current).filter(([key]) => key !== "questionRuntime")) as unknown as import("../lib/student-progress/types.ts").StudentProgressContract;
@@ -148,4 +170,52 @@ test("resumes on the first unfinished question and can clear the record", () => 
   assert.equal(restored.questionStates[0].status, "completed");
   clearStudentProgress(storage, "activity-1");
   assert.deepEqual(readStudentProgress(storage), {});
+});
+
+test("persists a question skipped after an AI outage without inventing an assessed result", () => {
+  const skipped = question({ status: "completed", skippedWithoutEvaluation: true });
+  const progress = createStudentProgressContract(session(skipped));
+  assert.deepEqual(progress.completedQuestionIds, ["question-1"]);
+  assert.equal(progress.questionRuntime[0].skippedWithoutEvaluation, true);
+  assert.deepEqual(progress.operationResults, []);
+  assert.deepEqual(progress.historicalKnowledgeResults, []);
+
+  const restored = restoreStudentProgress(session(), progress);
+  assert.equal(restored.questionStates[0].status, "completed");
+  assert.equal(restored.questionStates[0].skippedWithoutEvaluation, true);
+  assert.equal(restored.questionStates[0].result, undefined);
+  assert.deepEqual(restored.summary?.operationResults, []);
+  assert.deepEqual(restored.summary?.historicalKnowledgeResults, []);
+});
+
+test("restores the bilan when a completed activity is reopened", () => {
+  const completedAt = "2026-08-05T12:05:00.000Z";
+  const completedQuestion = question({ status: "completed", attemptNumber: 1, result: {
+    sessionId: "session-1", activityId: "activity-1", questionId: "question-1", notionId: "notion-1",
+    primaryOperationId: "operation-1", operationIds: ["operation-1"], historicalKnowledgeIds: ["knowledge-1"], documentIds: [],
+    attemptNumber: 1, hintLevel: 0, status: "mastered", advancedMastery: false, demonstratedKnowledgeIds: ["knowledge-1"],
+    demonstratedOperationIds: ["operation-1"], observedStrengths: ["Repère exact."], consolidationTargets: [], completedAt,
+  }});
+  const progress = createStudentProgressContract({ ...session(completedQuestion), status: "completed", summary: {
+    sessionId: "session-1", activityId: "activity-1", notionId: "notion-1", encouragement: "Bravo", strengths: ["Repère exact."],
+    consolidationTargets: [], operationResults: [{ id: "operation-1", status: "mastered" }],
+    historicalKnowledgeResults: [{ id: "knowledge-1", status: "mastered" }], workbookReferences: [], localDemoNotice: "", completedAt,
+  }});
+  const restored = restoreStudentProgress(session(), progress);
+  assert.equal(restored.status, "completed");
+  assert.equal(restored.summary?.completedAt, completedAt);
+  assert.deepEqual(restored.summary?.operationResults, progress.operationResults);
+});
+
+test("repairs an activity whose completed questions were saved with an in-progress state", () => {
+  const completedQuestion = question({ status: "completed", attemptNumber: 1, result: {
+    sessionId: "session-1", activityId: "activity-1", questionId: "question-1", notionId: "notion-1",
+    primaryOperationId: "operation-1", operationIds: ["operation-1"], historicalKnowledgeIds: ["knowledge-1"], documentIds: [],
+    attemptNumber: 1, hintLevel: 0, status: "mastered", advancedMastery: false, demonstratedKnowledgeIds: [], demonstratedOperationIds: [],
+    observedStrengths: [], consolidationTargets: [], completedAt: "2026-08-05T12:05:00.000Z",
+  }});
+  const progress = { ...createStudentProgressContract(session(completedQuestion)), state: "in_progress" as const };
+  const restored = restoreStudentProgress(session(), progress);
+  assert.equal(restored.status, "completed");
+  assert.ok(restored.summary);
 });

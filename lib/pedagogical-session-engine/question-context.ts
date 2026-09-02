@@ -49,10 +49,11 @@ export function createPedagogicalQuestionDefinition(question: LearningSessionQue
   const documentIds = question.documentRelations.map(({ documentId }) => documentId);
   const documentsById = new Map(documents.map((document) => [document.id, document]));
   return {
-    id: question.id, notionId, primaryOperationId: question.primaryOperationId,
+    id: question.id, notionId, questionPrompt: question.prompt, instruction: question.instruction, primaryOperationId: question.primaryOperationId,
     operationIds: question.intellectualOperations.map(({ id }) => id),
     historicalKnowledgeIds: [...question.historicalKnowledgeIds], documentIds,
     requiredDocumentIds: (question.requiredDocumentIds ?? []).filter((id) => documentIds.includes(id)),
+    maxAttempts: question.maxAttempts,
     hintSequence: { 1: question.localHint, 2: question.localHint },
     evaluationContext: {
       questionPrompt: question.prompt, instruction: question.instruction, notionTitle,

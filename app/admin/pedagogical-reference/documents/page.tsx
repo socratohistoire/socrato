@@ -24,6 +24,7 @@ import {
   RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS,
   RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_DOCUMENT,
   RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION,
+  RESPONSIBLE_GOVERNMENT_METCALFE_ELGIN_DOCUMENTS,
   PATRIOTES_ICONOGRAPHIC_DOCUMENTS,
   PATRIOTES_MERCURY_MILITARY_MOVEMENTS_DOCUMENT,
   PATRIOTES_MINERVE_INDEPENDENCE_DOCUMENT,
@@ -106,7 +107,7 @@ export function HistoricalDocumentsNotionPage({ notionId }: { notionId: string }
       <div className="document-bank__section-title"><p>Document cartographique approuvé</p><h2 id="acte-union-map-title">{ACTE_UNION_MAP_ADAPTATION_DRAFT.title}</h2><span>James Wyld · vers 1842 · carte modifiée à des fins pédagogiques</span></div>
       <div className="document-adaptation"><figure><Image src={ACTE_UNION_MAP_ADAPTATION_DRAFT.previewUrl} alt="Carte historique de James Wyld modifiée montrant approximativement le Canada-Ouest en rouge, le Canada-Est en violet-bleu, la Terre de Rupert en orange, le Nouveau-Brunswick en vert et les États-Unis en jaune." width={5766} height={3814} unoptimized /><figcaption>James Wyld, vers 1842, carte modifiée à des fins pédagogiques. Les frontières et les zones colorées sont approximatives.</figcaption><ul className="document-map-legend" aria-label="Légende de la carte"><li><span className="map-swatch map-swatch--west" />Canada-Ouest</li><li><span className="map-swatch map-swatch--east" />Canada-Est</li><li><span className="map-swatch map-swatch--rupert" />Terre de Rupert</li><li><span className="map-swatch map-swatch--brunswick" />Nouveau-Brunswick</li><li><span className="map-swatch map-swatch--usa" />États-Unis</li></ul><p className="document-map-warning"><strong>Attention :</strong> les frontières représentées sont approximatives.</p></figure><aside><header><div><small>Document cartographique adapté</small><h3>Repérer les territoires de la Province du Canada</h3></div><strong>Approuvé</strong></header><section><h4>Modifications apportées</h4><ul>{ACTE_UNION_MAP_ADAPTATION_DRAFT.modifications.map((item) => <li key={item}>{item}</li>)}</ul></section><section><h4>Notes cartographiques</h4><ul>{ACTE_UNION_MAP_ADAPTATION_DRAFT.validationNotes.map((item) => <li key={item}>{item}</li>)}</ul></section><p className="document-adaptation__rights">{ACTE_UNION_MAP_ADAPTATION_DRAFT.rightsAssessment}</p><div className="document-adaptation__links"><a href={ACTE_UNION_MAP_ADAPTATION_DRAFT.sourceUrl} target="_blank" rel="noreferrer">Consulter la carte originale ↗</a><a href={ACTE_UNION_MAP_ADAPTATION_DRAFT.cartographicReferenceUrl} target="_blank" rel="noreferrer">Vérifier les frontières ↗</a></div></aside></div>
     </section><section id={ACTE_UNION_STUDENT_TIMELINE.id} className="document-bank__timeline" aria-labelledby="acte-union-timeline-title">
-      <div className="document-bank__section-title"><p>Document chronologique approuvé · {ACTE_UNION_STUDENT_TIMELINE.id}</p><h2 id="acte-union-timeline-title">{ACTE_UNION_STUDENT_TIMELINE.title}</h2><span>{ACTE_UNION_STUDENT_TIMELINE.periodLabel} · cinq repères illustrés</span></div>
+      <div className="document-bank__section-title"><p>Document chronologique approuvé · {ACTE_UNION_STUDENT_TIMELINE.id}</p><h2 id="acte-union-timeline-title">{ACTE_UNION_STUDENT_TIMELINE.title}</h2><span>{ACTE_UNION_STUDENT_TIMELINE.periodLabel} · six repères illustrés</span></div>
       <article className="student-timeline-card"><div className="student-timeline-viewport" aria-label="Ligne du temps horizontale de 1837 à 1848"><div className="student-timeline"><div className="student-timeline__rail" aria-hidden="true" />{ACTE_UNION_STUDENT_TIMELINE.entries.map((entry) => <figure className="student-timeline__entry" key={entry.date}><div className="student-timeline__marker"><span aria-hidden="true" /><strong>{entry.date}</strong></div><div className="student-timeline__image"><Image src={entry.imageUrl} alt={entry.imageAlt} width={640} height={480} unoptimized /></div><figcaption><small>{entry.phase}</small><h3>{entry.title}</h3><p>{entry.description}</p><span>{entry.credit}</span></figcaption></figure>)}</div></div>
       <details className="document-verification-details"><summary>Détails de vérification</summary><div><dl><div><dt>Code documentaire</dt><dd>{ACTE_UNION_STUDENT_TIMELINE.id}</dd></div><div><dt>Droits</dt><dd>{ACTE_UNION_STUDENT_TIMELINE.rightsStatement}</dd></div><div><dt>Opérations suggérées</dt><dd>{ACTE_UNION_STUDENT_TIMELINE.operationIds.map((id) => getIntellectualOperation(id).officialLabel).join(" · ")}</dd></div></dl><p>{ACTE_UNION_STUDENT_TIMELINE.historicalContext}</p><section><h4>Éléments à observer</h4><ul>{ACTE_UNION_STUDENT_TIMELINE.observationGuide.map((item) => <li key={item}>{item}</li>)}</ul></section><section><h4>Précautions</h4><ul>{ACTE_UNION_STUDENT_TIMELINE.interpretationCautions.map((item) => <li key={item}>{item}</li>)}</ul></section><div className="document-adaptation__links">{ACTE_UNION_STUDENT_TIMELINE.entries.map((entry) => <a href={entry.sourceUrl} target="_blank" rel="noreferrer" key={entry.date}>Source {entry.date} ↗</a>)}</div></div></details></article>
     </section><ComparisonChartDocument chart={ACTE_UNION_DEBT_COMPARISON_CHART} /><ComparisonChartDocument chart={ACTE_UNION_POPULATION_COMPARISON_CHART} />
@@ -391,8 +392,24 @@ export function HistoricalDocumentsNotionPage({ notionId }: { notionId: string }
     </>}
 
     {notionId === "gouvernement-responsable" && <>
-    <section className="document-bank__text-documents" aria-labelledby="responsible-government-electoral-law-title">
-      <div className="document-bank__section-title"><p>Notion · Gouvernement responsable</p><h2 id="responsible-government-electoral-law-title">Documents textuels</h2></div>
+    <section className="document-bank__text-documents" aria-labelledby="responsible-government-primary-documents-title">
+      <div className="document-bank__section-title"><p>Notion · Gouvernement responsable</p><h2 id="responsible-government-primary-documents-title">Gouvernement responsable · sources primaires</h2><span>Trois extraits sur Metcalfe, Elgin et l’incendie du Parlement.</span></div>
+      <div className="iconographic-document-grid">{RESPONSIBLE_GOVERNMENT_METCALFE_ELGIN_DOCUMENTS.map((document) => <article id={document.id} className="student-document-preview" key={document.id}>
+        <p className="student-document-preview__label">Document textuel · {document.historicalDate}</p><div className="student-document-preview__card">
+          <h4><strong>{document.title}</strong><span aria-hidden="true"> · </span><small>{document.creator}</small></h4>
+          <div className="student-document-preview__excerpt"><blockquote>« {document.transcription} »</blockquote><cite>{document.creator} · {document.historicalDate}</cite></div>
+          <details className="document-verification-details"><summary>Détails de vérification</summary><div>
+            <dl><dt>Code documentaire</dt><dd>{document.id}</dd><dt>Référence</dt><dd>{document.sourceLocator}</dd><dt>Opérations suggérées</dt><dd>{document.operationIds.map((id) => getIntellectualOperation(id).officialLabel).join(" · ")}</dd></dl>
+            <section><h4>Mise en contexte</h4><p>{document.historicalContext}</p></section>
+            <div className="document-candidate__assessment"><section><h4>Éléments à observer</h4><ul>{document.observationGuide.map((item) => <li key={item}>{item}</li>)}</ul></section><section><h4>Questions et usages possibles</h4><ul>{document.pedagogicalUses.map((item) => <li key={item}>{item}</li>)}</ul></section></div>
+            <section><h4>Précautions</h4><ul>{document.interpretationCautions.map((item) => <li key={item}>{item}</li>)}</ul></section><p><strong>Droits :</strong> {document.rightsStatement}</p><div className="document-adaptation__links"><a href={document.sourceUrl} target="_blank" rel="noreferrer">Consulter la transcription source ↗</a></div>
+          </div></details>
+        </div>
+      </article>)}</div>
+    </section></>}
+
+    {notionId === "role-des-femmes" && <section className="document-bank__text-documents" aria-labelledby="responsible-government-electoral-law-title">
+      <div className="document-bank__section-title"><p>Notion · Rôle des femmes</p><h2 id="responsible-government-electoral-law-title">Documents textuels</h2></div>
       <article className="student-document-preview"><p className="student-document-preview__label">Aperçu exact du contenu de la carte élève</p><div className="student-document-preview__card">
         <h4><strong>{RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.title}</strong><span aria-hidden="true"> · </span><small>{RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.typeLabel}</small></h4>
         <div className="student-document-preview__excerpt"><blockquote>« {RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.studentText} »</blockquote><cite>{RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.authorLabel} · {RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.dateLabel}</cite></div>
@@ -403,7 +420,9 @@ export function HistoricalDocumentsNotionPage({ notionId }: { notionId: string }
           <section><h4>Précautions</h4><ul>{RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_DOCUMENT.interpretationCautions.map((item) => <li key={item}>{item}</li>)}</ul></section><p><strong>Droits :</strong> {RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_DOCUMENT.rightsStatement}</p><div className="document-adaptation__links"><a href={RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_DOCUMENT.assetUrl} target="_blank" rel="noreferrer">Consulter la loi originale ↗</a></div>
         </div></details>
       </div></article>
-    </section>
+    </section>}
+
+    {notionId === "gouvernement-responsable" && <>
     <section className="document-bank__iconography" aria-labelledby="responsible-government-iconography-title">
       <div className="document-bank__section-title"><p>Notion · Gouvernement responsable</p><h2 id="responsible-government-iconography-title">Documents iconographiques</h2><span>Cinq sources visuelles pour interpréter les appuis, les critiques, les acteurs et les tensions liés au gouvernement responsable.</span></div>
       <div className="iconographic-document-grid">{RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.map((document) => <article className="iconographic-document-card" key={document.id}>

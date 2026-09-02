@@ -20,6 +20,10 @@ import { neutralAnalysis, validateStructuredAnalysis } from "./validation.ts";
 
 const systemClock: PedagogicalClock = { now: () => new Date() };
 
+export function pedagogicalQuestionAttemptLimit(question: PedagogicalQuestionDefinition) {
+  return question.maxAttempts === null ? null : question.maxAttempts ?? MAX_PEDAGOGICAL_ATTEMPTS;
+}
+
 function identifiers(definition: PedagogicalSessionDefinition, question: PedagogicalQuestionDefinition) {
   return {
     sessionId: definition.sessionId,
@@ -104,10 +108,17 @@ function advancedMastery(analysis: StructuredResponseAnalysis, question: Pedagog
       && question.requiredDocumentIds.every((id) => analysis.usedDocumentIds.includes(id))));
 }
 
-function resultStatus(analysis: StructuredResponseAnalysis): ResultStatus {
-  if (analysis.pedagogicalOutcome === "satisfactory") return "mastered";
+function resultStatus(analysis: StructuredResponseAnalysis, runtime: QuestionRuntimeState, question: PedagogicalQuestionDefinition): ResultStatus {
+  if (analysis.pedagogicalOutcome === "satisfactory") return runtime.attemptNumber > 1 || runtime.hintLevel > 0 ? "to_consolidate" : "mastered";
+  const attemptLimit = pedagogicalQuestionAttemptLimit(question);
+  if (attemptLimit !== null && runtime.attemptNumber >= attemptLimit) return "to_work_on";
   if (analysis.pedagogicalOutcome === "partially_satisfactory") return "to_consolidate";
   return "to_work_on";
+}
+
+function asksForMultipleElements(question: PedagogicalQuestionDefinition) {
+  const instruction = `${question.questionPrompt ?? question.evaluationContext?.questionPrompt ?? ""} ${question.instruction ?? question.evaluationContext?.instruction ?? ""}`;
+  return /\b(deux|trois|plusieurs|au moins|d’une part|d'autre part|d’autre part|ainsi que)\b|\b(et|puis)\b/iu.test(instruction);
 }
 
 function assessmentStatus(level: StructuredResponseAnalysis["historicalAccuracy"]): ResultStatus {
@@ -124,18 +135,32 @@ function completeQuestion(
   analysis: StructuredResponseAnalysis,
   clock: PedagogicalClock,
 ): PedagogicalSessionState {
-  const status = resultStatus(analysis);
+  const status = resultStatus(analysis, runtime, question);
+  const attemptLimit = pedagogicalQuestionAttemptLimit(question);
+  const exhaustedWithoutSuccess = attemptLimit !== null && runtime.attemptNumber >= attemptLimit
+    && analysis.pedagogicalOutcome !== "satisfactory";
   const demonstratedOperationIds = analysis.observedOperationIds.filter((id) => question.operationIds.includes(id));
   const demonstratedKnowledgeIds = analysis.demonstratedKnowledgeIds.filter((id) => question.historicalKnowledgeIds.includes(id));
   const operationAssessments = question.operationIds
     .filter((id) => id === question.primaryOperationId || demonstratedOperationIds.includes(id))
     .map((id) => ({
     id,
-    status: assessmentStatus(analysis.primaryOperationPerformance),
+    status: id !== question.primaryOperationId && demonstratedOperationIds.includes(id)
+      ? analysis.pedagogicalOutcome === "satisfactory" ? "to_consolidate" as const : "mastered" as const
+      : exhaustedWithoutSuccess && assessmentStatus(analysis.primaryOperationPerformance) !== "mastered"
+        ? "to_work_on" as const
+      : analysis.pedagogicalOutcome === "satisfactory"
+      && status === "to_consolidate"
+      && assessmentStatus(analysis.primaryOperationPerformance) === "mastered" ? "to_consolidate" as const
+      : assessmentStatus(analysis.primaryOperationPerformance),
   }));
   const historicalKnowledgeAssessments = question.historicalKnowledgeIds.map((id) => ({
     id,
-    status: demonstratedKnowledgeIds.includes(id) ? assessmentStatus(analysis.historicalAccuracy) : "to_work_on" as const,
+    status: demonstratedKnowledgeIds.includes(id)
+      ? analysis.pedagogicalOutcome === "satisfactory" && status === "to_consolidate" && assessmentStatus(analysis.historicalAccuracy) === "mastered"
+        ? "to_consolidate" as const
+        : assessmentStatus(analysis.historicalAccuracy)
+      : "to_work_on" as const,
   }));
   const result: QuestionResult = {
     sessionId: state.sessionId, activityId: state.activityId, questionId: question.id, notionId: question.notionId,
@@ -146,8 +171,15 @@ function completeQuestion(
     demonstratedOperationIds,
     operationAssessments,
     historicalKnowledgeAssessments,
+    requiredDocumentIds: [...question.requiredDocumentIds],
+    usedDocumentIds: analysis.usedDocumentIds.filter((id) => question.documentIds.includes(id)),
+    documentUse: analysis.documentUse,
+    justificationQuality: analysis.justificationQuality,
     observedStrengths: [...analysis.observedStrengths],
-    consolidationTargets: status === "mastered" ? [] : [...analysis.missingElements],
+    consolidationTargets: status !== "mastered" ? [...new Set([...(runtime.observedDifficulties ?? []), ...analysis.missingElements])] : [],
+    instructionOmissionObserved: runtime.instructionOmissionObserved,
+    questionPrompt: question.questionPrompt ?? question.evaluationContext?.questionPrompt,
+    omittedInstructionElements: [...(runtime.omittedInstructionElements ?? [])],
     completedAt: clock.now().toISOString(),
   };
   const questionStates = state.questionStates.with(state.currentQuestionIndex, { ...runtime, status: "completed", result });
@@ -165,7 +197,8 @@ export async function submitStudentResponse(
 ): Promise<PedagogicalTransition> {
   const { question, runtime } = currentDefinition(definition, state);
   const attemptNumber = runtime.attemptNumber + 1;
-  if (attemptNumber > MAX_PEDAGOGICAL_ATTEMPTS) throw new Error("Le maximum de trois tentatives est déjà atteint.");
+  const attemptLimit = pedagogicalQuestionAttemptLimit(question);
+  if (attemptLimit !== null && attemptNumber > attemptLimit) throw new Error(`Le maximum de ${attemptLimit} tentatives est déjà atteint.`);
   const response: StudentResponse = {
     sessionId: state.sessionId, activityId: state.activityId, questionId: question.id, notionId: question.notionId,
     primaryOperationId: question.primaryOperationId, operationIds: [...question.operationIds], historicalKnowledgeIds: [...question.historicalKnowledgeIds], documentIds: [...question.documentIds],
@@ -177,18 +210,30 @@ export async function submitStudentResponse(
     } : undefined,
   };
   let analysis: StructuredResponseAnalysis;
+  let analysisUnavailable = false;
+  const explicitHelpRequest = explicitHelpRequestKind(content);
   try {
-    analysis = validateStructuredAnalysis(await analyzer.analyze(response, question), question);
+    analysis = explicitHelpRequest ? neutralAnalysis() : validateStructuredAnalysis(await analyzer.analyze(response, question), question);
   } catch {
     analysis = neutralAnalysis();
+    analysisUnavailable = true;
   }
-  const helpRequest = explicitHelpRequestKind(content)
+  const helpRequest = explicitHelpRequest
     ?? (analysis.responseDisposition === "answer_request" ? "asks_for_answer"
       : analysis.responseDisposition === "help_request" ? "general" : null);
   const requestsHelp = helpRequest !== null;
-  const recordedAttemptNumber = requestsHelp ? runtime.attemptNumber : attemptNumber;
-  const nonExploitableCount = runtime.nonExploitableCount + (!requestsHelp && analysis.pedagogicalOutcome === "non_exploitable" ? 1 : 0);
+  const recordedAttemptNumber = requestsHelp || analysisUnavailable ? runtime.attemptNumber : attemptNumber;
+  const nonExploitableCount = runtime.nonExploitableCount + (!requestsHelp && !analysisUnavailable && analysis.pedagogicalOutcome === "non_exploitable" ? 1 : 0);
   const offeredHintLevel = requestsHelp ? nextHintLevel(runtime) : null;
+  const instructionOmissionDetected = attemptNumber === 1
+    && analysis.responseDisposition === "substantive"
+    && analysis.pedagogicalOutcome === "partially_satisfactory"
+    && analysis.missingElements.some((element) => /\b(deuxième|second(?:e)?|élément manquant|oubli(?:é)?|n['’]a pas été|pas (?:été )?(?:expliqué|nommé|indiqué|traité)|ne répond pas à|partie de la consigne)\b/iu.test(element))
+    && asksForMultipleElements(question);
+  const observedDifficulties = analysis.responseDisposition === "substantive"
+    && analysis.pedagogicalOutcome === "partially_satisfactory"
+    ? [...new Set([...(runtime.observedDifficulties ?? []), ...analysis.missingElements])]
+    : [...(runtime.observedDifficulties ?? [])];
   const updatedRuntime: QuestionRuntimeState = {
     ...runtime,
     attemptNumber: recordedAttemptNumber,
@@ -197,9 +242,17 @@ export async function submitStudentResponse(
     status: "awaiting_response",
     hintLevel: offeredHintLevel ?? runtime.hintLevel,
     hintRequestCount: runtime.hintRequestCount + (offeredHintLevel ? 1 : 0),
+    instructionOmissionObserved: runtime.instructionOmissionObserved || instructionOmissionDetected,
+    omittedInstructionElements: runtime.omittedInstructionElements ?? (instructionOmissionDetected ? [...analysis.missingElements] : []),
+    observedDifficulties,
   };
-  const mustComplete = analysis.pedagogicalOutcome === "satisfactory" || recordedAttemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS;
-  const feedback = createPedagogicalFeedback(analysis, question, nonExploitableCount, mustComplete, helpRequest ?? false);
+  const mustComplete = analysis.pedagogicalOutcome === "satisfactory" || (attemptLimit !== null && recordedAttemptNumber >= attemptLimit);
+  const feedback = analysisUnavailable ? {
+    assessment: "Socrato ne peut pas analyser ta réponse pour le moment. Elle reste affichée et cette tentative ne compte pas; tu pourras réessayer lorsque le service sera rétabli.",
+    studentFacingText: "Socrato ne peut pas analyser ta réponse pour le moment. Elle reste affichée et cette tentative ne compte pas; tu pourras réessayer lorsque le service sera rétabli.",
+    technicalNotice: "L’analyse pédagogique est temporairement indisponible.",
+    relatedRuleIds: ["PED-AI-009"],
+  } : createPedagogicalFeedback(analysis, question, nonExploitableCount, mustComplete, helpRequest ?? false, state.currentQuestionIndex === definition.questions.length - 1);
   let nextState = { ...state, questionStates: state.questionStates.with(state.currentQuestionIndex, updatedRuntime) };
   if (mustComplete) nextState = completeQuestion(definition, nextState, question, updatedRuntime, analysis, clock);
   return {
@@ -223,4 +276,32 @@ export async function finalizePedagogicalSession(
     ? await summaryProducer.produce(state, references)
     : produceLocalStructuredSummary(state, references);
   return { ...state, summary };
+}
+
+export function skipQuestionAfterAnalysisUnavailable(
+  definition: PedagogicalSessionDefinition,
+  state: PedagogicalSessionState,
+): PedagogicalTransition {
+  const { runtime } = currentDefinition(definition, state);
+  const questionStates = state.questionStates.with(state.currentQuestionIndex, {
+    ...runtime,
+    status: "completed" as const,
+    skippedWithoutEvaluation: true,
+  });
+  const nextIndex = state.currentQuestionIndex + 1;
+  const sessionCompleted = nextIndex >= definition.questions.length;
+  const nextState: PedagogicalSessionState = sessionCompleted
+    ? { ...state, status: "completed", questionStates }
+    : { ...state, currentQuestionIndex: nextIndex, questionStates };
+  return {
+    state: nextState,
+    feedback: {
+      assessment: "Ta réponse est conservée sans évaluation.",
+      studentFacingText: "Ta réponse est conservée. Cette question ne comptera ni comme réussite ni comme difficulté dans ton bilan.",
+      technicalNotice: "Question passée en mode dégradé après l’indisponibilité de l’analyse.",
+      relatedRuleIds: ["PED-AI-009"],
+    },
+    questionCompleted: true,
+    sessionCompleted,
+  };
 }

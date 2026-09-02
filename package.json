@@ -8,6 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node --experimental-transform-types --test tests/**/*.test.ts",
+    "test:load:30": "node --experimental-transform-types --test tests/thirty-student-load.test.ts",
+    "test:load:30:database": "node --env-file=.env.local --experimental-transform-types --test tests/thirty-student-database-load.ts",
+    "test:load:5:openai": "node --env-file=.env.local --experimental-transform-types --test tests/five-student-openai-load.ts",
+    "test:load:10:openai": "SOCRATO_OPENAI_LOAD_STUDENTS=10 node --env-file=.env.local --experimental-transform-types --test tests/five-student-openai-load.ts",
+    "test:load:30:openai": "SOCRATO_OPENAI_LOAD_STUDENTS=30 node --env-file=.env.local --experimental-transform-types --test tests/five-student-openai-load.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

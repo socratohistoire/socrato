@@ -24,6 +24,7 @@ import {
   PATRIOTES_ICONOGRAPHIC_DOCUMENTS,
   PATRIOTES_MERCURY_MILITARY_MOVEMENTS_DOCUMENT,
   PATRIOTES_MINERVE_INDEPENDENCE_DOCUMENT,
+  PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT,
   PATRIOTES_MINERVE_POLITICAL_REPRESSION_DOCUMENT,
   PATRIOTES_MINERVE_RESIGNATION_DOCUMENT,
   PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT,
@@ -35,11 +36,11 @@ import {
   type HistoricalDocumentRecord,
 } from "../lib/pedagogical-reference/index.ts";
 
-test("conserve un seul rapport Durham et six présentations élèves retenues", () => {
+test("conserve un seul rapport Durham et sept présentations élèves retenues", () => {
   assert.equal(ACTE_UNION_DURHAM_DOCUMENT.status, "approved");
   assert.equal(ACTE_UNION_DURHAM_DOCUMENT.creator, "John George Lambton, comte de Durham");
   assert.match(ACTE_UNION_DURHAM_DOCUMENT.rightsStatement, /domaine public/);
-  assert.equal(ACTE_UNION_DURHAM_PRESENTATIONS.length, 6);
+  assert.equal(ACTE_UNION_DURHAM_PRESENTATIONS.length, 7);
   assert.ok(ACTE_UNION_DURHAM_PRESENTATIONS.every(({ documentId }) => documentId === ACTE_UNION_DURHAM_DOCUMENT.id));
   assert.ok(ACTE_UNION_DURHAM_PRESENTATIONS.every(({ status, contentSelectionStatus }) => status === "approved" && contentSelectionStatus === "retained"));
   assert.ok(ACTE_UNION_DURHAM_PRESENTATIONS.every(({ sourceSegmentLocators, sourceUrls, observationGuide, interpretationCautions }) => sourceSegmentLocators.length > 0 && sourceUrls.length === 3 && observationGuide.length > 0 && interpretationCautions.length > 0));
@@ -50,9 +51,20 @@ test("conserve un seul rapport Durham et six présentations élèves retenues", 
     "Revenus, dette et travaux publics",
     "La responsabilité ministérielle",
     "Les continuités après l’Union",
+    "L’anglais et l’avancement politique",
   ]);
   assert.ok(ACTE_UNION_DURHAM_PRESENTATIONS.filter(({ studentText }) => studentText.includes("[…]")).length >= 5);
   assert.ok(ACTE_UNION_DURHAM_PRESENTATIONS.every(({ title }) => !/majorité anglaise recherchée/i.test(title)));
+  const anglicizationExcerpt = ACTE_UNION_DURHAM_PRESENTATIONS.find(({ id }) => id === "historical-presentation:acte-union:durham-anglicisation");
+  assert.ok(anglicizationExcerpt);
+  assert.match(anglicizationExcerpt.studentText, /union des deux provinces donnerait une nette majorité anglaise/);
+  assert.match(anglicizationExcerpt.studentText, /immigration anglaise/);
+  const advancementExcerpt = ACTE_UNION_DURHAM_PRESENTATIONS.find(({ id }) => id === "historical-presentation:acte-union:durham-anglicisation-avancement");
+  assert.ok(advancementExcerpt);
+  assert.match(advancementExcerpt.studentText, /fondre son caractère français et à adopter complètement une nationalité américaine/);
+  assert.match(advancementExcerpt.studentText, /les Français se qualifièrent en apprenant l’anglais/);
+  assert.match(advancementExcerpt.studentText, /une majorité anglaise prédominera en permanence/);
+  assert.match(advancementExcerpt.editorialNote, /traduction française abrégée et fidèle/i);
 });
 
 test("valide séparément la source Durham et ses présentations élèves", () => {
@@ -190,6 +202,14 @@ test("approuve un troisième extrait indépendant de La Minerve sur l’idée d�
   assert.deepEqual(validateHistoricalDocument(PATRIOTES_MINERVE_INDEPENDENCE_DOCUMENT), {});
 });
 
+test("approuve un extrait de La Minerve reliant le refus britannique à la résistance", () => {
+  assert.equal(PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.id, "PAT-T-007");
+  assert.equal(PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.kind, "newspaper");
+  assert.match(PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.transcription, /repousse toutes et chacune des réformes/);
+  assert.match(PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.transcription, /celle de la résistance/);
+  assert.deepEqual(validateHistoricalDocument(PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT), {});
+});
+
 test("approuve l’extrait sur l’exil de chefs patriotes aux Bermudes", () => {
   assert.equal(ACTE_UNION_BERMUDA_EXILE_DOCUMENT.status, "approved");
   assert.match(ACTE_UNION_BERMUDA_EXILE_DOCUMENT.transcription, /Wolfred Nelson/);
@@ -231,9 +251,9 @@ test("prépare deux graphiques approuvés et réutilisables dans les cartes él�
   assert.ok([ACTE_UNION_DEBT_COMPARISON_CHART, ACTE_UNION_POPULATION_COMPARISON_CHART].every(({ sourceUrl, methodology, observationGuide }) => sourceUrl && methodology && observationGuide.length > 0));
 });
 
-test("ne conserve que les documents du gouvernement responsable sans permission écrite", () => {
-  assert.equal(RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.length, 2);
-  assert.deepEqual(RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.map(({ id }) => id), ["GR-I-002", "GR-I-005"]);
+test("ne conserve que les documents du gouvernement responsable réutilisables sans permission écrite", () => {
+  assert.equal(RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.length, 4);
+  assert.deepEqual(RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.map(({ id }) => id), ["GR-I-002", "GR-I-005", "GR-I-006", "GR-I-007"]);
   assert.ok(RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.every((document) => document.knowledgeHeadingIds.includes("gouvernement-responsable")));
   assert.ok(RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.every((document) => document.previewAssetUrls.length > 0));
   assert.ok(RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.every((document) => Object.keys(validateHistoricalDocument(document)).length === 0));
@@ -264,7 +284,11 @@ test("présente les trois images des Patriotes comme documents indépendants", (
 
 test("crée une ligne du temps illustrée de 1837 au gouvernement responsable", () => {
   assert.equal(ACTE_UNION_STUDENT_TIMELINE.id, "AU-D-002");
-  assert.deepEqual(ACTE_UNION_STUDENT_TIMELINE.entries.map(({ date }) => date), ["1837-1838", "1839", "1840", "1841", "1848"]);
+  assert.deepEqual(ACTE_UNION_STUDENT_TIMELINE.entries.map(({ date }) => date), ["1837-1838", "1839", "1840", "1841", "1843", "1848"]);
+  const metcalfeCrisis = ACTE_UNION_STUDENT_TIMELINE.entries.find(({ date }) => date === "1843");
+  assert.ok(metcalfeCrisis);
+  assert.match(metcalfeCrisis.description, /démissionnent/);
+  assert.match(metcalfeCrisis.credit, /domaine public/);
   assert.ok(ACTE_UNION_STUDENT_TIMELINE.entries.every(({ imageUrl, sourceUrl }) => imageUrl && sourceUrl));
   assert.doesNotMatch(JSON.stringify(ACTE_UNION_STUDENT_TIMELINE.entries), /1849/);
 });

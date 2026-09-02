@@ -1,6 +1,6 @@
 export type TeacherGroupActivityState = "completed" | "in_progress" | "not_started";
-export type TeacherGroupStudentPriority = "high" | "normal";
-export type TeacherGroupPriorityFilter = "all" | "high";
+export type TeacherGroupStudentPriority = "high" | "medium" | "normal";
+export type TeacherGroupPriorityFilter = "all" | "high" | "medium";
 export type TeacherGroupStateFilter = "all" | TeacherGroupActivityState;
 
 export type TeacherGroupStudent = {

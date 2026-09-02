@@ -1,19 +1,29 @@
 import type { ActivityConfiguration, ActivityCreatorCatalog, ActivityPreview } from "./types.ts";
+import { CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID } from "./intellectual-operation-learning.ts";
 
-const INITIAL_BALANCED_REVISION_FORMATS = ["multiple-choice", "short-answer", "document-interpretation", "document-interpretation", "short-answer", "multiple-choice"] as const;
-const CONTINUED_BALANCED_REVISION_FORMATS = ["document-interpretation", "short-answer", "multiple-choice"] as const;
-type BalancedRevisionFormat = (typeof CONTINUED_BALANCED_REVISION_FORMATS)[number];
+type BalancedRevisionFormat = "multiple-choice" | "short-answer" | "document-interpretation";
 
 export function getActivityQuestionCategory(format: ActivityCreatorCatalog["questions"][number]["format"]): BalancedRevisionFormat | "other" {
   if (format === "interactive-timeline" || format === "interactive-association") return "document-interpretation";
+  if (format === "development-150") return "other";
   if (format === "multiple-choice" || format === "short-answer" || format === "document-interpretation") return format;
   return "other";
 }
 
-function balancedRevisionFormatAt(index: number): BalancedRevisionFormat {
-  return index < INITIAL_BALANCED_REVISION_FORMATS.length
-    ? INITIAL_BALANCED_REVISION_FORMATS[index]
-    : CONTINUED_BALANCED_REVISION_FORMATS[(index - INITIAL_BALANCED_REVISION_FORMATS.length) % CONTINUED_BALANCED_REVISION_FORMATS.length];
+function createBalancedRevisionFormatPlan(questionCount: number): BalancedRevisionFormat[] {
+  const multipleChoiceCount = Math.round(questionCount * 0.2);
+  const multipleChoiceIndexes = new Set(Array.from(
+    { length: multipleChoiceCount },
+    (_, index) => Math.floor(index * questionCount / multipleChoiceCount),
+  ));
+  let openQuestionIndex = 0;
+
+  return Array.from({ length: questionCount }, (_, index) => {
+    if (multipleChoiceIndexes.has(index)) return "multiple-choice";
+    const format = openQuestionIndex % 2 === 0 ? "document-interpretation" : "short-answer";
+    openQuestionIndex += 1;
+    return format;
+  });
 }
 
 export function getEligibleActivityQuestions(config: ActivityConfiguration, catalog: ActivityCreatorCatalog) {
@@ -24,8 +34,8 @@ export function getEligibleActivityQuestions(config: ActivityConfiguration, cata
 
   return catalog.questions.filter(({ status, format, relatedKnowledgeHeadingIds, operationId, historicalDocumentIds }) =>
     status === "approved"
-    && (isCompleteActeUnionRevision || relatedKnowledgeHeadingIds.some((id) => selectedNotionIds.has(id)))
-    && (config.workType === "development" ? format === "development-150" : format !== "development-150")
+    && relatedKnowledgeHeadingIds.some((id) => selectedNotionIds.has(id))
+    && (config.workType === "development" ? format === "development-150" : config.workType === "revision" || format !== "development-150")
     && (!config.operationId || operationId === config.operationId)
     && (isCompleteActeUnionRevision || format === "interactive-timeline" || format === "interactive-association" || format === "development-150" || historicalDocumentIds.every((id) => availableDocumentIds.has(id))),
   );
@@ -39,9 +49,15 @@ export function isHistoricalPeriodReview(config: ActivityConfiguration, catalog:
   });
 }
 
-export function getActivityQuestionSelection(config: ActivityConfiguration, catalog: ActivityCreatorCatalog, previouslyAssignedQuestionIds: readonly string[] = []) {
+function seededQuestionOrder(questionId: string, seed: number) {
+  let value = seed >>> 0;
+  for (let index = 0; index < questionId.length; index += 1) value = Math.imul(value ^ questionId.charCodeAt(index), 16777619) >>> 0;
+  return value;
+}
+
+export function getActivityQuestionSelection(config: ActivityConfiguration, catalog: ActivityCreatorCatalog, previouslyAssignedQuestionIds: readonly string[] = [], randomSeed?: number) {
   const eligible = getEligibleActivityQuestions(config, catalog);
-  const reusable = isHistoricalPeriodReview(config, catalog);
+  const reusable = config.workType === "revision" || isHistoricalPeriodReview(config, catalog);
   const previouslyAssigned = new Set(previouslyAssignedQuestionIds);
   const available = reusable ? eligible : eligible.filter(({ id }) => !previouslyAssigned.has(id));
   if (config.questionCount === null || config.workType === "development") return available.slice(0, config.questionCount ?? available.length);
@@ -49,51 +65,62 @@ export function getActivityQuestionSelection(config: ActivityConfiguration, cata
   const requestedCount = Math.min(config.questionCount, available.length);
   const selected: typeof available = [];
   const selectedIds = new Set<string>();
-  const usedOperations = new Set<string>();
+  const operationUsage = new Map<string, number>();
+  const knowledgeUsage = new Map<string, number>();
   const usedDocuments = new Set<string>();
+  const selectedNotionIds = new Set(config.notionIds);
 
-  function candidateScore(question: (typeof available)[number]) {
-    const newDocuments = question.historicalDocumentIds.filter((id) => !usedDocuments.has(id)).length;
-    return (usedOperations.has(question.operationId) ? 0 : 100) + newDocuments * 10;
+  function registerQuestion(question: (typeof available)[number]) {
+    selected.push(question);
+    selectedIds.add(question.id);
+    operationUsage.set(question.operationId, (operationUsage.get(question.operationId) ?? 0) + 1);
+    question.relatedKnowledgeHeadingIds
+      .filter((id) => selectedNotionIds.size === 0 || selectedNotionIds.has(id))
+      .forEach((id) => knowledgeUsage.set(id, (knowledgeUsage.get(id) ?? 0) + 1));
+    question.historicalDocumentIds.forEach((id) => usedDocuments.add(id));
   }
 
-  function addBestCandidate(format?: BalancedRevisionFormat) {
+  function candidateScore(question: (typeof available)[number]) {
+    const relevantKnowledgeIds = question.relatedKnowledgeHeadingIds
+      .filter((id) => selectedNotionIds.size === 0 || selectedNotionIds.has(id));
+    const knowledgeUse = relevantKnowledgeIds.length > 0
+      ? Math.min(...relevantKnowledgeIds.map((id) => knowledgeUsage.get(id) ?? 0))
+      : 0;
+    const operationUse = operationUsage.get(question.operationId) ?? 0;
+    const newDocuments = question.historicalDocumentIds.filter((id) => !usedDocuments.has(id)).length;
+    return -knowledgeUse * 1_000 - operationUse * 100 + newDocuments * 10;
+  }
+
+  function addBestCandidate(format?: BalancedRevisionFormat | "other") {
     const eligibleCandidates = available
       .filter((question) => !selectedIds.has(question.id) && (!format || getActivityQuestionCategory(question.format) === format));
     const candidatesWithoutRepeatedDocuments = eligibleCandidates.filter((question) =>
       question.historicalDocumentIds.every((id) => !usedDocuments.has(id)));
-    const hasNonRepeatingCandidateInAnotherFormat = Boolean(format) && available.some((question) =>
-      !selectedIds.has(question.id) && question.historicalDocumentIds.every((id) => !usedDocuments.has(id)));
-    if (config.workType === "revision" && candidatesWithoutRepeatedDocuments.length === 0 && hasNonRepeatingCandidateInAnotherFormat) return false;
     const candidatePool = config.workType === "revision" && candidatesWithoutRepeatedDocuments.length > 0
       ? candidatesWithoutRepeatedDocuments
       : eligibleCandidates;
     const candidates = candidatePool
       .map((question, index) => ({ question, index, score: candidateScore(question) }))
-      .sort((a, b) => b.score - a.score || a.index - b.index);
+      .sort((a, b) => b.score - a.score || (randomSeed === undefined
+        ? a.index - b.index
+        : seededQuestionOrder(a.question.id, randomSeed) - seededQuestionOrder(b.question.id, randomSeed)));
     const best = candidates[0]?.question;
     if (!best) return false;
-    selected.push(best);
-    selectedIds.add(best.id);
-    usedOperations.add(best.operationId);
-    best.historicalDocumentIds.forEach((id) => usedDocuments.add(id));
+    registerQuestion(best);
     return true;
   }
 
-  const formatPlan = Array.from({ length: requestedCount }, (_, index) => balancedRevisionFormatAt(index));
+  const formatPlan = createBalancedRevisionFormatPlan(requestedCount);
   const firstTimeline = available.find(({ format }) => format === "interactive-timeline");
   if (firstTimeline && selected.length < requestedCount) {
-    selected.push(firstTimeline);
-    selectedIds.add(firstTimeline.id);
-    usedOperations.add(firstTimeline.operationId);
-    firstTimeline.historicalDocumentIds.forEach((id) => usedDocuments.add(id));
+    registerQuestion(firstTimeline);
     const interpretationIndex = formatPlan.indexOf("document-interpretation");
     if (interpretationIndex >= 0) formatPlan.splice(interpretationIndex, 1);
   }
 
   for (let index = 0; selected.length < requestedCount; index += 1) {
     const targetFormat = formatPlan[index];
-    if (!addBestCandidate(targetFormat) && !addBestCandidate()) break;
+    if (!addBestCandidate(targetFormat) && !addBestCandidate("other") && !addBestCandidate()) break;
   }
 
   return selected;
@@ -135,7 +162,9 @@ export function createLocalActivityPreview(config: ActivityConfiguration, catalo
     historicalKnowledgeIds: catalogQuestion?.relatedKnowledgeHeadingIds ?? [notion.id],
     question,
     instruction,
-    guidance: [catalogQuestion?.format === "short-answer"
+    guidance: [catalogQuestion?.id === CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID
+      ? "Aujourd’hui, je vais t’aider à comprendre comment déterminer une cause et une conséquence. Commençons simplement : quel est l’événement historique central présenté dans les trois documents?"
+      : catalogQuestion?.format === "short-answer"
       ? "J’attends ta réponse…"
       : catalogQuestion?.format === "document-interpretation"
         ? "Bonjour, consulte les sources puis réponds à la question."
@@ -143,5 +172,6 @@ export function createLocalActivityPreview(config: ActivityConfiguration, catalo
     documents: catalogQuestion ? catalog.documents.filter(({ id }) => catalogQuestion.historicalDocumentIds.includes(id)) : [],
     timelineInteraction: catalogQuestion?.timelineInteraction,
     associationInteraction: catalogQuestion?.associationInteraction,
+    causalChainInteraction: catalogQuestion?.causalChainInteraction,
   };
 }

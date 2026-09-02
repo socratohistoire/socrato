@@ -5,17 +5,35 @@ import Link from "next/link";
 import { DragEvent as ReactDragEvent, FormEvent, KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { ThemeToggle } from "../../tableau-de-bord/theme-toggle";
 import { StudentLogoutButton } from "../../logout-button";
-import { saveStudentOutcomeToDatabase, saveStudentProgressToDatabase } from "../progress-actions";
-import { analyzeAuthorizedStudentResponse } from "../analysis-actions";
+import { saveConsolidationOutcomeToDatabase, saveStudentOutcomeToDatabase, saveStudentProgressToDatabase } from "../progress-actions";
+import { analyzeAuthorizedConsolidationCoachTurn, analyzeAuthorizedStudentResponse } from "../analysis-actions";
 import { personalizeCompletedStudentSummary } from "../summary-actions";
 import { analyzeActeUnionTestResponse } from "@/app/teacher/api-test/actions";
+import { CausesConsequencesLearningAnalyzer } from "@/lib/pedagogical-session-engine/causes-consequences-learning-analyzer";
+import { CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID } from "@/lib/teacher-activity-creator/intellectual-operation-learning";
 import { createStudentProgressContract, restoreStudentProgress } from "@/lib/student-progress";
 import { createConfiguredDataRepository } from "@/lib/data-repository";
-import { createDemoPedagogicalDefinition, createPedagogicalFeedback, createPedagogicalSession, finalizePedagogicalSession, LocalDeterministicResponseAnalyzer, MAX_EXPLICIT_HINT_LEVEL, MAX_PEDAGOGICAL_ATTEMPTS, requestNextHint, submitStudentResponse, type PedagogicalSessionState, type ResponseAnalyzer } from "@/lib/pedagogical-session-engine";
+import { createDemoPedagogicalDefinition, createPedagogicalFeedback, createPedagogicalSession, finalizePedagogicalSession, LocalDeterministicResponseAnalyzer, MAX_EXPLICIT_HINT_LEVEL, MAX_PEDAGOGICAL_ATTEMPTS, pedagogicalQuestionAttemptLimit, requestNextHint, skipQuestionAfterAnalysisUnavailable, submitStudentResponse, type PedagogicalSessionState, type ResponseAnalyzer } from "@/lib/pedagogical-session-engine";
 import { getHistoricalPeriodLabel } from "@/lib/student-dashboard/historical-period";
 import { getCurrentLearningQuestion, getInitialQuestionDocument, getLearningSessionHeading, getQuestionDocuments } from "@/lib/student-learning-session/presentation";
 import type { LearningSessionDocument, LearningSessionMessage, LearningSessionQuestion, StudentLearningSessionData } from "@/lib/student-learning-session/types";
 import { appendVoiceTranscript, createBrowserVoiceAdapter, formatRecordingDuration, isLocalVoicePrototypeEnabled, LocalVoiceCaptureController, VOICE_MAX_SECONDS, type VoiceCaptureState } from "@/lib/student-voice-transcription";
+
+// Le serveur interrompt son analyse avant cette limite; l’élève récupère ainsi
+// toujours sa réponse et peut réessayer sans perdre une tentative.
+const RESPONSE_ANALYSIS_TIMEOUT_MS = 35_000;
+
+async function withResponseAnalysisTimeout<T>(operation: Promise<T>) {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("Socrato met trop de temps à répondre. Ta réponse a été conservée; tu peux réessayer.")), RESPONSE_ANALYSIS_TIMEOUT_MS);
+  });
+  try {
+    return await Promise.race([operation, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
 
 function revealNewestConversationMessage(region: HTMLDivElement, message: HTMLElement) {
   const regionTop = region.getBoundingClientRect().top;
@@ -25,10 +43,59 @@ function revealNewestConversationMessage(region: HTMLDivElement, message: HTMLEl
   region.scrollTo({ top: targetTop, behavior: reducedMotion ? "auto" : "smooth" });
 }
 
-export function StudentLearningSessionView({ data, teacherPreview = false, persistProgress = true, teacherApiTest = false, teacherPreviewExitHref = "/teacher/activities/new" }: { data: StudentLearningSessionData; teacherPreview?: boolean; persistProgress?: boolean; teacherApiTest?: boolean; teacherPreviewExitHref?: string }) {
+function consolidationOpeningMessage(label: string, advice: string) {
+  const definition = label === "Comparer avec méthode"
+    ? "Comparer consiste à examiner deux éléments avec un même critère, puis à nommer précisément leur différence ou leur similitude."
+    : label === "Dégager des différences et des similitudes"
+      ? "Dégager des différences et des similitudes consiste à comparer deux éléments avec un même critère, puis à nommer précisément ce qui les oppose ou les rapproche."
+    : label === "Construire une chaîne causale"
+      ? "Établir un lien de causalité consiste à expliquer comment un premier fait entraîne ou favorise le suivant."
+      : label === "Établir des liens de causalité"
+        ? "Établir des liens de causalité consiste à nommer une cause, à expliquer le mécanisme qui relie les faits, puis à formuler la conséquence qui en découle."
+      : label === "Déterminer des causes et des conséquences"
+        ? "Déterminer des causes et des conséquences consiste à distinguer ce qui explique une réalité historique de ce qui en découle."
+        : label === "Déterminer des changements et des continuités"
+          ? "Déterminer un changement ou une continuité consiste à comparer deux moments avec un même aspect et un repère de temps précis."
+          : label === "Mettre en relation des faits"
+            ? "Mettre en relation des faits consiste à associer chaque fait à la manifestation ou à la description qui lui correspond grâce à un indice distinctif."
+      : label === "Associer chaque date à son événement"
+        ? "Situer dans le temps consiste à associer chaque événement à un repère exact et à vérifier leur ordre chronologique."
+        : label === "Situer dans le temps et dans l’espace"
+          ? "Situer dans le temps et dans l’espace consiste à ordonner ou localiser les faits avec des repères temporels ou géographiques exacts."
+        : label === "Établir des faits"
+          ? "Établir des faits consiste à sélectionner un fait historique exact et pertinent qui répond directement à la question."
+          : "L’opération intellectuelle demande d’organiser des faits historiques et d’expliquer clairement la relation attendue par la consigne.";
+  return `Nous allons consolider l’opération « ${label} ». ${definition} Dans l’activité précédente, cette démarche a nécessité plusieurs essais. Voici le processus à appliquer : 1) repère l’action demandée; 2) relève les faits pertinents; 3) organise-les selon la relation attendue; 4) formule cette relation clairement; 5) vérifie que ta réponse réalise bien l’opération. Pour cette première pratique guidée : ${advice}`;
+}
+
+function defaultConsolidationAdvice(label: string, prompt: string) {
+  if (label === "Établir des faits" && /nomme\s+deux|deux\s+(?:raisons|faits|éléments)/iu.test(prompt)) {
+    return "Dans cette question, tu dois nommer deux raisons distinctes. Commence par repérer le verbe « nomme » et le nombre « deux ». Cherche ensuite deux faits historiques différents qui répondent directement à la consigne. Avant d’envoyer ta réponse, vérifie que tu as bien formulé deux raisons, et non une seule raison expliquée de deux façons.";
+  }
+  if (label === "Établir des faits") {
+    return "Repère le verbe de la consigne et tous les éléments demandés. Sélectionne ensuite des faits historiques exacts et distincts, puis vérifie un à un qu’ils répondent directement à la question.";
+  }
+  return "Lis d’abord toute la consigne, repère l’action demandée et les éléments à traiter, puis organise les faits nécessaires avant de rédiger. Vérifie enfin que chaque partie de ta réponse accomplit bien l’opération intellectuelle annoncée.";
+}
+
+function consolidationCoachOpening(label: string, prompt: string) {
+  const startsWithInterrogative = /^\s*(?:quel|quelle|quels|quelles)\b/iu.test(prompt);
+  const firstQuestion = startsWithInterrogative
+    ? "qu’est-ce que la question te demande de trouver ou d’identifier?"
+    : "quel est son verbe d’action?";
+  return `Nous allons travailler l’opération « ${label} » étape par étape. Lis bien la question : ${firstQuestion}`;
+}
+
+function consolidationCoachLabel(question: LearningSessionQuestion | undefined, fallback: string) {
+  return question?.intellectualOperations.find(({ id }) => id === question.primaryOperationId)?.label ?? fallback;
+}
+
+export function StudentLearningSessionView({ data, teacherPreview = false, classroomMode = false, persistProgress = true, teacherApiTest = false, teacherPreviewExitHref = "/teacher/activities/new" }: { data: StudentLearningSessionData; teacherPreview?: boolean; classroomMode?: boolean; persistProgress?: boolean; teacherApiTest?: boolean; teacherPreviewExitHref?: string }) {
   const engineDefinition = useMemo(() => createDemoPedagogicalDefinition(data), [data]);
   const initialEngineState = useMemo(() => restoreStudentProgress(createPedagogicalSession(engineDefinition), data.progress), [data.progress, engineDefinition]);
-  const analyzer = useMemo<ResponseAnalyzer>(() => teacherApiTest ? {
+  const analyzer = useMemo<ResponseAnalyzer>(() => data.questions.some(({ id }) => id === CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID)
+    ? new CausesConsequencesLearningAnalyzer()
+    : teacherApiTest ? {
     async analyze(response) {
       const result = await analyzeActeUnionTestResponse({
         questionId: response.questionId,
@@ -36,13 +103,16 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
         content: response.content,
         priorTurn: response.priorTurn,
       });
-      if (!result.ok) throw new Error(result.error);
+      if (!result.ok) {
+        console.error("[classroom-analysis]", result.error);
+        throw new Error(result.error);
+      }
       return result.analysis;
     },
   } : data.source === "server" ? {
     async analyze(response) {
       const result = await analyzeAuthorizedStudentResponse({
-        activityId: response.activityId,
+        activityId: data.consolidationContext?.parentActivityId ?? response.activityId,
         questionId: response.questionId,
         attemptNumber: response.attemptNumber,
         hintLevel: response.hintLevel,
@@ -52,20 +122,26 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
       if (!result.ok) throw new Error(result.error);
       return result.analysis;
     },
-  } : new LocalDeterministicResponseAnalyzer(), [data.source, teacherApiTest]);
+  } : process.env.NODE_ENV === "production" ? {
+    async analyze() {
+      throw new Error("L’analyse locale de démonstration n’est pas disponible en production.");
+    },
+  } : new LocalDeterministicResponseAnalyzer(), [data.consolidationContext?.parentActivityId, data.source, teacherApiTest]);
   const [engineState, setEngineState] = useState(initialEngineState);
   const [progressReady, setProgressReady] = useState(!persistProgress || data.source === "server");
   const [persistenceMessage, setPersistenceMessage] = useState("");
+  const [analysisUnavailable, setAnalysisUnavailable] = useState(false);
   const activeData = { ...data, currentQuestionIndex: engineState.currentQuestionIndex };
   const question = getCurrentLearningQuestion(activeData);
   const isInteractiveTimeline = question?.type === "interactive_timeline";
   const isInteractiveAssociation = question?.type === "interactive_association";
+  const isInteractiveCausalChain = question?.type === "interactive_causal_chain";
   const isMultipleChoice = question?.type === "multiple_choice";
   const [timelineCompleted, setTimelineCompleted] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [choiceFeedback, setChoiceFeedback] = useState<string | null>(null);
   const [pendingNextState, setPendingNextState] = useState<PedagogicalSessionState | null>(null);
-  const [finalFeedbackDelivered, setFinalFeedbackDelivered] = useState(false);
+  const [finalFeedbackDelivered, setFinalFeedbackDelivered] = useState(() => Boolean(initialEngineState.summary));
   const completedQuestions = engineState.questionStates.filter(({ status }) => status === "completed").length;
   const progressCompletedQuestions = Math.min(data.questions.length, Math.max(completedQuestions, engineState.currentQuestionIndex + (timelineCompleted ? 1 : 0)));
   const progress = {
@@ -78,7 +154,9 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
   const initialDocumentId = getInitialQuestionDocument(activeData)?.id ?? null;
   const [messages, setMessages] = useState<LearningSessionMessage[]>(() => {
     const index = initialEngineState.currentQuestionIndex;
-    const initial = data.questions[index]?.initialMessages ?? [];
+    const initial = data.consolidationStrategyLabel
+      ? [{ id: "socrato-consolidation-strategy", author: "socrato" as const, content: consolidationCoachOpening(consolidationCoachLabel(data.questions[index], data.consolidationStrategyLabel), data.questions[index]?.prompt ?? "") }]
+      : data.questions[index]?.initialMessages ?? [];
     const runtime = initialEngineState.questionStates[index];
     const definition = engineDefinition.questions[index];
     if (!runtime?.lastAnalysis || !definition) return initial;
@@ -89,10 +167,13 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
       { id: `socrato-restored-${runtime.questionId}`, author: "socrato", content: feedback.studentFacingText },
     ];
   });
+  const [consolidationCoachStep, setConsolidationCoachStep] = useState<number | null>(data.consolidationStrategyLabel ? 0 : null);
   const [response, setResponse] = useState("");
   const [currentHint, setCurrentHint] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const activeQuestionState = engineState.questionStates[engineState.currentQuestionIndex];
+  const activeQuestionDefinition = engineDefinition.questions[engineState.currentQuestionIndex];
+  const activeAttemptLimit = activeQuestionDefinition ? pedagogicalQuestionAttemptLimit(activeQuestionDefinition) : MAX_PEDAGOGICAL_ATTEMPTS;
   const maximumHelpReceived = activeQuestionState.hintLevel >= MAX_EXPLICIT_HINT_LEVEL;
   const responseInputRef = useRef<HTMLTextAreaElement>(null);
   const submissionLockRef = useRef(false);
@@ -128,6 +209,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
       setEngineState((current) => {
         const restored = restoreStudentProgress(current, records[current.activityId]);
         if (restored.currentQuestionIndex !== current.currentQuestionIndex) setMessages(data.questions[restored.currentQuestionIndex]?.initialMessages ?? []);
+        if (restored.summary) setFinalFeedbackDelivered(true);
         return restored;
       });
     }).catch(() => { if (active) setPersistenceMessage("Ta progression n’a pas pu être chargée. Tu peux continuer et réessayer plus tard."); }).finally(() => { if (active) setProgressReady(true); });
@@ -184,7 +266,34 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
 
   async function sendLocalResponse() {
     const content = response.trim();
-    if (!content || submitting || submissionLockRef.current || voiceBlocksSending || engineState.status === "completed" || activeQuestionState.attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS) return;
+    if (!content || submitting || submissionLockRef.current || voiceBlocksSending || engineState.status === "completed" || (activeAttemptLimit !== null && activeQuestionState.attemptNumber >= activeAttemptLimit)) return;
+    if (consolidationCoachStep !== null && consolidationCoachStep < 3 && data.consolidationStrategyLabel && data.consolidationContext) {
+      const activeCoachLabel = consolidationCoachLabel(question, data.consolidationStrategyLabel);
+      const studentMessage = { id: `student-coach-${messages.length}`, author: "student" as const, content };
+      setMessages((current) => [...current, studentMessage]);
+      setResponse("");
+      setSubmitting(true);
+      submissionLockRef.current = true;
+      try {
+        const coaching = await analyzeAuthorizedConsolidationCoachTurn({
+          activityId: data.consolidationContext.parentActivityId,
+          questionId: question.id,
+          operationLabel: activeCoachLabel,
+          step: consolidationCoachStep as 0 | 1 | 2,
+          content,
+        });
+        if (!coaching.ok) throw new Error(coaching.error);
+        setMessages((current) => [...current, { id: `socrato-coach-${current.length}`, author: "socrato", content: coaching.feedback }]);
+        if (coaching.accepted) setConsolidationCoachStep((current) => current === null ? null : Math.min(3, current + 1));
+      } catch (error) {
+        setMessages((current) => [...current, { id: `socrato-coach-error-${current.length}`, author: "socrato", content: error instanceof Error ? error.message : "Socrato ne peut pas guider cette étape pour le moment." }]);
+      } finally {
+        submissionLockRef.current = false;
+        setSubmitting(false);
+        restoreResponseFocusRef.current = true;
+      }
+      return;
+    }
     const pendingSubmission = pendingSubmissionRef.current?.questionId === activeQuestionState.questionId
       && pendingSubmissionRef.current.questionIndex === engineState.currentQuestionIndex
       && pendingSubmissionRef.current.content === content
@@ -195,16 +304,47 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
     submissionLockRef.current = true;
     restoreResponseFocusRef.current = true;
     setSubmitting(true);
-    setMessages((current) => [...current, { id: optimisticMessageId, author: "student", content }]);
+    setAnalysisUnavailable(false);
+    setPersistenceMessage("");
+    setMessages((current) => current.some(({ id }) => id === optimisticMessageId)
+      ? current
+      : [...current, { id: optimisticMessageId, author: "student", content }]);
     setResponse("");
     try {
-      const transition = await submitStudentResponse(engineDefinition, engineState, content, analyzer);
+      let consolidationPersistenceError = "";
+      const transition = await withResponseAnalysisTimeout(submitStudentResponse(engineDefinition, engineState, content, analyzer));
       let nextState = transition.state;
+      if (transition.feedback?.technicalNotice
+        && nextState.questionStates[engineState.currentQuestionIndex]?.attemptNumber === activeQuestionState.attemptNumber) {
+        const outageFeedback = transition.feedback.studentFacingText;
+        setMessages((current) => [
+          ...current,
+          { id: `socrato-analysis-unavailable-${current.length}`, author: "socrato", content: outageFeedback },
+        ]);
+        setResponse(content);
+        setAnalysisUnavailable(true);
+        return;
+      }
       if (transition.sessionCompleted) {
         nextState = await finalizePedagogicalSession(nextState);
         if (data.source === "server" && nextState.summary) {
           const personalized = await personalizeCompletedStudentSummary(nextState.summary);
           nextState = { ...nextState, summary: personalized.summary };
+        }
+        if (data.source === "server" && data.consolidationContext && data.consolidationContext.source !== "teacher_assigned") {
+          const result = [...nextState.questionStates].reverse().find(({ result }) => Boolean(result))?.result;
+          const saved = await saveConsolidationOutcomeToDatabase({
+            activityId: data.consolidationContext.parentActivityId,
+            strategyKey: data.consolidationContext.strategyKey,
+            strategyLabel: data.consolidationContext.strategyLabel,
+            targetOperationId: data.consolidationContext.targetOperationId,
+            successful: Boolean(result && result.status !== "to_work_on"),
+            attemptNumber: result?.attemptNumber ?? activeQuestionState.attemptNumber + 1,
+            completedAt: nextState.summary?.completedAt ?? new Date().toISOString(),
+            observation: result?.observedStrengths.find((entry) => entry.trim().length > 20),
+            source: data.consolidationContext.source,
+          });
+          if (!saved.ok) consolidationPersistenceError = saved.error;
         }
       }
       let progressAlreadySaved = false;
@@ -218,6 +358,21 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
         progressAlreadySaved = true;
       }
       if (transition.sessionCompleted && persistProgress && nextState.summary) await persistCompletedSession(nextState, progressAlreadySaved);
+      if (transition.sessionCompleted && data.source === "server" && data.consolidationContext?.source === "teacher_assigned") {
+        const result = [...nextState.questionStates].reverse().find(({ result }) => Boolean(result))?.result;
+        const saved = await saveConsolidationOutcomeToDatabase({
+          activityId: data.consolidationContext.parentActivityId,
+          strategyKey: data.consolidationContext.strategyKey,
+          strategyLabel: data.consolidationContext.strategyLabel,
+          targetOperationId: data.consolidationContext.targetOperationId,
+          successful: Boolean(result && result.status !== "to_work_on"),
+          attemptNumber: result?.attemptNumber ?? activeQuestionState.attemptNumber + 1,
+          completedAt: nextState.summary?.completedAt ?? new Date().toISOString(),
+          observation: result?.observedStrengths.find((entry) => entry.trim().length > 20),
+          source: "teacher_assigned",
+        });
+        if (!saved.ok) consolidationPersistenceError = saved.error;
+      }
       if (nextState.currentQuestionIndex !== engineState.currentQuestionIndex) {
         setPendingNextState(nextState);
         setEngineState({ ...nextState, status: "active", currentQuestionIndex: engineState.currentQuestionIndex });
@@ -237,7 +392,8 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
         }]);
         if (transition.sessionCompleted) setFinalFeedbackDelivered(true);
       }
-      setPersistenceMessage("");
+      setPersistenceMessage(consolidationPersistenceError);
+      setAnalysisUnavailable(false);
       pendingSubmissionRef.current = null;
     } catch (error) {
       setMessages((current) => current.filter(({ id }) => id !== optimisticMessageId));
@@ -245,6 +401,44 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
       setPersistenceMessage(error instanceof Error ? error.message : "Ta réponse n’a pas pu être enregistrée. Réessaie.");
     } finally {
       submissionLockRef.current = false;
+      setSubmitting(false);
+    }
+  }
+
+  async function continueWithoutEvaluation() {
+    if (submitting || !analysisUnavailable) return;
+    setSubmitting(true);
+    try {
+      const transition = skipQuestionAfterAnalysisUnavailable(engineDefinition, engineState);
+      let nextState = transition.state;
+      if (transition.sessionCompleted) {
+        nextState = await finalizePedagogicalSession(nextState);
+        if (data.source === "server" && nextState.summary) {
+          const personalized = await personalizeCompletedStudentSummary(nextState.summary);
+          nextState = { ...nextState, summary: personalized.summary };
+        }
+      }
+      if (persistProgress && data.source === "server") {
+        const saved = await saveStudentProgressToDatabase(createStudentProgressContract(nextState));
+        if (!saved.ok) throw new Error(saved.error);
+      }
+      if (transition.sessionCompleted && persistProgress && nextState.summary) await persistCompletedSession(nextState, true);
+      if (nextState.currentQuestionIndex !== engineState.currentQuestionIndex) {
+        setPendingNextState(nextState);
+        setEngineState({ ...nextState, status: "active", currentQuestionIndex: engineState.currentQuestionIndex });
+        setTimelineCompleted(true);
+      } else {
+        setEngineState(nextState);
+      }
+      setMessages((current) => [...current, { id: `socrato-degraded-${current.length}`, author: "socrato", content: transition.feedback?.studentFacingText ?? "Ta réponse est conservée sans évaluation." }]);
+      if (transition.sessionCompleted) setFinalFeedbackDelivered(true);
+      setResponse("");
+      setPersistenceMessage("");
+      setAnalysisUnavailable(false);
+      pendingSubmissionRef.current = null;
+    } catch (error) {
+      setPersistenceMessage(error instanceof Error ? error.message : "Le passage en mode dégradé n’a pas pu être enregistré.");
+    } finally {
       setSubmitting(false);
     }
   }
@@ -291,7 +485,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
     : voiceState.status === "permission_denied" || voiceState.status === "error" ? "Réessayer"
     : "Dicter ma réponse";
   const voiceBlocksSending = voiceState.status === "recording" || voiceBusy;
-  const responseUnavailable = submitting || engineState.status === "completed" || activeQuestionState.attemptNumber >= MAX_PEDAGOGICAL_ATTEMPTS;
+  const responseUnavailable = submitting || engineState.status === "completed" || (activeAttemptLimit !== null && activeQuestionState.attemptNumber >= activeAttemptLimit);
   const sendUnavailable = !response.trim() || responseUnavailable || voiceBlocksSending;
   const questionDocuments = getQuestionDocuments(activeData);
   const useStackedDocuments = questionDocuments.length > 0 && !isInteractiveTimeline && !isInteractiveAssociation;
@@ -301,7 +495,8 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
     const questionState = engineState.questionStates[engineState.currentQuestionIndex];
     if (!questionState || questionState.status === "completed") return;
     const completedAt = new Date().toISOString();
-    const status = satisfactory ? "mastered" as const : "to_consolidate" as const;
+    const receivedHelp = Math.max(questionState.attemptNumber, recordedAttemptNumber ?? 0) > 1 || questionState.hintLevel > 0;
+    const status = satisfactory ? receivedHelp ? "to_consolidate" as const : "mastered" as const : "to_work_on" as const;
     const result = {
       sessionId: questionState.sessionId,
       activityId: questionState.activityId,
@@ -314,11 +509,12 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
       attemptNumber: Math.max(1, questionState.attemptNumber, recordedAttemptNumber ?? 0),
       hintLevel: questionState.hintLevel,
       status,
-      advancedMastery: satisfactory,
+      advancedMastery: satisfactory && !receivedHelp,
       demonstratedKnowledgeIds: satisfactory ? [...questionState.historicalKnowledgeIds] : [],
       demonstratedOperationIds: satisfactory ? [...questionState.operationIds] : [],
       observedStrengths: satisfactory ? ["Tu as correctement mobilisé les connaissances et la démarche demandées."] : [],
       consolidationTargets: satisfactory ? [] : ["Revois les associations attendues avant de poursuivre."],
+      questionPrompt: question.prompt,
       completedAt,
     };
     const questionStates = engineState.questionStates.with(engineState.currentQuestionIndex, { ...questionState, attemptNumber: result.attemptNumber, status: "completed" as const, result });
@@ -379,7 +575,10 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
     const nextQuestion = data.questions[nextIndex];
     if (!nextQuestion || nextIndex === engineState.currentQuestionIndex) return;
     setEngineState((current) => ({ ...current, status: "active", currentQuestionIndex: nextIndex }));
-    setMessages(nextQuestion.initialMessages);
+    setMessages(data.consolidationStrategyLabel && data.consolidationContext
+      ? [{ id: `socrato-consolidation-strategy-${nextIndex}`, author: "socrato", content: consolidationCoachOpening(consolidationCoachLabel(nextQuestion, data.consolidationStrategyLabel), nextQuestion.prompt) }]
+      : nextQuestion.initialMessages);
+    setConsolidationCoachStep(data.consolidationStrategyLabel && data.consolidationContext ? 0 : null);
     setResponse("");
     setCurrentHint(null);
     setSelectedAnswer(null);
@@ -393,7 +592,10 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
     if (!pendingNextState) return;
     const nextQuestion = data.questions[pendingNextState.currentQuestionIndex];
     setEngineState(pendingNextState);
-    if (nextQuestion) setMessages(nextQuestion.initialMessages);
+    if (nextQuestion) setMessages(data.consolidationStrategyLabel && data.consolidationContext
+      ? [{ id: `socrato-consolidation-strategy-${pendingNextState.currentQuestionIndex}`, author: "socrato", content: consolidationCoachOpening(consolidationCoachLabel(nextQuestion, data.consolidationStrategyLabel), nextQuestion.prompt) }]
+      : nextQuestion.initialMessages);
+    setConsolidationCoachStep(data.consolidationStrategyLabel && data.consolidationContext ? 0 : null);
     setResponse("");
     setCurrentHint(null);
     setSelectedAnswer(null);
@@ -405,14 +607,23 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
   async function verifyMultipleChoiceAnswer() {
     const selectedOption = question.answerOptions?.find(({ label }) => label === selectedAnswer);
     const correct = Boolean(selectedOption?.correct);
+    const nextAttempt = activeQuestionState.attemptNumber + 1;
+    const exhausted = !correct && nextAttempt >= MAX_PEDAGOGICAL_ATTEMPTS;
     setChoiceFeedback(correct
       ? `Bonne réponse ! ${question.answerExplanation ?? "Cet ordre respecte la succession chronologique des événements."}`
+      : exhausted
+        ? "Tu as fait trois essais sérieux. Ce point reste à consolider et sera pris en compte dans ton bilan pour déterminer la prochaine étape la plus utile."
       : questionDocuments.length > 0
         ? "Pas tout à fait. Consulte les documents ou demande un indice, puis réessaie."
         : "Pas tout à fait. Demande un indice, puis réessaie.");
     if (correct) {
       setTimelineCompleted(true);
-      await completeObjectiveQuestion(true);
+      await completeObjectiveQuestion(true, nextAttempt);
+    } else if (exhausted) {
+      setTimelineCompleted(true);
+      await completeObjectiveQuestion(false, nextAttempt);
+    } else {
+      recordObjectiveAttempt(nextAttempt);
     }
   }
 
@@ -420,7 +631,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
     return (
       <section ref={choiceFeedbackRef} className={`multiple-choice-response${showWelcome ? " multiple-choice-socrato-panel" : ""}`} aria-label="Validation du choix de réponse">
         {showWelcome ? <div className="multiple-choice-socrato-welcome"><article><strong>Socrato</strong><p>J’attends ta réponse…</p></article></div> : null}
-        {choiceFeedback ? <div className={choiceFeedback.startsWith("Bonne") ? "choice-feedback-correct" : "choice-feedback-retry"} role="status"><strong>Socrato</strong><p>{choiceFeedback}</p>{choiceFeedback.startsWith("Bonne") && engineState.currentQuestionIndex < data.questions.length - 1 ? <button type="button" className="socrato-next-question" onClick={() => moveToQuestion(1)}>Passer à la question suivante →</button> : null}</div> : null}
+        {choiceFeedback ? <div className={choiceFeedback.startsWith("Bonne") ? "choice-feedback-correct" : "choice-feedback-retry"} role="status"><strong>Socrato</strong><p>{choiceFeedback}</p>{activeQuestionState.status === "completed" && engineState.currentQuestionIndex < data.questions.length - 1 ? <button type="button" className="socrato-next-question" onClick={() => moveToQuestion(1)}>Passer à la question suivante →</button> : null}</div> : null}
       </section>
     );
   }
@@ -433,7 +644,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
   }
 
   return (
-    <main className={`learning-session min-h-screen${teacherPreview ? " teacher-preview-session" : ""}`}>
+    <main className={`learning-session min-h-screen${teacherPreview ? " teacher-preview-session" : ""}${classroomMode ? " classroom-session" : ""}`}>
       {teacherPreview ? <nav className="teacher-preview-navigation" aria-label="Navigation du test enseignant"><strong>Mode test enseignant · aucune réponse enregistrée</strong><div><button type="button" disabled={engineState.currentQuestionIndex === 0} onClick={() => moveToQuestion(-1)}>← Question précédente</button><span>{progress.current === progress.total ? `Dernière question · ${progress.current} sur ${progress.total}` : `Question ${progress.current} sur ${progress.total}`}</span><button type="button" disabled={engineState.currentQuestionIndex >= data.questions.length - 1} onClick={() => moveToQuestion(1)}>Question suivante →</button><button type="button" className="teacher-preview-close" onClick={exitTeacherPreview}>Fermer l’aperçu</button></div></nav> : null}
       <header className="session-header">
         <div className="session-header-top">
@@ -449,18 +660,24 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
             {heading.contextualNotion ? <strong>{heading.contextualNotion}</strong> : null}
             <span>Période historique · {getHistoricalPeriodLabel(data.historicalPeriod)}</span>
           </div>
-          <div className="session-header-actions"><ThemeToggle />{teacherPreview ? null : <StudentLogoutButton />}</div>
+          <div className="session-header-actions"><ThemeToggle />{teacherPreview || classroomMode ? null : <StudentLogoutButton />}</div>
         </div>
         <div className="session-nav-row">
-          <Link href={data.dashboardHref} className="session-back"><span aria-hidden="true">←</span> Retour au tableau de bord</Link>
+          <Link href={classroomMode ? "/teacher/activities/new?mode=classroom" : data.dashboardHref} className="session-back"><span aria-hidden="true">←</span> {classroomMode ? "Retour au créateur" : "Retour au tableau de bord"}</Link>
           {data.questions.length > 0 ? <section className="student-activity-progress" aria-label={`Question ${progress.current} sur ${progress.total}, progression ${progress.percent} %`}><span>{progress.current === progress.total ? `Dernière question · ${progress.current}/${progress.total}` : `Question ${progress.current}/${progress.total}`}</span><span className="student-activity-progress__track" aria-hidden="true"><span style={{ width: `${progress.percent}%` }} /></span><strong>{progress.percent}%</strong></section> : null}
         </div>
       </header>
-      {persistenceMessage ? <p className="session-data-error" role="alert">{persistenceMessage}</p> : null}
+      {persistenceMessage || analysisUnavailable ? <div className="session-data-error" role="alert">
+        <p>{persistenceMessage || "Socrato discute à l’agora et ne peut pas analyser ta réponse pour le moment. Tu peux réessayer l’analyse ou continuer l’activité sans accompagnement pour cette question."}</p>
+        {response.trim() ? <button type="button" className="socrato-next-question" disabled={submitting} onClick={() => void sendLocalResponse()}>Analyser ma réponse de nouveau</button> : null}
+        {analysisUnavailable ? <button type="button" className="socrato-next-question" disabled={submitting} onClick={() => void continueWithoutEvaluation()}>Continuer cette question sans accompagnement</button> : null}
+      </div> : null}
 
-      <div className={`session-layout${isInteractiveTimeline || isInteractiveAssociation ? " session-layout--timeline" : ""}${isMultipleChoice && questionDocuments.length > 0 ? " session-layout--choice-with-documents" : ""}${questionDocuments.length === 0 && isMultipleChoice ? " session-layout--choice-no-documents" : ""}${isShortAnswerWithoutDocuments ? " session-layout--short-answer-no-documents" : ""}`}>
-        {isInteractiveTimeline && question.timelineInteraction ? (
-          <InteractiveTimelineQuestion key={question.id} question={question} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
+      <div className={`session-layout${isInteractiveTimeline || isInteractiveAssociation || isInteractiveCausalChain ? " session-layout--timeline" : ""}${isMultipleChoice && questionDocuments.length > 0 ? " session-layout--choice-with-documents" : ""}${questionDocuments.length === 0 && isMultipleChoice ? " session-layout--choice-no-documents" : ""}${isShortAnswerWithoutDocuments ? " session-layout--short-answer-no-documents" : ""}`}>
+        {isInteractiveCausalChain && question.causalChainInteraction ? (
+          <InteractiveCausalChainQuestion key={question.id} question={question} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
+        ) : isInteractiveTimeline && question.timelineInteraction ? (
+          <InteractiveTimelineQuestion classroomMode={classroomMode} key={question.id} question={question} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
         ) : isInteractiveAssociation && question.associationInteraction ? (
           <InteractiveAssociationQuestion key={question.id} question={question} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
         ) : <>
@@ -490,7 +707,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
               {isMultipleChoice && question.answerOptions ? (
                 <div className="multiple-choice-options" role="radiogroup" aria-label="Choix de réponse">
                   {question.answerOptions.map((option) => (
-                    <button key={option.label} type="button" role="radio" aria-checked={selectedAnswer === option.label} onClick={() => { setSelectedAnswer(option.label); setChoiceFeedback(null); }}>
+                    <button key={option.label} type="button" role="radio" aria-checked={selectedAnswer === option.label} disabled={activeQuestionState.status === "completed"} onClick={() => { setSelectedAnswer(option.label); setChoiceFeedback(null); }}>
                       <strong>{option.label}</strong><span>{option.text}</span>
                     </button>
                   ))}
@@ -504,7 +721,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
                   </svg>
                   {maximumHelpReceived ? "Aide maximale reçue" : "Obtenir un indice"}
                 </button>
-                <button type="button" className="multiple-choice-check" disabled={!selectedAnswer} onClick={() => void verifyMultipleChoiceAnswer()}>Vérifier ma réponse</button>
+                <button type="button" className="multiple-choice-check" disabled={!selectedAnswer || activeQuestionState.status === "completed"} onClick={() => void verifyMultipleChoiceAnswer()}>Vérifier ma réponse</button>
               </div> : null}
               {currentHint ? <p className="local-hint" role="status">{currentHint}</p> : null}
             </div>
@@ -519,6 +736,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
                   {message.author === "socrato" && index === messages.length - 1 && pendingNextState ? <button type="button" className="socrato-next-question" onClick={continueAfterSocratoFeedback}>Passer à la question suivante →</button> : null}
                 </article>
               ))}
+              {submitting ? <p className="analysis-waiting-message" role="status">Socrato analyse ta réponse…</p> : null}
             </div>
             <form className="response-composer" onSubmit={submitLocalResponse}>
               <div className="response-composer-shell">
@@ -571,7 +789,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
         </>}
         </>}
         {timelineCompleted && !pendingNextState && !isMultipleChoice && engineState.currentQuestionIndex < data.questions.length - 1 ? <div className="session-question-next"><button type="button" className="socrato-next-question" onClick={() => moveToQuestion(1)}>Passer à la question suivante →</button></div> : null}
-        {engineState.summary && finalFeedbackDelivered ? <div className="session-completion-footer"><SessionCompletionLink href={`${data.dashboardHref.replace(/#.*$/, "")}#bilan`} totalQuestions={data.questions.length} encouragement={engineState.summary.encouragement} recommendation={engineState.summary.recommendation?.label} /></div> : null}
+        {engineState.summary && finalFeedbackDelivered ? <div className="session-completion-footer"><SessionCompletionLink href={`${data.dashboardHref.replace(/#.*$/, "")}${data.dashboardHref.includes("?") ? "&" : "?"}reveal=bilan#bilan`} strengths={engineState.summary.strengths} consolidationTargets={engineState.summary.consolidationTargets} teacherPreview={teacherPreview} /></div> : null}
       </div>
     </main>
   );
@@ -579,9 +797,10 @@ export function StudentLearningSessionView({ data, teacherPreview = false, persi
 
 type TimelineInteraction = NonNullable<LearningSessionQuestion["timelineInteraction"]>;
 type AssociationInteraction = NonNullable<LearningSessionQuestion["associationInteraction"]>;
+type CausalChainInteraction = NonNullable<LearningSessionQuestion["causalChainInteraction"]>;
 
-function SessionCompletionLink({ href, totalQuestions, encouragement, recommendation }: { href: string; totalQuestions: number; encouragement?: string; recommendation?: string }) {
-  return <section className="local-session-summary" aria-label="Activité terminée"><h3><span aria-hidden="true">🌿</span> Ton bilan est prêt</h3><p>{encouragement ?? "Bravo, tu as terminé l’activité."}</p><p className="session-completion-count">Tu as terminé les {totalQuestions} question{totalQuestions > 1 ? "s" : ""} de cette activité.</p>{recommendation ? <p>{recommendation}</p> : null}<Link href={href}>Consulter mon bilan</Link></section>;
+function SessionCompletionLink({ href, strengths, consolidationTargets, teacherPreview }: { href: string; strengths: string[]; consolidationTargets: string[]; teacherPreview: boolean }) {
+  return <section className="local-session-summary" aria-label="Activité terminée"><h3><span aria-hidden="true">🌿</span> Ton bilan est prêt</h3><p>Bravo, tu as terminé l’activité. Voici le bilan de ton travail.</p>{teacherPreview ? <details className="preview-session-bilan"><summary>Consulter mon bilan</summary><div><h4>Points forts</h4>{strengths.length ? <ul>{strengths.map((strength) => <li key={strength}>{strength}</li>)}</ul> : <p>Les réponses attendues ont été mobilisées avec succès.</p>}<h4>Éléments à consolider</h4>{consolidationTargets.length ? <ul>{consolidationTargets.map((target) => <li key={target}>{target}</li>)}</ul> : <p>Aucun élément prioritaire à consolider.</p>}</div></details> : <Link href={href}>Consulter mon bilan</Link>}</section>;
 }
 
 type ObjectiveQuestionProps = {
@@ -592,6 +811,40 @@ type ObjectiveQuestionProps = {
   onHint: () => void;
   onComplete: (satisfactory: boolean, attemptNumber: number) => void;
 };
+
+function normalizeShortAnswer(value: string) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, " ").replace(/[^a-zA-Z0-9\s]/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+function InteractiveCausalChainQuestion({ question, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete }: ObjectiveQuestionProps) {
+  const interaction = question.causalChainInteraction as CausalChainInteraction;
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [attempts, setAttempts] = useState(initialAttempts);
+  const [completed, setCompleted] = useState(false);
+  const [showHint, setShowHint] = useState(initialHintLevel > 0);
+  const [feedback, setFeedback] = useState("Complète les six maillons de gauche à droite.");
+  const answered = interaction.steps.filter(({ id }) => answers[id]?.trim()).length;
+
+  function isCorrect(step: CausalChainInteraction["steps"][number]) {
+    const answer = normalizeShortAnswer(answers[step.id] ?? "");
+    return step.acceptedAnswers.some((accepted) => { const expected = normalizeShortAnswer(accepted); return answer.includes(expected) || expected.includes(answer); });
+  }
+
+  function verify() {
+    const correctCount = interaction.steps.filter(isCorrect).length;
+    const nextAttempt = attempts + 1; setAttempts(nextAttempt); onAttempt(nextAttempt);
+    if (correctCount === interaction.steps.length) { setCompleted(true); setFeedback("Bravo! Les six maillons forment la bonne chaîne de causalité."); onComplete(true, nextAttempt); return; }
+    if (nextAttempt >= 2) { setAnswers(Object.fromEntries(interaction.steps.map((step) => [step.id, step.expectedAnswer]))); setCompleted(true); setFeedback(`${correctCount} réponses sur ${interaction.steps.length} étaient correctes. Socrato affiche maintenant la chaîne attendue.`); onComplete(false, nextAttempt); return; }
+    setFeedback(`${correctCount} réponse${correctCount > 1 ? "s" : ""} sur ${interaction.steps.length} ${correctCount > 1 ? "sont correctes" : "est correcte"}. Revois les maillons avant de vérifier une deuxième fois.`);
+  }
+
+  return <section className="causal-chain-question" aria-labelledby="causal-chain-title">
+    <header className="timeline-question__header"><div><p>Gouvernement responsable · Politique</p><h2 id="causal-chain-title">{question.prompt}</h2><span>{answered} réponse{answered > 1 ? "s" : ""} sur {interaction.steps.length}</span></div><button type="button" aria-expanded={showHint} onClick={() => { if (!showHint) onHint(); setShowHint((value) => !value); }}>Obtenir un indice</button></header>
+    {showHint ? <p className="timeline-question__hint" role="status">{question.localHint}</p> : null}
+    <div className="causal-chain-track">{interaction.steps.map((step, index) => <div className="causal-chain-link" key={step.id}><article><span>{step.date}</span><h3>{step.prompt}</h3><label><span>{step.placeholder}</span><input value={answers[step.id] ?? ""} disabled={completed} onChange={(event) => setAnswers((current) => ({ ...current, [step.id]: event.target.value }))} placeholder="Écris ta réponse…" /></label></article>{index < interaction.steps.length - 1 ? <span className="causal-chain-arrow" aria-hidden="true">→</span> : null}</div>)}</div>
+    <footer className="timeline-question__footer"><p role="status" aria-live="polite"><strong>Socrato</strong>{feedback}</p><button type="button" disabled={answered !== interaction.steps.length || completed} onClick={verify}>{completed ? "Réponse vérifiée" : attempts ? "Vérifier ma deuxième tentative" : "Vérifier mes réponses"}</button></footer>
+  </section>;
+}
 
 function InteractiveAssociationQuestion({ question, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete }: ObjectiveQuestionProps) {
   const interaction = question.associationInteraction as AssociationInteraction;
@@ -628,13 +881,28 @@ function InteractiveAssociationQuestion({ question, initialAttempts, initialHint
 }
 
 function timelineImagePosition(entryId: string) {
-  return entryId === "timeline-entry-2" || entryId === "timeline-entry-5" ? "center top" : "center center";
+  const focalPoints: Record<string, string> = {
+    "timeline-entry-1": "center 78%",
+    "timeline-entry-2": "center 29%",
+    "timeline-entry-5": "center 72%",
+    "timeline-entry-6": "center 24%",
+    "responsible-timeline-entry-3": "center 18%",
+    "responsible-timeline-entry-4": "center 20%",
+  };
+
+  return focalPoints[entryId] ?? "center center";
 }
 
-function InteractiveTimelineQuestion({ question, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete }: ObjectiveQuestionProps) {
+function TimelineEntryVisual({ entry, width, height }: { entry: TimelineInteraction["entries"][number]; width: number; height: number }) {
+  const sources = entry.imageUrls?.length ? entry.imageUrls : [entry.imageUrl];
+  if (sources.length === 1) return <Image src={sources[0]} alt={entry.imageAlt} width={width} height={height} unoptimized style={{ objectPosition: timelineImagePosition(entry.id) }} />;
+  return <div className="timeline-entry-image-pair" role="img" aria-label={entry.imageAlt}>{sources.map((source) => <Image key={source} src={source} alt="" width={Math.round(width / sources.length)} height={height} unoptimized />)}</div>;
+}
+
+function InteractiveTimelineQuestion({ question, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete, classroomMode = false }: ObjectiveQuestionProps & { classroomMode?: boolean }) {
   const interaction = question.timelineInteraction as TimelineInteraction;
   const shuffledEntries = useMemo(() => {
-    const order = [2, 4, 0, 3, 1];
+    const order = interaction.entries.length === 7 ? [2, 6, 0, 4, 1, 5, 3] : [2, 5, 0, 4, 1, 3];
     return order.flatMap((index) => interaction.entries[index] ? [interaction.entries[index]] : []);
   }, [interaction.entries]);
   const [assignments, setAssignments] = useState<Record<string, string>>({});
@@ -655,7 +923,7 @@ function InteractiveTimelineQuestion({ question, initialAttempts, initialHintLev
       return { ...withoutSelected, [date]: selectedEntryId };
     });
     setSelectedEntryId(null);
-    setFeedback("Carte placée. Continue jusqu’à ce que les cinq dates soient complétées.");
+    setFeedback(`Carte placée. Continue jusqu’à ce que les ${interaction.dates.length} dates soient complétées.`);
   }
 
   function beginDrag(event: ReactDragEvent<HTMLElement>, entryId: string) {
@@ -674,7 +942,7 @@ function InteractiveTimelineQuestion({ question, initialAttempts, initialHintLev
       const withoutDragged = Object.fromEntries(Object.entries(current).filter(([, currentEntryId]) => currentEntryId !== entryId));
       return { ...withoutDragged, [date]: entryId };
     });
-    setFeedback("Carte placée. Continue jusqu’à ce que les cinq dates soient complétées.");
+    setFeedback(`Carte placée. Continue jusqu’à ce que les ${interaction.dates.length} dates soient complétées.`);
   }
 
   function verifyTimeline() {
@@ -685,18 +953,24 @@ function InteractiveTimelineQuestion({ question, initialAttempts, initialHintLev
     onAttempt(nextAttempt);
     if (correctCount === interaction.dates.length) {
       setCompleted(true);
-      setFeedback("Bravo! Les cinq événements sont placés dans le bon ordre chronologique.");
+      setFeedback(`Bravo! Les ${interaction.dates.length} événements sont placés dans le bon ordre chronologique.`);
       onComplete(true, nextAttempt);
       return;
     }
     if (nextAttempt >= 2) {
       setAssignments(Object.fromEntries(interaction.entries.map((entry) => [entry.date, entry.id])));
       setCompleted(true);
-      setFeedback(`${correctCount} réponse${correctCount > 1 ? "s" : ""} sur 5 étaient correctes. Socrato affiche maintenant l’ordre attendu pour te permettre de le revoir.`);
+      setFeedback(`${correctCount} réponse${correctCount > 1 ? "s" : ""} sur ${interaction.dates.length} étaient correctes. Socrato affiche maintenant l’ordre attendu pour te permettre de le revoir.`);
       onComplete(false, nextAttempt);
       return;
     }
-    setFeedback(`${correctCount} réponse${correctCount > 1 ? "s sont correctes" : " est correcte"} sur 5. Revois surtout la différence entre l’adoption de la loi et sa mise en application.`);
+    setFeedback(`${correctCount} réponse${correctCount > 1 ? "s sont correctes" : " est correcte"} sur ${interaction.dates.length}. ${question.localHint}`);
+  }
+
+  function revealTimelineAnswer() {
+    setAssignments(Object.fromEntries(interaction.entries.map((entry) => [entry.date, entry.id])));
+    setCompleted(true);
+    setFeedback(`Voici la réponse attendue. Les ${interaction.dates.length} événements sont maintenant placés dans le bon ordre chronologique.`);
   }
 
   return <section className="timeline-question" aria-labelledby="timeline-question-title">
@@ -706,11 +980,11 @@ function InteractiveTimelineQuestion({ question, initialAttempts, initialHintLev
       const entry = entryById.get(assignments[date]);
       return <div key={date} className={`timeline-date-slot${entry ? " is-filled" : ""}`} onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOnDate(event, date)}>
         <strong>{date}</strong><span className="timeline-date-marker" aria-hidden="true" />
-        {entry ? <article className="timeline-placed-card" draggable={!completed} onDragStart={(event) => beginDrag(event, entry.id)}><Image src={entry.imageUrl} alt={entry.imageAlt} width={360} height={220} unoptimized style={{ objectPosition: timelineImagePosition(entry.id) }} /><div><h3>{entry.title}</h3><p>{entry.description}</p><small>{entry.credit}</small>{!completed ? <button type="button" onClick={() => setAssignments((current) => Object.fromEntries(Object.entries(current).filter(([slotDate]) => slotDate !== date)))}>Retirer</button> : null}</div></article> : <button type="button" className="timeline-empty-slot" disabled={!selectedEntryId || completed} onClick={() => assignSelectedTo(date)}>{selectedEntryId ? `Placer ici sous ${date}` : "Choisis d’abord une carte"}</button>}
+        {entry ? <article className="timeline-placed-card" draggable={!completed} onDragStart={(event) => beginDrag(event, entry.id)}><TimelineEntryVisual entry={entry} width={360} height={150} /><div className="timeline-placed-card__content"><h3>{entry.title}</h3>{!completed ? <button type="button" onClick={() => setAssignments((current) => Object.fromEntries(Object.entries(current).filter(([slotDate]) => slotDate !== date)))}>Retirer</button> : null}</div></article> : <button type="button" className="timeline-empty-slot" disabled={!selectedEntryId || completed} onClick={() => assignSelectedTo(date)}>{selectedEntryId ? `Placer ici sous ${date}` : "Choisis d’abord une carte"}</button>}
       </div>;
     })}</div>
-    <section className="timeline-card-pool" aria-labelledby="timeline-cards-title"><header><div><h2 id="timeline-cards-title">Cartes à placer</h2><p>{interaction.entries.length - assignedEntryIds.size} restante{interaction.entries.length - assignedEntryIds.size > 1 ? "s" : ""}</p></div><span>Sélectionne ou fais glisser une carte</span></header><div>{shuffledEntries.filter(({ id }) => !assignedEntryIds.has(id)).map((entry) => <button key={entry.id} type="button" draggable={!completed} aria-pressed={selectedEntryId === entry.id} onDragStart={(event) => beginDrag(event, entry.id)} onClick={() => setSelectedEntryId(entry.id)}><Image src={entry.imageUrl} alt={entry.imageAlt} width={320} height={190} unoptimized style={{ objectPosition: timelineImagePosition(entry.id) }} /><span><strong>{entry.title}</strong><small>{entry.description}</small></span></button>)}</div></section>
-    <footer className="timeline-question__footer"><p role="status" aria-live="polite"><strong>Socrato</strong>{feedback}</p><button type="button" disabled={placedCount !== interaction.dates.length || completed} onClick={verifyTimeline}>{completed ? "Réponse vérifiée" : attempts === 0 ? "Vérifier mes réponses" : "Vérifier ma deuxième tentative"}</button></footer>
+    <section className="timeline-card-pool" aria-labelledby="timeline-cards-title"><header><div><h2 id="timeline-cards-title">Cartes à placer</h2><p>{interaction.entries.length - assignedEntryIds.size} restante{interaction.entries.length - assignedEntryIds.size > 1 ? "s" : ""}</p></div><span>Sélectionne ou fais glisser une carte</span></header><div>{shuffledEntries.filter(({ id }) => !assignedEntryIds.has(id)).map((entry) => <button key={entry.id} type="button" draggable={!completed} aria-pressed={selectedEntryId === entry.id} onDragStart={(event) => beginDrag(event, entry.id)} onClick={() => setSelectedEntryId(entry.id)}><TimelineEntryVisual entry={entry} width={320} height={190} /><span><strong>{entry.title}</strong><small>{entry.description}</small></span></button>)}</div></section>
+    <footer className="timeline-question__footer"><p role="status" aria-live="polite"><strong>Socrato</strong>{feedback}</p><div className="timeline-question__actions">{classroomMode && !completed ? <button type="button" className="timeline-reveal-answer" onClick={revealTimelineAnswer}>Afficher la réponse</button> : null}<button type="button" disabled={placedCount !== interaction.dates.length || completed} onClick={verifyTimeline}>{completed ? "Réponse vérifiée" : attempts === 0 ? "Vérifier mes réponses" : "Vérifier ma deuxième tentative"}</button></div></footer>
   </section>;
 }
 
@@ -901,7 +1175,7 @@ function DocumentThumbnailPreview({ document }: { document: OrderedDocument }) {
 
 function DocumentContent({ document, expanded = false, compact = false, onExpand }: { document: OrderedDocument; expanded?: boolean; compact?: boolean; onExpand?: () => void }) {
   const identification = document.content.kind === "population_table" || document.content.kind === "comparison_table"
-    ? "Données démographiques utilisées dans le débat sur l’Union · 1840"
+    ? [document.sourceLabel, document.dateLabel].filter(Boolean).join(" · ")
     : [document.authorLabel ?? document.institutionLabel ?? document.sourceLabel, document.dateLabel].filter(Boolean).join(" · ");
   const compactTextLength = compact && document.content.kind === "historical_excerpt" ? document.content.excerpt.length : 0;
   const compactDensity = !compact ? "" : compactTextLength <= 300 ? " document-content-compact--short" : compactTextLength <= 430 ? " document-content-compact--medium" : " document-content-compact--long";

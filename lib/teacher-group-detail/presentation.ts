@@ -1,4 +1,5 @@
 import type { TeacherGroupActivityState, TeacherGroupDetailRecord, TeacherGroupDetailViewModel, TeacherGroupPriorityFilter, TeacherGroupStateFilter, TeacherGroupStudent } from "./types.ts";
+import { compareStudentsByFamilyName } from "../student-display-order.ts";
 
 export const TEACHER_GROUP_STATE_LABELS: Record<TeacherGroupActivityState, string> = {
   completed: "Terminée",
@@ -7,7 +8,7 @@ export const TEACHER_GROUP_STATE_LABELS: Record<TeacherGroupActivityState, strin
 };
 
 export function filterTeacherGroupStudents(students: readonly TeacherGroupStudent[], priority: TeacherGroupPriorityFilter, state: TeacherGroupStateFilter) {
-  return students.filter((student) => (priority === "all" || student.priority === priority) && (state === "all" || student.activityState === state));
+  return students.filter((student) => (priority === "all" || student.priority === priority) && (state === "all" || student.activityState === state)).sort(compareStudentsByFamilyName);
 }
 
 export function createTeacherGroupDetailViewModel(record: TeacherGroupDetailRecord): TeacherGroupDetailViewModel {

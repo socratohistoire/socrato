@@ -62,3 +62,30 @@ export async function saveDemoPublishedActivity(value: unknown, teacher: Teacher
 
   return activity;
 }
+
+export async function savePersonalizedPublishedActivity(value: unknown, teacher: TeacherActor, target: { groupId: string; studentId: string }) {
+  if (process.env.SOCRATO_DEMO_DATABASE_WRITES !== "enabled") throw new Error("La publication locale vers Supabase n’est pas activée.");
+  const activity = normalizePublishedActivityContract(value);
+  if (!activity || activity.targetedGroupIds.length !== 1 || activity.targetedGroupIds[0] !== target.groupId) throw new Error("L’activité personnalisée est invalide.");
+  const sql = getSocratoDatabase();
+  const owned = await sql<{ id: string }[]>`
+    select s.id
+    from socrato.students s
+    join socrato.group_memberships gm on gm.student_id = s.id and gm.active = true
+    join socrato.groups g on g.id = gm.group_id and g.archived_at is null
+    where s.id = ${target.studentId} and g.id = ${target.groupId} and g.teacher_id = ${teacher.id}
+    limit 1
+  `;
+  if (!owned[0]) throw new Error("L’élève ciblé n’appartient pas à l’enseignant.");
+  await sql.begin(async (transaction) => {
+    await transaction`
+      insert into socrato.activities (id, schema_version, teacher_id, title, work_type, notion_ids, operation_id, question_ids, publication_status, published_at, updated_at)
+      values (${activity.id}, ${activity.schemaVersion}, ${teacher.id}, ${activity.title}, ${activity.workType}, ${activity.notionIds}, ${activity.operationId}, ${activity.questionIds}, ${activity.publicationStatus}, ${activity.publishedAt}, ${activity.updatedAt})
+    `;
+    await transaction`
+      insert into socrato.activity_group_assignments (id, activity_id, group_id)
+      values (${`personal-${activity.id}-${target.studentId}`}, ${activity.id}, ${target.groupId})
+    `;
+  });
+  return activity;
+}

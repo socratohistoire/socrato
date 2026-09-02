@@ -26,7 +26,7 @@ export function getProgressionCopy(config: Pick<ActivityConfiguration, "duration
   };
   return {
     summary: "Format à compléter",
-    help: "Choisissez un nombre de questions entre 1 et 20.",
+    help: "Choisissez un nombre de questions entre 1 et 24.",
     navigation: "Aucune progression définie",
   };
 }

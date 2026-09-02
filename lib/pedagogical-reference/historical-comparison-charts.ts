@@ -35,7 +35,7 @@ export const ACTE_UNION_DEBT_COMPARISON_CHART = {
   accessibleDescription: "Graphique à barres comparant une dette d’environ 133 000 livres pour le Bas-Canada à une dette estimée à 1 537 142 livres pour le Haut-Canada en 1841.",
   items: [
     { id: "lower-canada", label: "Bas-Canada", value: 133000, displayValue: "≈ 133 000 £" },
-    { id: "upper-canada", label: "Haut-Canada", value: 1537142, displayValue: "≈ 1,54 M£" },
+    { id: "upper-canada", label: "Haut-Canada", value: 1537142, displayValue: "≈ 1 540 000 £" },
   ],
   sourceLabel: "John George Bourinot, Public Debts in Canada, données attribuées à l’état financier présenté en 1841 et aux débats parlementaires.",
   sourceUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d8/Public_debts_in_Canada_%28IA_publicdebtsincan00perrrich%29.pdf",

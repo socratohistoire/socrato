@@ -5,8 +5,8 @@ import { createLocalActivityPreview, getEligibleActivityQuestions, LocalActivity
 import "../../../../eleve/activite/[activityId]/session.css";
 import "./student-preview.css";
 
-export default async function StudentActivityPreviewPage({ searchParams }: { searchParams: Promise<{ notion?: string; notions?: string; title?: string; variant?: string; workType?: string; operation?: string; questionIds?: string; questionNumber?: string; published?: string; embedded?: string; activityId?: string }> }) {
-  const { notion = "acte-union", notions, title, variant, workType, operation, questionIds, questionNumber, published, embedded, activityId } = await searchParams;
+export default async function StudentActivityPreviewPage({ searchParams }: { searchParams: Promise<{ notion?: string; notions?: string; title?: string; variant?: string; workType?: string; operation?: string; questionIds?: string; questionNumber?: string; published?: string; embedded?: string; activityId?: string; publishedActivityId?: string; classroom?: string }> }) {
+  const { notion = "acte-union", notions, title, variant, workType, operation, questionIds, questionNumber, published, embedded, activityId, publishedActivityId, classroom } = await searchParams;
   const data = createDemoStudentLearningSession("demo-activity-acte-union", notion, "teacher-assigned");
   if (!data) notFound();
   const catalog = await new LocalActivityCreatorProvider().getCatalog();
@@ -30,7 +30,8 @@ export default async function StudentActivityPreviewPage({ searchParams }: { sea
   const questions = previews.map((preview, index) => ({
     id: preview.questionId ?? `teacher-preview-${variants[index] ?? index}`,
     format: preview.format,
-    type: preview.format === "interactive-timeline" ? "interactive_timeline" as const
+    type: preview.causalChainInteraction ? "interactive_causal_chain" as const
+      : preview.format === "interactive-timeline" ? "interactive_timeline" as const
       : preview.format === "interactive-association" ? "interactive_association" as const
       : preview.format === "multiple-choice" ? "multiple_choice" as const
       : preview.documents.length > 0 ? "question_with_documents" as const
@@ -50,10 +51,11 @@ export default async function StudentActivityPreviewPage({ searchParams }: { sea
     answerExplanation: preview.answerExplanation,
     timelineInteraction: preview.timelineInteraction,
     associationInteraction: preview.associationInteraction,
+    causalChainInteraction: preview.causalChainInteraction,
   }));
   const documentCatalog = Array.from(new Map(previews.flatMap(({ documents }) => documents).map((document) => [document.id, document])).values());
   const preview = previews[0];
   if (!preview) notFound();
-  const publishedActivityId = published === "1" && activityId ? activityId : data.activityId;
-  return <div className="student-preview-surface"><StudentLearningSessionView teacherPreview={embedded !== "1" && published !== "1"} persistProgress={published === "1"} data={{ ...data, id: publishedActivityId, activityId: publishedActivityId, activityTitle: config.title, notionTitle: preview.notionTitle, questions, documentCatalog, dashboardHref: `/eleve/tableau-de-bord?activity=${encodeURIComponent(publishedActivityId)}#activite` }} /></div>;
+  const resolvedActivityId = published === "1" && (activityId || publishedActivityId) ? (activityId || publishedActivityId)! : data.activityId;
+  return <div className={`student-preview-surface${classroom === "1" ? " student-preview-surface--classroom" : ""}${embedded === "1" ? " student-preview-surface--embedded" : ""}`}><StudentLearningSessionView classroomMode={classroom === "1"} teacherApiTest teacherPreview={classroom !== "1" && embedded !== "1" && published !== "1"} persistProgress={published === "1"} data={{ ...data, id: resolvedActivityId, activityId: resolvedActivityId, activityTitle: config.title, notionTitle: preview.notionTitle, questions, documentCatalog, dashboardHref: `/eleve/tableau-de-bord?activity=${encodeURIComponent(resolvedActivityId)}#activite` }} /></div>;
 }

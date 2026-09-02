@@ -35,6 +35,7 @@ export async function personalizeCompletedStudentSummary(summary: PedagogicalSum
       join socrato.group_memberships gm on gm.group_id = aga.group_id and gm.active = true
       where a.id = ${summary.activityId} and a.publication_status = ${"published"}
         and gm.student_id = ${studentSession.anonymousStudentId}
+        and (aga.id not like 'personal-%' or aga.id = 'personal-' || a.id || '-' || gm.student_id)
         and ${summary.notionId} = any(a.notion_ids)
       limit 1
     `;

@@ -1,4 +1,4 @@
-export type ProgressStatus = "mastered" | "consolidate" | "needs_work" | "not_assessed";
+export type ProgressStatus = "mastered" | "consolidate" | "needs_work" | "covered" | "not_assessed";
 export type ActivityOrigin = "teacher_assigned" | "student_selected";
 export type DashboardMode = "teacher-assigned" | "notion-review";
 export type ActivityType = "revision" | "enrichment" | "development";
@@ -13,8 +13,11 @@ export type ActivitySummary = {
   state: "pending" | "local_demo_structured" | "server_structured";
   strengths: string[];
   consolidationTargets: string[];
+  readingAdvice?: string;
   recommendation: string | null;
   consolidationActivity: string | null;
+  recommendedOperationIds?: string[];
+  recommendedHistoricalKnowledgeIds?: string[];
   consolidationProgress: {
     state: "improving" | "consolidated" | "continue";
     source: "socrato_proposed" | "teacher_assigned";
@@ -22,6 +25,10 @@ export type ActivitySummary = {
     previousLevel: string;
     currentLevel: string;
     observation: string;
+    strategyKey?: string;
+    strategyLabel?: string;
+    attemptNumber?: number;
+    targetOperationId?: string;
   } | null;
 };
 

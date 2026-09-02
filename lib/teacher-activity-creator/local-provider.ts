@@ -4,9 +4,11 @@ import { INTELLECTUAL_OPERATIONS } from "../pedagogical-reference/intellectual-o
 import { createLocalTeacherDashboardData } from "../teacher-dashboard/local-provider.ts";
 import { SECONDARY_FOUR_NOTIONS } from "./secondary-four-notions.ts";
 import type { ActivityCreatorCatalog } from "./types.ts";
+import { isTeacherAuthenticationEnabled } from "../supabase/config.ts";
+import { CAUSES_CONSEQUENCES_LEARNING_QUESTION, INTELLECTUAL_OPERATION_LEARNING_DOCUMENTS } from "./intellectual-operation-learning.ts";
 
 export function isLocalActivityCreatorEnabled(environment = process.env.NODE_ENV) {
-  return environment !== "production";
+  return environment !== "production" || isTeacherAuthenticationEnabled();
 }
 
 export class LocalActivityCreatorProvider {
@@ -22,8 +24,8 @@ export class LocalActivityCreatorProvider {
       groups: dashboard.groups.map(({ id, name }) => ({ id, name })),
       notions: SECONDARY_FOUR_NOTIONS,
       operations: INTELLECTUAL_OPERATIONS.map(({ id, officialLabel }) => ({ id, label: officialLabel })),
-      documents: [...ACTE_UNION_CAUSAL_PILOT_DOCUMENTS, ...ACTE_UNION_DOCUMENTS],
-      questions: PEDAGOGICAL_QUESTION_CATALOG,
+      documents: [...ACTE_UNION_CAUSAL_PILOT_DOCUMENTS, ...ACTE_UNION_DOCUMENTS, ...INTELLECTUAL_OPERATION_LEARNING_DOCUMENTS],
+      questions: [...PEDAGOGICAL_QUESTION_CATALOG.filter(({ id }) => id !== "question:acte-union:document-interpretation-005"), CAUSES_CONSEQUENCES_LEARNING_QUESTION],
     };
   }
 }

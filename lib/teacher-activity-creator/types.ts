@@ -51,4 +51,5 @@ export type ActivityPreview = {
   documents: LearningSessionDocument[];
   timelineInteraction?: ApprovedQuestion["timelineInteraction"];
   associationInteraction?: ApprovedQuestion["associationInteraction"];
+  causalChainInteraction?: ApprovedQuestion["causalChainInteraction"];
 };
