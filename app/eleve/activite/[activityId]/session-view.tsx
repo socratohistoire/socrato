@@ -681,7 +681,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
         {analysisUnavailable ? <button type="button" className="socrato-next-question" disabled={submitting} onClick={() => void continueWithoutEvaluation()}>Continuer cette question sans accompagnement</button> : null}
       </div> : null}
 
-      <div className={`session-layout${isInteractiveTimeline || isInteractiveAssociation || isInteractiveCausalChain ? " session-layout--timeline" : ""}${isMultipleChoice && questionDocuments.length > 0 ? " session-layout--choice-with-documents" : ""}${questionDocuments.length === 0 && isMultipleChoice ? " session-layout--choice-no-documents" : ""}${isShortAnswerWithoutDocuments ? " session-layout--short-answer-no-documents" : ""}`}>
+      <div className={`session-layout${isInteractiveTimeline || isInteractiveAssociation || isInteractiveCausalChain ? " session-layout--timeline" : ""}${questionDocuments.length > 0 ? " session-layout--with-documents" : ""}${isMultipleChoice && questionDocuments.length > 0 ? " session-layout--choice-with-documents" : ""}${questionDocuments.length === 0 && isMultipleChoice ? " session-layout--choice-no-documents" : ""}${isShortAnswerWithoutDocuments ? " session-layout--short-answer-no-documents" : ""}`}>
         {isInteractiveCausalChain && question.causalChainInteraction ? (
           <InteractiveCausalChainQuestion key={question.id} question={question} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
         ) : isInteractiveTimeline && question.timelineInteraction ? (
@@ -908,8 +908,8 @@ function timelineImagePosition(entryId: string) {
 
 function TimelineEntryVisual({ entry, width, height }: { entry: TimelineInteraction["entries"][number]; width: number; height: number }) {
   const sources = entry.imageUrls?.length ? entry.imageUrls : [entry.imageUrl];
-  if (sources.length === 1) return <Image src={sources[0]} alt={entry.imageAlt} width={width} height={height} unoptimized style={{ objectPosition: timelineImagePosition(entry.id) }} />;
-  return <div className="timeline-entry-image-pair" role="img" aria-label={entry.imageAlt}>{sources.map((source) => <Image key={source} src={source} alt="" width={Math.round(width / sources.length)} height={height} unoptimized />)}</div>;
+  if (sources.length === 1) return <Image src={sources[0]} alt={entry.imageAlt} width={width} height={height} draggable={false} unoptimized style={{ objectPosition: timelineImagePosition(entry.id) }} />;
+  return <div className="timeline-entry-image-pair" role="img" aria-label={entry.imageAlt}>{sources.map((source) => <Image key={source} src={source} alt="" width={Math.round(width / sources.length)} height={height} draggable={false} unoptimized />)}</div>;
 }
 
 function InteractiveTimelineQuestion({ question, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete, classroomMode = false }: ObjectiveQuestionProps & { classroomMode?: boolean }) {
@@ -943,6 +943,7 @@ function InteractiveTimelineQuestion({ question, initialAttempts, initialHintLev
     if (completed) return;
     event.dataTransfer.setData("text/plain", entryId);
     event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setDragImage(event.currentTarget, Math.round(event.currentTarget.clientWidth / 2), 28);
     setSelectedEntryId(entryId);
   }
 

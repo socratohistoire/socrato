@@ -221,7 +221,7 @@ test("égalise les colonnes dans un espace de travail piloté par le viewport", 
   assert.match(cssSource, /\.document-actions,\.document-separator,\.document-navigation \{ flex:0 0 auto; \}/);
 });
 
-test("retrouve une hauteur naturelle et une seule colonne sous 1120 px", () => {
+test("conserve un repli vertical pour les très petits écrans", () => {
   assert.match(cssSource, /@media \(max-width:1119px\) \{[^}]*\.learning-session \{ height:auto; min-height:0; display:block; \}/);
   assert.match(cssSource, /@media \(max-width:1119px\)[\s\S]*\.session-layout \{ height:auto; min-height:0; grid-template-columns:1fr; grid-template-rows:none; align-items:start;[^}]*overflow:visible/);
   assert.match(cssSource, /@media \(max-width:1119px\)[\s\S]*\.message-list \{ max-height:clamp\(190px,32vh,320px\); flex:none; \}/);
@@ -461,9 +461,19 @@ test("isole le prototype de ligne du temps sans modifier la question textuelle",
   assert.match(viewSource, /"timeline-entry-2": "center 29%"/);
   assert.match(viewSource, /"timeline-entry-5": "center 72%"/);
   assert.match(viewSource, /"timeline-entry-6": "center 24%"/);
+  assert.match(viewSource, /draggable=\{false\}/);
+  assert.match(viewSource, /setDragImage\(event\.currentTarget/);
+  assert.match(cssSource, /\.timeline-question img\{-webkit-user-drag:none;user-select:none\}/);
+  assert.match(cssSource, /@media \(min-width:800px\) and \(max-height:850px\)/);
   assert.match(cssSource, /\.classroom-session \.timeline-question__dates,\.classroom-session \.timeline-card-pool>div\{grid-template-columns:repeat\(6,minmax\(0,1fr\)\);gap:8px\}/);
   assert.match(cssSource, /\.classroom-session \.timeline-empty-slot,\.classroom-session \.timeline-placed-card\{min-height:112px\}/);
   assert.match(cssSource, /\.classroom-session \.timeline-card-pool>div>button\{min-height:128px\}/);
+});
+
+test("garde les documents à droite de la conversation sur un petit ordinateur", () => {
+  assert.match(viewSource, /questionDocuments\.length > 0 \? " session-layout--with-documents"/);
+  assert.match(cssSource, /@media \(min-width:900px\)\{\.learning-session \.session-layout--with-documents:not\(\.session-layout--timeline\)/);
+  assert.match(cssSource, /\.session-layout--with-documents:not\(\.session-layout--timeline\) \.documents-pane\{grid-column:2;grid-row:2\}/);
 });
 
 test("propose la chronologie interactive du gouvernement responsable de 1841 à 1864", () => {
