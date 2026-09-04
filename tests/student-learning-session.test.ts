@@ -449,7 +449,7 @@ test("isole le prototype de ligne du temps sans modifier la question textuelle",
   const question = getCurrentLearningQuestion(data); assert.ok(question);
   assert.equal(question.type, "interactive_timeline");
   assert.equal(question.timelineInteraction?.entries.length, 6);
-  assert.deepEqual(question.timelineInteraction?.dates, ["1837-1838", "1839", "1840", "1841", "1843", "1848"]);
+  assert.deepEqual(question.timelineInteraction?.dates, ["1837-1838", "1839", "1840", "1841", "1841-1842", "1848"]);
   assert.equal(question.documentRelations.length, 0);
   assert.equal(data.documentCatalog.length, 0);
   assert.match(viewSource, /InteractiveTimelineQuestion/);

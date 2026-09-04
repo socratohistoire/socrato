@@ -284,11 +284,12 @@ test("présente les trois images des Patriotes comme documents indépendants", (
 
 test("crée une ligne du temps illustrée de 1837 au gouvernement responsable", () => {
   assert.equal(ACTE_UNION_STUDENT_TIMELINE.id, "AU-D-002");
-  assert.deepEqual(ACTE_UNION_STUDENT_TIMELINE.entries.map(({ date }) => date), ["1837-1838", "1839", "1840", "1841", "1843", "1848"]);
-  const metcalfeCrisis = ACTE_UNION_STUDENT_TIMELINE.entries.find(({ date }) => date === "1843");
-  assert.ok(metcalfeCrisis);
-  assert.match(metcalfeCrisis.description, /démissionnent/);
-  assert.match(metcalfeCrisis.credit, /domaine public/);
+  assert.deepEqual(ACTE_UNION_STUDENT_TIMELINE.entries.map(({ date }) => date), ["1837-1838", "1839", "1840", "1841", "1841-1842", "1848"]);
+  const reformAlliance = ACTE_UNION_STUDENT_TIMELINE.entries.find(({ date }) => date === "1841-1842");
+  assert.ok(reformAlliance);
+  assert.match(reformAlliance.description, /s’allient/);
+  assert.match(reformAlliance.imageUrl, /lafontaine-baldwin-portraits\.svg/);
+  assert.match(reformAlliance.credit, /domaine public/);
   assert.ok(ACTE_UNION_STUDENT_TIMELINE.entries.every(({ imageUrl, sourceUrl }) => imageUrl && sourceUrl));
   assert.doesNotMatch(JSON.stringify(ACTE_UNION_STUDENT_TIMELINE.entries), /1849/);
 });
