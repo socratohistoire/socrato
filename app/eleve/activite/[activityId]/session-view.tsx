@@ -8,7 +8,7 @@ import { StudentLogoutButton } from "../../logout-button";
 import { saveConsolidationOutcomeToDatabase, saveStudentOutcomeToDatabase, saveStudentProgressToDatabase } from "../progress-actions";
 import { analyzeAuthorizedConsolidationCoachTurn, analyzeAuthorizedStudentResponse } from "../analysis-actions";
 import { personalizeCompletedStudentSummary } from "../summary-actions";
-import { analyzeActeUnionTestResponse } from "@/app/teacher/api-test/actions";
+import { analyzeTeacherTestResponse } from "@/app/teacher/api-test/actions";
 import { CausesConsequencesLearningAnalyzer } from "@/lib/pedagogical-session-engine/causes-consequences-learning-analyzer";
 import { CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID } from "@/lib/teacher-activity-creator/intellectual-operation-learning";
 import { createStudentProgressContract, restoreStudentProgress } from "@/lib/student-progress";
@@ -21,7 +21,7 @@ import { appendVoiceTranscript, createBrowserVoiceAdapter, formatRecordingDurati
 
 // Le serveur interrompt son analyse avant cette limite; l’élève récupère ainsi
 // toujours sa réponse et peut réessayer sans perdre une tentative.
-const RESPONSE_ANALYSIS_TIMEOUT_MS = 35_000;
+const RESPONSE_ANALYSIS_TIMEOUT_MS = 45_000;
 
 async function withResponseAnalysisTimeout<T>(operation: Promise<T>) {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -97,7 +97,8 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
     ? new CausesConsequencesLearningAnalyzer()
     : teacherApiTest ? {
     async analyze(response) {
-      const result = await analyzeActeUnionTestResponse({
+      const result = await analyzeTeacherTestResponse({
+        notionId: data.notionId,
         questionId: response.questionId,
         attemptNumber: response.attemptNumber,
         content: response.content,
@@ -823,17 +824,21 @@ function InteractiveCausalChainQuestion({ question, initialAttempts, initialHint
   const [completed, setCompleted] = useState(false);
   const [showHint, setShowHint] = useState(initialHintLevel > 0);
   const [feedback, setFeedback] = useState("Complète les six maillons de gauche à droite.");
+  const [stepsToReview, setStepsToReview] = useState<string[]>([]);
   const answered = interaction.steps.filter(({ id }) => answers[id]?.trim()).length;
 
   function isCorrect(step: CausalChainInteraction["steps"][number]) {
     const answer = normalizeShortAnswer(answers[step.id] ?? "");
+    if (step.id === "gr-chain-1849-law" && ((answer.includes("loi") && answer.includes("indemni")) || (answer.includes("indemni") && answer.includes("rebellion")))) return true;
+    if (step.id === "gr-chain-instability" && answer.includes("instabilit") && (answer.includes("politique") || answer.includes("minister"))) return true;
     return step.acceptedAnswers.some((accepted) => { const expected = normalizeShortAnswer(accepted); return answer.includes(expected) || expected.includes(answer); });
   }
 
   function verify() {
     const correctCount = interaction.steps.filter(isCorrect).length;
     const nextAttempt = attempts + 1; setAttempts(nextAttempt); onAttempt(nextAttempt);
-    if (correctCount === interaction.steps.length) { setCompleted(true); setFeedback("Bravo! Les six maillons forment la bonne chaîne de causalité."); onComplete(true, nextAttempt); return; }
+    if (correctCount === interaction.steps.length) { setStepsToReview([]); setCompleted(true); setFeedback("Bravo! Les six maillons forment la bonne chaîne de causalité."); onComplete(true, nextAttempt); return; }
+    setStepsToReview(interaction.steps.filter((step) => !isCorrect(step)).map(({ id }) => id));
     if (nextAttempt >= 2) { setAnswers(Object.fromEntries(interaction.steps.map((step) => [step.id, step.expectedAnswer]))); setCompleted(true); setFeedback(`${correctCount} réponses sur ${interaction.steps.length} étaient correctes. Socrato affiche maintenant la chaîne attendue.`); onComplete(false, nextAttempt); return; }
     setFeedback(`${correctCount} réponse${correctCount > 1 ? "s" : ""} sur ${interaction.steps.length} ${correctCount > 1 ? "sont correctes" : "est correcte"}. Revois les maillons avant de vérifier une deuxième fois.`);
   }
@@ -842,6 +847,7 @@ function InteractiveCausalChainQuestion({ question, initialAttempts, initialHint
     <header className="timeline-question__header"><div><p>Gouvernement responsable · Politique</p><h2 id="causal-chain-title">{question.prompt}</h2><span>{answered} réponse{answered > 1 ? "s" : ""} sur {interaction.steps.length}</span></div><button type="button" aria-expanded={showHint} onClick={() => { if (!showHint) onHint(); setShowHint((value) => !value); }}>Obtenir un indice</button></header>
     {showHint ? <p className="timeline-question__hint" role="status">{question.localHint}</p> : null}
     <div className="causal-chain-track">{interaction.steps.map((step, index) => <div className="causal-chain-link" key={step.id}><article><span>{step.date}</span><h3>{step.prompt}</h3><label><span>{step.placeholder}</span><input value={answers[step.id] ?? ""} disabled={completed} onChange={(event) => setAnswers((current) => ({ ...current, [step.id]: event.target.value }))} placeholder="Écris ta réponse…" /></label></article>{index < interaction.steps.length - 1 ? <span className="causal-chain-arrow" aria-hidden="true">→</span> : null}</div>)}</div>
+    {stepsToReview.length > 0 ? <aside className="causal-chain-socrato-help" role="status" aria-live="polite"><strong>Socrato</strong><p>Tu as déjà trouvé une partie de la chaîne. Reprends seulement les maillons suivants :</p><ul>{stepsToReview.map((stepId) => <li key={stepId}>{stepId === "gr-chain-1849-law" ? "Pour la loi de 1849, cherche les mots qui relient une indemnité aux Rébellions." : stepId === "gr-chain-instability" ? "Pour 1854–1864, nomme le problème politique créé par les changements fréquents de ministère." : stepId === "gr-chain-cause" ? "Demande-toi pourquoi un ministère perd l’appui nécessaire dans les deux sections." : `Relis le maillon « ${interaction.steps.find(({ id }) => id === stepId)?.prompt ?? "à corriger"} » et précise le fait historique demandé.`}</li>)}</ul><p>{completed ? "La chaîne attendue est maintenant affichée afin que tu puisses comparer chaque lien avec ta réponse." : "Tu peux corriger ces réponses, puis vérifier une deuxième fois."}</p></aside> : null}
     <footer className="timeline-question__footer"><p role="status" aria-live="polite"><strong>Socrato</strong>{feedback}</p><button type="button" disabled={answered !== interaction.steps.length || completed} onClick={verify}>{completed ? "Réponse vérifiée" : attempts ? "Vérifier ma deuxième tentative" : "Vérifier mes réponses"}</button></footer>
   </section>;
 }
@@ -1168,7 +1174,9 @@ function DocumentThumbnailPreview({ document }: { document: OrderedDocument }) {
     return <div className="document-thumbnail-timeline" aria-hidden="true">{document.content.entries.map((entry) => <span key={entry.date}>{entry.date}</span>)}</div>;
   }
   if (document.content.kind === "political_structure_diagram") {
-    return <div className="document-thumbnail-diagram" aria-hidden="true"><span>Couronne</span><i>↓</i><span>Gouverneur</span><i>↓</i><span>Conseils · Assemblée</span></div>;
+    return document.content.period === "gouvernement-responsable"
+      ? <div className="document-thumbnail-diagram" aria-hidden="true"><span>Couronne → Gouverneur</span><i>↓</i><span>Ministère ⇄ Assemblée</span><i>↑</i><span>Électeurs</span></div>
+      : <div className="document-thumbnail-diagram" aria-hidden="true"><span>Couronne</span><i>↓</i><span>Gouverneur</span><i>↓</i><span>Conseils · Assemblée</span></div>;
   }
   return <blockquote className="document-thumbnail-quote" aria-hidden="true">« {document.content.excerpt} »</blockquote>;
 }
@@ -1215,12 +1223,27 @@ function DocumentContent({ document, expanded = false, compact = false, onExpand
               <cite>{entry.credit}</cite>
             </article>)}
           </div>
+        ) : document.content.kind === "political_structure_diagram" && document.content.period === "gouvernement-responsable" ? (
+          <div className="student-political-structure responsible-government-structure responsible-government-1848" role="img" aria-label="Schéma du gouvernement responsable de 1848 : la Couronne agit par le gouvernement britannique; le gouvernement britannique recommande la nomination du gouverneur; le gouverneur nomme les conseils; le Conseil exécutif conseille le gouverneur et doit conserver la confiance de l’Assemblée; le Conseil législatif et l’Assemblée adoptent les lois; les électeurs du Haut-Canada et du Bas-Canada élisent chacun 42 députés.">
+            <div className="ps-node rg-crown"><small>Autorité impériale</small><strong>Couronne britannique</strong></div>
+            <div className="rg-link">agit par l’intermédiaire du ↓</div>
+            <div className="ps-node rg-british-government"><strong>Gouvernement britannique</strong></div>
+            <div className="rg-link">recommande la nomination du ↓</div>
+            <div className="ps-node ps-governor rg-governor"><small>Représentant de la Couronne</small><strong>Gouverneur général</strong><span>Sanctionne les lois</span></div>
+            <div className="rg-two-links"><span><b>nomme le Conseil exécutif ↓</b><em>reçoit ses conseils ↑</em></span><span><b>nomme le Conseil législatif ↓</b><em>reçoit les projets de loi adoptés ↑</em></span></div>
+            <div className="rg-councils"><div className="ps-node ps-ministry"><small>Pouvoir exécutif responsable</small><strong>Conseil exécutif</strong><span>Dirige les affaires intérieures</span></div><div className="ps-node rg-legislative-council"><small>Chambre nommée</small><strong>Conseil législatif</strong><span>Étudie les projets de loi</span></div></div>
+            <div className="rg-two-links rg-assembly-links"><span><b>doit conserver la confiance de ↓</b><em>l’Assemblée accorde ou retire sa confiance ↑</em></span><span><b>adopte les lois avec ↓</b><em>l’Assemblée débat et vote les projets ↑</em></span></div>
+            <div className="ps-node ps-assembly rg-assembly"><small>Chambre élue</small><strong>Assemblée législative · 84 députés</strong><span>Vote les lois, les taxes et les crédits</span></div>
+            <div className="rg-two-links rg-election-links"><span>élit 42 députés ↑</span><span>élit 42 députés ↑</span></div>
+            <div className="rg-populations"><div className="ps-node ps-voters"><strong>Population électorale du Haut-Canada</strong></div><div className="ps-node ps-voters"><strong>Population électorale du Bas-Canada</strong></div></div>
+            <div className="responsible-loss"><strong>Si le Conseil exécutif perd la confiance de l’Assemblée</strong><span>Il démissionne ou demande la dissolution du Parlement et la tenue d’élections.</span></div>
+          </div>
         ) : document.content.kind === "political_structure_diagram" ? (
           <div className="student-political-structure" role="img" aria-label="Schéma de la structure politique de l’Acte d’Union : la Couronne nomme le gouverneur; le gouverneur nomme les conseils; les électeurs élisent une Assemblée commune de 84 députés.">
             <div className="ps-node ps-crown"><small>Autorité impériale</small><strong>Couronne et Parlement britannique</strong><span>Adoptent l’Acte d’Union</span></div><div className="ps-arrow">nomme ↓</div>
-            <div className="ps-node ps-governor"><small>Pouvoir exécutif</small><strong>Gouverneur général</strong><span>Nomme les conseils · sanctionne ou réserve les lois</span></div><div className="ps-arrow">nomme et consulte ↓</div>
+            <div className="ps-node ps-governor"><small>Pouvoir exécutif</small><strong>Gouverneur général</strong><span>Nomme les conseils · sanctionne ou réserve les lois</span></div><div className="ps-arrow">nomme les membres et consulte ↓</div>
             <div className="ps-councils"><div className="ps-node"><small>Nommé</small><strong>Conseil exécutif</strong><span>Conseille le gouverneur et administre</span></div><div className="ps-node"><small>Nommé</small><strong>Conseil législatif</strong><span>Étudie et adopte les projets de loi</span></div></div>
-            <div className="ps-arrow">projets de loi ↕</div><div className="ps-node ps-assembly"><small>Élue</small><strong>Assemblée législative · 84 députés</strong><span>Débat, vote les lois et les taxes</span><div><b>Canada-Ouest · 42</b><b>Canada-Est · 42</b></div></div><div className="ps-arrow">élisent ↑</div>
+            <div className="ps-council-links"><span><b>Le Conseil propose des mesures ↓</b><em>L’Assemblée vote les lois et les crédits ↑</em></span><span><b>Le Conseil étudie et adopte les projets ↓</b><em>L’Assemblée débat, vote et transmet les projets ↑</em></span></div><div className="ps-node ps-assembly"><small>Élue</small><strong>Assemblée législative · 84 députés</strong><span>Débat, vote les lois et les taxes</span><div><b>Canada-Ouest · 42</b><b>Canada-Est · 42</b></div></div><div className="ps-arrow">élisent ↑</div>
             <div className="ps-node ps-voters"><strong>Électeurs admissibles</strong></div>
           </div>
         ) : document.content.kind === "historical_image" ? (

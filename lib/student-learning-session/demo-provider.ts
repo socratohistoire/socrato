@@ -59,7 +59,7 @@ export function createCatalogLearningSessionQuestions(questionIds: readonly stri
       localHint: question.instruction,
       initialMessages: [{ id: `published-test-welcome-${index}`, author: "socrato", content: question.id === CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID
         ? "Aujourd’hui, je vais t’aider à comprendre comment déterminer une cause et une conséquence. Commençons simplement : quel est l’événement historique central présenté dans les trois documents?"
-        : question.format === "short-answer" ? "J’attends ta réponse…" : question.format === "document-interpretation" ? "Bonjour, consulte les sources puis réponds à la question." : "J’attends ta réponse…" }],
+        : documents.length === 0 ? "J’attends ta réponse…" : "Bonjour, consulte les sources puis réponds à la question." }],
       maxAttempts: question.id === CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID ? null : undefined,
       answerOptions: question.answerOptions,
       answerExplanation: question.expectedAnswer,

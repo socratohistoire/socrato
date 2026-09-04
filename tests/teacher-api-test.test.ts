@@ -26,6 +26,44 @@ test("expose les questions de l’Acte d’Union avec leur vrai contexte Sol", (
   }
 });
 
+test("date la création de l’alliance politique Baldwin–La Fontaine", () => {
+  const question = getQuestionsForKnowledgeHeading("gouvernement-responsable")
+    .find(({ id }) => id === "question:gouvernement-responsable:short-answer-001");
+  assert.ok(question);
+  assert.equal(question.prompt, "Explique une contrainte qui a poussé Baldwin et La Fontaine à créer une alliance politique en 1841.");
+  assert.deepEqual(question.historicalDocumentIds, ["AU-D-001", "GR-T-008", "GR-T-009"]);
+  assert.match(question.instruction, /l’adresse de La Fontaine et la lettre de Baldwin/);
+  const catalog = createCatalogLearningSessionQuestions([question.id]);
+  const laFontaine = catalog.documents.find(({ id }) => id === "GR-T-008");
+  const baldwin = catalog.documents.find(({ id }) => id === "GR-T-009");
+  assert.match(laFontaine?.content.kind === "historical_excerpt" ? laFontaine.content.excerpt : "", /L’unité d’action est nécessaire plus que jamais/);
+  assert.match(baldwin?.content.kind === "historical_excerpt" ? baldwin.content.excerpt : "", /cimentera fortement l’union entre les réformistes/);
+  assert.doesNotMatch(baldwin?.content.kind === "historical_excerpt" ? baldwin.content.excerpt : "", /La Fontaine affirme|L’unité d’action/);
+});
+
+test("analyse les questions du gouvernement responsable avec leur propre monographie", () => {
+  const approved = getQuestionsForKnowledgeHeading("gouvernement-responsable");
+  const catalog = createCatalogLearningSessionQuestions(approved.map(({ id }) => id));
+  assert.equal(catalog.questions.length, 15);
+  for (const question of catalog.questions) {
+    const definition = createPedagogicalQuestionDefinition(question, "gouvernement-responsable", "Gouvernement responsable", catalog.documents);
+    assert.equal(definition.evaluationContext?.referenceMonograph.id, "historical-record:gouvernement-responsable");
+  }
+});
+
+test("fournit quatre sources primaires distinctes et pertinentes pour la question 12 sur l’instabilité", () => {
+  const question = getQuestionsForKnowledgeHeading("gouvernement-responsable")
+    .find(({ id }) => id === "question:gouvernement-responsable:short-answer-005");
+  assert.ok(question);
+  const catalog = createCatalogLearningSessionQuestions([question.id]);
+  assert.deepEqual(catalog.questions[0]?.documentRelations.map(({ documentId }) => documentId), ["GR-T-011", "GR-T-012", "GR-T-013", "GR-T-007"]);
+  assert.equal(catalog.documents.length, 4);
+  for (const document of catalog.documents) {
+    assert.equal(document.content.kind, "historical_excerpt");
+    assert.match(document.content.kind === "historical_excerpt" ? document.content.excerpt : "", /\[…\]/);
+  }
+});
+
 test("ignore une question retirée dans une activité déjà publiée", () => {
   const catalog = createCatalogLearningSessionQuestions([
     "question:acte-union:short-answer-006",
@@ -163,11 +201,16 @@ test("réserve le banc d’essai à l’enseignant et ne touche pas à la progre
   assert.match(page, /teacherPreview/);
   assert.match(page, /teacherApiTest/);
   assert.match(page, /persistProgress=\{false\}/);
-  assert.match(studentView, /analyzeActeUnionTestResponse/);
+  assert.match(studentView, /analyzeTeacherTestResponse/);
   assert.match(studentView, /isMultipleChoice/);
   assert.match(studentView, /InteractiveTimelineQuestion/);
   assert.match(studentView, /InteractiveAssociationQuestion/);
   assert.match(action, /attemptNumber: request\.attemptNumber/);
+  assert.match(page, /query\.notion === "gouvernement-responsable"/);
+  assert.match(page, /getQuestionsForKnowledgeHeading\(notionId\)/);
+  assert.match(studentView, /notionId: data\.notionId/);
+  assert.match(action, /getQuestionsForKnowledgeHeading\(notionId\)/);
+  assert.match(action, /createPedagogicalQuestionDefinition\(question, notionId, notionTitle/);
   assert.match(action, /analyzeWithFallback\(response, definition, analyzer, new LocalDeterministicResponseAnalyzer\(\)\)/);
   assert.doesNotMatch(action, /catch \{[\s\S]*analyzer\.analyze\(response, definition\)/);
 });

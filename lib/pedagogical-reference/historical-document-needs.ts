@@ -766,6 +766,80 @@ export const ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT = {
   approvedAt: "2026-08-03T00:00:00.000-04:00",
 } as const satisfies HistoricalDocumentRecord;
 
+export const RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT = {
+  schemaVersion: 1,
+  id: "GR-T-008",
+  title: "La Fontaine appelle les réformistes des deux Canadas à s’unir",
+  kind: "other",
+  status: "approved",
+  periodIds: ["1840-1896"],
+  knowledgeHeadingIds: ["gouvernement-responsable"],
+  operationIds: ["relationships_between_facts", "causes_and_consequences", "causal_connections"],
+  historicalDate: "25 août 1840; publication le 28 août 1840",
+  creator: "Louis-Hippolyte La Fontaine",
+  holdingInstitution: "L’Aurore des Canadas; transcription modernisée en ligne",
+  sourceUrl: "https://biblio.republiquelibre.org/Adresse_aux_%C3%A9lecteurs_du_comt%C3%A9_de_Terrebonne",
+  sourceLocator: "Louis-Hippolyte La Fontaine, « Adresse aux électeurs du comté de Terrebonne », 25 août 1840, publiée dans L’Aurore des Canadas, 28 août 1840; passages sur la majorité et l’unité d’action des réformistes.",
+  assetUrl: "https://www.biographi.ca/fr/bio/la_fontaine_louis_hippolyte_9F.html",
+  rightsStatement: "Texte de 1840 dans le domaine public. Extrait abrégé; les coupures sont indiquées par […].",
+  transcription: "Pour y parvenir, il faut que l’administration coloniale soit formée et dirigée par et avec la majorité des représentants du peuple. […] Les réformistes, dans les deux provinces, forment une majorité immense. […] Il est de l’intérêt des réformistes des deux provinces de se rencontrer sur le terrain législatif, dans un esprit de paix, d’union, d’amitié et de fraternité. L’unité d’action est nécessaire plus que jamais.",
+  accessibleDescription: "Extraits distincts de l’adresse de La Fontaine reliant le gouvernement par la majorité à la nécessité d’une action commune des réformistes des deux Canadas.",
+  historicalContext: "En août 1840, avant la première élection sous l’Acte d’Union, La Fontaine explique publiquement que les réformistes des deux Canadas doivent agir ensemble dans la future Assemblée. Cette stratégie prépare son alliance politique avec Robert Baldwin en 1841.",
+  observationGuide: [
+    "Repérer que gouverner exige l’appui de la majorité des représentants.",
+    "Relever que les réformistes sont répartis dans les deux provinces.",
+    "Relier l’unité d’action demandée par La Fontaine à la formation d’une majorité commune.",
+  ],
+  interpretationCautions: [
+    "Le document réunit des passages distincts de la même adresse; chaque coupure est signalée par […].",
+    "La Fontaine ne nomme pas Baldwin dans ces passages, mais il expose la stratégie que leur alliance met en pratique en 1841.",
+    "Conserver la distinction entre le projet formulé en 1840 et l’alliance politique mise en œuvre à partir de 1841.",
+  ],
+  pedagogicalUses: [
+    "Expliquer pourquoi les réformistes des deux sections doivent collaborer pour former une majorité.",
+    "Relier l’alliance politique au principe du gouvernement responsable.",
+  ],
+  version: "1.0",
+  approvedAt: "2026-09-02T00:00:00.000-04:00",
+} as const satisfies HistoricalDocumentRecord;
+
+export const RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT = {
+  schemaVersion: 1,
+  id: "GR-T-009",
+  title: "Baldwin veut consolider l’union des réformistes",
+  kind: "other",
+  status: "approved",
+  periodIds: ["1840-1896"],
+  knowledgeHeadingIds: ["gouvernement-responsable"],
+  operationIds: ["relationships_between_facts", "causes_and_consequences", "causal_connections"],
+  historicalDate: "10 août 1841",
+  creator: "Robert Baldwin",
+  holdingInstitution: "Baldwin Correspondence; lettre reproduite dans The Life of Robert Baldwin",
+  sourceUrl: "https://electriccanadian.com/makers/baldwin/lifeofrobertbald00wils.pdf",
+  sourceLocator: "Robert Baldwin à William Warren Baldwin, 10 août 1841, Baldwin Correspondence; passage reproduit dans George E. Wilson, The Life of Robert Baldwin, p. 132.",
+  assetUrl: "https://recherche-collection-search.bac-lac.gc.ca/eng/Home/Record?IdNumber=99756&app=fonandcol",
+  rightsStatement: "Lettre de 1841 et ouvrage de 1933 dans le domaine public au Canada; traduction-adaptation pédagogique française réalisée par Socrato.",
+  transcription: "Je pense qu’il serait très souhaitable que vous proposiez […] de faire élire M. La Fontaine […]. Je suis convaincu que rien de ce qui pourrait être fait en ce moment n’aurait un meilleur effet sur l’état des partis à la Chambre que son élection […]. Cela cimentera fortement l’union entre les réformistes du Haut et du Bas-Canada.",
+  accessibleDescription: "Extrait d’une lettre dans laquelle Robert Baldwin propose de faire élire La Fontaine dans le Haut-Canada afin de renforcer l’union politique des réformistes des deux sections.",
+  historicalContext: "Après la défaite électorale de La Fontaine dans Terrebonne, Baldwin favorise sa candidature dans la quatrième circonscription de York. La Fontaine y est élu le 23 septembre 1841, donnant une forme concrète à leur alliance politique.",
+  observationGuide: [
+    "Repérer que Baldwin souhaite faire élire La Fontaine dans une circonscription du Haut-Canada.",
+    "Relever l’effet attendu de cette élection sur les partis à la Chambre.",
+    "Relier le geste de Baldwin à l’union des réformistes du Haut et du Bas-Canada.",
+  ],
+  interpretationCautions: [
+    "Le texte est une traduction-adaptation française d’un passage anglais reproduit dans une étude historique qui cite la Baldwin Correspondence.",
+    "Les coupures sont signalées par […]; aucun passage de La Fontaine n’est mêlé à cette lettre de Baldwin.",
+    "L’élection de La Fontaine à York renforce l’alliance, mais ne suffit pas à elle seule à établir immédiatement le gouvernement responsable.",
+  ],
+  pedagogicalUses: [
+    "Montrer une action concrète de Baldwin en faveur de l’alliance avec La Fontaine.",
+    "Relier la coopération électorale à la formation d’une majorité réformiste commune.",
+  ],
+  version: "1.0",
+  approvedAt: "2026-09-02T00:00:00.000-04:00",
+} as const satisfies HistoricalDocumentRecord;
+
 export const ACTE_UNION_HISTORICAL_DOCUMENT_NEEDS = [
   createHistoricalDocumentResearchNeed({
     id: "document-need:acte-union:territory-map",

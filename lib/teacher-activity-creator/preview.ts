@@ -151,6 +151,7 @@ export function createLocalActivityPreview(config: ActivityConfiguration, catalo
       : catalogQuestion
         ? catalogQuestion.instruction
         : "Explique brièvement pourquoi cette question te semble importante.";
+  const previewDocuments = catalogQuestion ? catalog.documents.filter(({ id }) => catalogQuestion.historicalDocumentIds.includes(id)) : [];
   return {
     questionId: catalogQuestion?.id,
     format: catalogQuestion?.format ?? (config.workType === "development" ? "development-150" : "short-answer"),
@@ -164,12 +165,10 @@ export function createLocalActivityPreview(config: ActivityConfiguration, catalo
     instruction,
     guidance: [catalogQuestion?.id === CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID
       ? "Aujourd’hui, je vais t’aider à comprendre comment déterminer une cause et une conséquence. Commençons simplement : quel est l’événement historique central présenté dans les trois documents?"
-      : catalogQuestion?.format === "short-answer"
+      : previewDocuments.length === 0
       ? "J’attends ta réponse…"
-      : catalogQuestion?.format === "document-interpretation"
-        ? "Bonjour, consulte les sources puis réponds à la question."
-        : "Bonjour, consulte les sources puis réponds lorsque tu te sens prêt. Je suis là pour t’accompagner si tu as besoin d’un indice."],
-    documents: catalogQuestion ? catalog.documents.filter(({ id }) => catalogQuestion.historicalDocumentIds.includes(id)) : [],
+      : "Bonjour, consulte les sources puis réponds à la question."],
+    documents: previewDocuments,
     timelineInteraction: catalogQuestion?.timelineInteraction,
     associationInteraction: catalogQuestion?.associationInteraction,
     causalChainInteraction: catalogQuestion?.causalChainInteraction,

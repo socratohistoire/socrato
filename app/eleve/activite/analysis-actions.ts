@@ -8,6 +8,7 @@ import { createConfiguredOpenAIPedagogicalAnalyzer, selectRelevantMonographPassa
 import { createPedagogicalQuestionDefinition } from "@/lib/pedagogical-session-engine/question-context";
 import type { StudentResponse } from "@/lib/pedagogical-session-engine/types";
 import { discardUnknownPedagogicalIds, validateStructuredAnalysis } from "@/lib/pedagogical-session-engine/validation";
+import { recordStudentAnalysisFailure } from "@/lib/server/student-analysis-failures";
 
 type AnalysisRequest = {
   activityId: string;
@@ -39,15 +40,19 @@ const CONSOLIDATION_COACH_SCHEMA = {
 const CONSOLIDATION_COACH_MAX_ATTEMPTS = 2;
 const CONSOLIDATION_COACH_TIMEOUT_MS = 25_000;
 const STUDENT_ANALYSIS_ATTEMPTS = 2;
-const STUDENT_ANALYSIS_ATTEMPT_TIMEOUT_MS = 12_000;
+const STUDENT_ANALYSIS_ATTEMPT_TIMEOUT_MS = 20_000;
 
-async function withStudentAnalysisDeadline<T>(operation: Promise<T>) {
+async function withStudentAnalysisDeadline<T>(operation: (signal: AbortSignal) => Promise<T>) {
+  const controller = new AbortController();
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error("L’analyse pédagogique a dépassé le délai de cette tentative.")), STUDENT_ANALYSIS_ATTEMPT_TIMEOUT_MS);
+    timeoutId = setTimeout(() => {
+      controller.abort(new Error("student_analysis_deadline"));
+      reject(new Error("L’analyse pédagogique a dépassé le délai de cette tentative."));
+    }, STUDENT_ANALYSIS_ATTEMPT_TIMEOUT_MS);
   });
   try {
-    return await Promise.race([operation, timeout]);
+    return await Promise.race([operation(controller.signal), timeout]);
   } finally {
     if (timeoutId) clearTimeout(timeoutId);
   }
@@ -153,12 +158,14 @@ export async function analyzeAuthorizedStudentResponse(request: AnalysisRequest)
     if (process.env.SOCRATO_PEDAGOGICAL_ANALYZER === "openai") {
       let lastError: unknown;
       for (let attempt = 1; attempt <= STUDENT_ANALYSIS_ATTEMPTS; attempt += 1) {
+        const startedAt = Date.now();
         try {
-          candidate = await withStudentAnalysisDeadline(analyzer.analyze(response, definition));
+          candidate = await withStudentAnalysisDeadline((signal) => analyzer.analyze(response, definition, signal));
           lastError = undefined;
           break;
         } catch (error) {
           lastError = error;
+          await recordStudentAnalysisFailure({ activityId: response.activityId, questionId: response.questionId, attemptNumber: attempt, durationMs: Date.now() - startedAt, error });
           if (attempt < STUDENT_ANALYSIS_ATTEMPTS) await waitBeforeRetry(attempt);
         }
       }

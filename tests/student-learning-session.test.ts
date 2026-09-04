@@ -368,7 +368,7 @@ test("limite aussi les choix multiples à trois essais", () => {
 });
 
 test("réactive la réponse si l’analyse Socrato tarde trop longtemps", () => {
-  assert.match(viewSource, /const RESPONSE_ANALYSIS_TIMEOUT_MS = 35_000/);
+  assert.match(viewSource, /const RESPONSE_ANALYSIS_TIMEOUT_MS = 45_000/);
   assert.match(viewSource, /Promise\.race\(\[operation, timeout\]\)/);
   assert.match(viewSource, /Socrato met trop de temps à répondre\. Ta réponse a été conservée; tu peux réessayer\./);
   assert.match(viewSource, /catch \(error\)[\s\S]*setResponse\(content\)[\s\S]*finally \{\s*submissionLockRef\.current = false;\s*setSubmitting\(false\)/);
@@ -639,7 +639,16 @@ test("rend le schéma politique visuel plutôt qu’un tableau statistique", () 
   assert.match(viewSource, /document\.content\.kind === "political_structure_diagram"/);
   assert.match(viewSource, /className="student-political-structure"/);
   assert.match(viewSource, /Assemblée législative · 84 députés/);
+  assert.match(viewSource, /Le Conseil propose des mesures ↓/);
+  assert.match(viewSource, /L’Assemblée débat, vote et transmet les projets ↑/);
   assert.match(cssSource, /\.student-political-structure\{[^}]*display:grid/);
+  assert.match(cssSource, /\.student-political-structure \.ps-council-links/);
+  assert.match(cssSource, /--diagram-link:#f2cc82/);
+  assert.match(viewSource, /responsible-government-structure/);
+  assert.match(viewSource, /responsible-government-1848/);
+  assert.match(viewSource, /agit par l’intermédiaire du ↓/);
+  assert.match(viewSource, /élit 42 députés ↑/);
+  assert.match(viewSource, /Si le Conseil exécutif perd la confiance/);
 });
 
 test("réunit le numéro et le type neutre dans l’en-tête de chaque document", () => {
@@ -709,6 +718,11 @@ test("empile tous les documents associés sans vignettes et adapte leur réparti
   assert.match(cssSource, /\.document-content-compact--short blockquote\{[^}]*font-size:clamp\(\.88rem/);
   assert.match(cssSource, /\.document-content-compact--medium blockquote\{[^}]*font-size:clamp\(\.78rem/);
   assert.match(cssSource, /\.document-content-compact blockquote\{[^}]*-webkit-line-clamp:unset/);
+});
+
+test("affiche simultanément les cartes documentaires compactes sans défilement interne", () => {
+  assert.match(cssSource, /\.stacked-document-list:has\(>\.stacked-document:nth-child\(4\):last-child\)\{grid-template-rows:repeat\(4,minmax\(0,1fr\)\)!important\}/);
+  assert.match(cssSource, /\.document-system-card--stacked \.stacked-document-list\{[^}]*overflow:visible!important/);
 });
 
 test("affiche une identification sobre et place les métadonnées sous Détails", () => {
@@ -807,4 +821,12 @@ test("préserve les thèmes clair et sombre et les contrats accessibles", () => 
   assert.match(cssSource, /prefers-reduced-motion/);
   assert.match(viewSource, /aria-live="polite"/);
   assert.match(viewSource, /aria-pressed/);
+});
+
+test("guide l’élève sous la chaîne après une tentative imparfaite", () => {
+  assert.match(viewSource, /className="causal-chain-socrato-help" role="status" aria-live="polite"/);
+  assert.match(viewSource, /Reprends seulement les maillons suivants/);
+  assert.match(viewSource, /answer\.includes\("indemni"\).*answer\.includes\("rebellion"\)/);
+  assert.match(viewSource, /answer\.includes\("instabilit"\).*answer\.includes\("politique"\)/);
+  assert.match(cssSource, /\.causal-chain-socrato-help\{[^}]*border-radius:18px/);
 });

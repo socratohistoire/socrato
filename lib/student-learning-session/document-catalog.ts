@@ -1,15 +1,16 @@
 import type { LearningSessionDocument } from "./types.ts";
-import { ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_CONSOLIDATED_REVENUE_FUND_DOCUMENT, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT, ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT, ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT, ACTE_UNION_MAP_ADAPTATION_DRAFT, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT, PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT } from "../pedagogical-reference/historical-document-needs.ts";
+import { ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_CONSOLIDATED_REVENUE_FUND_DOCUMENT, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT, ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT, ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT, ACTE_UNION_MAP_ADAPTATION_DRAFT, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT, PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT, RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT, RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT } from "../pedagogical-reference/historical-document-needs.ts";
 import { ACTE_UNION_DURHAM_DOCUMENT, ACTE_UNION_DURHAM_PRESENTATIONS } from "../pedagogical-reference/historical-document-presentations.ts";
 import { ACTE_UNION_DEBT_COMPARISON_CHART, ACTE_UNION_POPULATION_COMPARISON_CHART } from "../pedagogical-reference/historical-comparison-charts.ts";
 import { ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM, ACTE_UNION_STUDENT_TIMELINE, RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS, RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE } from "../pedagogical-reference/responsible-government-iconography.ts";
-import { RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT } from "../pedagogical-reference/responsible-government-primary-documents.ts";
+import { RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT, RESPONSIBLE_GOVERNMENT_DOUBLE_MAJORITY_DEBATE_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_GREY_MINISTRY_LETTER_DOCUMENT, RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT, RESPONSIBLE_GOVERNMENT_MINISTRY_DEFEAT_1858_DOCUMENT, RESPONSIBLE_GOVERNMENT_REBELLION_LOSSES_ACT_DOCUMENT, RESPONSIBLE_GOVERNMENT_SECTIONAL_DIFFICULTIES_1864_DOCUMENT } from "../pedagogical-reference/responsible-government-primary-documents.ts";
 import { RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION } from "../pedagogical-reference/responsible-government-electoral-law.ts";
 
 const PUBLIC_DOMAIN_RIGHTS = "Texte original de 1840 dans le domaine public.";
 const RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_IMAGE = RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.find(({ id }) => id === "GR-I-002")!;
 const RESPONSIBLE_GOVERNMENT_MAN_FIRED_PARLIAMENT_CARTOON = RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.find(({ id }) => id === "GR-I-006")!;
 const RESPONSIBLE_GOVERNMENT_HERE_WE_GO_CARTOON = RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.find(({ id }) => id === "GR-I-007")!;
+export const RESPONSIBLE_GOVERNMENT_FUNCTIONING_DIAGRAM_ID = "GR-D-002";
 
 const REBELLION_DOCUMENT_TYPE_LABELS: Record<string, string> = {
   "AU-T-006": "Suspension du régime représentatif",
@@ -50,6 +51,27 @@ export const ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENTS: LearningSessionDocument
 }));
 
 export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
+  ...[
+    RESPONSIBLE_GOVERNMENT_ELGIN_GREY_MINISTRY_LETTER_DOCUMENT,
+    RESPONSIBLE_GOVERNMENT_REBELLION_LOSSES_ACT_DOCUMENT,
+    RESPONSIBLE_GOVERNMENT_DOUBLE_MAJORITY_DEBATE_DOCUMENT,
+    RESPONSIBLE_GOVERNMENT_MINISTRY_DEFEAT_1858_DOCUMENT,
+    RESPONSIBLE_GOVERNMENT_SECTIONAL_DIFFICULTIES_1864_DOCUMENT,
+  ].map((document) => ({
+    id: document.id,
+    title: document.title,
+    typeLabel: document.kind === "law-or-official-text" ? "Texte officiel" : document.kind === "newspaper" ? "Compte rendu parlementaire" : document.creator.includes("Brown") ? "Discours parlementaire" : "Correspondance privée",
+    dateLabel: document.historicalDate,
+    authorLabel: document.creator,
+    institutionLabel: document.holdingInstitution,
+    sourceLabel: document.sourceLocator,
+    sourceUrls: [document.sourceUrl, document.assetUrl],
+    rightsLabel: document.rightsStatement,
+    editorialNote: document.interpretationCautions[0],
+    content: { kind: "historical_excerpt" as const, excerpt: document.transcription },
+    historicalKnowledgeIds: ["gouvernement-responsable", "instabilite-ministerielle", "grande-coalition"],
+    intellectualOperationIds: [...document.operationIds],
+  })),
   {
     id: RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.id,
     title: RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.title,
@@ -97,6 +119,21 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
     historicalKnowledgeIds: ["gouvernement-responsable", "loi-indemnisation", "incendie-parlement-montreal"],
     intellectualOperationIds: [...RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.operationIds],
   },
+  {
+    id: RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT.id,
+    title: RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT.title,
+    typeLabel: "Discours parlementaire",
+    dateLabel: RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT.historicalDate,
+    authorLabel: RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT.creator,
+    institutionLabel: RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT.holdingInstitution,
+    sourceLabel: RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT.sourceLocator,
+    sourceUrls: [RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT.sourceUrl, RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT.assetUrl],
+    rightsLabel: RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT.rightsStatement,
+    editorialNote: RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT.interpretationCautions[0],
+    content: { kind: "historical_excerpt", excerpt: RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT.transcription },
+    historicalKnowledgeIds: ["gouvernement-responsable", "instabilite-ministerielle", "grande-coalition"],
+    intellectualOperationIds: [...RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT.operationIds],
+  },
   ...[RESPONSIBLE_GOVERNMENT_MAN_FIRED_PARLIAMENT_CARTOON, RESPONSIBLE_GOVERNMENT_HERE_WE_GO_CARTOON].map((document) => ({
     id: document.id,
     title: document.title,
@@ -131,6 +168,20 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
     historicalKnowledgeIds: ["acte-union", "institutions-politiques"], intellectualOperationIds: [...ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM.operationIds],
   },
   {
+    id: RESPONSIBLE_GOVERNMENT_FUNCTIONING_DIAGRAM_ID,
+    title: "Fonctionnement politique de la Province du Canada après 1848",
+    typeLabel: "Schéma politique",
+    dateLabel: "À partir de 1848",
+    authorLabel: "Socrato",
+    sourceLabel: "Schéma pédagogique fondé sur la pratique du gouvernement responsable dans la Province du Canada.",
+    sourceUrls: [],
+    rightsLabel: "Création pédagogique Socrato.",
+    editorialNote: "Le gouverneur conserve ses pouvoirs officiels, mais les exerce normalement suivant l’avis d’un ministère qui doit garder la confiance de l’Assemblée élue.",
+    content: { kind: "political_structure_diagram", period: "gouvernement-responsable" },
+    historicalKnowledgeIds: ["gouvernement-responsable", "institutions-politiques", "confiance-parlementaire"],
+    intellectualOperationIds: ["relationships_between_facts"],
+  },
+  {
     id: ACTE_UNION_CONSOLIDATED_REVENUE_FUND_DOCUMENT.id,
     title: ACTE_UNION_CONSOLIDATED_REVENUE_FUND_DOCUMENT.title,
     typeLabel: "Extrait d’un texte législatif",
@@ -161,6 +212,38 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
     content: { kind: "historical_excerpt", excerpt: ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT.transcription },
     historicalKnowledgeIds: ["acte-union", "gouvernement-responsable", "alliance-reformiste"],
     intellectualOperationIds: [...ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT.operationIds],
+  },
+  {
+    id: RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT.id,
+    title: RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT.title,
+    typeLabel: "Extrait d’une adresse politique",
+    dateLabel: RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT.historicalDate,
+    authorLabel: RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT.creator,
+    institutionLabel: RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT.holdingInstitution,
+    originalDocumentLabel: "Adresse aux électeurs du comté de Terrebonne",
+    sourceLabel: RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT.sourceLocator,
+    sourceUrls: [RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT.sourceUrl, RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT.assetUrl],
+    rightsLabel: RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT.rightsStatement,
+    editorialNote: RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT.interpretationCautions[0],
+    content: { kind: "historical_excerpt", excerpt: RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT.transcription },
+    historicalKnowledgeIds: ["gouvernement-responsable", "alliance-reformiste", "majorite-parlementaire"],
+    intellectualOperationIds: [...RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT.operationIds],
+  },
+  {
+    id: RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT.id,
+    title: RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT.title,
+    typeLabel: "Extrait d’une lettre politique",
+    dateLabel: RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT.historicalDate,
+    authorLabel: RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT.creator,
+    institutionLabel: RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT.holdingInstitution,
+    originalDocumentLabel: "Lettre de Robert Baldwin à William Warren Baldwin",
+    sourceLabel: RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT.sourceLocator,
+    sourceUrls: [RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT.sourceUrl, RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT.assetUrl],
+    rightsLabel: RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT.rightsStatement,
+    editorialNote: RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT.interpretationCautions[0],
+    content: { kind: "historical_excerpt", excerpt: RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT.transcription },
+    historicalKnowledgeIds: ["gouvernement-responsable", "alliance-reformiste", "majorite-parlementaire"],
+    intellectualOperationIds: [...RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT.operationIds],
   },
   {
     id: ACTE_UNION_STUDENT_TIMELINE.id, title: ACTE_UNION_STUDENT_TIMELINE.title, typeLabel: "Ligne du temps", dateLabel: ACTE_UNION_STUDENT_TIMELINE.periodLabel, authorLabel: ACTE_UNION_STUDENT_TIMELINE.creator,

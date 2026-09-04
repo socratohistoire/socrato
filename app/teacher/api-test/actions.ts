@@ -11,24 +11,31 @@ import type { StudentResponse } from "@/lib/pedagogical-session-engine/types";
 import { discardUnknownPedagogicalIds, validateStructuredAnalysis } from "@/lib/pedagogical-session-engine/validation";
 import { createCatalogLearningSessionQuestions } from "@/lib/student-learning-session/demo-provider";
 
-type TestRequest = { questionId: string; content: string; attemptNumber: number; priorTurn?: StudentResponse["priorTurn"] };
+type TestRequest = { notionId: string; questionId: string; content: string; attemptNumber: number; priorTurn?: StudentResponse["priorTurn"] };
 
-export async function analyzeActeUnionTestResponse(request: TestRequest) {
+const TEST_NOTIONS = {
+  "acte-union": "Acte d’Union",
+  "gouvernement-responsable": "Gouvernement responsable",
+} as const;
+
+export async function analyzeTeacherTestResponse(request: TestRequest) {
   try {
     await requireTeacherActor();
     if (process.env.SOCRATO_PEDAGOGICAL_ANALYZER !== "openai") {
       return { ok: false as const, error: "Sol n’est pas activé dans la configuration actuelle." };
     }
-    if (typeof request?.questionId !== "string" || typeof request?.content !== "string"
+    if (!(request?.notionId in TEST_NOTIONS) || typeof request?.questionId !== "string" || typeof request?.content !== "string"
       || request.content.trim().length === 0 || request.content.length > 10_000
       || !Number.isInteger(request.attemptNumber) || request.attemptNumber < 1 || request.attemptNumber > 3) {
       return { ok: false as const, error: "Choisissez une question et écrivez une réponse à tester." };
     }
-    const ids = getQuestionsForKnowledgeHeading("acte-union").map(({ id }) => id);
+    const notionId = request.notionId as keyof typeof TEST_NOTIONS;
+    const notionTitle = TEST_NOTIONS[notionId];
+    const ids = getQuestionsForKnowledgeHeading(notionId).map(({ id }) => id);
     const catalog = createCatalogLearningSessionQuestions(ids);
     const question = catalog.questions.find(({ id }) => id === request.questionId);
-    if (!question) return { ok: false as const, error: "Cette question n’appartient pas au catalogue de l’Acte d’Union." };
-    const definition = createPedagogicalQuestionDefinition(question, "acte-union", "Acte d’Union", catalog.documents);
+    if (!question) return { ok: false as const, error: `Cette question n’appartient pas au catalogue « ${notionTitle} ».` };
+    const definition = createPedagogicalQuestionDefinition(question, notionId, notionTitle, catalog.documents);
     const response: StudentResponse = {
       sessionId: "teacher-api-test", activityId: "teacher-api-test", questionId: definition.id,
       notionId: definition.notionId, primaryOperationId: definition.primaryOperationId,

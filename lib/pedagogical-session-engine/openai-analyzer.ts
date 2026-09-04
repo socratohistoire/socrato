@@ -18,11 +18,11 @@ export type OpenAIPedagogicalAnalyzerOptions = {
   retryBaseDelayMs?: number;
 };
 
-const DEFAULT_REQUEST_TIMEOUT_MS = 25_000;
+const DEFAULT_REQUEST_TIMEOUT_MS = 18_000;
 const MAX_AI_CALLS_PER_STUDENT_RESPONSE = 2;
 
 class OpenAIRequestError extends Error {
-  constructor(readonly status: number) {
+  constructor(readonly status: number, readonly requestId?: string) {
     super(`L’analyse OpenAI a échoué (${status}).`);
   }
 }
@@ -290,7 +290,7 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
     this.retryBaseDelayMs = options.retryBaseDelayMs ?? 300;
   }
 
-  async analyze(response: StudentResponse, question: PedagogicalQuestionDefinition): Promise<StructuredResponseAnalysis> {
+  async analyze(response: StudentResponse, question: PedagogicalQuestionDefinition, signal?: AbortSignal): Promise<StructuredResponseAnalysis> {
     const greeting = lightweightGreetingAnalysis(response.content);
     if (greeting) return greeting;
     let callCount = 0;
@@ -305,6 +305,9 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
       return runQueuedAnalysis(async (waitDurationMs) => {
         recordAICall({ model: this.model, callType: "pedagogical_analysis", activityId: response.activityId, questionId: response.questionId, waitDurationMs });
         const controller = new AbortController();
+        const abortFromCaller = () => controller.abort(signal?.reason);
+        if (signal?.aborted) abortFromCaller();
+        else signal?.addEventListener("abort", abortFromCaller, { once: true });
         const timeoutId = setTimeout(() => controller.abort(), this.requestTimeoutMs);
         try {
           const apiResponse = await this.fetcher(this.endpoint, {
@@ -321,7 +324,7 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
           });
           if (!apiResponse.ok) {
             retryAfterRateLimit = apiResponse.status === 429;
-            throw new OpenAIRequestError(apiResponse.status);
+            throw new OpenAIRequestError(apiResponse.status, apiResponse.headers.get("x-request-id") ?? undefined);
           }
           return JSON.parse(extractOutputText(await apiResponse.json())) as unknown;
         } catch (error) {
@@ -329,6 +332,7 @@ export class OpenAIPedagogicalResponseAnalyzer implements ResponseAnalyzer {
           throw error;
         } finally {
           clearTimeout(timeoutId);
+          signal?.removeEventListener("abort", abortFromCaller);
         }
       });
     };

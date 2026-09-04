@@ -16,7 +16,7 @@ export type LearningSessionDocumentContent =
       kind: "historical_timeline";
       entries: Array<{ date: string; phase: string; title: string; description: string; imageUrl: string; imageAlt: string; credit: string }>;
     }
-  | { kind: "political_structure_diagram" }
+  | { kind: "political_structure_diagram"; period?: "acte-union" | "gouvernement-responsable" }
   | { kind: "historical_excerpt"; excerpt: string }
   | { kind: "historical_image"; localSrc: string; alt: string; description: string };
 

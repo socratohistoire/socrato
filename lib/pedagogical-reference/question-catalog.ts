@@ -4,9 +4,9 @@ import { RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD } from "./records/responsible-
 import { ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM, ACTE_UNION_STUDENT_TIMELINE, RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS, RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE } from "./responsible-government-iconography.ts";
 import { ACTE_UNION_DEBT_COMPARISON_CHART, ACTE_UNION_POPULATION_COMPARISON_CHART } from "./historical-comparison-charts.ts";
 import { ACTE_UNION_DOCUMENT_SOURCE_CATALOG } from "./acte-union-document-source-catalog.ts";
-import { ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT, ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT, ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT, ACTE_UNION_MAP_ADAPTATION_DRAFT, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT, ACTE_UNION_SPECIAL_COUNCIL_RESOLUTIONS_DOCUMENT, PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT } from "./historical-document-needs.ts";
+import { ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT, ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT, ACTE_UNION_MAP_ADAPTATION_DRAFT, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT, ACTE_UNION_SPECIAL_COUNCIL_RESOLUTIONS_DOCUMENT, PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT, RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT, RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT } from "./historical-document-needs.ts";
 import { ACTE_UNION_DURHAM_ADVANCEMENT_ANGLICIZATION_PRESENTATION, ACTE_UNION_DURHAM_ANGLICIZATION_PRESENTATION, ACTE_UNION_DURHAM_CONTINUITIES_PRESENTATION, ACTE_UNION_DURHAM_DOCUMENT, ACTE_UNION_DURHAM_FINANCES_PRESENTATION, ACTE_UNION_DURHAM_RESPONSIBLE_GOVERNMENT_PRESENTATION, ACTE_UNION_DURHAM_UNION_PRESENTATION } from "./historical-document-presentations.ts";
-import { RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_GREY_MINISTRY_LETTER_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_MINISTRY_APPOINTMENTS_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_NON_INTERVENTION_DOCUMENT, RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT, RESPONSIBLE_GOVERNMENT_METCALFE_RESIGNATION_DOCUMENT } from "./responsible-government-primary-documents.ts";
+import { RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT, RESPONSIBLE_GOVERNMENT_DOUBLE_MAJORITY_DEBATE_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_GREY_MINISTRY_LETTER_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_MINISTRY_APPOINTMENTS_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_NON_INTERVENTION_DOCUMENT, RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT, RESPONSIBLE_GOVERNMENT_METCALFE_RESIGNATION_DOCUMENT, RESPONSIBLE_GOVERNMENT_MINISTRY_DEFEAT_1858_DOCUMENT, RESPONSIBLE_GOVERNMENT_SECTIONAL_DIFFICULTIES_1864_DOCUMENT } from "./responsible-government-primary-documents.ts";
 import { RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION } from "./responsible-government-electoral-law.ts";
 
 const PILOT_SOURCE_IDS = ["lower-canada-92-resolutions-1834-primary", "uk-russell-resolutions-1837-primary"] as const;
@@ -36,7 +36,7 @@ const imprisonmentDeportationDocumentIds = [ACTE_UNION_BANQ_512_PRISONERS_DOCUME
 const imprisonmentDeportationSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => imprisonmentDeportationDocumentIds.some((documentId) => id === `document-source:${documentId}`));
 const causesConsequencesDevelopmentDocumentIds = [PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT.id, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT.id, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT.id, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT.id];
 const causesConsequencesDevelopmentSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => causesConsequencesDevelopmentDocumentIds.some((documentId) => id === `document-source:${documentId}`));
-const coalitionShortAnswerDocumentIds = [ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM.id, ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT.id];
+const coalitionShortAnswerDocumentIds = [ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM.id, RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT.id, RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT.id];
 const coalitionShortAnswerSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => coalitionShortAnswerDocumentIds.some((documentId) => id === `document-source:${documentId}`));
 const responsibleRecordSources = RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD.sourceCatalog;
 const responsibleTimelineSources = RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.entries.map((entry, index) => ({
@@ -56,6 +56,8 @@ const responsibleGeorgeBrownCoalitionSources = ACTE_UNION_DOCUMENT_SOURCE_CATALO
 const responsibleComparisonDocumentIds = [RESPONSIBLE_GOVERNMENT_METCALFE_RESIGNATION_DOCUMENT.id, RESPONSIBLE_GOVERNMENT_ELGIN_NON_INTERVENTION_DOCUMENT.id];
 const responsibleComparisonSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => responsibleComparisonDocumentIds.some((documentId) => id === `document-source:${documentId}`));
 const responsibleInstabilitySources = responsibleRecordSources.filter(({ id }) => id === "anq-gouvernement-responsable" || id === "anq-province-canada");
+const responsibleInstabilityDocumentIds = [RESPONSIBLE_GOVERNMENT_DOUBLE_MAJORITY_DEBATE_DOCUMENT.id, RESPONSIBLE_GOVERNMENT_MINISTRY_DEFEAT_1858_DOCUMENT.id, RESPONSIBLE_GOVERNMENT_SECTIONAL_DIFFICULTIES_1864_DOCUMENT.id, RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT.id];
+const responsibleInstabilityDocumentSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => responsibleInstabilityDocumentIds.some((documentId) => id === `document-source:${documentId}`));
 const responsibleElectoralLawSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === "document-source:GR-T-001");
 const parliamentFireDocument = RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.find(({ id }) => id === "GR-I-002")!;
 const manFiredParliamentCartoon = RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.find(({ id }) => id === "GR-I-006")!;
@@ -534,7 +536,7 @@ export const ACTE_UNION_DURHAM_RECOMMENDATIONS_DOCUMENT_QUESTION = {
   historicalRecordId: "historical-record:acte-union",
   status: "approved",
   format: "document-interpretation",
-  prompt: "Nomme deux recommandations formulées par lord Durham dans son rapport. Justifie ta réponse à l’aide des deux extraits.",
+  prompt: "Pour chacun des deux extraits, nomme la recommandation formulée par lord Durham et relève un passage qui la justifie.",
   instruction: "Nomme une recommandation différente dans chaque extrait et relève un élément du texte qui permet de la reconnaître.",
   expectedAnswer: "Lord Durham recommande d’abord de réunir le Haut-Canada et le Bas-Canada sous une seule législature. Il recommande également que les principaux responsables du gouvernement colonial soient responsables devant la législature et qu’ils possèdent sa confiance.",
   historicalDocumentIds: [ACTE_UNION_DURHAM_UNION_PRESENTATION.id, ACTE_UNION_DURHAM_RESPONSIBLE_GOVERNMENT_PRESENTATION.id],
@@ -822,9 +824,9 @@ export const RESPONSIBLE_GOVERNMENT_COALITION_SHORT_ANSWER_QUESTION = {
   historicalRecordId: "historical-record:gouvernement-responsable",
   status: "approved",
   format: "short-answer",
-  prompt: "Explique une contrainte qui a poussé Baldwin et La Fontaine à créer une alliance.",
-  instruction: "Appuie ta réponse sur le schéma de l’Assemblée et sur la lettre de Francis Hincks à Louis-Hippolyte La Fontaine.",
-  expectedAnswer: "La représentation égale accorde 42 députés à chaque section dans une même Assemblée. Pour obtenir une majorité et défendre des réformes communes, les réformistes du Canada-Est et du Canada-Ouest ont intérêt à collaborer. La lettre de Hincks à La Fontaine montre qu’ils considèrent leur aide mutuelle comme nécessaire; cette stratégie prépare l’alliance politique associée ensuite à La Fontaine et Baldwin.",
+  prompt: "Explique une contrainte qui a poussé Baldwin et La Fontaine à créer une alliance politique en 1841.",
+  instruction: "Appuie ta réponse sur le schéma de l’Assemblée, l’adresse de La Fontaine et la lettre de Baldwin.",
+  expectedAnswer: "La représentation égale accorde 42 députés à chaque section dans une même Assemblée. Pour former une majorité capable de gouverner et de faire avancer le gouvernement responsable, les réformistes du Canada-Est et du Canada-Ouest doivent collaborer. La Fontaine affirme que leur unité d’action est nécessaire; Baldwin concrétise cette stratégie en favorisant l’élection de La Fontaine dans le Haut-Canada pour consolider l’union des réformistes.",
   historicalDocumentIds: coalitionShortAnswerDocumentIds,
   commonErrors: ["Présenter LaFontaine et Baldwin comme des représentants de la même section.", "Affirmer que l’Acte d’Union instaure immédiatement le gouvernement responsable.", "Nommer l’alliance sans expliquer son lien avec la législature commune."],
   distractors: [],
@@ -879,11 +881,11 @@ export const RESPONSIBLE_GOVERNMENT_CAUSAL_CHAIN_QUESTION = {
   historicalDocumentIds: [], commonErrors: ["Confondre la loi d’indemnisation avec l’incendie du Parlement.", "Présenter l’instabilité ministérielle comme une conséquence immédiate de 1849.", "Confondre la Grande Coalition de 1864 avec la Confédération de 1867."], distractors: [], operationId: "causal_connections", sourceIds: responsibleInstabilitySources.map(({ id }) => id), sourceCatalog: responsibleInstabilitySources,
   rationale: "La chaîne fait construire six liens successifs et présente explicitement la Grande Coalition comme une réponse politique à l’instabilité ministérielle.", review: responsibleGovernmentReadyReview,
   causalChainInteraction: { steps: [
-    { id: "gr-chain-1848", date: "1848", prompt: "Nomme un accomplissement important de l’alliance réformiste La Fontaine–Baldwin.", placeholder: "Réponse courte", acceptedAnswers: ["gouvernement responsable", "obtention du gouvernement responsable"], expectedAnswer: "Le gouvernement responsable" },
+    { id: "gr-chain-1848", date: "1848", prompt: "Nomme un accomplissement important de l’alliance réformiste La Fontaine–Baldwin.", placeholder: "Réponse courte", acceptedAnswers: ["gouvernement responsable", "obtention du gouvernement responsable", "responsabilité ministérielle", "responsabilite ministerielle"], expectedAnswer: "Le gouvernement responsable" },
     { id: "gr-chain-1849-law", date: "1849", prompt: "Quelle loi controversée le ministère réformiste fait-il adopter?", placeholder: "Quelques mots", acceptedAnswers: ["loi d’indemnisation", "loi d'indemnisation", "loi d’indemnisation des pertes", "loi d'indemnisation des pertes"], expectedAnswer: "La loi d’indemnisation" },
     { id: "gr-chain-1849-result", date: "1849", prompt: "Quelle réaction violente suit la sanction de cette loi?", placeholder: "Réponse courte", acceptedAnswers: ["incendie du parlement", "incendie du parlement de montréal", "émeutes de montréal", "émeutes et incendie du parlement"], expectedAnswer: "Les émeutes et l’incendie du Parlement de Montréal" },
     { id: "gr-chain-instability", date: "1854–1864", prompt: "Quel problème politique marque cette période?", placeholder: "Quelques mots", acceptedAnswers: ["instabilité ministérielle", "instabilite ministerielle"], expectedAnswer: "L’instabilité ministérielle" },
-    { id: "gr-chain-cause", date: "1854–1864", prompt: "Pourquoi les ministères tombent-ils fréquemment?", placeholder: "Réponse courte", acceptedAnswers: ["coalitions fragiles", "double majorité", "difficile de conserver la majorité", "perte de confiance"], expectedAnswer: "Les coalitions sont fragiles et conservent difficilement la double majorité" },
+    { id: "gr-chain-cause", date: "1854–1864", prompt: "Pourquoi les ministères tombent-ils fréquemment?", placeholder: "Réponse courte", acceptedAnswers: ["coalitions fragiles", "les coalitions sont fragiles", "appui des deux sections", "appui dans les deux sections", "double majorité", "difficile de conserver la majorité", "perte de confiance"], expectedAnswer: "Les coalitions sont fragiles et conservent difficilement la double majorité" },
     { id: "gr-chain-1864", date: "1864", prompt: "Quelle solution politique est formée pour sortir de l’impasse?", placeholder: "Quelques mots", acceptedAnswers: ["grande coalition", "la grande coalition"], expectedAnswer: "La Grande Coalition" },
   ] },
 } as const satisfies ApprovedQuestion;
@@ -893,7 +895,7 @@ export const RESPONSIBLE_GOVERNMENT_FUNCTIONING_SHORT_ANSWER_QUESTION = {
   prompt: "Comment fonctionne le gouvernement responsable? Explique les liens entre l’Assemblée, le ministère et le gouverneur.",
   instruction: "Réponds en reliant les trois institutions et en utilisant les expressions confiance parlementaire, ministère et gouverneur.",
   expectedAnswer: "L’Assemblée élue accorde ou retire sa confiance au ministère. Le ministère dirige les affaires intérieures tant qu’il conserve l’appui de la majorité. Le gouverneur nomme officiellement les ministres, mais choisit normalement des personnes capables d’obtenir cette confiance et suit leurs avis. Si le ministère perd un vote de confiance, il doit normalement démissionner ou demander des élections.",
-  historicalDocumentIds: [], commonErrors: ["Affirmer que l’Assemblée nomme directement les ministres.", "Présenter le gouverneur comme dépourvu de toute fonction.", "Oublier les conséquences d’une perte de confiance."], distractors: [], operationId: "relationships_between_facts", sourceIds: responsibleFunctioningSources.map(({ id }) => id), sourceCatalog: responsibleFunctioningSources,
+  historicalDocumentIds: ["GR-D-002"], commonErrors: ["Affirmer que l’Assemblée nomme directement les ministres.", "Présenter le gouverneur comme dépourvu de toute fonction.", "Oublier les conséquences d’une perte de confiance."], distractors: [], operationId: "relationships_between_facts", sourceIds: responsibleFunctioningSources.map(({ id }) => id), sourceCatalog: responsibleFunctioningSources,
   rationale: "La question oblige l’élève à mettre en relation l’Assemblée, le ministère et le gouverneur plutôt qu’à réciter une définition isolée.", review: responsibleGovernmentReadyReview,
 } as const satisfies ApprovedQuestion;
 
@@ -1038,9 +1040,9 @@ export const RESPONSIBLE_GOVERNMENT_METCALFE_ELGIN_COMPARISON_QUESTION = {
 export const RESPONSIBLE_GOVERNMENT_INSTABILITY_SHORT_ANSWER_QUESTION = {
   schemaVersion: 1, id: "question:gouvernement-responsable:short-answer-005", scope: "notional", knowledgeHeadingId: "gouvernement-responsable", relatedKnowledgeHeadingIds: ["gouvernement-responsable"], referenceCardId: "reference-card:gouvernement-responsable", historicalRecordId: "historical-record:gouvernement-responsable", status: "ready-for-review", format: "short-answer",
   prompt: "Pourquoi le gouvernement responsable entraîne-t-il une instabilité ministérielle entre 1854 et 1864, et comment cette instabilité contribue-t-elle à la formation de la Grande Coalition?",
-  instruction: "Établis une chaîne causale qui relie la double majorité, les coalitions fragiles, les défaites en Chambre et la Grande Coalition.",
+  instruction: "À l’aide des quatre documents, établis une chaîne causale qui relie la double majorité, les coalitions fragiles, les défaites en Chambre et la Grande Coalition.",
   expectedAnswer: "Pour gouverner durablement, un ministère cherche souvent l’appui d’une majorité dans l’ensemble de l’Assemblée et dans chacune des deux sections. Les intérêts différents du Canada-Est et du Canada-Ouest rendent ces coalitions fragiles. Des défaites importantes en Chambre entraînent des démissions et la succession rapide de ministères. En 1864, cette impasse pousse des adversaires politiques à former la Grande Coalition afin de rechercher une nouvelle solution constitutionnelle.",
-  historicalDocumentIds: [], commonErrors: ["Présenter le gouvernement responsable comme la garantie d’un gouvernement stable.", "Confondre double majorité et représentation égale.", "Affirmer que la Confédération existe déjà en 1864."], distractors: [], operationId: "causal_connections", sourceIds: responsibleInstabilitySources.map(({ id }) => id), sourceCatalog: responsibleInstabilitySources,
+  historicalDocumentIds: responsibleInstabilityDocumentIds, commonErrors: ["Présenter le gouvernement responsable comme la garantie d’un gouvernement stable.", "Confondre double majorité et représentation égale.", "Affirmer que la Confédération existe déjà en 1864."], distractors: [], operationId: "causal_connections", sourceIds: responsibleInstabilityDocumentSources.map(({ id }) => id), sourceCatalog: responsibleInstabilityDocumentSources,
   rationale: "La question vérifie l’explication causale de la principale difficulté du régime entre 1854 et 1864 et prépare la transition vers la notion suivante.", review: responsibleGovernmentReadyReview,
 } as const satisfies ApprovedQuestion;
 

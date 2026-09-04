@@ -162,8 +162,17 @@ test("prépare trois dossiers pilotes, trente-cinq questions approuvées et quat
   assert.deepEqual(coalitionInterpretation?.historicalDocumentIds, ["GR-T-007"]);
   const causalChain = getQuestionsForKnowledgeHeading("gouvernement-responsable").find(({ causalChainInteraction }) => causalChainInteraction);
   assert.equal(causalChain?.format, "short-answer");
+  assert.deepEqual(causalChain?.historicalDocumentIds, []);
   assert.equal(causalChain?.causalChainInteraction?.steps.length, 6);
+  assert.ok(causalChain?.causalChainInteraction?.steps.find(({ id }) => id === "gr-chain-1848")?.acceptedAnswers.includes("responsabilité ministérielle"));
+  assert.ok(causalChain?.causalChainInteraction?.steps.find(({ id }) => id === "gr-chain-cause")?.acceptedAnswers.includes("les coalitions sont fragiles"));
+  assert.ok(causalChain?.causalChainInteraction?.steps.find(({ id }) => id === "gr-chain-cause")?.acceptedAnswers.includes("appui des deux sections"));
   assert.equal(causalChain?.causalChainInteraction?.steps.at(-1)?.expectedAnswer, "La Grande Coalition");
+  const functioning = getQuestionsForKnowledgeHeading("gouvernement-responsable").find(({ id }) => id === "question:gouvernement-responsable:short-answer-003");
+  assert.deepEqual(functioning?.historicalDocumentIds, ["GR-D-002"]);
+  const instability = getQuestionsForKnowledgeHeading("gouvernement-responsable").find(({ id }) => id === "question:gouvernement-responsable:short-answer-005");
+  assert.deepEqual(instability?.historicalDocumentIds, ["GR-T-011", "GR-T-012", "GR-T-013", "GR-T-007"]);
+  assert.equal(instability?.sourceCatalog.length, 4);
   const limitedParticipation = getQuestionsForKnowledgeHeading("gouvernement-responsable").find(({ prompt }) => /toute la population ne participe pas/.test(prompt));
   assert.deepEqual(limitedParticipation?.historicalDocumentIds, ["GR-T-001-P1"]);
   assert.match(limitedParticipation?.expectedAnswer ?? "", /exclut explicitement toutes les femmes du vote/);

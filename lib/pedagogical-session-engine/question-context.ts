@@ -1,4 +1,4 @@
-import { ACTE_UNION_HISTORICAL_RECORD } from "../pedagogical-reference/index.ts";
+import { ACTE_UNION_HISTORICAL_RECORD, RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD } from "../pedagogical-reference/index.ts";
 import type { LearningSessionDocument, LearningSessionQuestion } from "../student-learning-session/types.ts";
 import type { PedagogicalQuestionDefinition } from "./types.ts";
 
@@ -25,8 +25,12 @@ function successCriteria(question: LearningSessionQuestion) {
 }
 
 function referenceMonograph(notionId: string) {
-  if (notionId !== "acte-union") throw new Error("Aucune monographie pédagogique n’est configurée pour cette notion.");
-  const record = ACTE_UNION_HISTORICAL_RECORD;
+  const record = notionId === "acte-union"
+    ? ACTE_UNION_HISTORICAL_RECORD
+    : notionId === "gouvernement-responsable"
+      ? RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD
+      : undefined;
+  if (!record) throw new Error("Aucune monographie pédagogique n’est configurée pour cette notion.");
   return {
     id: record.id, title: record.manual.title, scope: record.scope, scopeBoundary: record.manual.scopeBoundary ?? "",
     sections: record.manual.sections.map(({ id, title, paragraphs }) => ({

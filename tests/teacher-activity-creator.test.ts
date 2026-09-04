@@ -283,13 +283,25 @@ test("génère un aperçu déterministe depuis les documents approuvés", async 
   assert.equal(first.questionId, catalog.questions[0]?.id);
 });
 
-test("Socrato attend simplement la réponse pour toutes les réponses courtes", async () => {
+test("Socrato adapte son accueil des réponses courtes à la présence de documents", async () => {
   const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
   const shortAnswerIndexes = getEligibleActivityQuestions(unlimitedRevisionConfig, catalog)
     .map((question, index) => ({ question, index }))
     .filter(({ question }) => question.format === "short-answer");
   assert.ok(shortAnswerIndexes.length > 0);
-  for (const { index } of shortAnswerIndexes) {
+  for (const { question, index } of shortAnswerIndexes) {
+    assert.equal(createLocalActivityPreview(unlimitedRevisionConfig, catalog, index).guidance[0], question.historicalDocumentIds.length === 0 ? "J’attends ta réponse…" : "Bonjour, consulte les sources puis réponds à la question.");
+  }
+});
+
+test("Socrato attend simplement la réponse dès qu’une question ne contient aucun document", async () => {
+  const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
+  const eligibleQuestions = getEligibleActivityQuestions(unlimitedRevisionConfig, catalog);
+  const questionsWithoutDocuments = eligibleQuestions
+    .map((question, index) => ({ question, index }))
+    .filter(({ question }) => question.historicalDocumentIds.length === 0);
+  assert.ok(questionsWithoutDocuments.length > 0);
+  for (const { index } of questionsWithoutDocuments) {
     assert.equal(createLocalActivityPreview(unlimitedRevisionConfig, catalog, index).guidance[0], "J’attends ta réponse…");
   }
 });
