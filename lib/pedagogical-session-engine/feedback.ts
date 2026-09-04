@@ -5,6 +5,15 @@ function joinParts(parts: Array<string | undefined>) {
   return parts.filter((part): part is string => Boolean(part)).join(" ");
 }
 
+function joinConversationParts(parts: Array<string | undefined>) {
+  return parts.filter((part): part is string => Boolean(part)).join("\n\n");
+}
+
+function successfulReformulation(analysis: StructuredResponseAnalysis) {
+  const entry = analysis.observedStrengths.find((strength) => /^formulation possible\s*:/iu.test(strength));
+  return entry?.replace(/^formulation possible\s*:\s*/iu, "").trim();
+}
+
 function replaceDocumentIds(value: string | undefined, question: PedagogicalQuestionDefinition) {
   if (!value) return value;
   return question.evaluationContext?.approvedDocuments.reduce(
@@ -122,10 +131,20 @@ export function createPedagogicalFeedback(
     };
   }
   if (analysis.pedagogicalOutcome === "satisfactory") {
-    const assessment = "Bravo, ta réponse est réussie.";
+    const assessment = activityClosing ? "Bravo, ta réponse est réussie." : "Ta réponse est réussie. Prêt pour la suite?";
     const conciseEnrichment = missingElement?.replace(/^\s*précision(?:\s+facultative)?\s*:\s*/i, "");
-    const enrichment = conciseEnrichment ? `À retenir aussi : ${conciseEnrichment}` : undefined;
-    return { acknowledgement, assessment, missingElement, studentFacingText: joinParts([acknowledgement, assessment, enrichment]), relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-011"] };
+    const reformulation = successfulReformulation(analysis);
+    const enrichment = conciseEnrichment ? `À retenir aussi\n${conciseEnrichment}` : undefined;
+    return {
+      acknowledgement, assessment, missingElement,
+      studentFacingText: joinConversationParts([
+        acknowledgement,
+        reformulation ? `Une formulation possible\n${reformulation}` : undefined,
+        enrichment,
+        assessment,
+      ]),
+      relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-011"],
+    };
   }
   const tailoredGuidance = missingElement?.includes("?") ? missingElement : undefined;
   const priorityPrompt = tailoredGuidance ?? (analysis.pedagogicalOutcome === "partially_satisfactory"
@@ -133,7 +152,11 @@ export function createPedagogicalFeedback(
     : "Quel élément du document peux-tu d’abord établir comme fait?");
   return {
     acknowledgement, assessment: acknowledgement ?? "Poursuivons ensemble.", missingElement, priorityPrompt,
-    studentFacingText: joinParts([acknowledgement, tailoredGuidance ? undefined : missingElement, priorityPrompt]),
+    studentFacingText: joinConversationParts([
+      acknowledgement,
+      tailoredGuidance ? `Prochaine étape\n${tailoredGuidance}` : missingElement,
+      tailoredGuidance ? undefined : `Prochaine étape\n${priorityPrompt}`,
+    ]),
     relatedRuleIds: ["PED-FDBK-004", "PED-FDBK-006", "PED-FDBK-009"],
   };
 }

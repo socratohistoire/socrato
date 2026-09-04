@@ -251,8 +251,11 @@ test("conserve la question à gauche et compacte la ligne du temps dans le volet
 });
 
 test("place les indices ouverts dans la conversation avec Socrato", () => {
-  assert.match(viewSource, /const conversationFeedback = transition\.hint[\s\S]*`\$\{feedback\.studentFacingText\} \$\{transition\.hint\.text\}`/);
+  assert.match(viewSource, /const conversationFeedback = transition\.hint[\s\S]*`\$\{feedback\.studentFacingText\}\\n\\nIndice\\n\$\{transition\.hint\.text\}`/);
   assert.match(viewSource, /content: `Voici un indice : \$\{hint\.text\}`/);
+  assert.match(viewSource, /function ConversationMessageContent/);
+  assert.match(viewSource, /content\.split\(\/\\n\{2,\}\//);
+  assert.match(cssSource, /\.message-content\{display:grid;gap:10px\}/);
 });
 
 test("affiche uniquement l’opération principale explicitement définie près de QUESTION 1", () => {

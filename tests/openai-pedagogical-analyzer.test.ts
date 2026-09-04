@@ -462,7 +462,7 @@ test("préserve la piste personnalisée et remplace les codes internes", async (
     ...validAnalysis,
     missingElements: ["Ajoute une revendication précise, puis relie-la au refus : que demande le document document-1 au sujet du Conseil législatif?"],
   }, question, 0);
-  assert.equal(feedback.studentFacingText, "Un lien historique pertinent est amorcé. Ajoute une revendication précise, puis relie-la au refus : que demande le document Acte d’Union au sujet du Conseil législatif?");
+  assert.equal(feedback.studentFacingText, "Un lien historique pertinent est amorcé.\n\nProchaine étape\nAjoute une revendication précise, puis relie-la au refus : que demande le document Acte d’Union au sujet du Conseil législatif?");
   assert.doesNotMatch(feedback.studentFacingText, /document-1|Observe un document autorisé/);
 });
 

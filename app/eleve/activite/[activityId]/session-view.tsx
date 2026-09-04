@@ -90,6 +90,13 @@ function consolidationCoachLabel(question: LearningSessionQuestion | undefined, 
   return question?.intellectualOperations.find(({ id }) => id === question.primaryOperationId)?.label ?? fallback;
 }
 
+function ConversationMessageContent({ content }: { content: string }) {
+  return <div className="message-content">{content.split(/\n{2,}/).filter(Boolean).map((part, index) => {
+    const [firstLine, ...rest] = part.split("\n");
+    return <p key={`${index}-${firstLine}`}>{rest.length > 0 ? <><strong>{firstLine}</strong><span>{rest.join(" ")}</span></> : firstLine}</p>;
+  })}</div>;
+}
+
 export function StudentLearningSessionView({ data, teacherPreview = false, classroomMode = false, persistProgress = true, teacherApiTest = false, teacherPreviewExitHref = "/teacher/activities/new" }: { data: StudentLearningSessionData; teacherPreview?: boolean; classroomMode?: boolean; persistProgress?: boolean; teacherApiTest?: boolean; teacherPreviewExitHref?: string }) {
   const engineDefinition = useMemo(() => createDemoPedagogicalDefinition(data), [data]);
   const initialEngineState = useMemo(() => restoreStudentProgress(createPedagogicalSession(engineDefinition), data.progress), [data.progress, engineDefinition]);
@@ -384,7 +391,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
       if (transition.feedback) {
         const feedback = transition.feedback;
         const conversationFeedback = transition.hint
-          ? `${feedback.studentFacingText} ${transition.hint.text}`
+          ? `${feedback.studentFacingText}\n\nIndice\n${transition.hint.text}`
           : feedback.studentFacingText;
         setMessages((current) => current.at(-1)?.author === "socrato" && current.at(-1)?.content === conversationFeedback ? current : [...current, {
           id: `socrato-${current.length}`,
@@ -733,8 +740,8 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
               {messages.map((message, index) => (
                 <article ref={index === messages.length - 1 ? newestMessageRef : undefined} key={message.id} className={`message message-${message.author}`}>
                   <strong>{message.author === "student" ? "Toi" : "Socrato"}</strong>
-                  <p>{message.content}</p>
-                  {message.author === "socrato" && index === messages.length - 1 && pendingNextState ? <button type="button" className="socrato-next-question" onClick={continueAfterSocratoFeedback}>Passer à la question suivante →</button> : null}
+                  <ConversationMessageContent content={message.content} />
+                  {message.author === "socrato" && index === messages.length - 1 && pendingNextState ? <button type="button" className="socrato-next-question" onClick={continueAfterSocratoFeedback}>Continuer avec la question suivante →</button> : null}
                 </article>
               ))}
               {submitting ? <p className="analysis-waiting-message" role="status">Socrato analyse ta réponse…</p> : null}

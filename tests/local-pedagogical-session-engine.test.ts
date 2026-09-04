@@ -233,21 +233,21 @@ test("accepte une réponse satisfaisante tout en proposant un enrichissement pr�
   assert.equal(transition.state.questionStates[0].result?.status, "mastered");
   assert.equal(transition.state.questionStates[0].result?.advancedMastery, false);
   assert.match(transition.feedback?.studentFacingText ?? "", /Bravo, ta réponse est réussie/);
-  assert.match(transition.feedback?.studentFacingText ?? "", /À retenir aussi : nomme explicitement La Minerve/);
+  assert.match(transition.feedback?.studentFacingText ?? "", /À retenir aussi\nnomme explicitement La Minerve/);
 });
 
 test("évite de répéter le libellé précision dans un enrichissement réussi", async () => {
   const satisfactory = analysis({ pedagogicalOutcome: "satisfactory", nextAction: "complete_question", missingElements: ["Précision : Durham vise aussi les lois et la langue."] });
   const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Réponse complète", new ScriptedAnalyzer([satisfactory]), fixedClock);
-  assert.match(transition.feedback?.studentFacingText ?? "", /À retenir aussi : Durham vise aussi/);
-  assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /À retenir aussi : Précision :/);
+  assert.match(transition.feedback?.studentFacingText ?? "", /À retenir aussi\nDurham vise aussi/);
+  assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /À retenir aussi\nPrécision :/);
 });
 
 test("évite aussi de répéter le libellé précision facultative", async () => {
   const satisfactory = analysis({ pedagogicalOutcome: "satisfactory", nextAction: "complete_question", missingElements: ["Précision facultative : ce refus n’est pas l’unique cause."] });
   const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Réponse complète", new ScriptedAnalyzer([satisfactory]), fixedClock);
-  assert.match(transition.feedback?.studentFacingText ?? "", /À retenir aussi : ce refus n’est pas l’unique cause/);
-  assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /À retenir aussi : Précision facultative/);
+  assert.match(transition.feedback?.studentFacingText ?? "", /À retenir aussi\nce refus n’est pas l’unique cause/);
+  assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /À retenir aussi\nPrécision facultative/);
 });
 
 test("une réponse partielle autorise une nouvelle tentative", async () => {
@@ -517,6 +517,21 @@ test("la dernière intervention clôt sans poser une question impossible à rép
   assert.match(transition.feedback?.studentFacingText ?? "", /reste à consolider/i);
   assert.match(transition.feedback?.studentFacingText ?? "", /pris en compte dans ton bilan/i);
   assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /proposerai|activité de consolidation/i);
+  assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /Formulation possible|demandes précises/i);
+});
+
+test("affiche une reformulation seulement après une réponse réussie", async () => {
+  const satisfactory = analysis({
+    pedagogicalOutcome: "satisfactory",
+    nextAction: "complete_question",
+    observedStrengths: [
+      "Ton lien de causalité est clair.",
+      "Formulation possible : Mécanisation → exode rural → urbanisation.",
+    ],
+    missingElements: [],
+  });
+  const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Réponse complète", new ScriptedAnalyzer([satisfactory]), fixedClock);
+  assert.match(transition.feedback?.studentFacingText ?? "", /Une formulation possible\nMécanisation → exode rural → urbanisation/);
 });
 
 test("transmet à toutes les questions ouvertes le bilan structuré du tour précédent", async () => {
