@@ -5,14 +5,12 @@ import { useEffect, useState } from "react";
 type Theme = "light" | "dark";
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
     let isCurrent = true;
     const storedTheme = window.localStorage.getItem("socrato-theme");
-    const preferredTheme: Theme = storedTheme === "light" || storedTheme === "dark"
-      ? storedTheme
-      : window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    const preferredTheme: Theme = storedTheme === "light" ? "light" : "dark";
     queueMicrotask(() => {
       if (!isCurrent) return;
       setTheme(preferredTheme);

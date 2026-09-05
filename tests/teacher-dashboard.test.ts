@@ -625,8 +625,8 @@ test("préserve le mode réduit et le sélecteur de thème", () => {
 });
 
 test("hydrate le sélecteur de thème avec un premier rendu déterministe", () => {
-  assert.match(themeToggleSource, /useState<Theme>\("light"\)/);
-  assert.match(themeToggleSource, /useEffect\(\(\) => \{[\s\S]*localStorage\.getItem\("socrato-theme"\)[\s\S]*matchMedia\("\(prefers-color-scheme: dark\)"\)[\s\S]*queueMicrotask[\s\S]*setTheme\(preferredTheme\)[\s\S]*document\.documentElement\.dataset\.theme = preferredTheme;[\s\S]*\}, \[\]\)/);
+  assert.match(themeToggleSource, /useState<Theme>\("dark"\)/);
+  assert.match(themeToggleSource, /useEffect\(\(\) => \{[\s\S]*localStorage\.getItem\("socrato-theme"\)[\s\S]*storedTheme === "light" \? "light" : "dark"[\s\S]*queueMicrotask[\s\S]*setTheme\(preferredTheme\)[\s\S]*document\.documentElement\.dataset\.theme = preferredTheme;[\s\S]*\}, \[\]\)/);
   assert.doesNotMatch(themeToggleSource, /useState[^;]*(?:window|document|localStorage|matchMedia)/);
   assert.match(themeToggleSource, /aria-pressed=\{theme === "light"\}/);
   assert.match(themeToggleSource, /aria-pressed=\{theme === "dark"\}/);

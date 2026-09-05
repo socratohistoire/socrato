@@ -1,10 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
+import { LoginThemeDefault } from "../login-theme-default";
 import { StudentAccessForm } from "./student-access-form";
 
 export default function StudentAccessPage() {
   return (
     <main className="min-h-screen bg-[#efefed] p-3 text-[#0d2945] sm:p-5">
+      <LoginThemeDefault />
       <div
         className="relative mx-auto flex min-h-[calc(100vh-24px)] max-w-[1500px] flex-col overflow-hidden rounded-[28px] border border-white/80 bg-[#fbf8f2] shadow-[0_14px_45px_rgba(15,23,42,0.12)] sm:min-h-[calc(100vh-40px)]"
         style={{

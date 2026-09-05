@@ -167,7 +167,11 @@ test("attend la confirmation du cookie avant d’ouvrir le tableau de bord", asy
 
 test("la page d’accueil ouvre directement l’espace élève avec une seule saisie", async () => {
   const homeSource = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const loginThemeSource = await readFile(new URL("../app/login-theme-default.tsx", import.meta.url), "utf8");
   assert.match(homeSource, /import \{ StudentAccessForm \}/);
   assert.match(homeSource, /<StudentAccessForm \/>/);
+  assert.match(homeSource, /<LoginThemeDefault \/>/);
+  assert.match(loginThemeSource, /localStorage\.setItem\("socrato-theme", "dark"\)/);
+  assert.match(loginThemeSource, /document\.documentElement\.dataset\.theme = "dark"/);
   assert.doesNotMatch(homeSource, /action="\/eleve"|method="get"|Commencer la révision/);
 });

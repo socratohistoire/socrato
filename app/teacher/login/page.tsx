@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createSocratoSupabaseServerClient } from "@/lib/supabase/server";
 import { isTeacherAuthenticationEnabled } from "@/lib/supabase/config";
+import { LoginThemeDefault } from "@/app/login-theme-default";
 import { sendTeacherMagicLink } from "./actions";
 import "./teacher-login.css";
 
@@ -14,7 +15,7 @@ export default async function TeacherLoginPage({ searchParams }: { searchParams:
   const { data: { user } } = await supabase.auth.getUser();
   if (user) redirect(returnTo);
   const errorMessage = params.error === "invalid-email" ? "Inscrivez une adresse courriel valide." : params.error === "not-authorized" ? "Cette adresse n’est pas encore autorisée pour l’espace enseignant." : params.error ? "Le lien n’a pas pu être utilisé. Réessayez." : null;
-  return <main className="teacher-login-page"><section className="teacher-login-card" aria-labelledby="teacher-login-title">
+  return <main className="teacher-login-page"><LoginThemeDefault /><section className="teacher-login-card" aria-labelledby="teacher-login-title">
     <p className="teacher-login-brand">SOCRATO</p><h1 id="teacher-login-title">Espace enseignant</h1>
     <p className="teacher-login-intro">Connectez-vous sans mot de passe. Un lien sécurisé et temporaire sera envoyé à votre adresse autorisée.</p>
     {params.sent === "1" ? <p className="teacher-login-success" role="status">Le lien de connexion a été envoyé. Consultez votre boîte courriel sur ce même appareil.</p> : null}
