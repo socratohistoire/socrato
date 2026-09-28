@@ -57,11 +57,11 @@ export function validateApprovedQuestion(question: ApprovedQuestion): ApprovedQu
     errors.identity = "La question doit pointer vers le dossier et la fiche de la même rubrique officielle.";
   }
   if (!INTELLECTUAL_OPERATION_IDS.includes(question.operationId)
-    || (reviewable && (!question.prompt.trim() || !question.instruction.trim() || !question.expectedAnswer.trim() || !question.rationale.trim()))
+    || (reviewable && (!question.prompt.trim() || (question.format !== "interactive-timeline" && !question.instruction.trim()) || !question.expectedAnswer.trim() || !question.rationale.trim()))
     || (question.format === "multiple-choice" && (question.distractors.length < 3 || question.answerOptions?.length !== 4 || question.answerOptions.filter(({ correct }) => correct).length !== 1))) {
     errors.content = "La question doit être complète et conforme à son format et à une opération canonique.";
   }
-  const requiresHistoricalDocument = question.format !== "multiple-choice" && question.format !== "short-answer";
+  const requiresHistoricalDocument = question.format !== "multiple-choice" && question.format !== "short-answer" && question.format !== "interactive-association";
   if (reviewable && (question.sourceIds.length === 0 || (requiresHistoricalDocument && question.historicalDocumentIds.length === 0) || question.sourceIds.some((id) => !verifiedSourceIds.has(id)))) {
     errors.sources = "Une question prête à valider doit être documentée par des sources vérifiées.";
   }

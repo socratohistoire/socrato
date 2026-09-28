@@ -138,6 +138,7 @@ test("traite la première tentative et produit une seule relance prioritaire", a
   assert.equal(transition.state.questionStates[0].attemptNumber, 1);
   assert.equal(transition.questionCompleted, false);
   assert.equal(transition.feedback?.priorityPrompt, "Quel fait précis permet de justifier le lien que tu proposes?");
+  assert.match(transition.feedback?.studentFacingText ?? "", /^(Bonne piste!|Bon début!|Oui, en partie\.|Tu avances bien\.|Une partie est juste\.|Voilà un premier élément\.|Cette observation est juste\.)/);
   assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /Bonne réponse|Mauvaise réponse/);
 });
 
@@ -150,6 +151,7 @@ test("termine immédiatement une réponse satisfaisante", async () => {
   });
   const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Réponse", new ScriptedAnalyzer([satisfactory]), fixedClock);
   assert.equal(transition.sessionCompleted, true);
+  assert.match(transition.feedback?.studentFacingText ?? "", /^(Oui!|Exact!|Bien vu!|Très juste!|Tout à fait!|Beau constat!|Tu y es!|C’est bien ça!)/);
   assert.equal(transition.state.questionStates[0].result?.status, "mastered");
   assert.equal(transition.state.questionStates[0].result?.advancedMastery, true);
 });
@@ -232,7 +234,7 @@ test("accepte une réponse satisfaisante tout en proposant un enrichissement pr�
   assert.equal(transition.questionCompleted, true);
   assert.equal(transition.state.questionStates[0].result?.status, "mastered");
   assert.equal(transition.state.questionStates[0].result?.advancedMastery, false);
-  assert.match(transition.feedback?.studentFacingText ?? "", /Bravo, ta réponse est réussie/);
+  assert.match(transition.feedback?.studentFacingText ?? "", /réussi|objectif atteint|raisonnement est juste/i);
   assert.match(transition.feedback?.studentFacingText ?? "", /À retenir aussi\nnomme explicitement La Minerve/);
 });
 
@@ -520,7 +522,7 @@ test("la dernière intervention clôt sans poser une question impossible à rép
   assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /Formulation possible|demandes précises/i);
 });
 
-test("affiche une reformulation seulement après une réponse réussie", async () => {
+test("ne propose pas de formulation possible après une réponse réussie", async () => {
   const satisfactory = analysis({
     pedagogicalOutcome: "satisfactory",
     nextAction: "complete_question",
@@ -531,7 +533,8 @@ test("affiche une reformulation seulement après une réponse réussie", async (
     missingElements: [],
   });
   const transition = await submitStudentResponse(definition, createPedagogicalSession(definition), "Réponse complète", new ScriptedAnalyzer([satisfactory]), fixedClock);
-  assert.match(transition.feedback?.studentFacingText ?? "", /Une formulation possible\nMécanisation → exode rural → urbanisation/);
+  assert.doesNotMatch(transition.feedback?.studentFacingText ?? "", /Une formulation possible|Mécanisation → exode rural → urbanisation/);
+  assert.match(transition.feedback?.studentFacingText ?? "", /réussi|objectif atteint|raisonnement est juste/i);
 });
 
 test("transmet à toutes les questions ouvertes le bilan structuré du tour précédent", async () => {

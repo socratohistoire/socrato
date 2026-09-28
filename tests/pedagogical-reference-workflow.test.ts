@@ -4,6 +4,10 @@ import test from "node:test";
 import {
   acceptHistoricalRecordReviewItems,
   ACTE_UNION_HISTORICAL_RECORD,
+  BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD,
+  BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS,
+  FEDERAL_PROVINCIAL_RELATIONS_HISTORICAL_RECORD,
+  INDIAN_AFFAIRS_HISTORICAL_RECORD,
   RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD,
   ACTE_UNION_CAUSAL_PILOT_QUESTION,
   ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION,
@@ -29,6 +33,205 @@ import {
   createHistoricalRecordReviewDraft,
   getHistoricalRecordReviewItems,
 } from "../lib/pedagogical-reference/index.ts";
+
+test("documente les cinq précisions des relations fédérales-provinciales sans approuver le dossier", () => {
+  const record = FEDERAL_PROVINCIAL_RELATIONS_HISTORICAL_RECORD;
+  assert.equal(record.id, "historical-record:relations-federales-provinciales");
+  assert.equal(record.knowledgeHeadingId, "relations-federales-provinciales");
+  assert.equal(record.status, "draft");
+  assert.deepEqual(record.knowledgePrecisions.map(({ officialLabel }) => officialLabel), [
+    "Champs de compétence", "Répartition des revenus", "Conférence interprovinciale", "Soulèvements des Métis", "Écoles catholiques hors Québec",
+  ]);
+  assert.deepEqual(record.knowledgePrecisions.map(({ officialOrder }) => officialOrder), [1, 2, 3, 4, 5]);
+  assert.ok(record.knowledgePrecisions.every(({ coverageStatus, linkedStatementIds }) => coverageStatus === "complete" && linkedStatementIds.length >= 5));
+  assert.equal(record.manual.sections.length, 9);
+  const paragraphs = record.manual.sections.flatMap(({ paragraphs }) => paragraphs);
+  const tables = record.manual.sections.flatMap(({ tables = [] }) => tables);
+  assert.ok(paragraphs.length >= 39);
+  assert.equal(tables.length, 4);
+  assert.ok(tables.every(({ columns, rows }) => rows.every(({ cells }) => cells.length === columns.length)));
+  const statements = [
+    ...record.knowledgePrecisions, ...paragraphs, ...tables.flatMap(({ rows }) => rows), ...record.narrative,
+    ...record.chronologicalMarkers, ...record.actors, ...record.territories, ...record.relationships,
+    ...record.vocabulary, ...record.misconceptions, ...record.expectedLearning,
+  ];
+  assert.equal(new Set(statements.map(({ id }) => id)).size, statements.length);
+  const sourceIds = new Set(record.sourceCatalog.map(({ id }) => id));
+  assert.ok(statements.every(({ sourceIds: links }) => links.length > 0 && links.every((id) => sourceIds.has(id))));
+  assert.ok(record.sourceCatalog.every(({ verificationStatus, url }) => verificationStatus === "verified" && Boolean(url)));
+  assert.ok(record.sourceCatalog.some(({ kind, locator }) => kind === "official-program" && locator.includes("cinq précisions")));
+  assert.deepEqual(new Set(record.expectedLearning.flatMap(({ operationIds }) => operationIds)), new Set([
+    "time_and_space", "establish_facts", "differences_and_similarities", "causes_and_consequences",
+    "changes_and_continuities", "relationships_between_facts", "causal_connections",
+  ]));
+  assert.deepEqual(validateHistoricalRecord(record), {});
+  assert.deepEqual(validateHistoricalRecord({ ...record, status: "ready-for-review" }), {});
+  const questions = getQuestionsForKnowledgeHeading(record.knowledgeHeadingId);
+  assert.equal(questions.length, 2);
+  const metisComparison = questions.find(({ id }) => id === "question:relations-federales-provinciales:document-interpretation-001");
+  assert.deepEqual(metisComparison?.historicalDocumentIds, ["RFP-T-001", "RFP-T-002"]);
+  assert.equal(metisComparison?.operationId, "causes_and_consequences");
+  assert.match(metisComparison?.prompt ?? "", /causes, les moyens et les issues/);
+  const competencyAssociation = questions.find(({ id }) => id === "question:relations-federales-provinciales:interactive-association-001");
+  assert.equal(competencyAssociation?.operationId, "establish_facts");
+  assert.deepEqual(competencyAssociation?.historicalDocumentIds, ["RFP-T-003"]);
+  assert.equal(competencyAssociation?.associationInteraction?.items.length, 13);
+  assert.deepEqual(competencyAssociation?.associationInteraction?.categories?.map(({ articleLabel }) => articleLabel), ["Article 91", "Article 92 — et article 93 pour l’éducation"]);
+  assert.match(competencyAssociation?.associationInteraction?.tension?.explanation ?? "", /désaveu/);
+});
+
+test("documente les quatre précisions de l’AANB de secondaire 4 et son évolution territoriale", () => {
+  const record = BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD;
+  assert.equal(record.id, "historical-record:acte-de-l-amerique-du-nord-britannique");
+  assert.equal(record.knowledgeHeadingId, "acte-de-l-amerique-du-nord-britannique");
+  assert.equal(record.status, "draft");
+  assert.equal(record.version, null);
+  assert.equal(record.approvedAt, null);
+  assert.deepEqual(record.knowledgePrecisions.map(({ officialLabel }) => officialLabel), [
+    "Grande Coalition", "Conférences", "Structure du fédéralisme canadien", "Territoire du Dominion du Canada",
+  ]);
+  assert.deepEqual(record.knowledgePrecisions.map(({ officialOrder }) => officialOrder), [1, 2, 3, 4]);
+  assert.ok(record.knowledgePrecisions.every(({ coverageStatus }) => coverageStatus === "complete"));
+  assert.equal(record.manual.sections.length, 9);
+  const paragraphs = record.manual.sections.flatMap(({ paragraphs }) => paragraphs);
+  const tables = record.manual.sections.flatMap(({ tables = [] }) => tables);
+  assert.ok(paragraphs.length >= 35);
+  assert.equal(tables.length, 3);
+  assert.ok(tables.every(({ columns, rows }) => rows.every(({ cells }) => cells.length === columns.length)));
+  const statements = [
+    ...record.knowledgePrecisions, ...paragraphs, ...tables.flatMap(({ rows }) => rows),
+    ...record.narrative, ...record.chronologicalMarkers, ...record.actors, ...record.territories,
+    ...record.relationships, ...record.vocabulary, ...record.misconceptions, ...record.expectedLearning,
+  ];
+  const statementIds = new Set(statements.map(({ id }) => id));
+  assert.equal(statementIds.size, statements.length);
+  const sourceIds = new Set(record.sourceCatalog.map(({ id }) => id));
+  assert.ok(statements.every(({ sourceIds: linkedSources }) => linkedSources.length > 0 && linkedSources.every((id) => sourceIds.has(id))));
+  assert.ok(record.knowledgePrecisions.every(({ linkedStatementIds }) => linkedStatementIds.length >= 4 && linkedStatementIds.every((id) => statementIds.has(id))));
+  assert.ok(record.sourceCatalog.every(({ verificationStatus, url }) => verificationStatus === "verified" && Boolean(url)));
+  assert.ok(record.sourceCatalog.some(({ kind, locator }) => kind === "official-program" && locator.includes("p. 46")));
+  const monographText = paragraphs.map(({ text }) => text).join("\n");
+  assert.match(monographText, /181 députés/);
+  assert.match(monographText, /72 membres/);
+  assert.match(monographText, /29 mars 1867/);
+  assert.match(monographText, /1er juillet/);
+  assert.match(monographText, /exclus des négociations officielles/);
+  assert.ok(record.misconceptions.some(({ misconception }) => /entièrement indépendant/.test(misconception)));
+  assert.deepEqual(new Set(record.expectedLearning.flatMap(({ operationIds }) => operationIds)), new Set([
+    "time_and_space", "establish_facts", "differences_and_similarities", "causes_and_consequences",
+    "changes_and_continuities", "relationships_between_facts", "causal_connections",
+  ]));
+  const questions = getQuestionsForKnowledgeHeading(record.knowledgeHeadingId);
+  assert.equal(questions.length, 13);
+  assert.equal(questions[0]?.operationId, "changes_and_continuities");
+  assert.deepEqual(questions[0]?.historicalDocumentIds, ["AANB-M-001", "AANB-M-002"]);
+  assert.match(questions[0]?.prompt ?? "", /deux changements territoriaux/);
+  const confederationViewpoints = questions.find(({ id }) => id === "question:acte-de-l-amerique-du-nord-britannique:document-interpretation-002");
+  assert.equal(confederationViewpoints?.operationId, "differences_and_similarities");
+  assert.deepEqual(confederationViewpoints?.historicalDocumentIds, ["AANB-T-001", "AANB-T-002", "AANB-T-003"]);
+  assert.match(confederationViewpoints?.expectedAnswer ?? "", /force du centre.*autonomie provinciale.*Dorion/);
+  const railwayCondition = questions.find(({ id }) => id === "question:acte-de-l-amerique-du-nord-britannique:document-interpretation-003");
+  assert.equal(railwayCondition?.operationId, "establish_facts");
+  assert.deepEqual(railwayCondition?.historicalDocumentIds, ["AANB-T-004", "AANB-T-005"]);
+  assert.match(railwayCondition?.expectedAnswer ?? "", /chemin de fer Intercolonial/);
+  const coalitionCausal = questions.find(({ id }) => id === "question:acte-de-l-amerique-du-nord-britannique:document-interpretation-004");
+  assert.equal(coalitionCausal?.operationId, "causal_connections");
+  assert.deepEqual(coalitionCausal?.historicalDocumentIds, ["AANB-T-006", "AANB-T-007", "AANB-T-008"]);
+  assert.match(coalitionCausal?.expectedAnswer ?? "", /succession rapide[\s\S]*Grande Coalition[\s\S]*Résolutions de Québec/);
+  const intercolonialCauseConsequence = questions.find(({ id }) => id === "question:acte-de-l-amerique-du-nord-britannique:document-interpretation-005");
+  assert.equal(intercolonialCauseConsequence?.operationId, "causes_and_consequences");
+  assert.deepEqual(intercolonialCauseConsequence?.historicalDocumentIds, ["AANB-M-005", "AANB-S-001"]);
+  assert.match(intercolonialCauseConsequence?.expectedAnswer ?? "", /342 196.*522 710.*53 %/);
+  const americanThreat = questions.find(({ id }) => id === "question:acte-de-l-amerique-du-nord-britannique:document-interpretation-006");
+  assert.equal(americanThreat?.operationId, "causes_and_consequences");
+  assert.deepEqual(americanThreat?.historicalDocumentIds, ["AANB-I-001", "AANB-T-009", "AANB-T-010"]);
+  assert.match(americanThreat?.expectedAnswer ?? "", /puissance militaire menaçante.*protection commune.*chemin de fer Intercolonial/);
+  const territorialFear = questions.find(({ id }) => id === "question:acte-de-l-amerique-du-nord-britannique:document-interpretation-007");
+  assert.equal(territorialFear?.operationId, "establish_facts");
+  assert.deepEqual(territorialFear?.historicalDocumentIds, ["AANB-I-001"]);
+  assert.match(territorialFear?.expectedAnswer ?? "", /envahir ou annexer leur territoire/);
+  const dateAssociation = questions.find(({ id }) => id === "question:acte-de-l-amerique-du-nord-britannique:interactive-association-001");
+  assert.equal(dateAssociation?.operationId, "time_and_space");
+  assert.deepEqual(dateAssociation?.historicalDocumentIds, ["AANB-M-003", "AANB-M-001", "AANB-M-002", "AANB-M-004"]);
+  assert.deepEqual(dateAssociation?.associationInteraction?.items.map(({ label }) => label), ["Carte A", "Carte B", "Carte C", "Carte D"]);
+  assert.ok(dateAssociation?.associationInteraction?.items.every(({ imageUrl }) => imageUrl?.endsWith(".png")));
+  assert.deepEqual(dateAssociation?.associationInteraction?.targets.map(({ label }) => label), ["1849", "1867", "1873", "1949"]);
+  assert.deepEqual(dateAssociation?.associationInteraction?.targets.map(({ correctItemId }) => correctItemId), ["map-b", "map-d", "map-a", "map-c"]);
+  const provincesExpansionAssociation = questions.find(({ id }) => id === "question:acte-de-l-amerique-du-nord-britannique:interactive-association-002");
+  assert.equal(provincesExpansionAssociation?.operationId, "time_and_space");
+  assert.deepEqual(provincesExpansionAssociation?.historicalDocumentIds, []);
+  assert.equal(provincesExpansionAssociation?.associationInteraction?.items.length, 6);
+  assert.deepEqual(provincesExpansionAssociation?.associationInteraction?.targets.map(({ label }) => label), ["1867", "1870", "1871", "1873", "1905", "1949"]);
+  assert.deepEqual(provincesExpansionAssociation?.associationInteraction?.targets.map(({ correctItemId }) => correctItemId), ["provinces-1867", "province-1870", "province-1871", "province-1873", "provinces-1905", "province-1949"]);
+  const mapAdhesionDates = questions.find(({ id }) => id === "question:acte-de-l-amerique-du-nord-britannique:interactive-association-004");
+  assert.equal(mapAdhesionDates?.operationId, "time_and_space");
+  assert.equal(mapAdhesionDates?.associationInteraction?.map?.imageUrl, "/historical-documents/carte-politique-canada-interactive.svg");
+  assert.equal(mapAdhesionDates?.associationInteraction?.targets.length, 8);
+  assert.equal(mapAdhesionDates?.associationInteraction?.items.length, 8);
+  assert.deepEqual(mapAdhesionDates?.associationInteraction?.targets.find(({ id }) => id === "map-zone-ab-sk")?.label, "Alberta et Saskatchewan");
+  assert.deepEqual(mapAdhesionDates?.associationInteraction?.targets.find(({ id }) => id === "map-zone-mb-nwt")?.label, "Manitoba et Territoires du Nord-Ouest");
+  const conferencesAssociation = questions.find(({ id }) => id === "question:acte-de-l-amerique-du-nord-britannique:interactive-association-003");
+  assert.equal(conferencesAssociation?.operationId, "differences_and_similarities");
+  assert.deepEqual(conferencesAssociation?.historicalDocumentIds, []);
+  assert.deepEqual(conferencesAssociation?.associationInteraction?.items.map(({ label }) => label), ["Conférence de Québec", "Conférence de Londres", "Conférence de Charlottetown"]);
+  assert.deepEqual(conferencesAssociation?.associationInteraction?.targets.map(({ label, correctItemId }) => [label, correctItemId]), [[undefined, "conference-charlottetown"], [undefined, "conference-quebec"], [undefined, "conference-london"]]);
+  const competenciesAssociation = questions.find(({ id }) => id === "question:acte-de-l-amerique-du-nord-britannique:interactive-association-005");
+  assert.equal(competenciesAssociation?.operationId, "relationships_between_facts");
+  assert.deepEqual(competenciesAssociation?.associationInteraction?.categories?.map(({ articleLabel }) => articleLabel), ["Article 91", "Articles 92 et 93", "Article 95"]);
+  assert.deepEqual(competenciesAssociation?.associationInteraction?.categories?.find(({ id }) => id === "aanb-shared")?.correctItemIds, ["aanb-agriculture", "aanb-immigration"]);
+  const conferenceParticipation = questions.find(({ id }) => id === "question:acte-de-l-amerique-du-nord-britannique:short-answer-001");
+  assert.equal(conferenceParticipation?.operationId, "relationships_between_facts");
+  assert.deepEqual(conferenceParticipation?.historicalDocumentIds, ["AANB-T-011"]);
+  assert.match(conferenceParticipation?.expectedAnswer ?? "", /Île-du-Prince-Édouard et Terre-Neuve.*refusent.*provinces fondatrices/);
+  assert.equal(BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS.length, 4);
+  assert.ok(BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS.every(({ status, assetUrl }) => status === "ready-for-review" && assetUrl.endsWith(".png")));
+  assert.deepEqual(validateHistoricalRecord(record), {});
+  assert.deepEqual(validateHistoricalRecord({ ...record, status: "ready-for-review" }), {});
+  const route = readFileSync(new URL("../app/admin/pedagogical-reference/notions/[notionId]/page.tsx", import.meta.url), "utf8");
+  assert.match(route, /notionId === "acte-de-l-amerique-du-nord-britannique".*record=\{BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD\}/);
+});
+
+test("documente la monographie des affaires indiennes sans l’approuver", () => {
+  const record = INDIAN_AFFAIRS_HISTORICAL_RECORD;
+  assert.equal(record.id, "historical-record:affaires-indiennes");
+  assert.equal(record.status, "draft");
+  assert.deepEqual(record.knowledgePrecisions.map(({ officialLabel }) => officialLabel), [
+    "Création des réserves indiennes au Bas-Canada",
+    "Missions catholiques et protestantes",
+    "Loi sur les Indiens",
+  ]);
+  assert.ok(record.knowledgePrecisions.every(({ coverageStatus, linkedStatementIds }) => coverageStatus === "complete" && linkedStatementIds.length >= 6));
+  assert.deepEqual(record.manual.sections.map(({ id }) => id), [
+    "ai-mono-framing",
+    "ai-mono-policy",
+    "ai-mono-reserves",
+    "ai-mono-responses",
+    "ai-mono-missions",
+    "ai-mono-transition",
+    "ai-mono-indian-act",
+    "ai-mono-legacy",
+  ]);
+  const paragraphs = record.manual.sections.flatMap(({ paragraphs }) => paragraphs);
+  const tables = record.manual.sections.flatMap(({ tables = [] }) => tables);
+  assert.ok(paragraphs.length >= 35);
+  assert.ok(paragraphs.every(({ sourceIds }) => sourceIds.length > 0));
+  assert.equal(tables.length, 3);
+  assert.ok(tables.flatMap(({ rows }) => rows).every(({ sourceIds, cells }) => sourceIds.length > 0 && cells.length > 0));
+  assert.deepEqual(record.chronologicalMarkers.map(({ sortYear }) => sortYear), [1840, 1841, 1844, 1850, 1851, 1853, 1857, 1867, 1869, 1876, 1880]);
+  assert.ok(record.misconceptions.some(({ misconception }) => /pensionnat/.test(misconception)));
+  assert.ok(record.misconceptions.some(({ misconception }) => /passivement/.test(misconception)));
+  assert.deepEqual(new Set(record.expectedLearning.flatMap(({ operationIds }) => operationIds)), new Set([
+    "time_and_space",
+    "establish_facts",
+    "differences_and_similarities",
+    "causes_and_consequences",
+    "changes_and_continuities",
+    "relationships_between_facts",
+    "causal_connections",
+  ]));
+  assert.ok(record.sourceCatalog.every(({ verificationStatus }) => verificationStatus === "verified"));
+  assert.deepEqual(validateHistoricalRecord(record), {});
+});
 
 test("documente la monographie du gouvernement responsable sans l’approuver", () => {
   const record = RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD;
@@ -129,23 +332,104 @@ test("empêche l’approbation d’un dossier ou d’une question non documenté
   assert.ok(Object.keys(validateApprovedQuestion(question)).length > 0);
 });
 
-test("prépare trois dossiers pilotes, trente-cinq questions approuvées et quatorze questions du gouvernement responsable à valider", () => {
+test("prépare les dossiers pilotes, les questions approuvées et les questions à valider", () => {
   assert.deepEqual(PEDAGOGICAL_REFERENCE_PILOTS.map(({ knowledgeHeadingId }) => knowledgeHeadingId), [
     "acte-union",
     "premiere-phase-d-industrialisation",
     "revolution-tranquille",
   ]);
   assert.ok(PEDAGOGICAL_REFERENCE_PILOTS.every(({ questionDraft }) => questionDraft.status === "not-started" && !questionDraft.prompt));
-  assert.equal(PEDAGOGICAL_QUESTION_CATALOG.length, 49);
+  assert.equal(PEDAGOGICAL_QUESTION_CATALOG.length, 82);
   assert.equal(PEDAGOGICAL_QUESTION_CATALOG.filter(({ status }) => status === "approved").length, 35);
   assert.ok(PEDAGOGICAL_QUESTION_CATALOG.every((question) => Object.keys(validateApprovedQuestion(question)).length === 0));
   assert.equal(getQuestionsForKnowledgeHeading("acte-union").length, 34);
   assert.equal(getQuestionsForKnowledgeHeading("gouvernement-responsable").length, 15);
+  const indianAffairsQuestions = getQuestionsForKnowledgeHeading("affaires-indiennes");
+  assert.equal(indianAffairsQuestions.length, 9);
+  assert.equal(indianAffairsQuestions[0]?.id, "question:affaires-indiennes:document-interpretation-001");
+  assert.equal(indianAffairsQuestions[0]?.operationId, "causal_connections");
+  assert.deepEqual(indianAffairsQuestions[0]?.historicalDocumentIds, ["AI-T-005", "AI-T-006"]);
+  assert.match(indianAffairsQuestions[0]?.expectedAnswer ?? "", /projet plus structuré d’écoles industrielles/);
+  assert.equal(indianAffairsQuestions[1]?.id, "question:affaires-indiennes:document-interpretation-002");
+  assert.equal(indianAffairsQuestions[1]?.operationId, "changes_and_continuities");
+  assert.deepEqual(indianAffairsQuestions[1]?.historicalDocumentIds, ["AI-I-001", "AI-I-002"]);
+  assert.match(indianAffairsQuestions[1]?.expectedAnswer ?? "", /objectif d’assimilation culturelle/);
+  assert.equal(indianAffairsQuestions[2]?.id, "question:affaires-indiennes:document-interpretation-003");
+  assert.equal(indianAffairsQuestions[2]?.operationId, "causes_and_consequences");
+  assert.deepEqual(indianAffairsQuestions[2]?.historicalDocumentIds, ["AI-I-003"]);
+  assert.match(indianAffairsQuestions[2]?.expectedAnswer ?? "", /séparation/);
+  assert.equal(indianAffairsQuestions[3]?.id, "question:affaires-indiennes:document-interpretation-004");
+  assert.equal(indianAffairsQuestions[3]?.operationId, "causes_and_consequences");
+  assert.deepEqual(indianAffairsQuestions[3]?.historicalDocumentIds, ["AI-I-004", "AI-I-005"]);
+  assert.match(indianAffairsQuestions[3]?.expectedAnswer ?? "", /christianisation/);
+  assert.equal(indianAffairsQuestions[4]?.id, "question:affaires-indiennes:document-interpretation-005");
+  assert.equal(indianAffairsQuestions[4]?.operationId, "establish_facts");
+  assert.deepEqual(indianAffairsQuestions[4]?.historicalDocumentIds, ["AI-T-004", "AI-T-007"]);
+  assert.match(indianAffairsQuestions[4]?.expectedAnswer ?? "", /statut juridique/);
+  assert.equal(indianAffairsQuestions[5]?.id, "question:affaires-indiennes:document-interpretation-006");
+  assert.equal(indianAffairsQuestions[5]?.operationId, "relationships_between_facts");
+  assert.deepEqual(indianAffairsQuestions[5]?.historicalDocumentIds, ["AI-T-008", "AI-I-006"]);
+  assert.match(indianAffairsQuestions[5]?.expectedAnswer ?? "", /arpenter et mettre à part/);
+  assert.equal(indianAffairsQuestions[6]?.id, "question:affaires-indiennes:document-interpretation-007");
+  assert.equal(indianAffairsQuestions[6]?.operationId, "changes_and_continuities");
+  assert.deepEqual(indianAffairsQuestions[6]?.historicalDocumentIds, ["AI-S-001"]);
+  assert.match(indianAffairsQuestions[6]?.prompt ?? "", /entre 1890 et 1897.*deux données/);
+  assert.match(indianAffairsQuestions[6]?.expectedAnswer ?? "", /6 671.*9 628.*44 %/);
+  assert.equal(indianAffairsQuestions[7]?.id, "question:affaires-indiennes:document-interpretation-008");
+  assert.equal(indianAffairsQuestions[7]?.operationId, "differences_and_similarities");
+  assert.deepEqual(indianAffairsQuestions[7]?.historicalDocumentIds, ["AI-T-009", "AI-T-010"]);
+  assert.match(indianAffairsQuestions[7]?.expectedAnswer ?? "", /tutelle.*alliés.*autonomie politique/);
+  assert.equal(indianAffairsQuestions[8]?.id, "question:affaires-indiennes:document-interpretation-009");
+  assert.equal(indianAffairsQuestions[8]?.operationId, "changes_and_continuities");
+  assert.deepEqual(indianAffairsQuestions[8]?.historicalDocumentIds, ["AI-I-007"]);
+  assert.match(indianAffairsQuestions[8]?.expectedAnswer ?? "", /loi de 1851.*création.*nouvelles réserves/);
+  const federalProvincialQuestions = getQuestionsForKnowledgeHeading("relations-federales-provinciales");
+  assert.equal(federalProvincialQuestions.length, 2);
+  assert.ok(federalProvincialQuestions.every(({ status }) => status === "ready-for-review"));
+  assert.deepEqual(federalProvincialQuestions[0]?.historicalDocumentIds, ["RFP-T-001", "RFP-T-002"]);
+  assert.match(federalProvincialQuestions[0]?.expectedAnswer ?? "", /Batoche/);
+  assert.equal(federalProvincialQuestions[1]?.format, "interactive-association");
+  assert.equal(federalProvincialQuestions[1]?.associationInteraction?.categories?.length, 2);
+  const colonialEconomyQuestions = getQuestionsForKnowledgeHeading("economie-coloniale");
+  assert.equal(colonialEconomyQuestions.length, 9);
+  assert.ok(colonialEconomyQuestions.every(({ status }) => status === "ready-for-review"));
+  const colonialEconomyInterpretation = colonialEconomyQuestions.find(({ format }) => format === "document-interpretation");
+  assert.equal(colonialEconomyInterpretation?.operationId, "changes_and_continuities");
+  assert.deepEqual(colonialEconomyInterpretation?.historicalDocumentIds, ["EC-T-001", "EC-T-002"]);
+  const colonialEconomyMultipleChoice = colonialEconomyQuestions.filter(({ format }) => format === "multiple-choice");
+  assert.equal(colonialEconomyMultipleChoice.length, 2);
+  assert.deepEqual(colonialEconomyMultipleChoice.map(({ id }) => id), ["question:economie-coloniale:multiple-choice-001", "question:economie-coloniale:multiple-choice-002"]);
+  assert.ok(colonialEconomyMultipleChoice.every(({ answerOptions }) => answerOptions?.length === 4 && answerOptions.filter(({ correct }) => correct).length === 1));
+  const colonialEconomyConceptAssociation = colonialEconomyQuestions.find(({ id }) => id === "question:economie-coloniale:interactive-association-001");
+  assert.equal(colonialEconomyConceptAssociation?.operationId, "establish_facts");
+  assert.deepEqual(colonialEconomyConceptAssociation?.associationInteraction?.targets.map(({ label, correctItemId }) => [label, correctItemId]), [["A", "protectionism"], ["B", "reciprocity-treaty"], ["C", "free-trade"], ["D", "corn-laws"]]);
+  assert.deepEqual(colonialEconomyConceptAssociation?.historicalDocumentIds, []);
+  const colonialEconomyCornLawsConsequence = colonialEconomyQuestions.find(({ id }) => id === "question:economie-coloniale:document-interpretation-002");
+  assert.equal(colonialEconomyCornLawsConsequence?.operationId, "causal_connections");
+  assert.deepEqual(colonialEconomyCornLawsConsequence?.historicalDocumentIds, ["EC-T-003", "EC-T-004"]);
+  assert.match(colonialEconomyCornLawsConsequence?.expectedAnswer ?? "", /relations commerciales avec les États-Unis/);
+  const colonialEconomyCivilWarConsequence = colonialEconomyQuestions.find(({ id }) => id === "question:economie-coloniale:document-interpretation-003");
+  assert.equal(colonialEconomyCivilWarConsequence?.operationId, "causal_connections");
+  assert.deepEqual(colonialEconomyCivilWarConsequence?.historicalDocumentIds, ["EC-T-005"]);
+  assert.match(colonialEconomyCivilWarConsequence?.expectedAnswer ?? "", /sans en être la seule cause/);
+  const colonialEconomyExportsChartQuestion = colonialEconomyQuestions.find(({ id }) => id === "question:economie-coloniale:document-interpretation-004");
+  assert.equal(colonialEconomyExportsChartQuestion?.operationId, "changes_and_continuities");
+  assert.deepEqual(colonialEconomyExportsChartQuestion?.historicalDocumentIds, ["EC-G-001"]);
+  assert.match(colonialEconomyExportsChartQuestion?.instruction ?? "", /1853-1854.*1855-1856/);
+  assert.match(colonialEconomyExportsChartQuestion?.expectedAnswer ?? "", /approximativement doublé/);
+  const colonialEconomyCornLawsViewpoints = colonialEconomyQuestions.find(({ id }) => id === "question:economie-coloniale:document-interpretation-005");
+  assert.equal(colonialEconomyCornLawsViewpoints?.operationId, "differences_and_similarities");
+  assert.deepEqual(colonialEconomyCornLawsViewpoints?.historicalDocumentIds, ["EC-T-006", "EC-T-007"]);
+  assert.match(colonialEconomyCornLawsViewpoints?.expectedAnswer ?? "", /favorable.*À l’inverse.*inquiétude et alarme/);
+  const colonialEconomyReciprocityMap = colonialEconomyQuestions.find(({ id }) => id === "question:economie-coloniale:document-interpretation-006");
+  assert.equal(colonialEconomyReciprocityMap?.operationId, "changes_and_continuities");
+  assert.deepEqual(colonialEconomyReciprocityMap?.historicalDocumentIds, ["EC-M-001"]);
+  assert.match(colonialEconomyReciprocityMap?.expectedAnswer ?? "", /blé.*bois.*charbon.*sans droits de douane/);
   assert.ok(getQuestionsForKnowledgeHeading("gouvernement-responsable").some(({ prompt }) => /incendie du Parlement/.test(prompt)));
   const responsibleTimeline = getQuestionsForKnowledgeHeading("gouvernement-responsable").find(({ format }) => format === "interactive-timeline");
   assert.ok(responsibleTimeline?.timelineInteraction);
-  assert.deepEqual(responsibleTimeline.timelineInteraction.dates, ["1841", "1841-1842", "1843", "1848", "1849", "1854-1864", "1864"]);
-  assert.equal(responsibleTimeline.timelineInteraction.entries.length, 7);
+  assert.deepEqual(responsibleTimeline.timelineInteraction.dates, ["1841", "1841-1842", "1848", "1849", "1854-1864", "1864"]);
+  assert.equal(responsibleTimeline.timelineInteraction.entries.length, 6);
   const responsibleDevelopment = getQuestionsForKnowledgeHeading("gouvernement-responsable").find(({ format }) => format === "development-150");
   assert.equal(responsibleDevelopment?.operationId, "causal_connections");
   assert.deepEqual(responsibleDevelopment?.historicalDocumentIds, ["GR-D-001"]);

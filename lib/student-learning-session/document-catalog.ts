@@ -1,10 +1,17 @@
 import type { LearningSessionDocument } from "./types.ts";
 import { ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_CONSOLIDATED_REVENUE_FUND_DOCUMENT, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT, ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT, ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT, ACTE_UNION_MAP_ADAPTATION_DRAFT, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT, PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT, RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT, RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT } from "../pedagogical-reference/historical-document-needs.ts";
 import { ACTE_UNION_DURHAM_DOCUMENT, ACTE_UNION_DURHAM_PRESENTATIONS } from "../pedagogical-reference/historical-document-presentations.ts";
-import { ACTE_UNION_DEBT_COMPARISON_CHART, ACTE_UNION_POPULATION_COMPARISON_CHART } from "../pedagogical-reference/historical-comparison-charts.ts";
+import { ACTE_UNION_DEBT_COMPARISON_CHART, ACTE_UNION_POPULATION_COMPARISON_CHART, COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART } from "../pedagogical-reference/historical-comparison-charts.ts";
 import { ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM, ACTE_UNION_STUDENT_TIMELINE, RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS, RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE } from "../pedagogical-reference/responsible-government-iconography.ts";
-import { RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT, RESPONSIBLE_GOVERNMENT_DOUBLE_MAJORITY_DEBATE_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_GREY_MINISTRY_LETTER_DOCUMENT, RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT, RESPONSIBLE_GOVERNMENT_MINISTRY_DEFEAT_1858_DOCUMENT, RESPONSIBLE_GOVERNMENT_REBELLION_LOSSES_ACT_DOCUMENT, RESPONSIBLE_GOVERNMENT_SECTIONAL_DIFFICULTIES_1864_DOCUMENT } from "../pedagogical-reference/responsible-government-primary-documents.ts";
+import { RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT, RESPONSIBLE_GOVERNMENT_DOUBLE_MAJORITY_DEBATE_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_GREY_MINISTRY_LETTER_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_MINISTRY_APPOINTMENTS_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_NON_INTERVENTION_DOCUMENT, RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT, RESPONSIBLE_GOVERNMENT_METCALFE_RESIGNATION_DOCUMENT, RESPONSIBLE_GOVERNMENT_MINISTRY_DEFEAT_1858_DOCUMENT, RESPONSIBLE_GOVERNMENT_REBELLION_LOSSES_ACT_DOCUMENT, RESPONSIBLE_GOVERNMENT_SECTIONAL_DIFFICULTIES_1864_DOCUMENT, RESPONSIBLE_GOVERNMENT_TORY_MOBILIZATION_DOCUMENT } from "../pedagogical-reference/responsible-government-primary-documents.ts";
 import { RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION } from "../pedagogical-reference/responsible-government-electoral-law.ts";
+import { COLONIAL_ECONOMY_PRIMARY_DOCUMENTS } from "../pedagogical-reference/colonial-economy-primary-documents.ts";
+import { INDIAN_AFFAIRS_PRIMARY_DOCUMENTS } from "../pedagogical-reference/indian-affairs-primary-documents.ts";
+import { INDIAN_AFFAIRS_ICONOGRAPHIC_DOCUMENTS } from "../pedagogical-reference/indian-affairs-iconography.ts";
+import { FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS } from "../pedagogical-reference/federal-provincial-relations-primary-documents.ts";
+import { INDUSTRIALIZATION_ICONOGRAPHIC_DOCUMENTS } from "../pedagogical-reference/industrialization-iconography.ts";
+import { BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS } from "../pedagogical-reference/british-north-america-act-maps.ts";
+import { BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS } from "../pedagogical-reference/british-north-america-confederation-documents.ts";
 
 const PUBLIC_DOMAIN_RIGHTS = "Texte original de 1840 dans le domaine public.";
 const RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_IMAGE = RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.find(({ id }) => id === "GR-I-002")!;
@@ -51,8 +58,139 @@ export const ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENTS: LearningSessionDocument
 }));
 
 export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
+  ...BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS.map((document) => ({
+    id: document.id,
+    title: document.title,
+    typeLabel: document.id === "AANB-M-005" ? "Carte historique" : document.id === "AANB-S-001" ? "Tableau statistique" : document.id === "AANB-I-001" ? "Caricature politique" : "Discours parlementaire",
+    dateLabel: document.historicalDate,
+    authorLabel: document.creator,
+    institutionLabel: document.holdingInstitution,
+    sourceLabel: document.sourceLocator,
+    sourceUrls: [document.sourceUrl, document.assetUrl],
+    rightsLabel: document.rightsStatement,
+    editorialNote: document.interpretationCautions[0],
+    content: document.id === "AANB-M-005" || document.id === "AANB-I-001"
+      ? { kind: "historical_image" as const, localSrc: document.assetUrl, alt: document.accessibleDescription, description: document.id === "AANB-I-001" ? "" : document.historicalContext }
+      : document.id === "AANB-S-001"
+        ? { kind: "comparison_table" as const, caption: "Marchandises transportées par le chemin de fer Intercolonial", headers: ["Période", "Marchandises transportées"] as [string, string], rows: [{ label: "1875-1876 · liaison non achevée", value: "342 196 tonnes" }, { label: "1876-1877 · première année après l’achèvement", value: "421 327 tonnes" }, { label: "1877-1878 · deuxième année après l’achèvement", value: "522 710 tonnes" }] }
+        : { kind: "historical_excerpt" as const, excerpt: document.transcription },
+    historicalKnowledgeIds: ["acte-de-l-amerique-du-nord-britannique", "confederation", "partage-des-pouvoirs"],
+    intellectualOperationIds: [...document.operationIds],
+  })),
+  ...BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS.map((document) => ({
+    id: document.id,
+    title: document.title,
+    typeLabel: "Carte historique",
+    dateLabel: document.historicalDate,
+    authorLabel: document.creator,
+    institutionLabel: document.holdingInstitution,
+    sourceLabel: document.sourceLocator,
+    sourceUrls: [document.sourceUrl],
+    rightsLabel: document.rightsStatement,
+    editorialNote: document.interpretationCautions[0],
+    content: { kind: "historical_image" as const, localSrc: document.assetUrl, alt: document.accessibleDescription, description: document.historicalContext },
+    historicalKnowledgeIds: ["acte-de-l-amerique-du-nord-britannique", "territoire-du-dominion-du-canada", "confederation"],
+    intellectualOperationIds: [...document.operationIds],
+  })),
+  ...FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS.map((document) => ({
+    id: document.id,
+    title: document.title,
+    typeLabel: document.id === "RFP-T-001" ? "Déclaration politique" : document.id === "RFP-T-002" ? "Déclaration judiciaire" : "Texte constitutionnel",
+    dateLabel: document.historicalDate,
+    authorLabel: document.creator,
+    institutionLabel: document.holdingInstitution,
+    sourceLabel: document.sourceLocator,
+    sourceUrls: [document.sourceUrl, document.assetUrl],
+    rightsLabel: document.rightsStatement,
+    editorialNote: document.interpretationCautions[0],
+    content: { kind: "historical_excerpt" as const, excerpt: document.transcription },
+    historicalKnowledgeIds: ["relations-federales-provinciales", "soulevements-metis", "riviere-rouge", "batoche"],
+    intellectualOperationIds: [...document.operationIds],
+  })),
+  ...INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.map((document) => ({
+    id: document.id,
+    title: document.title,
+    typeLabel: document.id === "AI-S-001" ? "Tableau statistique" : document.id === "AI-T-005" ? "Rapport de la commission Bagot" : document.id === "AI-T-006" ? "Rapport sur les écoles industrielles" : document.id === "AI-T-009" ? "Rapport gouvernemental" : document.id === "AI-T-010" ? "Pétition autochtone" : "Extrait d’un texte législatif",
+    dateLabel: document.historicalDate,
+    authorLabel: document.creator,
+    institutionLabel: document.holdingInstitution,
+    sourceLabel: document.sourceLocator,
+    sourceUrls: [document.sourceUrl, document.assetUrl],
+    rightsLabel: document.rightsStatement,
+    editorialNote: document.interpretationCautions[0],
+    content: document.id === "AI-S-001"
+      ? { kind: "comparison_table" as const, caption: "Nombre total d’élèves inscrits dans les écoles déclarées par les Affaires indiennes", headers: ["Année", "Élèves inscrits"] as [string, string], rows: [{ label: "1890", value: "6 671" }, { label: "1891", value: "7 554" }, { label: "1897", value: "9 628" }] }
+      : { kind: "historical_excerpt" as const, excerpt: document.transcription },
+    historicalKnowledgeIds: ["affaires-indiennes", "commission-bagot", "reserves", "missions", "loi-sur-les-indiens"],
+    intellectualOperationIds: [...document.operationIds],
+  })),
+  ...INDIAN_AFFAIRS_ICONOGRAPHIC_DOCUMENTS.map((document) => ({
+    id: document.id,
+    title: document.title,
+    typeLabel: document.id === "AI-I-001" || document.id === "AI-I-002" ? "Photographie gouvernementale mise en scène" : document.id === "AI-I-003" ? "Photographie historique" : document.kind === "map" ? "Carte historique" : "Photographie d’un pensionnat",
+    dateLabel: document.historicalDate,
+    authorLabel: document.creator,
+    institutionLabel: document.holdingInstitution,
+    sourceLabel: document.sourceLocator,
+    sourceUrls: [document.sourceUrl],
+    rightsLabel: document.rightsStatement,
+    editorialNote: document.interpretationCautions[0],
+    content: { kind: "historical_image" as const, localSrc: document.assetUrl, alt: document.accessibleDescription, description: document.historicalContext, visibleCaption: document.studentVisibleCaption, visibleCaptionNote: document.studentVisibleCaptionNote },
+    historicalKnowledgeIds: ["affaires-indiennes", "loi-sur-les-indiens", "ecoles-industrielles", "assimilation-culturelle", "christianisation"],
+    intellectualOperationIds: [...document.operationIds],
+  })),
+  {
+    id: COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART.id,
+    title: COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART.title,
+    typeLabel: COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART.typeLabel,
+    dateLabel: COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART.dateLabel,
+    authorLabel: "Board of Trade, Statistical Department",
+    institutionLabel: "Parlement du Royaume-Uni",
+    sourceLabel: COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART.sourceLabel,
+    sourceUrls: [COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART.sourceUrl],
+    rightsLabel: "Données historiques officielles; présentation graphique créée par Socrato.",
+    editorialNote: COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART.interpretationCautions[0],
+    content: { kind: "historical_comparison_chart" as const, chart: COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART },
+    historicalKnowledgeIds: ["economie-coloniale", "traite-reciprocite", "exportations-vers-etats-unis"],
+    intellectualOperationIds: ["changes_and_continuities", "relationships_between_facts", "establish_facts"],
+  },
+  ...COLONIAL_ECONOMY_PRIMARY_DOCUMENTS.map((document) => ({
+    id: document.id,
+    title: document.title,
+    typeLabel: document.kind === "map" ? "Carte pédagogique" : document.id === "EC-T-006" ? "Lettre privée" : document.id === "EC-T-007" ? "Pétition commerciale" : "Extrait d’un texte officiel",
+    dateLabel: document.historicalDate,
+    authorLabel: document.creator,
+    institutionLabel: document.holdingInstitution,
+    sourceLabel: document.sourceLocator,
+    sourceUrls: [document.sourceUrl, document.assetUrl],
+    rightsLabel: document.rightsStatement,
+    editorialNote: document.interpretationCautions[0],
+    content: document.kind === "map"
+      ? { kind: "historical_image" as const, localSrc: document.assetUrl, alt: document.accessibleDescription, description: "" }
+      : { kind: "historical_excerpt" as const, excerpt: document.transcription },
+    historicalKnowledgeIds: ["economie-coloniale", "preferences-imperiales", "traite-reciprocite"],
+    intellectualOperationIds: [...document.operationIds],
+  })),
+  ...INDUSTRIALIZATION_ICONOGRAPHIC_DOCUMENTS.map((document) => ({
+    id: document.id,
+    title: document.title,
+    typeLabel: document.kind === "map" ? "Carte historique" : "Document iconographique",
+    dateLabel: document.historicalDate,
+    authorLabel: document.creator,
+    institutionLabel: document.holdingInstitution,
+    sourceLabel: document.sourceLocator,
+    sourceUrls: [document.sourceUrl, document.assetUrl],
+    rightsLabel: document.rightsStatement,
+    editorialNote: document.interpretationCautions[0],
+    content: { kind: "historical_image" as const, localSrc: document.assetUrl, alt: document.accessibleDescription, description: document.historicalContext },
+    historicalKnowledgeIds: ["premiere-phase-d-industrialisation", "reseau-de-transport", "canaux", "chemins-de-fer"],
+    intellectualOperationIds: [...document.operationIds],
+  })),
   ...[
     RESPONSIBLE_GOVERNMENT_ELGIN_GREY_MINISTRY_LETTER_DOCUMENT,
+    RESPONSIBLE_GOVERNMENT_ELGIN_MINISTRY_APPOINTMENTS_DOCUMENT,
+    RESPONSIBLE_GOVERNMENT_METCALFE_RESIGNATION_DOCUMENT,
+    RESPONSIBLE_GOVERNMENT_ELGIN_NON_INTERVENTION_DOCUMENT,
     RESPONSIBLE_GOVERNMENT_REBELLION_LOSSES_ACT_DOCUMENT,
     RESPONSIBLE_GOVERNMENT_DOUBLE_MAJORITY_DEBATE_DOCUMENT,
     RESPONSIBLE_GOVERNMENT_MINISTRY_DEFEAT_1858_DOCUMENT,
@@ -120,6 +258,22 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
     intellectualOperationIds: [...RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.operationIds],
   },
   {
+    id: RESPONSIBLE_GOVERNMENT_TORY_MOBILIZATION_DOCUMENT.id,
+    title: RESPONSIBLE_GOVERNMENT_TORY_MOBILIZATION_DOCUMENT.title,
+    typeLabel: "Notice historique",
+    dateLabel: RESPONSIBLE_GOVERNMENT_TORY_MOBILIZATION_DOCUMENT.historicalDate,
+    authorLabel: RESPONSIBLE_GOVERNMENT_TORY_MOBILIZATION_DOCUMENT.creator,
+    institutionLabel: RESPONSIBLE_GOVERNMENT_TORY_MOBILIZATION_DOCUMENT.holdingInstitution,
+    originalDocumentLabel: "Stones thrown at Lord Elgin",
+    sourceLabel: RESPONSIBLE_GOVERNMENT_TORY_MOBILIZATION_DOCUMENT.sourceLocator,
+    sourceUrls: [RESPONSIBLE_GOVERNMENT_TORY_MOBILIZATION_DOCUMENT.sourceUrl],
+    rightsLabel: RESPONSIBLE_GOVERNMENT_TORY_MOBILIZATION_DOCUMENT.rightsStatement,
+    editorialNote: RESPONSIBLE_GOVERNMENT_TORY_MOBILIZATION_DOCUMENT.interpretationCautions[0],
+    content: { kind: "historical_excerpt", excerpt: RESPONSIBLE_GOVERNMENT_TORY_MOBILIZATION_DOCUMENT.transcription },
+    historicalKnowledgeIds: ["gouvernement-responsable", "loi-indemnisation", "incendie-parlement-montreal", "tories"],
+    intellectualOperationIds: [...RESPONSIBLE_GOVERNMENT_TORY_MOBILIZATION_DOCUMENT.operationIds],
+  },
+  {
     id: RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT.id,
     title: RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT.title,
     typeLabel: "Discours parlementaire",
@@ -169,9 +323,9 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
   },
   {
     id: RESPONSIBLE_GOVERNMENT_FUNCTIONING_DIAGRAM_ID,
-    title: "Fonctionnement politique de la Province du Canada après 1848",
-    typeLabel: "Schéma politique",
-    dateLabel: "À partir de 1848",
+    title: "Schéma politique du gouvernement de la Province du Canada en 1848",
+    typeLabel: "Schéma politique du gouvernement de la Province du Canada en 1848",
+    dateLabel: "1848",
     authorLabel: "Socrato",
     sourceLabel: "Schéma pédagogique fondé sur la pratique du gouvernement responsable dans la Province du Canada.",
     sourceUrls: [],

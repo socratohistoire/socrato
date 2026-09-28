@@ -1,6 +1,27 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getSharedSummaryDetails } from "../lib/student-dashboard/shared-summary-details.ts";
+import { getSharedStrengths, getSharedSummaryDetails } from "../lib/student-dashboard/shared-summary-details.ts";
+
+test("présente les points forts comme des apprentissages précis plutôt que comme des types de réponse", () => {
+  const strengths = getSharedStrengths({
+    savedStrengths: [],
+    questionIds: ["question:acte-union:document-interpretation-002"],
+    operationLabels: { causes_and_consequences: "Établir des liens de causalité" },
+    questionRuntime: [{
+      questionId: "question:acte-union:document-interpretation-002", attemptNumber: 1, hintLevel: 0,
+      hintRequestCount: 0, nonExploitableCount: 0, status: "completed",
+      lastAnalysis: {
+        responseDisposition: "substantive", pedagogicalOutcome: "satisfactory", historicalAccuracy: "demonstrated",
+        documentUse: "demonstrated", justificationQuality: "demonstrated", primaryOperationPerformance: "demonstrated",
+        demonstratedKnowledgeIds: [], observedOperationIds: [], usedDocumentIds: [],
+        observedStrengths: ["Tu expliques précisément que l’Union crée une seule province composée du Canada-Est et du Canada-Ouest."],
+        missingElements: [], nextAction: "complete_question", confidence: "high",
+      },
+    }],
+  });
+  assert.match(strengths[0] ?? "", /^Comprendre la création de la Province du Canada\n/);
+  assert.doesNotMatch(strengths[0] ?? "", /^Établir des liens de causalité/);
+});
 
 test("fournit exactement le même bilan précis aux vues élève et enseignant", () => {
   const details = getSharedSummaryDetails({

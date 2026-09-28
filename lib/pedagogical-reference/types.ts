@@ -232,6 +232,7 @@ export interface ApprovedQuestion {
   format: ApprovedQuestionFormat;
   prompt: string;
   instruction: string;
+  initialGuidance?: string;
   expectedAnswer: string;
   historicalDocumentIds: readonly string[];
   commonErrors: readonly string[];
@@ -260,9 +261,12 @@ export interface ApprovedQuestion {
     }[];
   };
   associationInteraction?: {
-    documentId: string;
-    items: readonly { id: string; label: string }[];
-    targets: readonly { id: string; description: string; correctItemId: string }[];
+    documentId?: string;
+    map?: { imageUrl: string; imageAlt: string };
+    items: readonly { id: string; label: string; imageUrl?: string; imageAlt?: string }[];
+    targets: readonly { id: string; label?: string; description: string; imageUrl?: string; imageAlt?: string; correctItemId: string; zone?: { x: number; y: number; width: number; height: number } }[];
+    categories?: readonly { id: string; label: string; articleLabel: string; description: string; correctItemIds: readonly string[] }[];
+    tension?: { title: string; prompt: string; explanation: string };
   };
   causalChainInteraction?: {
     steps: readonly { id: string; date: string; prompt: string; placeholder: string; acceptedAnswers: readonly string[]; expectedAnswer: string }[];

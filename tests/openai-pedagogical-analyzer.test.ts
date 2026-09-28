@@ -68,6 +68,7 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(instructions, /Choisis une aide proportionnée/);
   assert.match(instructions, /affirmation liée à la question est substantive/);
   assert.match(instructions, /dialogue est cumulatif et peut compter jusqu’à trois réponses/);
+  assert.match(instructions, /priorTurn ou dans la réponse actuelle/);
   assert.match(instructions, /n’exige pas une phrase de synthèse supplémentaire/);
   assert.match(instructions, /liste fermée des obligations explicitement formulées/);
   assert.match(instructions, /Il est interdit de transformer un détail supplémentaire/);
@@ -462,7 +463,7 @@ test("préserve la piste personnalisée et remplace les codes internes", async (
     ...validAnalysis,
     missingElements: ["Ajoute une revendication précise, puis relie-la au refus : que demande le document document-1 au sujet du Conseil législatif?"],
   }, question, 0);
-  assert.equal(feedback.studentFacingText, "Un lien historique pertinent est amorcé.\n\nProchaine étape\nAjoute une revendication précise, puis relie-la au refus : que demande le document Acte d’Union au sujet du Conseil législatif?");
+  assert.equal(feedback.studentFacingText, "Bon début! Un lien historique pertinent est amorcé.\n\nProchaine étape\nAjoute une revendication précise, puis relie-la au refus : que demande le document Acte d’Union au sujet du Conseil législatif?");
   assert.doesNotMatch(feedback.studentFacingText, /document-1|Observe un document autorisé/);
 });
 
@@ -487,7 +488,7 @@ test("demande seulement une reformulation personnelle après une copie substanti
   const feedback = createPedagogicalFeedback(result, copiedQuestion, 0);
   assert.equal(result.pedagogicalOutcome, "partially_satisfactory");
   assert.deepEqual(result.missingElements, []);
-  assert.equal(feedback.studentFacingText, "Tu as repéré le passage pertinent, mais tu dois formuler ton idée dans tes mots.");
+  assert.equal(feedback.studentFacingText, "Voilà un premier élément. Tu as repéré le passage pertinent, mais tu dois formuler ton idée dans tes mots.");
 });
 
 test("corrige une attribution ponctuelle sans redemander un raisonnement déjà complet", async () => {

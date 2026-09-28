@@ -212,8 +212,9 @@ function preciseDemonstratedStrengths(state: PedagogicalSessionState, results: Q
       : "";
     const conclusion = strengths.length === limit - 1 ? positiveConclusion(result) : "";
     const preciseObservation = result.observedStrengths.find(isSpecificObservation)?.trim();
-    strengths.push(`${preciseObservation ?? descriptor.title}\n${[
+    strengths.push(`${descriptor.title}\n${[
       `${achievement.charAt(0).toUpperCase()}${achievement.slice(1)}`,
+      preciseObservation,
       descriptor.explanation,
       knowledgeConnection,
       conclusion,

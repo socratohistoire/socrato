@@ -8,6 +8,7 @@ import {
   countHistoricalRecordReview,
   createHistoricalRecordReviewDraft,
   getIntellectualOperation,
+  getSecondaryFourKnowledgeHeading,
   INTELLECTUAL_OPERATIONS,
   INTELLECTUAL_OPERATION_SOURCES,
   type HistoricalRecord,
@@ -140,6 +141,8 @@ export function ReferenceValidationView({ record, initialSection = "lecture" }: 
   const archivedCorrectionHistory = correctionHistory.filter(({ itemId }) => !correctionTargets.has(itemId));
   const operationSources = new Map(INTELLECTUAL_OPERATION_SOURCES.map((source) => [source.id, source]));
   const statusLabel = review.status === "approved" ? "Approuvé localement" : review.status === "changes-requested" ? "Corrections demandées" : "En validation";
+  const knowledgeHeadingLabel = getSecondaryFourKnowledgeHeading(record.knowledgeHeadingId)?.officialLabel ?? record.title;
+  const editorialRevisionLog = record.knowledgeHeadingId === "acte-union" ? EDITORIAL_REVISION_LOG : [];
 
   function validateGroup(ids: readonly string[], label: string) {
     setReview((current) => {
@@ -171,7 +174,7 @@ export function ReferenceValidationView({ record, initialSection = "lecture" }: 
 
   return <main id="reference-top" className="reference-admin">
     <header className="reference-admin__header">
-      <div><p>Administration · Référentiel pédagogique</p><h1>{record.knowledgeHeadingId === "gouvernement-responsable" ? "Gouvernement responsable" : "Acte d’Union"}</h1><span>1840-1896 · La formation du régime fédéral canadien</span></div>
+      <div><p>Administration · Référentiel pédagogique</p><h1>{knowledgeHeadingLabel}</h1><span>1840-1896 · La formation du régime fédéral canadien</span></div>
       <div className="reference-admin__header-actions"><Link href="/admin/pedagogical-reference">Toutes les périodes</Link><Link href="/teacher">Espace enseignant</Link></div>
     </header>
 
@@ -269,10 +272,10 @@ export function ReferenceValidationView({ record, initialSection = "lecture" }: 
 
     {activeSection === "appropriation" && <section className="review-section approval-file-panel" aria-labelledby="approval-file-title">
       <div className="review-section__intro"><p>Préparation à une évaluation externe</p><h2 id="approval-file-title">Dossier d’approbation</h2><span>Cette vue prépare les preuves nécessaires à une révision institutionnelle. Elle ne signifie pas que Socrato ou ce dossier sont approuvés par le ministère.</span></div>
-      <div className="approval-file-summary"><div><strong>{progress.accepted}/{progress.total}</strong><span>éléments du contenu validés</span></div><div><strong>{record.knowledgePrecisions.length}/4</strong><span>précisions ministérielles documentées</span></div><div><strong>{record.sourceCatalog.length}</strong><span>sources répertoriées · {missingSourceCount === 0 ? "aucune source manquante" : `${missingSourceCount} source(s) à compléter`}</span></div><div><strong>{currentCorrectionHistory.filter(({ status }) => status === "open").length}</strong><span>corrections ouvertes sur la version actuelle</span></div></div>
+      <div className="approval-file-summary"><div><strong>{progress.accepted}/{progress.total}</strong><span>éléments du contenu validés</span></div><div><strong>{record.knowledgePrecisions.length}/{record.knowledgePrecisions.length}</strong><span>précisions ministérielles documentées</span></div><div><strong>{record.sourceCatalog.length}</strong><span>sources répertoriées · {missingSourceCount === 0 ? "aucune source manquante" : `${missingSourceCount} source(s) à compléter`}</span></div><div><strong>{currentCorrectionHistory.filter(({ status }) => status === "open").length}</strong><span>corrections ouvertes sur la version actuelle</span></div></div>
       <div className="approval-file-grid">
         <article><span className="file-status file-status--ready">Documenté</span><h3>Référentiel historique lisible</h3><p>Le texte continu, ses notes et sa bibliographie proviennent du même manuel canonique que la validation par chapitre.</p></article>
-        <article><span className="file-status file-status--ready">Documenté</span><h3>Concordance avec le programme</h3><p>Les quatre précisions officielles de la notion sont reliées aux paragraphes, affirmations et sources.</p></article>
+        <article><span className="file-status file-status--ready">Documenté</span><h3>Concordance avec le programme</h3><p>Les {record.knowledgePrecisions.length} précisions officielles de la notion sont reliées aux paragraphes, affirmations et sources.</p></article>
         <article><span className={`file-status file-status--${review.status === "approved" ? "ready" : "review"}`}>{review.status === "approved" ? "Documenté" : "En validation"}</span><h3>Piste de vérification</h3><p>{review.status === "approved" ? "La monographie, la structure pédagogique, les opérations intellectuelles et les sources ont été validées." : "La monographie, la structure pédagogique, les opérations intellectuelles et les sources doivent être validées."}</p></article>
         <article><span className="file-status file-status--todo">À préparer</span><h3>Fiche pédagogique concise</h3><p>La fiche destinée au fonctionnement de Socrato sera finalisée à partir du dossier historique approuvé.</p></article>
         <article><span className="file-status file-status--todo">À préparer</span><h3>Questions et documents destinés aux élèves</h3><p>Chaque question, document, réponse attendue et règle de rétroaction devra être documenté et approuvé séparément.</p></article>
@@ -284,9 +287,9 @@ export function ReferenceValidationView({ record, initialSection = "lecture" }: 
     {activeSection === "appropriation" && <section className="review-section" aria-labelledby="approval-title">
       <div className="approval-grid"><div><p>Décision administrative</p><h2 id="approval-title">Approbation finale</h2><p className="approval-summary-copy">Cette décision confirme que la monographie, la structure pédagogique, les opérations intellectuelles et les sources déjà validées peuvent former le dossier de référence officiel de Socrato pour cette notion.</p></div><div className="approval-form"><label>Nom de la personne responsable<input value={review.reviewerName} onChange={(event) => setReview((current) => ({ ...current, reviewerName: event.target.value }))} /></label><label>Version<input value={review.version} onChange={(event) => setReview((current) => ({ ...current, version: event.target.value }))} /></label><label>Commentaire de validation<textarea value={review.reviewerComment} onChange={(event) => setReview((current) => ({ ...current, reviewerComment: event.target.value }))} /></label><div className="approval-actions"><button className="approval-primary" type="button" onClick={approve} disabled={!canApprove}>Approuver le dossier</button></div>{!canApprove && <p className="approval-help">Pour approuver : valider la monographie, la structure pédagogique, les opérations intellectuelles et les sources, puis inscrire ton nom et une version.</p>}{review.status === "approved" && review.approvedAt && <p className="approval-success" role="status">Dossier approuvé localement le {new Intl.DateTimeFormat("fr-CA", { dateStyle: "long", timeStyle: "short" }).format(new Date(review.approvedAt))}.</p>}</div></div>
       <details className="correction-history">
-        <summary><div><p>Traçabilité des révisions</p><h3>Historique des révisions</h3></div><span>{EDITORIAL_REVISION_LOG.length} révisions éditoriales · {currentCorrectionHistory.filter(({ status }) => status === "open").length} correction(s) ouverte(s)</span></summary>
+        <summary><div><p>Traçabilité des révisions</p><h3>Historique des révisions</h3></div><span>{editorialRevisionLog.length} révisions éditoriales · {currentCorrectionHistory.filter(({ status }) => status === "open").length} correction(s) ouverte(s)</span></summary>
         <div className="correction-history__content">
-          <ol className="editorial-revision-list">{EDITORIAL_REVISION_LOG.map((revision) => <li key={revision.id}><div><strong>{revision.area}</strong><p>{revision.summary}</p></div><time>{revision.date}</time></li>)}</ol>
+          {editorialRevisionLog.length > 0 && <ol className="editorial-revision-list">{editorialRevisionLog.map((revision) => <li key={revision.id}><div><strong>{revision.area}</strong><p>{revision.summary}</p></div><time>{revision.date}</time></li>)}</ol>}
           <details className="legacy-revision-history"><summary>Anciennes corrections enregistrées ({correctionHistory.length})</summary>{correctionHistory.length === 0 ? <p className="correction-history__empty">Aucune correction n’a été enregistrée dans les versions précédentes.</p> : <ol>{[...currentCorrectionHistory, ...archivedCorrectionHistory].map((correction) => <li key={correction.itemId} className="correction-history__archived"><div><strong>Correction conservée dans l’historique</strong><span>{correctionTargets.get(correction.itemId) ?? correction.itemId}</span><p>{correction.comment}</p></div></li>)}</ol>}</details>
         </div>
       </details>

@@ -12,6 +12,8 @@ import { getConsolidationSessionUrl, getConsolidationStrategyAdvice, getLearning
 const viewSource = readFileSync("app/eleve/activite/[activityId]/session-view.tsx", "utf8");
 const pageSource = readFileSync("app/eleve/activite/[activityId]/page.tsx", "utf8");
 const teacherPreviewPageSource = readFileSync("app/teacher/activities/new/student-preview/page.tsx", "utf8");
+const questionCatalogSource = readFileSync("lib/pedagogical-reference/question-catalog.ts", "utf8");
+const documentCatalogSource = readFileSync("lib/student-learning-session/document-catalog.ts", "utf8");
 
 test("utilise l’analyse IA dans tous les aperçus du créateur, y compris après publication", () => {
   assert.match(teacherPreviewPageSource, /<StudentLearningSessionView[^>]*teacherApiTest(?:\s|>)/);
@@ -22,7 +24,15 @@ test("utilise l’analyse IA dans tous les aperçus du créateur, y compris apr�
 
 test("réaffiche le bilan lorsqu’une activité terminée est rouverte", () => {
   assert.match(viewSource, /useState\(\(\) => Boolean\(initialEngineState\.summary\)\)/);
-  assert.match(viewSource, /engineState\.summary && finalFeedbackDelivered/);
+  assert.match(viewSource, /Boolean\(engineState\.summary && finalFeedbackDelivered\)/);
+});
+
+test("intègre le bouton du bilan dans la dernière intervention de Socrato", () => {
+  assert.match(viewSource, /className="message message-socrato local-session-summary"/);
+  assert.match(viewSource, /<strong>Socrato<\/strong><h3>/);
+  assert.match(viewSource, /Consulter mon bilan<\/Link>/);
+  assert.match(viewSource, /region\.scrollTo\(\{ top: region\.scrollHeight/);
+  assert.doesNotMatch(viewSource, /<div className="session-completion-footer"><SessionCompletionLink/);
 });
 
 test("la consolidation reprend en priorité une difficulté réellement rencontrée", () => {
@@ -175,8 +185,8 @@ test("présente les contrôles de réponse et la simulation locale de dictée", 
 test("applique la lisibilité pédagogique à tous les messages", () => {
   assert.match(cssSource, /\.message p \{[^}]*font-size:16px[^}]*font-weight:400[^}]*line-height:1\.5/);
   assert.match(cssSource, /\.message strong \{[^}]*font-size:16px[^}]*font-weight:700[^}]*line-height:1\.3/);
-  assert.match(cssSource, /\.question-card h3 \{[^}]*margin:0[^}]*font-family:var\(--font-geist-sans\)[^}]*font-size:clamp\(22px,1\.5vw,23px\)[^}]*font-weight:700[^}]*line-height:1\.32/);
-  assert.match(cssSource, /@media \(max-width:620px\) \{ \.question-card \{ padding:12px 16px; \}\.question-card h3 \{ font-size:clamp\(20px,5\.2vw,22px\); line-height:1\.32; \} \}/);
+  assert.match(cssSource, /\.question-card h3 \{[^}]*margin:0[^}]*font-family:var\(--font-geist-sans\)[^}]*font-size:clamp\(15\.4px,1\.05vw,16\.1px\)[^}]*font-weight:700[^}]*line-height:1\.32/);
+  assert.match(cssSource, /@media \(max-width:620px\) \{ \.question-card \{ padding:12px 16px; \}\.question-card h3 \{ font-size:clamp\(14px,3\.64vw,15\.4px\); line-height:1\.32; \} \}/);
   assert.match(cssSource, /@media \(max-width:620px\)[^{]*\{[^}]*\.session-header/);
   assert.match(cssSource, /\.message p \{ font-size:16px; line-height:1\.5; \}/);
   assert.match(cssSource, /textarea::placeholder/);
@@ -187,30 +197,35 @@ test("masque les compteurs techniques tout en conservant leur état dans le mote
   const engineTypes = readFileSync("lib/pedagogical-session-engine/types.ts", "utf8");
   assert.match(engineTypes, /attemptNumber: number/);
   assert.match(engineTypes, /hintLevel: HintLevel/);
-  assert.match(viewSource, /maximumHelpReceived \? "Aide maximale reçue" : "Obtenir un indice"/);
+  assert.doesNotMatch(viewSource, />Obtenir un indice</);
 });
 
 test("rend la zone de réponse compacte dans un encadré intégré", () => {
-  assert.match(cssSource, /\.response-composer textarea \{[^}]*height:48px[^}]*min-height:48px[^}]*max-height:112px[^}]*overflow-y:auto[^}]*overflow-x:hidden[^}]*resize:none[^}]*padding:12px 4px[^}]*font-size:16px[^}]*line-height:1\.4/);
-  assert.match(cssSource, /\.response-composer-shell \{[^}]*grid-template-columns:minmax\(0,1fr\) auto[^}]*border-radius:16px/);
+  assert.match(cssSource, /\.question-card h3 \{[^}]*font-size:clamp\(15\.4px,1\.05vw,16\.1px\)/);
+  assert.match(cssSource, /\.response-composer textarea \{[^}]*height:88px[^}]*min-height:88px[^}]*max-height:200px[^}]*overflow-y:hidden[^}]*overflow-x:hidden[^}]*resize:none[^}]*padding:10px 4px[^}]*font-size:16px[^}]*line-height:1\.45/);
+  assert.match(cssSource, /\.response-composer-shell \{[^}]*grid-template-columns:minmax\(0,1fr\) auto[^}]*border-radius:20px/);
+  assert.match(viewSource, /textarea\.style\.height = "auto"/);
+  assert.match(viewSource, /Math\.min\(Math\.max\(textarea\.scrollHeight, 88\), maximumHeight\)/);
+  assert.match(viewSource, /textarea\.style\.overflowY = textarea\.scrollHeight > maximumHeight \? "auto" : "hidden"/);
+  assert.match(viewSource, /rows=\{3\}/);
   assert.match(cssSource, /\.response-composer-shell:focus-within \{[^}]*border-color:var\(--gold\)[^}]*box-shadow:/);
   assert.match(cssSource, /\.learning-session \.response-composer textarea:focus,\.learning-session \.response-composer textarea:focus-visible \{ border:0; outline:0; box-shadow:none; \}/);
 });
 
 test("la conversation grandit naturellement puis fait défiler uniquement les messages", () => {
-  assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\)[\s\S]*\.conversation \{ min-height:0; flex:1; overflow:hidden; \}/);
+  assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\)[\s\S]*\.conversation \{ min-height:0; height:100%; flex:1; overflow:hidden; \}/);
   assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\)[\s\S]*\.message-list \{ min-height:0; max-height:none; flex:1; \}/);
   assert.match(cssSource, /\.message-list \{[^}]*overflow-y:auto[^}]*overflow-x:hidden/);
   assert.match(cssSource, /\.response-composer \{[^}]*flex:0 0 auto/);
   assert.match(viewSource, /<section className="conversation"[\s\S]*<div[^>]*className="message-list"[\s\S]*<form className="response-composer"/);
   assert.match(cssSource, /\.question-card \{[^}]*padding:12px 20px/);
   assert.doesNotMatch(cssSource, /\.question-card \{[^}]*min-height/);
-  assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\)[\s\S]*\.conversation \{ min-height:0; flex:1/);
+  assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\)[\s\S]*\.conversation \{ min-height:0; height:100%; flex:1/);
 });
 
 test("égalise les colonnes dans un espace de travail piloté par le viewport", () => {
   assert.match(cssSource, /\.learning-session \{[^}]*min-height:100vh[^}]*display:block/);
-  assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\) \{[\s\S]*\.session-layout \{ height:100dvh; min-height:100dvh; grid-template-columns:minmax\(0,1\.02fr\) minmax\(0,\.98fr\); grid-template-rows:auto minmax\(0,1fr\); align-items:stretch/);
+  assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\) \{[\s\S]*\.session-layout \{ height:100dvh; min-height:700px; grid-template-columns:minmax\(0,1\.02fr\) minmax\(0,\.98fr\); grid-template-rows:auto minmax\(0,1fr\); align-items:stretch/);
   assert.doesNotMatch(cssSource, /min-height:calc\(100vh -/);
   assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\)[\s\S]*\.question-pane,\.documents-pane \{ height:100%; min-height:0; display:flex; flex-direction:column; \}/);
   assert.match(cssSource, /\.question-module \{[^}]*display:flex[^}]*flex-direction:column/);
@@ -219,6 +234,10 @@ test("égalise les colonnes dans un espace de travail piloté par le viewport", 
   assert.match(cssSource, /\.document-content-group-visual \{ min-height:0; flex:1 1 auto; overflow:hidden; \}/);
   assert.match(cssSource, /\.document-flex-space \{ min-height:0; display:block; flex:1 1 auto; \}/);
   assert.match(cssSource, /\.document-actions,\.document-separator,\.document-navigation \{ flex:0 0 auto; \}/);
+  assert.match(cssSource, /@media \(min-width:900px\)[\s\S]*session-layout--with-documents:not\(\.session-layout--timeline\)\{height:100dvh;min-height:700px/);
+  assert.match(cssSource, /session-layout--with-documents:not\(\.session-layout--timeline\) \.question-module,\.learning-session \.session-layout--with-documents:not\(\.session-layout--timeline\) \.documents-module\{display:flex;flex-direction:column\}/);
+  assert.match(cssSource, /session-layout--with-documents:not\(\.session-layout--timeline\) \.document-system-card\{height:100%;min-height:0;flex:1;overflow:hidden\}/);
+  assert.match(cssSource, /@media \(min-width:900px\)\{\.learning-session \.session-layout--with-documents:not\(\.session-layout--timeline\) \.document-system-card--stacked \.stacked-document-list\{height:100%!important\}\}/);
 });
 
 test("conserve un repli vertical pour les très petits écrans", () => {
@@ -228,9 +247,10 @@ test("conserve un repli vertical pour les très petits écrans", () => {
   assert.match(cssSource, /@media \(max-width:1119px\)[\s\S]*\.document-system-card \{ height:auto; display:block; overflow:visible; \}/);
 });
 
-test("intègre l’indice à droite de la dernière ligne de la question", () => {
-  assert.match(viewSource, /<h3 id="question-title">\{question\.prompt\}\{!isMultipleChoice \? <span className="question-inline-hint">[\s\S]*className="hint-button hint-button-compact"/);
-  assert.match(viewSource, /<div className="multiple-choice-actions">[\s\S]*Obtenir un indice[\s\S]*Vérifier ma réponse/);
+test("retire le bouton d’indice de toutes les questions", () => {
+  assert.match(viewSource, /<h3 id="question-title">\{question\.prompt\}<\/h3>/);
+  assert.doesNotMatch(viewSource, />Obtenir un indice</);
+  assert.match(viewSource, /<div className="multiple-choice-actions">[\s\S]*Vérifier ma réponse/);
   assert.doesNotMatch(viewSource, /<p>\{question\.instruction\}<\/p>/);
   assert.match(cssSource, /\.question-support-row \{[^}]*display:flex[^}]*justify-content:flex-end/);
   assert.match(cssSource, /\.question-card-heading-row \{[^}]*display:block/);
@@ -240,14 +260,14 @@ test("intègre l’indice à droite de la dernière ligne de la question", () =>
   assert.doesNotMatch(cssSource, /\.hint-button \{[^}]*position:absolute/);
   assert.match(cssSource, /\.question-card-actions \{[^}]*display:flex[^}]*justify-content:flex-end/);
   assert.match(cssSource, /\.hint-button \{[^}]*min-height:44px/);
-  assert.match(viewSource, /<svg className="hint-icon"[^>]*aria-hidden="true"/);
+  assert.doesNotMatch(viewSource, /className="hint-icon"/);
 });
 
 test("conserve la question à gauche et compacte la ligne du temps dans le volet documentaire", () => {
   assert.doesNotMatch(viewSource, /session-layout--timeline-development|conversation--timeline-dock|Afficher la conversation/);
   assert.match(viewSource, /const useStackedDocuments = questionDocuments\.length > 0/);
   assert.match(viewSource, /<DocumentContent document=\{document\} compact onExpand=\{\(\) => expandStackedDocument\(document\.id\)\} \/>/);
-  assert.match(viewSource, /<DocumentContent document=\{selected\} expanded \/>/);
+  assert.match(viewSource, /<DocumentContent document=\{selected\} expanded imageZoom=\{imageZoom\} onImageZoomChange=\{setImageZoom\} \/>/);
 });
 
 test("place les indices ouverts dans la conversation avec Socrato", () => {
@@ -260,24 +280,25 @@ test("place les indices ouverts dans la conversation avec Socrato", () => {
 
 test("affiche uniquement l’opération principale explicitement définie près de QUESTION 1", () => {
   assert.match(viewSource, /find\(\(\{ id \}\) => id === question\.primaryOperationId\)/);
-  assert.match(viewSource, /<h2 id="question-section-title" className="column-title question-number">Question \{question\.number\}<\/h2>\s*\{primaryOperation \? <span className="operation-chip">\{primaryOperation\.label\}<\/span> : null\}/);
+  assert.match(viewSource, /<div className="question-card-meta">\s*<h2 id="question-section-title">Question \{question\.number\}<\/h2>\s*\{primaryOperation \? <span className="operation-chip">\{primaryOperation\.label\}<\/span> : null\}/);
+  assert.match(viewSource, /InteractiveAssociationQuestion[^>]*operationLabel=\{primaryOperation\?\.label\}/);
+  assert.match(viewSource, /<p>Question \{question\.number\}<\/p>\{operationLabel \? <span className="operation-chip">\{operationLabel\}<\/span> : null\}<\/div><h2 id="association-question-title"/);
   assert.doesNotMatch(viewSource, /question\.intellectualOperations\.map/);
   assert.match(cssSource, /\.operation-chip \{[^}]*min-height:30px[^}]*padding:4px 12px[^}]*font-size:clamp\(\.9375rem,1vw,1rem\)[^}]*font-weight:700[^}]*line-height:1\.2[^}]*white-space:nowrap/);
   assert.match(cssSource, /@media \(max-width:620px\)[\s\S]*\.operation-chip \{ min-height:28px; padding-inline:10px; font-size:\.875rem; white-space:normal; \}/);
 });
 
-test("place les deux en-têtes hors des cartes dans une grille alignée", () => {
+test("place le numéro et l’opération dans la carte de question", () => {
   assert.match(viewSource, /<div className=\{`session-layout\$\{isInteractiveTimeline \|\| isInteractiveAssociation \|\| isInteractiveCausalChain \? " session-layout--timeline" : ""\}[\s\S]*session-layout--choice-no-documents/);
-  assert.match(viewSource, /<div className="question-heading">[\s\S]*?<section className="question-pane" aria-labelledby="question-section-title">\s*<div className="question-module">\s*<div className=\{`question-card\$\{isShortAnswerWithoutDocuments/);
+  assert.match(viewSource, /<section className="question-pane" aria-labelledby="question-section-title">\s*<div className="question-module">\s*<div className=\{`question-card\$\{isShortAnswerWithoutDocuments[\s\S]*?<div className="question-card-meta">/);
   assert.match(viewSource, /<div className="documents-heading">[\s\S]*?<h2 id="documents-title"[\s\S]*?<DocumentsPane/);
   assert.doesNotMatch(viewSource, /className="session-progress"/);
   assert.match(viewSource, /<aside className="documents-pane" aria-labelledby="documents-title">\s*<div className="documents-module">/);
-  assert.match(viewSource, /<div className=\{`question-card\$\{isShortAnswerWithoutDocuments[\s\S]*<div className="question-card-heading-row">[\s\S]*<h3 id="question-title">\{question\.prompt\}\{!isMultipleChoice \? <span className="question-inline-hint">/);
-  assert.match(viewSource, /className="question-inline-hint">[\s\S]*className="hint-button hint-button-compact"/);
+  assert.match(viewSource, /<div className=\{`question-card\$\{isShortAnswerWithoutDocuments[\s\S]*<div className="question-card-heading-row">[\s\S]*<h3 id="question-title">\{question\.prompt\}<\/h3>/);
   assert.match(cssSource, /@media \(min-width:1120px\) and \(min-height:700px\)[\s\S]*\.session-layout \{[^}]*grid-template-rows:auto minmax\(0,1fr\)/);
-  assert.match(cssSource, /\.question-heading \{[^}]*position:sticky[^}]*top:0[^}]*grid-column:1[^}]*grid-row:1/);
   assert.match(cssSource, /\.documents-heading \{[^}]*position:sticky[^}]*top:0[^}]*grid-column:2[^}]*grid-row:1/);
-  assert.match(cssSource, /\.question-heading \{[^}]*background:transparent/);
+  assert.match(cssSource, /\.question-card-meta \{[^}]*display:flex[^}]*border-bottom:1px solid/);
+  assert.match(cssSource, /\.question-card-meta h2 \{[^}]*text-transform:uppercase/);
   assert.match(cssSource, /\.documents-heading \{[^}]*background:transparent/);
   assert.match(cssSource, /@media \(max-width:1119px\)[^{]*\{[\s\S]*\.question-pane,\.documents-pane \{ height:auto; display:block; grid-row:auto; \}/);
 });
@@ -314,7 +335,7 @@ test("encadre uniquement la conversation avec la palette adaptée au thème", ()
 });
 
 test("retire les grands cadres extérieurs et partage le style des titres", () => {
-  assert.match(viewSource, /className="column-title question-number"/);
+  assert.match(viewSource, /className="question-card-meta"/);
   assert.match(viewSource, /className="column-title">Documents historiques<\/h2>/);
   assert.match(cssSource, /\.column-title \{[^}]*font-size:clamp\(1\.25rem,1\.6vw,1\.6rem\)[^}]*font-weight:700[^}]*line-height:1\.15/);
   assert.match(cssSource, /\.question-number \{[^}]*padding:0[^}]*border:0[^}]*border-radius:0[^}]*background:transparent[^}]*box-shadow:none/);
@@ -422,8 +443,7 @@ test("demande au moteur un indice local borné", () => {
   assert.match(viewSource, /requestNextHint\(engineDefinition, engineState\)/);
   assert.match(viewSource, /setCurrentHint\(hint\?\.text/);
   assert.match(viewSource, /maximumHelpReceived = activeQuestionState\.hintLevel >= MAX_EXPLICIT_HINT_LEVEL/);
-  assert.match(viewSource, /disabled=\{engineState\.status === "completed" \|\| maximumHelpReceived\}/);
-  assert.match(viewSource, /maximumHelpReceived \? "Aide maximale reçue" : "Obtenir un indice"/);
+  assert.doesNotMatch(viewSource, />Obtenir un indice</);
 });
 
 test("n’ajoute aucun appel IA ou externe", () => {
@@ -470,6 +490,26 @@ test("isole le prototype de ligne du temps sans modifier la question textuelle",
   assert.match(cssSource, /\.classroom-session \.timeline-card-pool>div>button\{min-height:128px\}/);
 });
 
+test("adapte l’association interactive aux concepts, aux lettres et au nombre d’éléments", () => {
+  assert.match(viewSource, /Éléments à associer/);
+  assert.match(viewSource, /interaction\.targets\.length/);
+  assert.match(viewSource, /target\.label \?\? index \+ 1/);
+  assert.match(viewSource, /target\.description !== target\.label/);
+  assert.match(viewSource, /association-question--compact-dates/);
+  assert.match(viewSource, /association-question--date-timeline/);
+  assert.match(viewSource, /association-assigned-item/);
+  assert.match(viewSource, /association-pool--images/);
+  assert.match(viewSource, /association-assigned-item--image/);
+  assert.match(viewSource, /association-image-expand/);
+  assert.match(viewSource, /association-image-modal/);
+  assert.match(cssSource, /\.association-targets article:last-child:nth-child\(odd\)/);
+  assert.match(cssSource, /\.association-question--compact-dates \.association-targets\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(cssSource, /\.association-question--date-timeline \.association-targets--date-timeline\{position:relative;grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
+  assert.match(cssSource, /\.association-question--date-timeline \.association-targets--count-4\{grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(cssSource, /@media\(min-width:621px\)\{\.association-question--date-timeline \.association-pool--images>div\{grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(cssSource, /\.association-assigned-item:disabled\{border-color:transparent;background:var\(--gold\);color:#1f1720;opacity:1\}/);
+});
+
 test("garde les documents à droite de la conversation sur un petit ordinateur", () => {
   assert.match(viewSource, /questionDocuments\.length > 0 \? " session-layout--with-documents"/);
   assert.match(cssSource, /@media \(min-width:900px\)\{\.learning-session \.session-layout--with-documents:not\(\.session-layout--timeline\)/);
@@ -482,9 +522,19 @@ test("propose la chronologie interactive du gouvernement responsable de 1841 à 
   assert.equal(data.notionId, "gouvernement-responsable");
   assert.equal(data.notionTitle, "Gouvernement responsable");
   assert.equal(question.type, "interactive_timeline");
-  assert.deepEqual(question.timelineInteraction?.dates, ["1841", "1841-1842", "1843", "1848", "1849", "1854-1864", "1864"]);
-  assert.equal(question.timelineInteraction?.entries.length, 7);
+  assert.deepEqual(question.timelineInteraction?.dates, ["1841", "1841-1842", "1848", "1849", "1854-1864", "1864"]);
+  assert.equal(question.timelineInteraction?.entries.length, 6);
   assert.ok(question.timelineInteraction?.entries.some(({ date, description }) => date === "1848" && /confiance de l’Assemblée/.test(description)));
+});
+
+test("agrandit les titres des cartes interactives et affiche l’alliance La Fontaine–Baldwin", () => {
+  assert.match(cssSource, /\.timeline-question \.timeline-card-pool button strong\{font-size:20px/);
+  assert.match(cssSource, /\.timeline-question \.timeline-placed-card__content h3\{font-size:18px/);
+  assert.match(cssSource, /\.causal-chain-question \.causal-chain-link h3\{font-size:18px/);
+  const iconography = readFileSync("lib/pedagogical-reference/responsible-government-iconography.ts", "utf8");
+  assert.match(iconography, /title: "Alliance La Fontaine–Baldwin"[^\n]+imageUrls: \["\/historical-documents\/gr-lafontaine-portrait\.jpg", "\/historical-documents\/gr-baldwin-portrait\.jpg"\]/);
+  assert.doesNotMatch(viewSource, /<small>\{entry\.description\}<\/small>/);
+  assert.match(viewSource, /className="timeline-placed-card__remove"[^>]+aria-label=\{`Retirer la carte/);
 });
 
 test("conserve tous les rattachements pédagogiques plusieurs-à-plusieurs", () => {
@@ -497,6 +547,13 @@ test("conserve tous les rattachements pédagogiques plusieurs-à-plusieurs", () 
     assert.ok(document.historicalKnowledgeIds.length >= 1);
     assert.ok(document.intellectualOperationIds.length >= 1);
   }
+});
+
+test("formule la question du gouvernement responsable avec les quatre mots à relier", () => {
+  const data = createDemoStudentLearningSession("demo-activity-timeline", "gouvernement-responsable", "teacher-assigned"); assert.ok(data);
+  const source = readFileSync("lib/pedagogical-reference/question-catalog.ts", "utf8");
+  assert.match(source, /Explique comment le parti majoritaire, le Conseil exécutif, l’Assemblée et le gouverneur participent au fonctionnement du gouvernement responsable\./);
+  assert.match(documentCatalogSource, /Schéma politique du gouvernement de la Province du Canada en 1848/);
 });
 
 test("conserve les sources et notes éditoriales des deux textes approuvés", () => {
@@ -529,12 +586,12 @@ test("utilise le premier texte approuvé comme document initial", () => {
 
 test("rend le document 4 dans la navigation, l’agrandissement et les détails", () => {
   assert.match(viewSource, /className="historical-document-image"/);
-  assert.match(viewSource, /<figcaption>\{document\.title\}<\/figcaption>/);
+  assert.match(viewSource, /<figcaption className=\{document\.content\.visibleCaption/);
   assert.match(viewSource, /<dt>Description factuelle<\/dt>/);
   assert.match(viewSource, /document\.content\.localSrc/);
   assert.match(viewSource, /\{consultedIds\.size\} sur \{documents\.length\}/);
-  assert.match(viewSource, /<DocumentContent document=\{selected\} onExpand=\{\(\) => setExpanded\(true\)\} \/>/);
-  assert.match(viewSource, /<DocumentContent document=\{selected\} expanded \/>/);
+  assert.match(viewSource, /<DocumentContent document=\{selected\} onExpand=\{\(\) => \{ setImageZoom\(1\.5\); setExpanded\(true\); \}\} \/>/);
+  assert.match(viewSource, /<DocumentContent document=\{selected\} expanded imageZoom=\{imageZoom\} onImageZoomChange=\{setImageZoom\} \/>/);
 });
 
 test("affiche une miniature locale uniquement pour les documents réellement illustrés", () => {
@@ -550,11 +607,17 @@ test("affiche une miniature locale uniquement pour les documents réellement ill
   assert.doesNotMatch(viewSource, /https?:\/\/upload\.wikimedia\.org/);
 });
 
+test("affiche la description traduite de Qu’Appelle directement sous l’image", () => {
+  assert.match(documentCatalogSource, /visibleCaption: document\.studentVisibleCaption/);
+  assert.match(viewSource, /className=\{document\.content\.visibleCaption \? "historical-document-caption historical-document-caption--expanded"[\s\S]*Description traduite[\s\S]*document\.content\.visibleCaption[\s\S]*document\.content\.visibleCaptionNote/);
+  assert.match(cssSource, /\.historical-document-caption--expanded \{[^}]*display:grid[^}]*border-left:3px solid var\(--gold\)/);
+});
+
 test("entoure uniquement les extraits historiques de guillemets français", () => {
   assert.match(viewSource, /<blockquote>« \{document\.content\.excerpt\} »<\/blockquote>/);
   assert.match(viewSource, /document\.content\.kind === "historical_excerpt"[\s\S]*<cite className="document-identification">\{identification\}<\/cite>/);
-  assert.match(viewSource, /<DocumentContent document=\{selected\} onExpand=\{\(\) => setExpanded\(true\)\} \/>/);
-  assert.match(viewSource, /<DocumentContent document=\{selected\} expanded \/>/);
+  assert.match(viewSource, /<DocumentContent document=\{selected\} onExpand=\{\(\) => \{ setImageZoom\(1\.5\); setExpanded\(true\); \}\} \/>/);
+  assert.match(viewSource, /<DocumentContent document=\{selected\} expanded imageZoom=\{imageZoom\} onImageZoomChange=\{setImageZoom\} \/>/);
   assert.match(viewSource, /document\.content\.kind === "population_table" \? \([\s\S]*?<table>[\s\S]*?<\/table>[\s\S]*?\) : document\.content\.kind === "historical_image" \?[\s\S]*?: <blockquote>« \{document\.content\.excerpt\} »<\/blockquote>/);
   const data = createDemoStudentLearningSession(); assert.ok(data);
   const excerpts = getQuestionDocuments(data).filter(({ content }) => content.kind === "historical_excerpt");
@@ -643,7 +706,7 @@ test("neutralise les titres visibles et les noms accessibles des documents", () 
 test("présente les types neutres dans les vignettes", () => {
   const data = createDemoStudentLearningSession(); assert.ok(data);
   assert.deepEqual(getQuestionDocuments(data).map(({ typeLabel }) => typeLabel), ["Extrait d’un texte parlementaire", "Extrait d’un texte parlementaire", "Extrait d’un discours publié dans un journal"]);
-  assert.match(viewSource, /document\.content\.kind === "population_table" \|\| document\.content\.kind === "comparison_table" \? "Tableau statistique" : document\.typeLabel/);
+  assert.match(viewSource, /document\.content\.kind === "population_table" \|\| document\.content\.kind === "comparison_table" \? "Tableau statistique" : document\.content\.kind === "historical_comparison_chart" \? "Graphique statistique" : document\.typeLabel/);
   assert.match(viewSource, /<strong>Document \{document\.displayOrder\}<\/strong>[\s\S]*<span>\{getNeutralDocumentType\(document\)\}<\/span>/);
   assert.doesNotMatch(viewSource, /<span>\{document\.authorLabel\}<\/span>/);
 });
@@ -662,6 +725,16 @@ test("rend le schéma politique visuel plutôt qu’un tableau statistique", () 
   assert.match(viewSource, /agit par l’intermédiaire du ↓/);
   assert.match(viewSource, /élit 42 députés ↑/);
   assert.match(viewSource, /Si le Conseil exécutif perd la confiance/);
+  assert.match(viewSource, /Le chef de la majorité choisit ses ministres dans le Conseil exécutif/);
+  assert.doesNotMatch(viewSource, /<small>Autorité impériale<\/small><strong>Couronne britannique/);
+  assert.doesNotMatch(viewSource, /<small>Représentant de la Couronne<\/small><strong>Gouverneur général/);
+  assert.doesNotMatch(viewSource, /<small>Pouvoir exécutif responsable<\/small><strong>Conseil exécutif/);
+  assert.doesNotMatch(viewSource, /<small>Chambre nommée<\/small><strong>Conseil législatif/);
+  assert.doesNotMatch(viewSource, /<small>Chambre élue<\/small><strong>Assemblée législative/);
+  assert.match(viewSource, /Met en application les lois/);
+  assert.doesNotMatch(viewSource, /Dirige les affaires intérieures|reçoit ses conseils|reçoit les projets de loi adoptés|l’Assemblée accorde ou retire sa confiance|l’Assemblée débat et vote les projets/);
+  assert.match(viewSource, /<div className="rg-two-links"><span><b>nomme ↓<\/b><\/span><span><b>nomme ↓<\/b><\/span><\/div>/);
+  assert.doesNotMatch(viewSource, /nomme le Conseil exécutif|nomme le Conseil législatif/);
 });
 
 test("réunit le numéro et le type neutre dans l’en-tête de chaque document", () => {
@@ -698,15 +771,17 @@ test("affiche les choix A à D et remplace la réponse libre pour une question �
   assert.match(cssSource, /\.learning-session \.session-layout--choice-no-documents\{[^}]*max-width:1600px[^}]*grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)/);
   assert.match(cssSource, /\.learning-session \.session-layout--choice-no-documents \.question-pane\{[^}]*grid-column:1[^}]*width:100%/);
   assert.match(cssSource, /\.learning-session \.session-layout--choice-no-documents \.documents-heading,[^}]*\.documents-pane\{display:none\}/);
-  assert.match(viewSource, /Pas tout à fait\. Consulte les documents ou demande un indice, puis réessaie\./);
-  assert.match(viewSource, /Pas tout à fait\. Demande un indice, puis réessaie\./);
+  assert.match(viewSource, /Vérifie qui adopte ces lois et quelles céréales bénéficient d’un avantage tarifaire/);
+  assert.match(viewSource, /Repère les partenaires de l’entente et distingue plusieurs produits naturels de l’ensemble des produits/);
+  assert.match(viewSource, /Réponse attendue : \$\{question\.answerExplanation\}/);
+  assert.doesNotMatch(viewSource, /demande un indice/iu);
   assert.match(cssSource, /\.choice-feedback-correct \{[^}]*max-height:min\(42vh,360px\)[^}]*overflow-y:auto[^}]*scrollbar-gutter:stable/);
 });
 
 test("rend visible la rétroaction Socrato après une longue question à choix", () => {
   assert.match(viewSource, /choiceFeedbackRef\.current\?\.scrollIntoView/);
   assert.match(viewSource, /ref=\{choiceFeedbackRef\}/);
-  assert.match(cssSource, /session-layout--choice-no-documents\{height:auto!important;min-height:0!important;grid-template-rows:auto auto!important;align-items:start!important;overflow:visible!important/);
+  assert.match(cssSource, /session-layout--choice-no-documents\{height:auto!important;min-height:0!important;grid-template-rows:auto!important;align-items:start!important;overflow:visible!important/);
 });
 
 test("regroupe actions, navigation et quatre vignettes dans l’encadré documentaire local", () => {
@@ -723,6 +798,8 @@ test("empile tous les documents associés sans vignettes et adapte leur réparti
   assert.match(viewSource, /const useStackedDocuments = questionDocuments\.length > 0 && !isInteractiveTimeline && !isInteractiveAssociation/);
   assert.match(viewSource, /stacked=\{useStackedDocuments\}/);
   assert.match(viewSource, /stacked \? <div ref=\{stackedListRef\} className="stacked-document-list" style=\{\{ gridTemplateRows: `repeat\(\$\{documents\.length\}, minmax\(0, 1fr\)\)` \}\}>\{documents\.map/);
+  assert.match(viewSource, /closest\("button, details, a"\)[\s\S]*expandStackedDocument\(document\.id\)/);
+  assert.match(cssSource, /\.stacked-document \.document-content-compact\{user-select:none;-webkit-user-select:none\}/);
   assert.match(viewSource, /<DocumentContent document=\{document\} compact onExpand=/);
   assert.match(cssSource, /\.stacked-document-list\{[^}]*display:grid/);
   assert.match(cssSource, /\.document-content-compact blockquote\{[^}]*-webkit-line-clamp:4/);
@@ -738,6 +815,10 @@ test("affiche simultanément les cartes documentaires compactes sans défilement
   assert.match(cssSource, /\.document-system-card--stacked \.stacked-document-list\{[^}]*overflow:visible!important/);
 });
 
+test("empêche la sélection des extraits historiques, y compris lorsqu’ils sont agrandis", () => {
+  assert.match(cssSource, /\.document-content blockquote,\.document-modal \.document-content blockquote\{[^}]*-webkit-user-select:none;user-select:none/);
+});
+
 test("affiche une identification sobre et place les métadonnées sous Détails", () => {
   assert.match(viewSource, /document\.authorLabel \?\? document\.institutionLabel \?\? document\.sourceLabel/);
   assert.match(viewSource, /document\.dateLabel/);
@@ -745,7 +826,7 @@ test("affiche une identification sobre et place les métadonnées sous Détails"
   assert.match(viewSource, /<details className="document-details">\s*<summary>Détails<\/summary>/);
   assert.doesNotMatch(viewSource, /<details className="document-details"[^>]*\sopen(?:=|\s|>)/);
   assert.match(viewSource, /<dt>Source complète<\/dt>/);
-  assert.match(viewSource, /document\.editorialNote/);
+  assert.doesNotMatch(viewSource, /<dt>Note éditoriale<\/dt>/);
   assert.match(viewSource, /document\.sourceUrls/);
   assert.match(cssSource, /\.document-details\[open\] summary::before/);
   assert.match(cssSource, /\.document-system-card--stacked\{position:relative/);
@@ -761,12 +842,14 @@ test("place chaque attribution dans le même groupe que son document avant les a
   assert.doesNotMatch(cssSource, /\.document-content-group \{[^}]*justify-content:space-between/);
 });
 
-test("contient entièrement les images sans faire défiler la région visuelle", () => {
-  assert.match(viewSource, /document\.content\.kind === "historical_image"[\s\S]*<div className="document-visual-viewport">[\s\S]*className="historical-document-image"/);
+test("contient les aperçus et permet d’agrandir les images détaillées", () => {
+  assert.match(viewSource, /document\.content\.kind === "historical_image"[\s\S]*document-visual-viewport--expanded[\s\S]*className="historical-document-image"/);
   assert.match(cssSource, /\.document-visual-viewport \{ min-height:0; flex:1 1 auto; display:grid; place-items:center; overflow:hidden; \}/);
   assert.match(cssSource, /\.historical-document-image \{[^}]*width:100%[^}]*height:100%[^}]*max-height:100%[^}]*object-fit:contain/);
   assert.match(cssSource, /\.document-content-group-visual \+ \.document-flex-space \{ display:none; \}/);
-  assert.match(cssSource, /\.document-modal \.document-visual-viewport \{[^}]*height:min\(70dvh,700px\)[^}]*overflow:hidden/);
+  assert.match(viewSource, /aria-label="Agrandissement de la carte"[\s\S]*Réduire la carte de 5 %[\s\S]*Agrandir la carte de 5 %/);
+  assert.match(cssSource, /\.document-modal \{[^}]*width:min\(1400px,calc\(100vw - 32px\)\)[^}]*height:calc\(100dvh - 32px\)/);
+  assert.match(cssSource, /\.document-modal \.document-visual-viewport \{[^}]*flex:1[^}]*overflow:auto[^}]*scrollbar-gutter:stable/);
 });
 
 test("maintient Agrandir et Détails ensemble puis affiche les détails dessous", () => {
@@ -842,4 +925,23 @@ test("guide l’élève sous la chaîne après une tentative imparfaite", () => 
   assert.match(viewSource, /answer\.includes\("indemni"\).*answer\.includes\("rebellion"\)/);
   assert.match(viewSource, /answer\.includes\("instabilit"\).*answer\.includes\("politique"\)/);
   assert.match(cssSource, /\.causal-chain-socrato-help\{[^}]*border-radius:18px/);
+});
+
+test("recadre les caricatures verticales dans leurs vignettes sans recadrer la vue agrandie", () => {
+  assert.match(cssSource, /\.document-visual-viewport:has\(\.historical-document-image\[src\$="gr-man-fired-parliament\.jpg"\]\)[^{]*\{height:126px/);
+  assert.match(cssSource, /\.stacked-document \.historical-document-image\[src\$="gr-man-fired-parliament\.jpg"\][^{]*\{width:100%;height:96px[^}]*object-fit:cover;object-position:center 43%\}/);
+  assert.match(cssSource, /\.stacked-document \.historical-document-image\[src\$="gr-here-we-go\.jpg"\][^{]*\{width:100%;height:96px[^}]*object-fit:cover;object-position:center 43%\}/);
+  assert.match(cssSource, /\.document-modal \.historical-document-image\[src\$="gr-man-fired-parliament\.jpg"\][^{]*\{[^}]*width:auto!important[^}]*height:100%!important[^}]*object-fit:contain/);
+  assert.match(cssSource, /\.document-modal \.historical-document-figure:has\(\.historical-document-image\[src\$="gr-man-fired-parliament\.jpg"\]\)[^{]*\{display:grid;grid-template-rows:minmax\(0,1fr\) auto/);
+});
+
+test("relie la loi d’indemnisation à la mobilisation tory avec un troisième document", () => {
+  assert.match(questionCatalogSource, /const rebellionLossesConsequencesDocumentIds = \[RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT\.id, manFiredParliamentCartoon\.id, RESPONSIBLE_GOVERNMENT_TORY_MOBILIZATION_DOCUMENT\.id\];/);
+  assert.match(questionCatalogSource, /la colère et la mobilisation des Tories, puis l’incendie du Parlement/);
+  assert.match(questionCatalogSource, /La caricature peut servir d’appui, mais tu n’es pas obligé de l’utiliser/);
+});
+
+test("agrandit la caricature restante lorsque la question comporte deux documents", () => {
+  assert.match(cssSource, /\.stacked-document-list:has\(>\.stacked-document:nth-child\(2\):last-child\)[^{]*\.document-visual-viewport:has\(\.historical-document-image\[src\$="gr-man-fired-parliament\.jpg"\]\)[^{]*\{height:230px;min-height:230px\}/);
+  assert.match(cssSource, /\.stacked-document-list:has\(>\.stacked-document:nth-child\(2\):last-child\) \.historical-document-image\[src\$="gr-man-fired-parliament\.jpg"\]\{width:100%;height:200px;min-height:200px;object-fit:contain/);
 });

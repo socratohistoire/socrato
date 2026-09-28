@@ -937,7 +937,7 @@ export const ACTE_UNION_MAP_ADAPTATION_DRAFT = {
   id: "document-draft:acte-union:wyld-1842-socrato",
   title: "Province du Canada vers 1842 — carte de Wyld modifiée",
   status: "approved",
-  previewUrl: "/pedagogical-reference/documents/acte-union/province-canada-wyld-1842-modifiee-officielle.png",
+  previewUrl: "/pedagogical-reference/documents/acte-union/province-canada-1842-utilisateur.jpg",
   editableAssetUrl: "/pedagogical-reference/documents/acte-union/province-canada-wyld-1842-socrato.svg",
   originalAssetUrl: "/pedagogical-reference/documents/acte-union/province-canada-wyld-1842-original.jpg",
   sourceUrl: "https://commons.wikimedia.org/wiki/File:Province_of_Canada.JamesWyld.ca1842.jpg",

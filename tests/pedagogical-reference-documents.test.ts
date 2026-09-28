@@ -31,10 +31,147 @@ import {
   PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT,
   ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM,
   ACTE_UNION_STUDENT_TIMELINE,
+  COLONIAL_ECONOMY_PRIMARY_DOCUMENTS,
+  FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT,
+  FEDERAL_PROVINCIAL_RELATIONS_METIS_PRIMARY_DOCUMENTS,
+  INDIAN_AFFAIRS_BAGOT_EDUCATION_DOCUMENT,
+  INDIAN_AFFAIRS_PRIMARY_DOCUMENTS,
+  INDIAN_AFFAIRS_SCHOOL_ENROLMENT_TABLE_DOCUMENT,
+  INDIAN_AFFAIRS_RYERSON_INDUSTRIAL_SCHOOLS_DOCUMENT,
+  INDIAN_AFFAIRS_ICONOGRAPHIC_DOCUMENTS,
+  INDIAN_AFFAIRS_QUAPPELLE_FAMILIES_DOCUMENT,
+  INDIAN_AFFAIRS_THOMAS_MOORE_DOCUMENTS,
+  COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART,
+  INDUSTRIALIZATION_ICONOGRAPHIC_DOCUMENTS,
+  BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS,
   validateHistoricalDocument,
   validateHistoricalDocumentPresentation,
   type HistoricalDocumentRecord,
 } from "../lib/pedagogical-reference/index.ts";
+
+test("prépare deux sources primaires comparables sur les résistances métisses", () => {
+  assert.deepEqual(FEDERAL_PROVINCIAL_RELATIONS_METIS_PRIMARY_DOCUMENTS.map(({ id }) => id), ["RFP-T-001", "RFP-T-002"]);
+  assert.ok(FEDERAL_PROVINCIAL_RELATIONS_METIS_PRIMARY_DOCUMENTS.every(({ status }) => status === "ready-for-review"));
+  assert.ok(FEDERAL_PROVINCIAL_RELATIONS_METIS_PRIMARY_DOCUMENTS.every((document) => Object.keys(validateHistoricalDocument(document)).length === 0));
+  assert.ok(FEDERAL_PROVINCIAL_RELATIONS_METIS_PRIMARY_DOCUMENTS.every(({ knowledgeHeadingIds }) => knowledgeHeadingIds.includes("relations-federales-provinciales")));
+  assert.ok(FEDERAL_PROVINCIAL_RELATIONS_METIS_PRIMARY_DOCUMENTS.every(({ transcription }) => transcription.split("[…] ").length === 4));
+  assert.match(FEDERAL_PROVINCIAL_RELATIONS_METIS_PRIMARY_DOCUMENTS[0].transcription, /gouvernement provisoire/);
+  assert.match(FEDERAL_PROVINCIAL_RELATIONS_METIS_PRIMARY_DOCUMENTS[1].transcription, /pétitions/);
+});
+
+test("prépare les documents sur la création du Dominion et l’Intercolonial", () => {
+  assert.deepEqual(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS.map(({ id }) => id), ["AANB-T-001", "AANB-T-002", "AANB-T-003", "AANB-T-004", "AANB-T-005", "AANB-T-006", "AANB-T-007", "AANB-T-008", "AANB-M-005", "AANB-S-001", "AANB-I-001", "AANB-T-009", "AANB-T-010", "AANB-T-011"]);
+  assert.ok(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS.every((document) => Object.keys(validateHistoricalDocument(document)).length === 0));
+  assert.match(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS[0]?.transcription ?? "", /renforcerons ainsi le Parlement central/);
+  assert.match(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS[1]?.transcription ?? "", /diversité des populations, des religions et des intérêts locaux/);
+  assert.match(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS[2]?.transcription ?? "", /minorité de représentants/);
+  assert.match(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS[3]?.transcription ?? "", /chemin de fer doit précéder l’union/);
+  assert.match(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS[4]?.transcription ?? "", /chemin de fer Intercolonial/);
+  assert.match(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS[5]?.transcription ?? "", /\[la Grande Coalition\]/);
+  assert.match(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS[6]?.transcription ?? "", /projet d’union fédérale/);
+  assert.match(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS[7]?.transcription ?? "", /\[les Résolutions de Québec\]/);
+  assert.ok(readFileSync(`public${BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS[8]?.assetUrl}`).length > 1_000_000);
+  assert.match(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS[9]?.transcription ?? "", /342 196.*522 710/);
+  assert.ok(readFileSync(`public${BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS[10]?.assetUrl}`).length > 1_000_000);
+  assert.match(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS[11]?.transcription ?? "", /ne pourraient pas se défendre seules/);
+  assert.match(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS[12]?.transcription ?? "", /transporter rapidement leurs troupes/);
+  assert.match(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS[13]?.transcription ?? "", /Île-du-Prince-Édouard rejette expressément/);
+});
+
+test("prépare le texte constitutionnel qui alimente le classement des compétences", () => {
+  const document = FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT;
+  assert.equal(document.id, "RFP-T-003");
+  assert.equal(document.status, "ready-for-review");
+  assert.deepEqual(validateHistoricalDocument(document), {});
+  assert.match(document.transcription, /article 91/);
+  assert.match(document.transcription, /article 92/);
+  assert.match(document.transcription, /éducation/);
+  assert.match(document.transcription, /désaveu/);
+});
+
+test("prépare dix textes et un tableau statistique pour les affaires indiennes", () => {
+  assert.deepEqual(INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.map(({ id }) => id), ["AI-T-001", "AI-T-002", "AI-T-003", "AI-T-004", "AI-T-005", "AI-T-006", "AI-T-007", "AI-T-008", "AI-S-001", "AI-T-009", "AI-T-010"]);
+  assert.ok(INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.every((document) => document.status === "ready-for-review"));
+  assert.ok(INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.every((document) => Object.keys(validateHistoricalDocument(document)).length === 0));
+  assert.ok(INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.every(({ knowledgeHeadingIds }) => knowledgeHeadingIds.includes("affaires-indiennes")));
+  assert.match(INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.find(({ id }) => id === "AI-T-004")?.transcription ?? "", /réserves, des terres, des sommes et des biens/);
+  assert.match(INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.find(({ id }) => id === "AI-T-007")?.transcription ?? "", /femme indienne qui épouse/);
+  assert.equal(INDIAN_AFFAIRS_SCHOOL_ENROLMENT_TABLE_DOCUMENT.kind, "statistics");
+  assert.match(INDIAN_AFFAIRS_SCHOOL_ENROLMENT_TABLE_DOCUMENT.transcription, /1890 : 6 671/);
+  assert.match(INDIAN_AFFAIRS_SCHOOL_ENROLMENT_TABLE_DOCUMENT.transcription, /1897 : 9 628/);
+  assert.match(INDIAN_AFFAIRS_SCHOOL_ENROLMENT_TABLE_DOCUMENT.interpretationCautions.join(" "), /inscriptions.*fréquentation quotidienne/i);
+  assert.match(INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.find(({ id }) => id === "AI-T-009")?.transcription ?? "", /tutelle.*pleine citoyenneté/);
+  assert.match(INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.find(({ id }) => id === "AI-T-010")?.transcription ?? "", /pas des sujets, mais des alliés/);
+});
+
+test("relie la recommandation scolaire de Bagot au projet industriel de Ryerson", () => {
+  assert.match(INDIAN_AFFAIRS_BAGOT_EDUCATION_DOCUMENT.transcription, /écoles industrielles/);
+  assert.match(INDIAN_AFFAIRS_BAGOT_EDUCATION_DOCUMENT.transcription, /organisations religieuses/);
+  assert.match(INDIAN_AFFAIRS_RYERSON_INDUSTRIAL_SCHOOLS_DOCUMENT.transcription, /résident ensemble/);
+  assert.match(INDIAN_AFFAIRS_RYERSON_INDUSTRIAL_SCHOOLS_DOCUMENT.transcription, /éducation anglaise/);
+  assert.match(INDIAN_AFFAIRS_RYERSON_INDUSTRIAL_SCHOOLS_DOCUMENT.interpretationCautions.join(" "), /réseau fédéral plus tardif/);
+});
+
+test("prépare les deux portraits de Thomas Moore comme sources critiques sur l’assimilation", () => {
+  assert.deepEqual(INDIAN_AFFAIRS_THOMAS_MOORE_DOCUMENTS.map(({ id }) => id), ["AI-I-001", "AI-I-002"]);
+  assert.ok(INDIAN_AFFAIRS_THOMAS_MOORE_DOCUMENTS.every((document) => document.status === "ready-for-review"));
+  assert.ok(INDIAN_AFFAIRS_THOMAS_MOORE_DOCUMENTS.every((document) => Object.keys(validateHistoricalDocument(document)).length === 0));
+  assert.ok(INDIAN_AFFAIRS_THOMAS_MOORE_DOCUMENTS.every(({ assetUrl }) => readFileSync(`public${assetUrl}`).length > 100_000));
+  assert.match(INDIAN_AFFAIRS_THOMAS_MOORE_DOCUMENTS[0].transcription, /WHEN ADMITTED/);
+  assert.match(INDIAN_AFFAIRS_THOMAS_MOORE_DOCUMENTS[1].transcription, /AFTER TUITION/);
+  assert.ok(INDIAN_AFFAIRS_THOMAS_MOORE_DOCUMENTS.every(({ interpretationCautions }) => /mise en scène|construction visuelle/.test(interpretationCautions.join(" "))));
+});
+
+test("présente la photographie de Qu’Appelle avec une description traduite prudente", () => {
+  assert.deepEqual(INDIAN_AFFAIRS_ICONOGRAPHIC_DOCUMENTS.map(({ id }) => id), ["AI-I-001", "AI-I-002", "AI-I-003", "AI-I-004", "AI-I-005", "AI-I-006", "AI-I-007"]);
+  assert.deepEqual(validateHistoricalDocument(INDIAN_AFFAIRS_QUAPPELLE_FAMILIES_DOCUMENT), {});
+  assert.ok(readFileSync(`public${INDIAN_AFFAIRS_QUAPPELLE_FAMILIES_DOCUMENT.assetUrl}`).length > 50_000);
+  assert.match(INDIAN_AFFAIRS_QUAPPELLE_FAMILIES_DOCUMENT.studentVisibleCaption ?? "", /parents autochtones campent à l’extérieur/);
+  assert.doesNotMatch(INDIAN_AFFAIRS_QUAPPELLE_FAMILIES_DOCUMENT.studentVisibleCaption ?? "", /loi|interdi/iu);
+  assert.equal(INDIAN_AFFAIRS_QUAPPELLE_FAMILIES_DOCUMENT.studentVisibleCaptionNote, undefined);
+  assert.doesNotMatch(
+    [INDIAN_AFFAIRS_QUAPPELLE_FAMILIES_DOCUMENT.transcription, ...INDIAN_AFFAIRS_QUAPPELLE_FAMILIES_DOCUMENT.interpretationCautions].join(" "),
+    /interdiction légale|forbidden by law|adoptées en 1894/iu,
+  );
+  assert.match(INDIAN_AFFAIRS_QUAPPELLE_FAMILIES_DOCUMENT.rightsStatement, /PA-182246/);
+});
+
+test("réunit deux photographies nettes sur la christianisation dans les pensionnats", () => {
+  const documents = INDIAN_AFFAIRS_ICONOGRAPHIC_DOCUMENTS.filter(({ id }) => id === "AI-I-004" || id === "AI-I-005");
+  assert.equal(documents.length, 2);
+  assert.ok(documents.every((document) => Object.keys(validateHistoricalDocument(document)).length === 0));
+  assert.ok(documents.every(({ assetUrl }) => readFileSync(`public${assetUrl}`).length > 45_000));
+  assert.match(documents[0]?.transcription ?? "", /LOOKING UNTO JESUS/);
+  assert.match(documents[1]?.sourceLocator ?? "", /T-127/);
+  assert.match(documents[1]?.historicalDate ?? "", /1964/);
+});
+
+test("présente un plan cadastral de Maniwaki pour étudier la gestion des réserves", () => {
+  const document = INDIAN_AFFAIRS_ICONOGRAPHIC_DOCUMENTS.find(({ id }) => id === "AI-I-006");
+  assert.ok(document);
+  assert.deepEqual(validateHistoricalDocument(document), {});
+  assert.ok(readFileSync(`public${document.assetUrl}`).length > 1_000_000);
+  assert.match(document.studentVisibleCaption ?? "", /Kitigan Zibi/);
+  assert.match(document.observationGuide.join(" "), /rangs|lots|superficies/);
+});
+
+test("prépare sept extraits primaires et une carte pour étudier les marchés de l’économie coloniale", () => {
+  assert.deepEqual(COLONIAL_ECONOMY_PRIMARY_DOCUMENTS.map(({ id }) => id), ["EC-T-001", "EC-T-002", "EC-M-001", "EC-T-003", "EC-T-004", "EC-T-005", "EC-T-006", "EC-T-007"]);
+  assert.ok(COLONIAL_ECONOMY_PRIMARY_DOCUMENTS.every((document) => document.status === "ready-for-review"));
+  assert.ok(COLONIAL_ECONOMY_PRIMARY_DOCUMENTS.every((document) => Object.keys(validateHistoricalDocument(document)).length === 0));
+  assert.ok(COLONIAL_ECONOMY_PRIMARY_DOCUMENTS.filter(({ id }) => ["EC-T-001", "EC-T-002", "EC-T-003", "EC-T-004", "EC-T-005"].includes(id)).every(({ transcription }) => transcription.split("[…] ").length === 4));
+  assert.ok(readFileSync("public/historical-documents/economie-coloniale-traite-reciprocite-1854.jpg").length > 100_000);
+  assert.match(COLONIAL_ECONOMY_PRIMARY_DOCUMENTS.find(({ id }) => id === "EC-T-006")?.transcription ?? "", /abolition immédiate/);
+  assert.match(COLONIAL_ECONOMY_PRIMARY_DOCUMENTS.find(({ id }) => id === "EC-T-007")?.transcription ?? "", /inquiétude et alarme/);
+});
+
+test("prépare un graphique révisable sur la hausse des exportations sous le traité de réciprocité", () => {
+  assert.equal(COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART.status, "ready-for-review");
+  assert.deepEqual(COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART.items.map(({ value }) => value), [2189731, 2082936, 4167977, 4418885]);
+  assert.match(COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART.sourceLabel, /Board of Trade/);
+  assert.match(COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART.methodology, /environ 100 %/);
+  assert.equal(COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART.approvedAt, null);
+});
 
 test("conserve un seul rapport Durham et sept présentations élèves retenues", () => {
   assert.equal(ACTE_UNION_DURHAM_DOCUMENT.status, "approved");
@@ -98,7 +235,7 @@ test("conserve trois cartes candidates avec provenance, droits, forces et limite
 test("conserve séparément la carte originale et sa version pédagogique officielle", () => {
   assert.equal(ACTE_UNION_MAP_ADAPTATION_DRAFT.status, "approved");
   assert.match(ACTE_UNION_MAP_ADAPTATION_DRAFT.originalAssetUrl, /original\.jpg$/);
-  assert.match(ACTE_UNION_MAP_ADAPTATION_DRAFT.previewUrl, /modifiee-officielle\.png$/);
+  assert.match(ACTE_UNION_MAP_ADAPTATION_DRAFT.previewUrl, /province-canada-1842-utilisateur\.jpg$/);
   assert.match(ACTE_UNION_MAP_ADAPTATION_DRAFT.editableAssetUrl, /socrato\.svg$/);
   assert.ok(ACTE_UNION_MAP_ADAPTATION_DRAFT.modifications.some((item) => item.includes("Canada-Ouest")));
   assert.ok(ACTE_UNION_MAP_ADAPTATION_DRAFT.modifications.some((item) => item.includes("États-Unis")));
@@ -257,6 +394,16 @@ test("ne conserve que les documents du gouvernement responsable réutilisables s
   assert.ok(RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.every((document) => document.knowledgeHeadingIds.includes("gouvernement-responsable")));
   assert.ok(RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.every((document) => document.previewAssetUrls.length > 0));
   assert.ok(RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.every((document) => Object.keys(validateHistoricalDocument(document)).length === 0));
+});
+
+test("classe quatre documents iconographiques vérifiés dans la première phase d’industrialisation", () => {
+  assert.deepEqual(INDUSTRIALIZATION_ICONOGRAPHIC_DOCUMENTS.map(({ id }) => id), ["IND-I-001", "IND-M-001", "IND-I-002", "IND-I-003"]);
+  assert.ok(INDUSTRIALIZATION_ICONOGRAPHIC_DOCUMENTS.every(({ knowledgeHeadingIds }) => knowledgeHeadingIds.includes("premiere-phase-d-industrialisation")));
+  assert.ok(INDUSTRIALIZATION_ICONOGRAPHIC_DOCUMENTS.every(({ rightsStatement }) => /UTILISATION AUTORISÉE/.test(rightsStatement)));
+  assert.ok(INDUSTRIALIZATION_ICONOGRAPHIC_DOCUMENTS.every((document) => Object.keys(validateHistoricalDocument(document)).length === 0));
+  const page = readFileSync("app/admin/pedagogical-reference/documents/page.tsx", "utf8");
+  assert.match(page, /notionId === "premiere-phase-d-industrialisation"/);
+  assert.match(page, /INDUSTRIALIZATION_ICONOGRAPHIC_DOCUMENTS\.map/);
 });
 
 test("prépare la loi électorale de 1849 comme extrait élève vérifiable", () => {

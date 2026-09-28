@@ -15,12 +15,15 @@ type TestRequest = { notionId: string; questionId: string; content: string; atte
 
 const TEST_NOTIONS = {
   "acte-union": "Acte d’Union",
+  "economie-coloniale": "Économie coloniale",
   "gouvernement-responsable": "Gouvernement responsable",
+  "affaires-indiennes": "Affaires indiennes",
 } as const;
 
 export async function analyzeTeacherTestResponse(request: TestRequest) {
   try {
-    await requireTeacherActor();
+    if (process.env.NODE_ENV === "production") await requireTeacherActor();
+    else await requireTeacherActor().catch(() => undefined);
     if (process.env.SOCRATO_PEDAGOGICAL_ANALYZER !== "openai") {
       return { ok: false as const, error: "Sol n’est pas activé dans la configuration actuelle." };
     }

@@ -27,7 +27,7 @@ import {
   RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT,
 } from "./historical-document-needs.ts";
 import { ACTE_UNION_DURHAM_DOCUMENT } from "./historical-document-presentations.ts";
-import { ACTE_UNION_DEBT_COMPARISON_CHART, ACTE_UNION_POPULATION_COMPARISON_CHART } from "./historical-comparison-charts.ts";
+import { ACTE_UNION_DEBT_COMPARISON_CHART, ACTE_UNION_POPULATION_COMPARISON_CHART, COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART } from "./historical-comparison-charts.ts";
 import {
   ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM,
   ACTE_UNION_STUDENT_TIMELINE,
@@ -36,6 +36,12 @@ import {
 } from "./responsible-government-iconography.ts";
 import { RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_DOCUMENT } from "./responsible-government-electoral-law.ts";
 import { RESPONSIBLE_GOVERNMENT_METCALFE_ELGIN_DOCUMENTS } from "./responsible-government-primary-documents.ts";
+import { COLONIAL_ECONOMY_PRIMARY_DOCUMENTS } from "./colonial-economy-primary-documents.ts";
+import { INDIAN_AFFAIRS_PRIMARY_DOCUMENTS } from "./indian-affairs-primary-documents.ts";
+import { INDIAN_AFFAIRS_ICONOGRAPHIC_DOCUMENTS } from "./indian-affairs-iconography.ts";
+import { INDUSTRIALIZATION_ICONOGRAPHIC_DOCUMENTS } from "./industrialization-iconography.ts";
+import { BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS } from "./british-north-america-act-maps.ts";
+import { BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS } from "./british-north-america-confederation-documents.ts";
 
 type SourceBearingRecord = {
   id: string;
@@ -68,6 +74,7 @@ const DOCUMENTS: readonly SourceBearingRecord[] = [
   ACTE_UNION_UPPER_CANADA_ASSEMBLY_DOCUMENT,
   ACTE_UNION_DEBT_COMPARISON_CHART,
   ACTE_UNION_POPULATION_COMPARISON_CHART,
+  COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART,
   ...PATRIOTES_ICONOGRAPHIC_DOCUMENTS,
   PATRIOTES_MERCURY_MILITARY_MOVEMENTS_DOCUMENT,
   PATRIOTES_MINERVE_INDEPENDENCE_DOCUMENT,
@@ -80,6 +87,12 @@ const DOCUMENTS: readonly SourceBearingRecord[] = [
   RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT,
   RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_DOCUMENT,
   ...RESPONSIBLE_GOVERNMENT_METCALFE_ELGIN_DOCUMENTS,
+  ...COLONIAL_ECONOMY_PRIMARY_DOCUMENTS,
+  ...INDIAN_AFFAIRS_PRIMARY_DOCUMENTS,
+  ...INDIAN_AFFAIRS_ICONOGRAPHIC_DOCUMENTS,
+  ...INDUSTRIALIZATION_ICONOGRAPHIC_DOCUMENTS,
+  ...BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS,
+  ...BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS,
   ...RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS,
   ...ACTE_UNION_STUDENT_TIMELINE.entries.map((entry, index) => ({
     id: `${ACTE_UNION_STUDENT_TIMELINE.id}-source-${index + 1}`,
@@ -93,8 +106,8 @@ const DOCUMENTS: readonly SourceBearingRecord[] = [
 ];
 
 function sourceKind(url: string): ReferenceSourceKind {
-  if (/assnat\.qc\.ca|canada\.ca|gc\.ca|parliament\.uk/.test(url)) return "government";
-  if (/banq\.qc\.ca|canadiana\.ca|bac-lac\.gc\.ca|collectionscanada\.gc\.ca|historymuseum\.ca|loc\.gov/.test(url)) return "museum-or-archive";
+  if (/assnat\.qc\.ca|canada\.ca|gc\.ca|parliament\.uk|govinfo\.gov|history\.state\.gov/.test(url)) return "government";
+  if (/banq\.qc\.ca|canadiana\.ca|bac-lac\.gc\.ca|collectionscanada\.gc\.ca|historymuseum\.ca|musee-mccord-stewart\.ca|loc\.gov|commons\.wikimedia\.org/.test(url)) return "museum-or-archive";
   if (/biographi\.ca|openedition\.org/.test(url)) return "academic";
   return "other";
 }

@@ -51,6 +51,21 @@ test("analyse les questions du gouvernement responsable avec leur propre monogra
   }
 });
 
+test("analyse aussi l’économie coloniale et les affaires indiennes avec leur propre monographie", () => {
+  for (const [notionId, notionTitle, recordId] of [
+    ["economie-coloniale", "Économie coloniale", "historical-record:economie-coloniale"],
+    ["affaires-indiennes", "Affaires indiennes", "historical-record:affaires-indiennes"],
+  ] as const) {
+    const approved = getQuestionsForKnowledgeHeading(notionId);
+    const catalog = createCatalogLearningSessionQuestions(approved.map(({ id }) => id));
+    assert.ok(catalog.questions.length > 0);
+    for (const question of catalog.questions) {
+      const definition = createPedagogicalQuestionDefinition(question, notionId, notionTitle, catalog.documents);
+      assert.equal(definition.evaluationContext?.referenceMonograph.id, recordId);
+    }
+  }
+});
+
 test("fournit quatre sources primaires distinctes et pertinentes pour la question 12 sur l’instabilité", () => {
   const question = getQuestionsForKnowledgeHeading("gouvernement-responsable")
     .find(({ id }) => id === "question:gouvernement-responsable:short-answer-005");
@@ -71,6 +86,16 @@ test("ignore une question retirée dans une activité déjà publiée", () => {
   ]);
   assert.deepEqual(catalog.questions.map(({ id }) => id), ["question:acte-union:001"]);
   assert.equal(catalog.questions[0]?.number, 1);
+});
+
+test("affiche l’opération officielle pour l’association des cartes territoriales", () => {
+  const catalog = createCatalogLearningSessionQuestions([
+    "question:acte-de-l-amerique-du-nord-britannique:interactive-association-001",
+  ]);
+  assert.equal(catalog.questions[0]?.primaryOperationId, "time_and_space");
+  assert.deepEqual(catalog.questions[0]?.intellectualOperations, [
+    { id: "time_and_space", label: "Situer dans le temps et dans l’espace" },
+  ]);
 });
 
 test("ajoute un second extrait sur l’avancement politique à la question d’assimilation", () => {

@@ -27,8 +27,20 @@ export function getSharedStrengths(input: SharedStrengthsInput) {
     const observation = runtime.lastAnalysis?.observedStrengths.find((entry) => entry.trim().length >= 35
       && !/correctement mobilisé|démarche demandée|réponse (?:est )?réussie|bonne réponse/iu.test(entry));
     if (!observation) continue;
-    const operationId = questions.get(runtime.questionId)?.primaryOperationId;
-    const subtitle = operationId ? input.operationLabels[operationId] ?? operationId : "Raisonnement historique";
+    const question = questions.get(runtime.questionId);
+    const operationId = question?.primaryOperationId;
+    const prompt = question?.prompt ?? "";
+    const subtitle = /transformation politique principale/iu.test(prompt)
+      ? "Comprendre la création de la Province du Canada"
+      : /mise en commun des dettes/iu.test(prompt)
+        ? "Expliquer l’injustice du partage des dettes"
+        : /réponse britannique.+Rébellions/iu.test(prompt)
+          ? "Relier le refus britannique aux Rébellions"
+          : /Russell.+La Fontaine|La Fontaine.+Russell/iu.test(prompt)
+            ? "Comparer les points de vue sur l’Union"
+            : /recommandation.+appliquée.+ne l’est pas/iu.test(prompt)
+              ? "Distinguer les recommandations de Durham"
+              : operationId ? input.operationLabels[operationId] ?? operationId : "Raisonnement historique";
     const comment = observation.trim().split(/(?<=\.)\s+/u)[0];
     const entry = `${subtitle}\n${comment}`;
     if (!strengths.includes(entry)) strengths.push(entry);

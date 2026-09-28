@@ -34,6 +34,13 @@ import {
   PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT,
   ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM,
   ACTE_UNION_STUDENT_TIMELINE,
+  COLONIAL_ECONOMY_PRIMARY_DOCUMENTS,
+  FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS,
+  INDIAN_AFFAIRS_PRIMARY_DOCUMENTS,
+  INDIAN_AFFAIRS_ICONOGRAPHIC_DOCUMENTS,
+  COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART,
+  INDUSTRIALIZATION_ICONOGRAPHIC_DOCUMENTS,
+  type HistoricalDocumentRecord,
   type HistoricalDocumentStudentPresentation,
   type HistoricalComparisonChart as HistoricalComparisonChartRecord,
 } from "@/lib/pedagogical-reference";
@@ -80,7 +87,7 @@ function HistoricalExcerpt({ text, attribution }: { text: string; attribution: s
 
 function ComparisonChartDocument({ chart }: { chart: HistoricalComparisonChartRecord }) {
   return <section id={chart.id} className="document-bank__charts" aria-labelledby={`${chart.id}-title`}>
-    <div className="document-bank__section-title"><p>Document graphique approuvé · {chart.id}</p><h2 id={`${chart.id}-title`}>{chart.title}</h2></div>
+    <div className="document-bank__section-title"><p>{chart.status === "approved" ? "Document graphique approuvé" : "Document graphique à réviser"} · {chart.id}</p><h2 id={`${chart.id}-title`}>{chart.title}</h2></div>
     <article className="document-chart-card"><HistoricalComparisonChart chart={chart} /><details className="document-verification-details"><summary>Détails de vérification</summary><div>
       <dl><div><dt>Code documentaire</dt><dd>{chart.id}</dd></div><div><dt>Source</dt><dd>{chart.sourceLabel}</dd></div><div><dt>Méthode</dt><dd>{chart.methodology}</dd></div></dl>
       <div className="document-candidate__assessment"><section><h4>Mise en contexte · enseignant seulement</h4><p>{chart.historicalContext}</p></section><section><h4>Intention pédagogique</h4><ul>{chart.observationGuide.map((item) => <li key={item}>{item}</li>)}</ul></section></div>
@@ -90,10 +97,27 @@ function ComparisonChartDocument({ chart }: { chart: HistoricalComparisonChartRe
   </section>;
 }
 
+function ReviewableTextDocument({ document }: { document: HistoricalDocumentRecord }) {
+  return <section id={document.id} className="document-bank__candidates" aria-labelledby={`${document.id}-title`}>
+    <div className="document-bank__section-title"><p>Document à réviser · {document.id}</p><h2 id={`${document.id}-title`}>{document.title}</h2><span>{document.creator} · {document.historicalDate}</span></div>
+    <div><article className="document-candidate document-candidate--preferred">
+      <header><div><small>Source primaire · {document.historicalDate}</small><h3>{document.title}</h3><p>{document.holdingInstitution}</p></div><strong>Prêt pour révision</strong></header>
+      <section><h4>Extrait adapté pour l’élève</h4><HistoricalExcerpt text={document.transcription} attribution={document.creator} /></section>
+      <details className="document-verification-details"><summary>Détails de vérification</summary><div>
+        <dl><div><dt>Code documentaire</dt><dd>{document.id}</dd></div><div><dt>Référence</dt><dd>{document.sourceLocator}</dd></div><div><dt>Traitement éditorial</dt><dd>{document.interpretationCautions[0]}</dd></div><div><dt>Droits</dt><dd>{document.rightsStatement}</dd></div></dl>
+        <div className="document-candidate__assessment"><section><h4>Mise en contexte · enseignant seulement</h4><p>{document.historicalContext}</p></section><section><h4>Éléments à observer</h4><ul>{document.observationGuide.map((item) => <li key={item}>{item}</li>)}</ul></section></div>
+        <section><h4>Questions possibles</h4><ul>{document.pedagogicalUses.map((item) => <li key={item}>{item}</li>)}</ul></section>
+        <section><h4>Précautions</h4><ul>{document.interpretationCautions.map((item) => <li key={item}>{item}</li>)}</ul></section>
+        <div className="document-adaptation__links"><a href={document.sourceUrl} target="_blank" rel="noreferrer">Consulter la source primaire ↗</a></div>
+      </div></details>
+    </article></div>
+  </section>;
+}
+
 export function HistoricalDocumentsNotionPage({ notionId }: { notionId: string }) {
   const officialHeading = SECONDARY_FOUR_PERIODS.flatMap(({ knowledgeHeadings }) => knowledgeHeadings).find(({ id }) => id === notionId);
   const notionLabel = notionId === "rebellions-1837-1838" ? "Rébellions de 1837-1838" : officialHeading?.officialLabel ?? notionId;
-  const hasDocuments = ["acte-union", "gouvernement-responsable", "rebellions-1837-1838"].includes(notionId);
+  const hasDocuments = ["acte-union", "gouvernement-responsable", "rebellions-1837-1838", "economie-coloniale", "affaires-indiennes", "relations-federales-provinciales", "premiere-phase-d-industrialisation"].includes(notionId);
   return <main className="reference-admin document-bank">
     <header className="reference-admin__header">
       <div><p>Administration · Référentiel pédagogique</p><h1>{notionLabel}</h1><span>{officialHeading ? `${SECONDARY_FOUR_PERIODS.find(({ id }) => id === officialHeading.periodId)?.officialPeriodLabel} · Dossier de la notion` : "Notion historique"}</span></div>
@@ -102,6 +126,35 @@ export function HistoricalDocumentsNotionPage({ notionId }: { notionId: string }
     <NotionTabs notionId={notionId} activeSection="documents" />
     <section className="document-bank__notion-title" aria-labelledby="pilot-title"><div className="document-bank__section-title"><p>Section de la notion</p><h2 id="pilot-title">Banque de documents historiques</h2><span>Documents originaux, notices de Socrato et usages pédagogiques approuvés</span></div></section>
     {!hasDocuments && <section className="document-bank__empty"><h2>Aucun document pour le moment</h2><p>Cette page est prête à recevoir les documents historiques associés à cette notion.</p></section>}
+
+    {notionId === "economie-coloniale" && <><ComparisonChartDocument chart={COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART} />{COLONIAL_ECONOMY_PRIMARY_DOCUMENTS.map((document) => <ReviewableTextDocument document={document} key={document.id} />)}</>}
+    {notionId === "premiere-phase-d-industrialisation" && <section className="document-bank__iconography" aria-labelledby="industrialization-iconography-title">
+      <div className="document-bank__section-title"><p>Notion · Première phase d’industrialisation</p><h2 id="industrialization-iconography-title">Documents iconographiques</h2><span>Quatre sources visuelles sur les canaux, les obstacles à la navigation, le chemin de fer et le pont Victoria.</span></div>
+      <div className="iconographic-document-grid">{INDUSTRIALIZATION_ICONOGRAPHIC_DOCUMENTS.map((document) => <article id={document.id} className="iconographic-document-card" key={document.id}>
+        <header><div><small>{document.kind === "map" ? "Document cartographique" : "Document iconographique"} · {document.historicalDate}</small><h3>{document.title}</h3><p>{document.creator}</p></div><strong>Prêt pour révision · v{document.version}</strong></header>
+        <figure className="iconographic-document-card__visual"><div><Image src={document.assetUrl} alt={document.accessibleDescription} width={1800} height={1100} unoptimized /></div><figcaption>{document.imageCredit}</figcaption></figure>
+        <details className="document-verification-details"><summary>Détails de vérification</summary><div>
+          <dl><div><dt>Code documentaire</dt><dd>{document.id}</dd></div><div><dt>Notion</dt><dd>Première phase d’industrialisation · 1840–1896</dd></div><div><dt>Référence</dt><dd>{document.sourceLocator}</dd></div><div><dt>Opérations suggérées</dt><dd>{document.operationIds.map((id) => getIntellectualOperation(id).officialLabel).join(" · ")}</dd></div></dl>
+          <div className="document-candidate__assessment"><section><h4>Mise en contexte</h4><p>{document.historicalContext}</p></section><section><h4>Éléments à observer</h4><ul>{document.observationGuide.map((item) => <li key={item}>{item}</li>)}</ul></section></div>
+          <section><h4>Usages pédagogiques</h4><ul>{document.pedagogicalUses.map((item) => <li key={item}>{item}</li>)}</ul></section><section><h4>Précautions</h4><ul>{document.interpretationCautions.map((item) => <li key={item}>{item}</li>)}</ul></section>
+          <p><strong>Droits :</strong> {document.rightsStatement}</p><div className="document-adaptation__links"><a href={document.sourceUrl} target="_blank" rel="noreferrer">Consulter la notice et les droits ↗</a></div>
+        </div></details>
+      </article>)}</div>
+    </section>}
+    {notionId === "affaires-indiennes" && <><section className="document-bank__iconography" aria-labelledby="indian-affairs-thomas-moore-title">
+      <div className="document-bank__section-title"><p>Notion · Affaires indiennes</p><h2 id="indian-affairs-thomas-moore-title">Écoles industrielles, assimilation et séparation familiale</h2><span>Les portraits de Thomas Moore et les photographies de Qu’Appelle, Red Deer et Carcross permettent d’étudier la transformation culturelle, l’éloignement des familles et la christianisation.</span></div>
+      <div className="iconographic-document-grid">{INDIAN_AFFAIRS_ICONOGRAPHIC_DOCUMENTS.map((document) => <article id={document.id} className="iconographic-document-card" key={document.id}>
+        <header><div><small>Document iconographique · {document.historicalDate}</small><h3>{document.title}</h3><p>{document.creator}</p></div><strong>Prêt pour révision · v{document.version}</strong></header>
+        <figure className="iconographic-document-card__visual"><div><Image src={document.assetUrl} alt={document.accessibleDescription} width={1120} height={1560} unoptimized /></div><figcaption>{document.imageCredit}{document.studentVisibleCaption ? <><br /><strong>Description traduite :</strong> {document.studentVisibleCaption}{document.studentVisibleCaptionNote ? <><br /><small>{document.studentVisibleCaptionNote}</small></> : null}</> : null}</figcaption></figure>
+        <details className="document-verification-details"><summary>Détails de vérification</summary><div>
+          <dl><div><dt>Code documentaire</dt><dd>{document.id}</dd></div><div><dt>Notion</dt><dd>Affaires indiennes · 1840–1896</dd></div><div><dt>Référence</dt><dd>{document.sourceLocator}</dd></div><div><dt>Légende originale</dt><dd>{document.transcription}</dd></div><div><dt>Opérations suggérées</dt><dd>{document.operationIds.map((id) => getIntellectualOperation(id).officialLabel).join(" · ")}</dd></div></dl>
+          <div className="document-candidate__assessment"><section><h4>Mise en contexte</h4><p>{document.historicalContext}</p></section><section><h4>Éléments à observer</h4><ul>{document.observationGuide.map((item) => <li key={item}>{item}</li>)}</ul></section></div>
+          <section><h4>Usages pédagogiques</h4><ul>{document.pedagogicalUses.map((item) => <li key={item}>{item}</li>)}</ul></section><section><h4>Précautions</h4><ul>{document.interpretationCautions.map((item) => <li key={item}>{item}</li>)}</ul></section>
+          <p><strong>Droits :</strong> {document.rightsStatement}</p><div className="document-adaptation__links"><a href={document.sourceUrl} target="_blank" rel="noreferrer">Consulter le rapport officiel ↗</a></div>
+        </div></details>
+      </article>)}</div>
+    </section>{INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.map((document) => <ReviewableTextDocument document={document} key={document.id} />)}</>}
+    {notionId === "relations-federales-provinciales" && FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS.map((document) => <ReviewableTextDocument document={document} key={document.id} />)}
 
     {notionId === "acte-union" && <><section className="document-bank__adaptation" id={ACTE_UNION_MAP_ADAPTATION_DRAFT.id} aria-labelledby="acte-union-map-title">
       <div className="document-bank__section-title"><p>Document cartographique approuvé</p><h2 id="acte-union-map-title">{ACTE_UNION_MAP_ADAPTATION_DRAFT.title}</h2><span>James Wyld · vers 1842 · carte modifiée à des fins pédagogiques</span></div>

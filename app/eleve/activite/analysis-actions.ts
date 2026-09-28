@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { getStudentAccessRuntime, STUDENT_SESSION_COOKIE } from "@/lib/student-access/local-runtime";
 import { DatabaseStudentLearningSessionProvider } from "@/lib/student-learning-session/database-provider";
-import { LocalDeterministicResponseAnalyzer } from "@/lib/pedagogical-session-engine/local-analyzer";
+import { analyzeDeterministically, LocalDeterministicResponseAnalyzer } from "@/lib/pedagogical-session-engine/local-analyzer";
 import { createConfiguredOpenAIPedagogicalAnalyzer, selectRelevantMonographPassages } from "@/lib/pedagogical-session-engine/openai-analyzer";
 import { createPedagogicalQuestionDefinition } from "@/lib/pedagogical-session-engine/question-context";
 import type { StudentResponse } from "@/lib/pedagogical-session-engine/types";
@@ -169,7 +169,7 @@ export async function analyzeAuthorizedStudentResponse(request: AnalysisRequest)
           if (attempt < STUDENT_ANALYSIS_ATTEMPTS) await waitBeforeRetry(attempt);
         }
       }
-      if (lastError) throw lastError;
+      if (lastError) candidate = analyzeDeterministically(response, definition);
     } else {
       candidate = await analyzer.analyze(response, definition);
     }

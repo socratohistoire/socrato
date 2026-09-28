@@ -72,6 +72,12 @@ export class LocalDeterministicResponseAnalyzer implements ResponseAnalyzer {
   }
 
   async analyze(response: StudentResponse, question: PedagogicalQuestionDefinition): Promise<StructuredResponseAnalysis> {
+    return analyzeDeterministically(response, question);
+  }
+}
+
+/** Secours sans réseau : volontairement prudent, utilisable après l’échec confirmé du fournisseur externe. */
+export function analyzeDeterministically(response: StudentResponse, question: PedagogicalQuestionDefinition): StructuredResponseAnalysis {
     const content = response.content.trim();
     const scenario = scenarioAnalysis(content, question);
     if (scenario) return scenario;
@@ -92,5 +98,4 @@ export class LocalDeterministicResponseAnalyzer implements ResponseAnalyzer {
       nextAction: "request_revision",
       confidence: "low",
     };
-  }
 }

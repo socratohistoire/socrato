@@ -17,6 +17,11 @@ const cssSource = readFileSync("app/eleve/tableau-de-bord/dashboard.css", "utf8"
 const pageSource = readFileSync("app/eleve/tableau-de-bord/page.tsx", "utf8");
 const providerSource = readFileSync("lib/student-dashboard/demo-provider.ts", "utf8");
 const databaseProviderSource = readFileSync("lib/student-dashboard/database-provider.ts", "utf8");
+
+test("conserve une piste de consolidation après trois tentatives même si la réponse finale est réussie", () => {
+  assert.match(databaseProviderSource, /operation\.status === "needs_work" \|\| operation\.status === "consolidate"/);
+  assert.match(databaseProviderSource, /attemptNumber >= 3/);
+});
 const knowledgeScrollSource = readFileSync("app/eleve/tableau-de-bord/knowledge-scroll-region.tsx", "utf8");
 const databaseSource = readFileSync("lib/server/database.ts", "utf8");
 const sessionViewSource = readFileSync("app/eleve/activite/[activityId]/session-view.tsx", "utf8");

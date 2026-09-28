@@ -134,6 +134,17 @@ test("expose dans l’ordre les 56 rubriques de connaissances du programme minis
   assert.deepEqual(catalog.notions.slice(-3).map(({ title }) => title), ["Dévitalisation de localités", "Relations internationales", "Ère de l’information"]);
 });
 
+test("rend les 15 questions du gouvernement responsable accessibles aux activités enseignantes", async () => {
+  const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
+  const config = { ...baseConfig, notionIds: ["gouvernement-responsable"], questionCount: 15 };
+  const eligible = getEligibleActivityQuestions(config, catalog);
+  const documentIds = new Set(catalog.documents.map(({ id }) => id));
+  assert.equal(eligible.length, 15);
+  assert.equal(eligible.filter(({ status }) => status === "approved").length, 1);
+  assert.equal(eligible.filter(({ status }) => status === "ready-for-review").length, 14);
+  assert.ok(eligible.every(({ historicalDocumentIds }) => historicalDocumentIds.every((id) => documentIds.has(id))));
+});
+
 test("regroupe les notions dans les quatre périodes officielles de quatrième secondaire", async () => {
   const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
   assert.deepEqual(
@@ -274,7 +285,7 @@ test("génère un aperçu déterministe depuis les documents approuvés", async 
   const second = createLocalActivityPreview(unlimitedRevisionConfig, catalog);
   assert.deepEqual(first, second);
   assert.deepEqual(first.documents.map(({ id }) => id), ["PAT-T-002", "PAT-T-003", "PAT-T-007"]);
-  assert.equal(catalog.questions.length, 49);
+  assert.equal(catalog.questions.length, 82);
   assert.equal(catalog.questions.some(({ id }) => id === "question:acte-union:document-interpretation-005"), false);
   assert.equal(first.operationLabel, "Établir des liens de causalité");
   assert.equal(first.question, catalog.questions[0]?.prompt);
@@ -290,7 +301,7 @@ test("Socrato adapte son accueil des réponses courtes à la présence de docume
     .filter(({ question }) => question.format === "short-answer");
   assert.ok(shortAnswerIndexes.length > 0);
   for (const { question, index } of shortAnswerIndexes) {
-    assert.equal(createLocalActivityPreview(unlimitedRevisionConfig, catalog, index).guidance[0], question.historicalDocumentIds.length === 0 ? "J’attends ta réponse…" : "Bonjour, consulte les sources puis réponds à la question.");
+    assert.equal(createLocalActivityPreview(unlimitedRevisionConfig, catalog, index).guidance[0], question.initialGuidance ?? (question.historicalDocumentIds.length === 0 ? "J’attends ta réponse…" : question.historicalDocumentIds.length === 1 ? "Bonjour, consulte la source puis réponds à la question." : "Bonjour, consulte les sources puis réponds à la question."));
   }
 });
 
@@ -315,7 +326,7 @@ test("Socrato invite à consulter les sources pour toutes les interprétations d
   for (const { question, index } of documentQuestionIndexes) {
     const guidance = createLocalActivityPreview(unlimitedRevisionConfig, catalog, index).guidance[0];
     if (question.id === "question:acte-union:understand-causes-consequences") assert.match(guidance, /comprendre comment déterminer une cause et une conséquence/);
-    else assert.equal(guidance, "Bonjour, consulte les sources puis réponds à la question.");
+    else assert.equal(guidance, question.initialGuidance ?? (question.historicalDocumentIds.length === 1 ? "Bonjour, consulte la source puis réponds à la question." : "Bonjour, consulte les sources puis réponds à la question."));
   }
 });
 
@@ -356,6 +367,16 @@ test("raccorde les deux questions interactives à l’aperçu élève", async ()
   assert.match(viewSource, /<iframe[^>]*src=\{singlePreviewHref\}/);
   assert.match(studentPreviewSource, /<StudentLearningSessionView/);
   assert.match(studentPreviewFrameCssSource, /\.student-page-preview iframe/);
+});
+
+test("raccorde le classement fédéral-provincial à deux colonnes interactives", async () => {
+  const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
+  const question = catalog.questions.find(({ id }) => id === "question:relations-federales-provinciales:interactive-association-001");
+  assert.equal(question?.operationId, "establish_facts");
+  assert.equal(question?.associationInteraction?.items.length, 13);
+  assert.equal(question?.associationInteraction?.categories?.length, 2);
+  assert.ok(question?.associationInteraction?.categories?.find(({ id }) => id === "provincial")?.correctItemIds.includes("education"));
+  assert.match(question?.associationInteraction?.tension?.explanation ?? "", /autonomie provinciale/);
 });
 
 test("permet de fermer le test complet sans alourdir l’aperçu intégré", () => {

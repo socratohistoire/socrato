@@ -3,7 +3,7 @@ import type { DashboardMode } from "../student-dashboard/types.ts";
 import type { StudentLearningSessionProvider } from "./provider.ts";
 import type { LearningSessionQuestion, StudentLearningSessionData } from "./types.ts";
 import { ACTE_UNION_CAUSAL_PILOT_DOCUMENTS, ACTE_UNION_DOCUMENTS } from "./document-catalog.ts";
-import { ACTE_UNION_CAUSAL_PILOT_QUESTION, ACTE_UNION_POLITICAL_INSTITUTIONS_ASSOCIATION_QUESTION, ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION, PEDAGOGICAL_QUESTION_CATALOG, RESPONSIBLE_GOVERNMENT_CAUSAL_CHAIN_QUESTION, RESPONSIBLE_GOVERNMENT_TIMELINE_SHORT_ANSWER_QUESTION } from "../pedagogical-reference/question-catalog.ts";
+import { ACTE_UNION_CAUSAL_PILOT_QUESTION, ACTE_UNION_POLITICAL_INSTITUTIONS_ASSOCIATION_QUESTION, ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION, FEDERAL_PROVINCIAL_RELATIONS_COMPETENCIES_ASSOCIATION_QUESTION, PEDAGOGICAL_QUESTION_CATALOG, RESPONSIBLE_GOVERNMENT_CAUSAL_CHAIN_QUESTION, RESPONSIBLE_GOVERNMENT_TIMELINE_SHORT_ANSWER_QUESTION } from "../pedagogical-reference/question-catalog.ts";
 import { INTELLECTUAL_OPERATIONS } from "../pedagogical-reference/intellectual-operations.ts";
 import type { ApprovedQuestion } from "../pedagogical-reference/types.ts";
 import { CAUSES_CONSEQUENCES_LEARNING_QUESTION, CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID, INTELLECTUAL_OPERATION_LEARNING_DOCUMENTS } from "../teacher-activity-creator/intellectual-operation-learning.ts";
@@ -14,6 +14,7 @@ const DEMO_ACTIVITIES = new Set([
   "demo-teacher-practice-1",
   "demo-activity-timeline",
   "demo-activity-association",
+  "demo-activity-federal-provincial-competencies",
   "demo-activity-causal-chain",
 ]);
 
@@ -57,9 +58,9 @@ export function createCatalogLearningSessionQuestions(questionIds: readonly stri
       documentRelations: documents.map(({ id: documentId }, documentIndex) => ({ documentId, displayOrder: documentIndex + 1 })),
       requiredDocumentIds: documents.map(({ id: documentId }) => documentId),
       localHint: question.instruction,
-      initialMessages: [{ id: `published-test-welcome-${index}`, author: "socrato", content: question.id === CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID
+      initialMessages: [{ id: `published-test-welcome-${index}`, author: "socrato", content: question.initialGuidance ?? (question.id === CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID
         ? "Aujourd’hui, je vais t’aider à comprendre comment déterminer une cause et une conséquence. Commençons simplement : quel est l’événement historique central présenté dans les trois documents?"
-        : documents.length === 0 ? "J’attends ta réponse…" : "Bonjour, consulte les sources puis réponds à la question." }],
+        : documents.length === 0 ? "J’attends ta réponse…" : documents.length === 1 ? "Bonjour, consulte la source puis réponds à la question." : "Bonjour, consulte les sources puis réponds à la question.") }],
       maxAttempts: question.id === CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID ? null : undefined,
       answerOptions: question.answerOptions,
       answerExplanation: question.expectedAnswer,
@@ -79,8 +80,8 @@ export function createDemoStudentLearningSession(
   requestedMode: DashboardMode = "teacher-assigned",
 ): StudentLearningSessionData | null {
   if (!DEMO_ACTIVITIES.has(activityId)) return null;
-  const notionId = requestedNotionId === "industrialisation" || requestedNotionId === "gouvernement-responsable" ? requestedNotionId : "acte-union";
-  const notionTitle = notionId === "industrialisation" ? "Industrialisation" : notionId === "gouvernement-responsable" ? "Gouvernement responsable" : "Acte d’union";
+  const notionId = requestedNotionId === "industrialisation" || requestedNotionId === "gouvernement-responsable" || requestedNotionId === "relations-federales-provinciales" ? requestedNotionId : "acte-union";
+  const notionTitle = notionId === "industrialisation" ? "Industrialisation" : notionId === "gouvernement-responsable" ? "Gouvernement responsable" : notionId === "relations-federales-provinciales" ? "Relations fédérales-provinciales" : "Acte d’union";
   const activityTitle = activityId === "demo-activity-acte-union"
     ? "Révision avant l’évaluation 1"
     : activityId === "demo-activity-causal-chain"
@@ -89,12 +90,17 @@ export function createDemoStudentLearningSession(
       ? notionId === "gouvernement-responsable" ? "Chronologie du gouvernement responsable" : "Révision avant l’évaluation"
     : activityId === "demo-activity-industrialisation"
       ? "Révision – Industrialisation"
+    : activityId === "demo-activity-federal-provincial-competencies"
+      ? "Classement des compétences fédérales et provinciales"
       : "Révision de l’Acte d’Union";
   const hasActeUnionDocuments = notionId === "acte-union";
   const isTimelinePrototype = activityId === "demo-activity-timeline";
-  const isAssociationPrototype = activityId === "demo-activity-association";
+  const isCompetencyAssociationPrototype = activityId === "demo-activity-federal-provincial-competencies";
+  const isAssociationPrototype = activityId === "demo-activity-association" || isCompetencyAssociationPrototype;
   const isCausalChainPrototype = activityId === "demo-activity-causal-chain";
   const timelineQuestion = notionId === "gouvernement-responsable" ? RESPONSIBLE_GOVERNMENT_TIMELINE_SHORT_ANSWER_QUESTION : ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION;
+  const associationQuestion = isCompetencyAssociationPrototype ? FEDERAL_PROVINCIAL_RELATIONS_COMPETENCIES_ASSOCIATION_QUESTION : ACTE_UNION_POLITICAL_INSTITUTIONS_ASSOCIATION_QUESTION;
+  const associationOperation = INTELLECTUAL_OPERATIONS.find(({ id }) => id === associationQuestion.operationId);
 
   if (activityId === "demo-teacher-practice-1") {
     const published = createCatalogLearningSessionQuestions(PUBLISHED_TEST_QUESTION_IDS);
@@ -144,19 +150,20 @@ export function createDemoStudentLearningSession(
         initialMessages: [{ id: "causal-chain-welcome", author: "socrato", content: "Bonjour, complète chaque maillon de gauche à droite pour reconstruire la chaîne de causalité." }],
         causalChainInteraction: RESPONSIBLE_GOVERNMENT_CAUSAL_CHAIN_QUESTION.causalChainInteraction,
       } : isAssociationPrototype ? {
-        id: ACTE_UNION_POLITICAL_INSTITUTIONS_ASSOCIATION_QUESTION.id,
+        id: associationQuestion.id,
         type: "interactive_association",
+        format: "interactive-association",
         number: 1,
-        prompt: ACTE_UNION_POLITICAL_INSTITUTIONS_ASSOCIATION_QUESTION.prompt,
-        instruction: ACTE_UNION_POLITICAL_INSTITUTIONS_ASSOCIATION_QUESTION.instruction,
-        primaryOperationId: ACTE_UNION_POLITICAL_INSTITUTIONS_ASSOCIATION_QUESTION.operationId,
-        intellectualOperations: [{ id: "relationships_between_facts", label: "Mettre en relation des faits" }],
-        historicalKnowledgeIds: ["acte-union-1840", "institutions-politiques"],
+        prompt: associationQuestion.prompt,
+        instruction: associationQuestion.instruction,
+        primaryOperationId: associationQuestion.operationId,
+        intellectualOperations: [{ id: associationQuestion.operationId, label: associationOperation?.officialLabel ?? associationQuestion.operationId }],
+        historicalKnowledgeIds: isCompetencyAssociationPrototype ? ["relations-federales-provinciales", "champs-de-competence", "articles-91-92", "education", "desaveu"] : ["acte-union-1840", "institutions-politiques"],
         documentRelations: [],
         requiredDocumentIds: [],
-        localHint: "Distingue d’abord les institutions élues des institutions nommées, puis repère celles qui conseillent ou représentent la Couronne.",
-        initialMessages: [{ id: "association-welcome", author: "socrato", content: "Bonjour, sélectionne une institution, puis associe-la à son rôle principal." }],
-        associationInteraction: ACTE_UNION_POLITICAL_INSTITUTIONS_ASSOCIATION_QUESTION.associationInteraction,
+        localHint: isCompetencyAssociationPrototype ? "L’article 91 énumère les compétences fédérales. L’article 92 énumère les compétences provinciales; l’éducation est précisée à l’article 93." : "Distingue d’abord les institutions élues des institutions nommées, puis repère celles qui conseillent ou représentent la Couronne.",
+        initialMessages: [{ id: "association-welcome", author: "socrato", content: isCompetencyAssociationPrototype ? "Bonjour, classe chaque compétence dans le tableau fédéral-provincial." : "Bonjour, sélectionne une institution, puis associe-la à son rôle principal." }],
+        associationInteraction: associationQuestion.associationInteraction,
       } : isTimelinePrototype ? {
         id: timelineQuestion.id,
         type: "interactive_timeline",

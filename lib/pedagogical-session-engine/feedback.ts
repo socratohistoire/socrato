@@ -9,11 +9,6 @@ function joinConversationParts(parts: Array<string | undefined>) {
   return parts.filter((part): part is string => Boolean(part)).join("\n\n");
 }
 
-function successfulReformulation(analysis: StructuredResponseAnalysis) {
-  const entry = analysis.observedStrengths.find((strength) => /^formulation possible\s*:/iu.test(strength));
-  return entry?.replace(/^formulation possible\s*:\s*/iu, "").trim();
-}
-
 function replaceDocumentIds(value: string | undefined, question: PedagogicalQuestionDefinition) {
   if (!value) return value;
   return question.evaluationContext?.approvedDocuments.reduce(
@@ -29,6 +24,46 @@ function keepOnlyQuestion(value: string | undefined) {
   const separator = Math.max(beforeQuestion.lastIndexOf(":"), beforeQuestion.lastIndexOf(";"), beforeQuestion.lastIndexOf("."));
   const question = beforeQuestion.slice(separator + 1).trim();
   return question ? `${question[0].toLocaleUpperCase("fr-CA")}${question.slice(1)}` : value;
+}
+
+const ACTIVITY_SUCCESS_CLOSINGS = [
+  "Bravo, c’est réussi.",
+  "Excellent, objectif atteint.",
+  "C’est réussi. Beau travail.",
+  "Parfait, cette question est réussie.",
+  "Très bien, ton raisonnement est juste.",
+  "Voilà une réponse réussie.",
+] as const;
+
+const QUESTION_SUCCESS_CLOSINGS = [
+  "Très bien, on continue.",
+  "Excellent, passons à la suite.",
+  "C’est réussi. On poursuit?",
+  "Beau travail. Continuons.",
+  "Tu peux passer à la suite.",
+  "C’est complet. On continue.",
+] as const;
+
+const SUCCESS_OPENINGS = [
+  "Oui!", "Exact!", "Bien vu!", "Très juste!", "Tout à fait!", "Beau constat!", "Tu y es!", "C’est bien ça!",
+] as const;
+
+const PARTIAL_OPENINGS = [
+  "Bonne piste!", "Bon début!", "Oui, en partie.", "Tu avances bien.", "Une partie est juste.", "Voilà un premier élément.", "Cette observation est juste.",
+] as const;
+
+function stableVariant<T>(values: readonly T[], seed: string) {
+  const index = Array.from(seed).reduce((total, character) => total + character.codePointAt(0)!, 0) % values.length;
+  return values[index];
+}
+
+function ensureBriefOpening(acknowledgement: string | undefined, outcome: StructuredResponseAnalysis["pedagogicalOutcome"], seed: string) {
+  if (!acknowledgement || outcome === "non_exploitable") return acknowledgement;
+  const alreadyHasBriefOpening = /^[^.!?]{1,24}!(?:\s|$)/u.test(acknowledgement)
+    || PARTIAL_OPENINGS.some((opening) => acknowledgement.toLocaleLowerCase("fr-CA").startsWith(opening.toLocaleLowerCase("fr-CA")));
+  if (alreadyHasBriefOpening) return acknowledgement;
+  const openings = outcome === "satisfactory" ? SUCCESS_OPENINGS : PARTIAL_OPENINGS;
+  return `${stableVariant(openings, seed)} ${acknowledgement}`;
 }
 
 export function createPedagogicalFeedback(
@@ -102,7 +137,11 @@ export function createPedagogicalFeedback(
     };
   }
 
-  const acknowledgement = replaceDocumentIds(analysis.observedStrengths[0], question);
+  const acknowledgement = ensureBriefOpening(
+    replaceDocumentIds(analysis.observedStrengths[0], question),
+    analysis.pedagogicalOutcome,
+    `${question.id}:${analysis.observedStrengths[0] ?? ""}`,
+  );
   const missingElement = replaceDocumentIds(analysis.missingElements[0], question);
   if (questionClosing && analysis.pedagogicalOutcome !== "satisfactory") {
     const assessment = "Tu as fait trois essais sérieux. Ce point reste à consolider et sera pris en compte dans ton bilan pour déterminer la prochaine étape la plus utile.";
@@ -131,15 +170,13 @@ export function createPedagogicalFeedback(
     };
   }
   if (analysis.pedagogicalOutcome === "satisfactory") {
-    const assessment = activityClosing ? "Bravo, ta réponse est réussie." : "Ta réponse est réussie. Prêt pour la suite?";
+    const assessment = stableVariant(activityClosing ? ACTIVITY_SUCCESS_CLOSINGS : QUESTION_SUCCESS_CLOSINGS, `${question.id}:${acknowledgement ?? ""}`);
     const conciseEnrichment = missingElement?.replace(/^\s*précision(?:\s+facultative)?\s*:\s*/i, "");
-    const reformulation = successfulReformulation(analysis);
     const enrichment = conciseEnrichment ? `À retenir aussi\n${conciseEnrichment}` : undefined;
     return {
       acknowledgement, assessment, missingElement,
       studentFacingText: joinConversationParts([
         acknowledgement,
-        reformulation ? `Une formulation possible\n${reformulation}` : undefined,
         enrichment,
         assessment,
       ]),

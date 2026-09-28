@@ -18,6 +18,7 @@ import { getHistoricalPeriodLabel } from "@/lib/student-dashboard/historical-per
 import { getCurrentLearningQuestion, getInitialQuestionDocument, getLearningSessionHeading, getQuestionDocuments } from "@/lib/student-learning-session/presentation";
 import type { LearningSessionDocument, LearningSessionMessage, LearningSessionQuestion, StudentLearningSessionData } from "@/lib/student-learning-session/types";
 import { appendVoiceTranscript, createBrowserVoiceAdapter, formatRecordingDuration, isLocalVoicePrototypeEnabled, LocalVoiceCaptureController, VOICE_MAX_SECONDS, type VoiceCaptureState } from "@/lib/student-voice-transcription";
+import { HistoricalComparisonChart } from "@/app/components/historical-comparison-chart";
 
 // Le serveur interrompt son analyse avant cette limite; l’élève récupère ainsi
 // toujours sa réponse et peut réessayer sans perdre une tentative.
@@ -90,6 +91,22 @@ function consolidationCoachLabel(question: LearningSessionQuestion | undefined, 
   return question?.intellectualOperations.find(({ id }) => id === question.primaryOperationId)?.label ?? fallback;
 }
 
+function multipleChoiceRetryPrompt(question: LearningSessionQuestion) {
+  if (question.id === "question:economie-coloniale:multiple-choice-001") {
+    return "Pas tout à fait. Vérifie qui adopte ces lois et quelles céréales bénéficient d’un avantage tarifaire.";
+  }
+  if (question.id === "question:economie-coloniale:multiple-choice-002") {
+    return "Pas tout à fait. Repère les partenaires de l’entente et distingue plusieurs produits naturels de l’ensemble des produits.";
+  }
+  return question.localHint ? `Pas tout à fait. ${question.localHint}` : "Pas tout à fait. Relis la question et compare les choix, puis réessaie.";
+}
+
+function correctAnswerCount(count: number, total: number, past = false) {
+  if (count === 0) return past ? `Aucune réponse sur ${total} n’était correcte.` : `Aucune réponse n’est correcte sur ${total}.`;
+  if (count === 1) return past ? `Une réponse sur ${total} était correcte.` : `Une réponse est correcte sur ${total}.`;
+  return past ? `${count} réponses sur ${total} étaient correctes.` : `${count} réponses sont correctes sur ${total}.`;
+}
+
 function ConversationMessageContent({ content }: { content: string }) {
   return <div className="message-content">{content.split(/\n{2,}/).filter(Boolean).map((part, index) => {
     const [firstLine, ...rest] = part.split("\n");
@@ -157,6 +174,8 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
     total: data.questions.length,
     percent: Math.round((progressCompletedQuestions / data.questions.length) * 100),
   };
+  const completionReady = Boolean(engineState.summary && finalFeedbackDelivered);
+  const completionHref = `${data.dashboardHref.replace(/#.*$/, "")}${data.dashboardHref.includes("?") ? "&" : "?"}reveal=bilan#bilan`;
   const heading = getLearningSessionHeading(data);
   const primaryOperation = question?.intellectualOperations.find(({ id }) => id === question.primaryOperationId);
   const initialDocumentId = getInitialQuestionDocument(activeData)?.id ?? null;
@@ -249,11 +268,31 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
   }, [messages]);
 
   useEffect(() => {
+    if (!completionReady || !messagesRegionRef.current) return;
+    const frame = window.requestAnimationFrame(() => {
+      const region = messagesRegionRef.current;
+      if (!region) return;
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      region.scrollTo({ top: region.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [completionReady]);
+
+  useEffect(() => {
     if (!submitting && restoreResponseFocusRef.current) {
       restoreResponseFocusRef.current = false;
       responseInputRef.current?.focus();
     }
   }, [submitting]);
+
+  useEffect(() => {
+    const textarea = responseInputRef.current;
+    if (!textarea) return;
+    const maximumHeight = 200;
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, 88), maximumHeight)}px`;
+    textarea.style.overflowY = textarea.scrollHeight > maximumHeight ? "auto" : "hidden";
+  }, [response]);
 
   useEffect(() => {
     const controller = new LocalVoiceCaptureController(createBrowserVoiceAdapter(), {
@@ -620,10 +659,8 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
     setChoiceFeedback(correct
       ? `Bonne réponse ! ${question.answerExplanation ?? "Cet ordre respecte la succession chronologique des événements."}`
       : exhausted
-        ? "Tu as fait trois essais sérieux. Ce point reste à consolider et sera pris en compte dans ton bilan pour déterminer la prochaine étape la plus utile."
-      : questionDocuments.length > 0
-        ? "Pas tout à fait. Consulte les documents ou demande un indice, puis réessaie."
-        : "Pas tout à fait. Demande un indice, puis réessaie.");
+        ? `Tu as fait trois essais sérieux. Ce point reste à consolider. ${question.answerExplanation ? `Réponse attendue : ${question.answerExplanation}` : "Compare maintenant les choix avec les documents avant de poursuivre."}`
+        : multipleChoiceRetryPrompt(question));
     if (correct) {
       setTimelineCompleted(true);
       await completeObjectiveQuestion(true, nextAttempt);
@@ -640,6 +677,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
       <section ref={choiceFeedbackRef} className={`multiple-choice-response${showWelcome ? " multiple-choice-socrato-panel" : ""}`} aria-label="Validation du choix de réponse">
         {showWelcome ? <div className="multiple-choice-socrato-welcome"><article><strong>Socrato</strong><p>J’attends ta réponse…</p></article></div> : null}
         {choiceFeedback ? <div className={choiceFeedback.startsWith("Bonne") ? "choice-feedback-correct" : "choice-feedback-retry"} role="status"><strong>Socrato</strong><p>{choiceFeedback}</p>{activeQuestionState.status === "completed" && engineState.currentQuestionIndex < data.questions.length - 1 ? <button type="button" className="socrato-next-question" onClick={() => moveToQuestion(1)}>Passer à la question suivante →</button> : null}</div> : null}
+        {completionReady && engineState.summary ? <SessionCompletionLink href={completionHref} strengths={engineState.summary.strengths} consolidationTargets={engineState.summary.consolidationTargets} teacherPreview={teacherPreview} /> : null}
       </section>
     );
   }
@@ -675,42 +713,27 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
           {data.questions.length > 0 ? <section className="student-activity-progress" aria-label={`Question ${progress.current} sur ${progress.total}, progression ${progress.percent} %`}><span>{progress.current === progress.total ? `Dernière question · ${progress.current}/${progress.total}` : `Question ${progress.current}/${progress.total}`}</span><span className="student-activity-progress__track" aria-hidden="true"><span style={{ width: `${progress.percent}%` }} /></span><strong>{progress.percent}%</strong></section> : null}
         </div>
       </header>
-      {persistenceMessage || analysisUnavailable ? <div className="session-data-error" role="alert">
-        <p>{persistenceMessage || "Socrato discute à l’agora et ne peut pas analyser ta réponse pour le moment. Tu peux réessayer l’analyse ou continuer l’activité sans accompagnement pour cette question."}</p>
-        {response.trim() ? <button type="button" className="socrato-next-question" disabled={submitting} onClick={() => void sendLocalResponse()}>Analyser ma réponse de nouveau</button> : null}
-        {analysisUnavailable ? <button type="button" className="socrato-next-question" disabled={submitting} onClick={() => void continueWithoutEvaluation()}>Continuer cette question sans accompagnement</button> : null}
-      </div> : null}
+      {persistenceMessage && !analysisUnavailable ? <div className="session-data-error" role="alert"><p>{persistenceMessage}</p></div> : null}
 
       <div className={`session-layout${isInteractiveTimeline || isInteractiveAssociation || isInteractiveCausalChain ? " session-layout--timeline" : ""}${questionDocuments.length > 0 ? " session-layout--with-documents" : ""}${isMultipleChoice && questionDocuments.length > 0 ? " session-layout--choice-with-documents" : ""}${questionDocuments.length === 0 && isMultipleChoice ? " session-layout--choice-no-documents" : ""}${isShortAnswerWithoutDocuments ? " session-layout--short-answer-no-documents" : ""}`}>
         {isInteractiveCausalChain && question.causalChainInteraction ? (
-          <InteractiveCausalChainQuestion key={question.id} question={question} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
+          <InteractiveCausalChainQuestion key={question.id} question={question} operationLabel={primaryOperation?.label} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
         ) : isInteractiveTimeline && question.timelineInteraction ? (
-          <InteractiveTimelineQuestion classroomMode={classroomMode} key={question.id} question={question} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
+          <InteractiveTimelineQuestion classroomMode={classroomMode} key={question.id} question={question} operationLabel={primaryOperation?.label} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
+        ) : isInteractiveAssociation && question.associationInteraction?.categories?.length ? (
+          <InteractiveCompetencyCategorizationQuestion key={question.id} question={question} operationLabel={primaryOperation?.label} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
         ) : isInteractiveAssociation && question.associationInteraction ? (
-          <InteractiveAssociationQuestion key={question.id} question={question} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
+          <InteractiveAssociationQuestion key={question.id} question={question} operationLabel={primaryOperation?.label} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
         ) : <>
-        <div className="question-heading">
-          <div className="question-heading-copy">
-            <div className="question-heading-main">
-              <h2 id="question-section-title" className="column-title question-number">Question {question.number}</h2>
-              {primaryOperation ? <span className="operation-chip">{primaryOperation.label}</span> : null}
-            </div>
-            <span className="question-heading-accent" aria-hidden="true" />
-          </div>
-        </div>
         <section className="question-pane" aria-labelledby="question-section-title">
           <div className="question-module">
             <div className={`question-card${isShortAnswerWithoutDocuments ? " question-card--short-no-documents" : ""}`}>
+              <div className="question-card-meta">
+                <h2 id="question-section-title">Question {question.number}</h2>
+                {primaryOperation ? <span className="operation-chip">{primaryOperation.label}</span> : null}
+              </div>
               <div className="question-card-heading-row">
-                <h3 id="question-title">{question.prompt}{!isMultipleChoice ? <span className="question-inline-hint">
-                  <button type="button" className="hint-button hint-button-compact" aria-expanded={Boolean(currentHint)} onClick={obtainLocalHint} disabled={engineState.status === "completed" || maximumHelpReceived}>
-                    <svg className="hint-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                      <path d="M9 18h6M10 21h4M8.2 14.5A7 7 0 1 1 15.8 14.5c-.9.7-1.3 1.4-1.3 2.5h-5c0-1.1-.4-1.8-1.3-2.5Z" />
-                      <path d="M12 5.5v3M8.8 8.1l2.1 2.1M15.2 8.1l-2.1 2.1" />
-                    </svg>
-                      {maximumHelpReceived ? "Aide maximale reçue" : "Obtenir un indice"}
-                  </button>
-                </span> : null}</h3>
+                <h3 id="question-title">{question.prompt}</h3>
               </div>
               {isMultipleChoice && question.answerOptions ? (
                 <div className="multiple-choice-options" role="radiogroup" aria-label="Choix de réponse">
@@ -722,13 +745,6 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
                 </div>
               ) : null}
               {isMultipleChoice ? <div className="multiple-choice-actions">
-                <button type="button" className="hint-button hint-button-compact" aria-expanded={Boolean(currentHint)} onClick={obtainLocalHint} disabled={engineState.status === "completed" || maximumHelpReceived}>
-                  <svg className="hint-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M9 18h6M10 21h4M8.2 14.5A7 7 0 1 1 15.8 14.5c-.9.7-1.3 1.4-1.3 2.5h-5c0-1.1-.4-1.8-1.3-2.5Z" />
-                    <path d="M12 5.5v3M8.8 8.1l2.1 2.1M15.2 8.1l-2.1 2.1" />
-                  </svg>
-                  {maximumHelpReceived ? "Aide maximale reçue" : "Obtenir un indice"}
-                </button>
                 <button type="button" className="multiple-choice-check" disabled={!selectedAnswer || activeQuestionState.status === "completed"} onClick={() => void verifyMultipleChoiceAnswer()}>Vérifier ma réponse</button>
               </div> : null}
               {currentHint ? <p className="local-hint" role="status">{currentHint}</p> : null}
@@ -742,13 +758,18 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
                   <strong>{message.author === "student" ? "Toi" : "Socrato"}</strong>
                   <ConversationMessageContent content={message.content} />
                   {message.author === "socrato" && index === messages.length - 1 && pendingNextState ? <button type="button" className="socrato-next-question" onClick={continueAfterSocratoFeedback}>Continuer avec la question suivante →</button> : null}
+                  {message.author === "socrato" && index === messages.length - 1 && analysisUnavailable ? <div className="analysis-recovery-actions">
+                    {response.trim() ? <button type="button" className="socrato-next-question" disabled={submitting} onClick={() => void sendLocalResponse()}>Analyser ma réponse de nouveau</button> : null}
+                    <button type="button" className="socrato-next-question" disabled={submitting} onClick={() => void continueWithoutEvaluation()}>Continuer sans accompagnement</button>
+                  </div> : null}
                 </article>
               ))}
               {submitting ? <p className="analysis-waiting-message" role="status">Socrato analyse ta réponse…</p> : null}
+              {completionReady && engineState.summary ? <SessionCompletionLink href={completionHref} strengths={engineState.summary.strengths} consolidationTargets={engineState.summary.consolidationTargets} teacherPreview={teacherPreview} /> : null}
             </div>
             <form className="response-composer" onSubmit={submitLocalResponse}>
               <div className="response-composer-shell">
-                <textarea ref={responseInputRef} id="student-response" aria-label="Réponse de l’élève" value={response} onChange={(event) => setResponse(event.target.value)} onKeyDown={handleResponseKeyDown} rows={2} placeholder="Écris ta réponse ici…" disabled={responseUnavailable} />
+                <textarea ref={responseInputRef} id="student-response" aria-label="Réponse de l’élève" value={response} onChange={(event) => setResponse(event.target.value)} onKeyDown={handleResponseKeyDown} rows={3} placeholder="Écris ta réponse ici…" disabled={responseUnavailable} />
                 <div className="composer-toolbar">
                 <div className="voice-controls">
                   {voiceState.status === "recording" ? (
@@ -797,7 +818,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
         </>}
         </>}
         {timelineCompleted && !pendingNextState && !isMultipleChoice && engineState.currentQuestionIndex < data.questions.length - 1 ? <div className="session-question-next"><button type="button" className="socrato-next-question" onClick={() => moveToQuestion(1)}>Passer à la question suivante →</button></div> : null}
-        {engineState.summary && finalFeedbackDelivered ? <div className="session-completion-footer"><SessionCompletionLink href={`${data.dashboardHref.replace(/#.*$/, "")}${data.dashboardHref.includes("?") ? "&" : "?"}reveal=bilan#bilan`} strengths={engineState.summary.strengths} consolidationTargets={engineState.summary.consolidationTargets} teacherPreview={teacherPreview} /></div> : null}
+        {completionReady && engineState.summary && (isInteractiveTimeline || isInteractiveAssociation || isInteractiveCausalChain) ? <section className="conversation session-completion-footer" aria-label="Conversation avec Socrato"><div className="message-list message-list--completion"><SessionCompletionLink href={completionHref} strengths={engineState.summary.strengths} consolidationTargets={engineState.summary.consolidationTargets} teacherPreview={teacherPreview} /></div></section> : null}
       </div>
     </main>
   );
@@ -808,11 +829,12 @@ type AssociationInteraction = NonNullable<LearningSessionQuestion["associationIn
 type CausalChainInteraction = NonNullable<LearningSessionQuestion["causalChainInteraction"]>;
 
 function SessionCompletionLink({ href, strengths, consolidationTargets, teacherPreview }: { href: string; strengths: string[]; consolidationTargets: string[]; teacherPreview: boolean }) {
-  return <section className="local-session-summary" aria-label="Activité terminée"><h3><span aria-hidden="true">🌿</span> Ton bilan est prêt</h3><p>Bravo, tu as terminé l’activité. Voici le bilan de ton travail.</p>{teacherPreview ? <details className="preview-session-bilan"><summary>Consulter mon bilan</summary><div><h4>Points forts</h4>{strengths.length ? <ul>{strengths.map((strength) => <li key={strength}>{strength}</li>)}</ul> : <p>Les réponses attendues ont été mobilisées avec succès.</p>}<h4>Éléments à consolider</h4>{consolidationTargets.length ? <ul>{consolidationTargets.map((target) => <li key={target}>{target}</li>)}</ul> : <p>Aucun élément prioritaire à consolider.</p>}</div></details> : <Link href={href}>Consulter mon bilan</Link>}</section>;
+  return <article className="message message-socrato local-session-summary" aria-label="Activité terminée"><strong>Socrato</strong><h3><span aria-hidden="true">🌿</span> Ton bilan est prêt</h3><p>Bravo, tu as terminé l’activité. Tu peux maintenant consulter le bilan de ton travail.</p>{teacherPreview ? <details className="preview-session-bilan"><summary>Consulter mon bilan</summary><div><h4>Points forts</h4>{strengths.length ? <ul>{strengths.map((strength) => <li key={strength}>{strength}</li>)}</ul> : <p>Les réponses attendues ont été mobilisées avec succès.</p>}<h4>Éléments à consolider</h4>{consolidationTargets.length ? <ul>{consolidationTargets.map((target) => <li key={target}>{target}</li>)}</ul> : <p>Aucun élément prioritaire à consolider.</p>}</div></details> : <Link href={href}>Consulter mon bilan</Link>}</article>;
 }
 
 type ObjectiveQuestionProps = {
   question: LearningSessionQuestion;
+  operationLabel?: string;
   initialAttempts: number;
   initialHintLevel: number;
   onAttempt: (attemptNumber: number) => void;
@@ -824,7 +846,7 @@ function normalizeShortAnswer(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, " ").replace(/[^a-zA-Z0-9\s]/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
 }
 
-function InteractiveCausalChainQuestion({ question, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete }: ObjectiveQuestionProps) {
+function InteractiveCausalChainQuestion({ question, operationLabel, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete }: ObjectiveQuestionProps) {
   const interaction = question.causalChainInteraction as CausalChainInteraction;
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [attempts, setAttempts] = useState(initialAttempts);
@@ -846,12 +868,12 @@ function InteractiveCausalChainQuestion({ question, initialAttempts, initialHint
     const nextAttempt = attempts + 1; setAttempts(nextAttempt); onAttempt(nextAttempt);
     if (correctCount === interaction.steps.length) { setStepsToReview([]); setCompleted(true); setFeedback("Bravo! Les six maillons forment la bonne chaîne de causalité."); onComplete(true, nextAttempt); return; }
     setStepsToReview(interaction.steps.filter((step) => !isCorrect(step)).map(({ id }) => id));
-    if (nextAttempt >= 2) { setAnswers(Object.fromEntries(interaction.steps.map((step) => [step.id, step.expectedAnswer]))); setCompleted(true); setFeedback(`${correctCount} réponses sur ${interaction.steps.length} étaient correctes. Socrato affiche maintenant la chaîne attendue.`); onComplete(false, nextAttempt); return; }
-    setFeedback(`${correctCount} réponse${correctCount > 1 ? "s" : ""} sur ${interaction.steps.length} ${correctCount > 1 ? "sont correctes" : "est correcte"}. Revois les maillons avant de vérifier une deuxième fois.`);
+    if (nextAttempt >= 2) { setAnswers(Object.fromEntries(interaction.steps.map((step) => [step.id, step.expectedAnswer]))); setCompleted(true); setFeedback(`${correctAnswerCount(correctCount, interaction.steps.length, true)} Socrato affiche maintenant la chaîne attendue.`); onComplete(false, nextAttempt); return; }
+    setFeedback(`${correctAnswerCount(correctCount, interaction.steps.length)} Revois les maillons avant de vérifier une deuxième fois.`);
   }
 
   return <section className="causal-chain-question" aria-labelledby="causal-chain-title">
-    <header className="timeline-question__header"><div><p>Gouvernement responsable · Politique</p><h2 id="causal-chain-title">{question.prompt}</h2><span>{answered} réponse{answered > 1 ? "s" : ""} sur {interaction.steps.length}</span></div><button type="button" aria-expanded={showHint} onClick={() => { if (!showHint) onHint(); setShowHint((value) => !value); }}>Obtenir un indice</button></header>
+    <header className="timeline-question__header"><div><p>Gouvernement responsable · Politique</p>{operationLabel ? <span className="operation-chip">{operationLabel}</span> : null}<h2 id="causal-chain-title">{question.prompt}</h2><span>{answered} réponse{answered > 1 ? "s" : ""} sur {interaction.steps.length}</span></div></header>
     {showHint ? <p className="timeline-question__hint" role="status">{question.localHint}</p> : null}
     <div className="causal-chain-track">{interaction.steps.map((step, index) => <div className="causal-chain-link" key={step.id}><article><span>{step.date}</span><h3>{step.prompt}</h3><label><span>{step.placeholder}</span><input value={answers[step.id] ?? ""} disabled={completed} onChange={(event) => setAnswers((current) => ({ ...current, [step.id]: event.target.value }))} placeholder="Écris ta réponse…" /></label></article>{index < interaction.steps.length - 1 ? <span className="causal-chain-arrow" aria-hidden="true">→</span> : null}</div>)}</div>
     {stepsToReview.length > 0 ? <aside className="causal-chain-socrato-help" role="status" aria-live="polite"><strong>Socrato</strong><p>Tu as déjà trouvé une partie de la chaîne. Reprends seulement les maillons suivants :</p><ul>{stepsToReview.map((stepId) => <li key={stepId}>{stepId === "gr-chain-1849-law" ? "Pour la loi de 1849, cherche les mots qui relient une indemnité aux Rébellions." : stepId === "gr-chain-instability" ? "Pour 1854–1864, nomme le problème politique créé par les changements fréquents de ministère." : stepId === "gr-chain-cause" ? "Demande-toi pourquoi un ministère perd l’appui nécessaire dans les deux sections." : `Relis le maillon « ${interaction.steps.find(({ id }) => id === stepId)?.prompt ?? "à corriger"} » et précise le fait historique demandé.`}</li>)}</ul><p>{completed ? "La chaîne attendue est maintenant affichée afin que tu puisses comparer chaque lien avec ta réponse." : "Tu peux corriger ces réponses, puis vérifier une deuxième fois."}</p></aside> : null}
@@ -859,37 +881,119 @@ function InteractiveCausalChainQuestion({ question, initialAttempts, initialHint
   </section>;
 }
 
-function InteractiveAssociationQuestion({ question, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete }: ObjectiveQuestionProps) {
+function InteractiveAssociationQuestion({ question, operationLabel, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete }: ObjectiveQuestionProps) {
   const interaction = question.associationInteraction as AssociationInteraction;
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState("Sélectionne une institution, puis choisis le rôle correspondant.");
+  const [feedback, setFeedback] = useState("Sélectionne un élément, puis choisis la description correspondante.");
   const [attempts, setAttempts] = useState(initialAttempts);
   const [completed, setCompleted] = useState(false);
   const [showHint, setShowHint] = useState(initialHintLevel > 0);
+  const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
   const itemById = new Map(interaction.items.map((item) => [item.id, item]));
   const assignedItemIds = new Set(Object.values(assignments));
+  const hasImageTargets = interaction.targets.some(({ imageUrl }) => imageUrl);
+  const hasImageItems = interaction.items.some(({ imageUrl }) => imageUrl);
+  const hasMapLayout = Boolean(interaction.map);
+  const useCompactDateLayout = !hasMapLayout && !hasImageTargets && interaction.targets.every(({ label, description }) => Boolean(label) && label === description);
+  const hideTargetLabels = interaction.targets.every(({ label }) => !label);
+  const hasDescriptiveTargetLabels = !useCompactDateLayout && interaction.targets.some(({ label }) => Boolean(label && !/^\d+$/.test(label)));
+  const expandedItem = expandedItemId ? itemById.get(expandedItemId) : undefined;
+
+  useEffect(() => {
+    if (!expandedItemId) return;
+    function closeOnEscape(event: KeyboardEvent) { if (event.key === "Escape") setExpandedItemId(null); }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [expandedItemId]);
 
   function assign(targetId: string, itemId = selectedItemId) {
     if (!itemId || completed) return;
     setAssignments((current) => ({ ...Object.fromEntries(Object.entries(current).filter(([, value]) => value !== itemId)), [targetId]: itemId }));
     setSelectedItemId(null);
-    setFeedback("Association placée. Continue jusqu’à ce que les cinq rôles soient complétés.");
+    setFeedback(`Association placée. Continue jusqu’à ce que les ${interaction.targets.length} associations soient complétées.`);
   }
   function beginDrag(event: ReactDragEvent<HTMLElement>, itemId: string) { event.dataTransfer.setData("text/plain", itemId); setSelectedItemId(itemId); }
   function verify() {
     const correctCount = interaction.targets.filter((target) => assignments[target.id] === target.correctItemId).length;
     const nextAttempt = attempts + 1; setAttempts(nextAttempt); onAttempt(nextAttempt);
-    if (correctCount === interaction.targets.length) { setCompleted(true); setFeedback("Bravo! Les cinq institutions sont associées à leur rôle principal."); onComplete(true, nextAttempt); return; }
-    if (nextAttempt >= 2) { setAssignments(Object.fromEntries(interaction.targets.map((target) => [target.id, target.correctItemId]))); setCompleted(true); setFeedback(`${correctCount} réponse${correctCount > 1 ? "s" : ""} sur 5 étaient correctes. Socrato affiche maintenant les associations attendues.`); onComplete(false, nextAttempt); return; }
-    setFeedback(`${correctCount} réponse${correctCount > 1 ? "s sont correctes" : " est correcte"} sur 5. Revois la distinction entre institutions élues, nommées et représentantes de la Couronne.`);
+    if (correctCount === interaction.targets.length) { setCompleted(true); setFeedback(`Bravo! Les ${interaction.targets.length} éléments sont associés à la bonne description.`); onComplete(true, nextAttempt); return; }
+    if (nextAttempt >= 2) { setAssignments(Object.fromEntries(interaction.targets.map((target) => [target.id, target.correctItemId]))); setCompleted(true); setFeedback(`${correctAnswerCount(correctCount, interaction.targets.length, true)} Socrato affiche maintenant les associations attendues.`); onComplete(false, nextAttempt); return; }
+    setFeedback(`${correctAnswerCount(correctCount, interaction.targets.length)} Relis attentivement chaque description avant de vérifier de nouveau.`);
   }
-  return <section className="association-question" aria-labelledby="association-question-title">
-    <header className="timeline-question__header"><div><p>Question {question.number} · Association interactive</p><h2 id="association-question-title">{question.prompt}</h2></div><button type="button" aria-expanded={showHint} onClick={() => { if (!showHint) onHint(); setShowHint((value) => !value); }}>Obtenir un indice</button></header>
+  return <section className={`association-question${useCompactDateLayout ? " association-question--compact-dates association-question--date-timeline" : ""}${hasMapLayout ? " association-question--map" : ""}`} aria-labelledby="association-question-title">
+    <header className="timeline-question__header"><div><div className="association-question__meta"><p>Question {question.number}</p>{operationLabel ? <span className="operation-chip">{operationLabel}</span> : null}</div><h2 id="association-question-title">{question.prompt}</h2></div></header>
     {showHint ? <p className="timeline-question__hint" role="status">{question.localHint}</p> : null}
-    <section className="association-pool" aria-labelledby="association-pool-title"><h3 id="association-pool-title">Institutions à associer</h3><div>{interaction.items.filter(({ id }) => !assignedItemIds.has(id)).map((item) => <button key={item.id} type="button" draggable={!completed} aria-pressed={selectedItemId === item.id} onDragStart={(event) => beginDrag(event, item.id)} onClick={() => setSelectedItemId(item.id)}>{item.label}</button>)}</div></section>
-    <div className="association-targets">{interaction.targets.map((target, index) => { const item = itemById.get(assignments[target.id]); return <article key={target.id} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); assign(target.id, event.dataTransfer.getData("text/plain")); }}><span>{index + 1}</span><p>{target.description}</p>{item ? <button type="button" disabled={completed} onClick={() => setAssignments((current) => Object.fromEntries(Object.entries(current).filter(([key]) => key !== target.id)))}>{item.label}<small>{completed ? "" : "Retirer"}</small></button> : <button type="button" disabled={!selectedItemId || completed} onClick={() => assign(target.id)}>{selectedItemId ? "Associer ici" : "Choisis une institution"}</button>}</article>; })}</div>
+    <section className={`association-pool${hasImageItems ? " association-pool--images" : ""}`} aria-labelledby="association-pool-title"><h3 id="association-pool-title">Éléments à associer</h3><div>{interaction.items.filter(({ id }) => !assignedItemIds.has(id)).map((item) => item.imageUrl ? <div className="association-image-choice" key={item.id} draggable={!completed} onDragStart={(event) => beginDrag(event, item.id)}><button className="association-image-select" type="button" aria-pressed={selectedItemId === item.id} onClick={() => setSelectedItemId(item.id)}><Image src={item.imageUrl} alt={item.imageAlt ?? item.label} width={460} height={350} sizes="(max-width: 620px) 44vw, 22vw" draggable={false} unoptimized /><span>{item.label}</span></button><button className="association-image-expand" type="button" aria-label={`Agrandir ${item.label}`} onClick={() => setExpandedItemId(item.id)}><span aria-hidden="true">⤢</span> Agrandir</button></div> : <button key={item.id} type="button" draggable={!completed} aria-pressed={selectedItemId === item.id} onDragStart={(event) => beginDrag(event, item.id)} onClick={() => setSelectedItemId(item.id)}><span>{item.label}</span></button>)}</div></section>
+    {hasMapLayout && interaction.map ? <div className="association-map-board"><Image className="association-map-image" src={interaction.map.imageUrl} alt={interaction.map.imageAlt} width={1130} height={920} unoptimized />{interaction.targets.map((target) => { const item = itemById.get(assignments[target.id]); const zone = target.zone; if (!zone) return null; return <article className={`association-map-zone association-map-zone--${target.id}`} key={target.id} style={{ left: `${zone.x}%`, top: `${zone.y}%`, width: `${zone.width}%`, height: `${zone.height}%` }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); assign(target.id, event.dataTransfer.getData("text/plain")); }}><span>{target.label}</span>{item ? <button className="association-map-date" type="button" disabled={completed} onClick={() => setAssignments((current) => Object.fromEntries(Object.entries(current).filter(([key]) => key !== target.id)))}>{item.label}<small>{completed ? "" : "Retirer"}</small></button> : <button className="association-map-drop" type="button" disabled={!selectedItemId || completed} onClick={() => assign(target.id)}>{selectedItemId ? "Déposer ici" : "Date"}</button>}</article>; })}</div> : null}
+    <div className={`association-targets${hasImageTargets ? " association-targets--maps" : ""}${hideTargetLabels ? " association-targets--without-labels" : ""}${hasDescriptiveTargetLabels ? " association-targets--descriptive-labels" : ""}${useCompactDateLayout ? ` association-targets--date-timeline association-targets--count-${interaction.targets.length}` : ""}`} role={useCompactDateLayout ? "list" : undefined} aria-label={useCompactDateLayout ? "Ligne du temps de l’expansion territoriale du Canada" : undefined}>{interaction.targets.map((target, index) => { const item = itemById.get(assignments[target.id]); return <article role={useCompactDateLayout ? "listitem" : undefined} key={target.id} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); assign(target.id, event.dataTransfer.getData("text/plain")); }}><span>{target.label ?? index + 1}</span>{target.description !== target.label ? <p>{target.description}</p> : null}{target.imageUrl ? <Image className="association-target-image" src={target.imageUrl} alt={target.imageAlt ?? target.description} width={920} height={700} sizes="(max-width: 760px) 92vw, 44vw" unoptimized /> : null}{item ? <><button className={`association-assigned-item${item.imageUrl ? " association-assigned-item--image" : ""}`} type="button" disabled={completed} onClick={() => setAssignments((current) => Object.fromEntries(Object.entries(current).filter(([key]) => key !== target.id)))}>{item.imageUrl ? <Image src={item.imageUrl} alt={item.imageAlt ?? item.label} width={460} height={350} sizes="(max-width: 620px) 70vw, 22vw" draggable={false} unoptimized /> : null}<span>{item.label}</span><small>{completed ? "" : "Retirer"}</small></button>{item.imageUrl ? <button className="association-placed-expand" type="button" aria-label={`Agrandir ${item.label}`} onClick={() => setExpandedItemId(item.id)}><span aria-hidden="true">⤢</span> Agrandir</button> : null}</> : <button type="button" disabled={!selectedItemId || completed} onClick={() => assign(target.id)}>{selectedItemId ? "Déposer ici" : "Choisis un élément"}</button>}</article>; })}</div>
     <footer className="timeline-question__footer"><p role="status" aria-live="polite"><strong>Socrato</strong>{feedback}</p><button type="button" disabled={Object.keys(assignments).length !== interaction.targets.length || completed} onClick={verify}>{completed ? "Réponse vérifiée" : attempts ? "Vérifier ma deuxième tentative" : "Vérifier mes réponses"}</button></footer>
+    {expandedItem?.imageUrl ? <div className="association-image-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setExpandedItemId(null); }}><section className="association-image-modal" role="dialog" aria-modal="true" aria-label={`${expandedItem.label} agrandie`}><button className="association-image-modal__close" type="button" onClick={() => setExpandedItemId(null)}>Fermer <span aria-hidden="true">×</span></button><div className="association-image-modal__image" role="img" aria-label={expandedItem.imageAlt ?? expandedItem.label} style={{ backgroundImage: `url("${expandedItem.imageUrl}")` }} /><strong>{expandedItem.label}</strong></section></div> : null}
+  </section>;
+}
+
+function InteractiveCompetencyCategorizationQuestion({ question, operationLabel, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete }: ObjectiveQuestionProps) {
+  const interaction = question.associationInteraction as AssociationInteraction;
+  const categories = interaction.categories ?? [];
+  const [placements, setPlacements] = useState<Record<string, string>>({});
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState("Déplace chaque compétence dans la bonne catégorie.");
+  const [attempts, setAttempts] = useState(initialAttempts);
+  const [completed, setCompleted] = useState(false);
+  const [showHint, setShowHint] = useState(initialHintLevel > 0);
+  const itemById = new Map(interaction.items.map((item) => [item.id, item]));
+  const unplacedItems = interaction.items.filter(({ id }) => !placements[id]);
+
+  function place(itemId: string | null, categoryId: string) {
+    if (!itemId || completed) return;
+    setPlacements((current) => ({ ...current, [itemId]: categoryId }));
+    setSelectedItemId(null);
+    setFeedback("Compétence placée. Continue jusqu’à ce que toutes les étiquettes soient classées.");
+  }
+
+  function beginDrag(event: ReactDragEvent<HTMLElement>, itemId: string) {
+    event.dataTransfer.setData("text/plain", itemId);
+    setSelectedItemId(itemId);
+  }
+
+  function verify() {
+    const correctCount = categories.reduce((count, category) => count + category.correctItemIds.filter((itemId) => placements[itemId] === category.id).length, 0);
+    const nextAttempt = attempts + 1;
+    setAttempts(nextAttempt);
+    onAttempt(nextAttempt);
+    if (correctCount === interaction.items.length) {
+      setCompleted(true);
+      setFeedback(interaction.tension ? "Bravo! Toutes les compétences sont classées correctement. Observe maintenant la zone de tension." : "Bravo! Toutes les compétences sont classées correctement.");
+      onComplete(true, nextAttempt);
+      return;
+    }
+    if (nextAttempt >= 2) {
+      setPlacements(Object.fromEntries(categories.flatMap((category) => category.correctItemIds.map((itemId) => [itemId, category.id]))));
+      setCompleted(true);
+      setFeedback(`${correctCount} compétence${correctCount > 1 ? "s" : ""} sur ${interaction.items.length} ${correctCount > 1 ? "étaient correctes" : "était correcte"}. Socrato affiche maintenant le classement attendu.`);
+      onComplete(false, nextAttempt);
+      return;
+    }
+    setFeedback(`${correctCount} compétence${correctCount > 1 ? "s sont bien classées" : " est bien classée"} sur ${interaction.items.length}. Relis le titre et la description de chaque catégorie avant ta deuxième tentative.`);
+  }
+
+  return <section className="association-question competency-categorization" aria-labelledby="competency-categorization-title">
+    <header className="timeline-question__header"><div><p>Question {question.number} · Classement interactif</p>{operationLabel ? <span className="operation-chip">{operationLabel}</span> : null}<h2 id="competency-categorization-title">{question.prompt}</h2><span>{Object.keys(placements).length} compétence{Object.keys(placements).length > 1 ? "s" : ""} sur {interaction.items.length}</span></div></header>
+    {showHint ? <p className="timeline-question__hint" role="status">{question.localHint}</p> : null}
+    <section className="association-pool competency-pool" aria-labelledby="competency-pool-title"><h3 id="competency-pool-title">Titres des compétences à classer</h3><p>Sélectionne une étiquette ou fais-la glisser dans la bonne colonne.</p><div>{unplacedItems.map((item) => <button key={item.id} type="button" draggable={!completed} aria-pressed={selectedItemId === item.id} onDragStart={(event) => beginDrag(event, item.id)} onClick={() => setSelectedItemId(item.id)}>{item.label}</button>)}</div>{unplacedItems.length === 0 ? <strong className="competency-pool__empty">Toutes les compétences sont placées.</strong> : null}</section>
+    <div className="competency-classification-table" role="table" aria-label="Tableau de classement des compétences constitutionnelles">{categories.map((category) => {
+      const placedItems = interaction.items.filter(({ id }) => placements[id] === category.id);
+      return <section className="competency-category" role="rowgroup" key={category.id} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); place(event.dataTransfer.getData("text/plain"), category.id); }}>
+        <header role="columnheader"><span>{category.articleLabel}</span><h3>{category.label}</h3><p>{category.description}</p></header>
+        <div className="competency-category__dropzone" role="cell" aria-label={`Compétences classées sous ${category.label}`}>
+          {placedItems.map((item) => <button key={item.id} type="button" disabled={completed} onClick={() => setPlacements((current) => Object.fromEntries(Object.entries(current).filter(([itemId]) => itemId !== item.id)))}>{item.label}<small>{completed ? "" : "Retirer"}</small></button>)}
+          {placedItems.length === 0 ? <p>Aucune compétence placée.</p> : null}
+          <button className="competency-category__place" type="button" disabled={!selectedItemId || completed} onClick={() => place(selectedItemId, category.id)}>{selectedItemId ? `Déposer « ${itemById.get(selectedItemId)?.label ?? "cette compétence"} » ici` : "Choisis d’abord une compétence"}</button>
+        </div>
+      </section>;
+    })}</div>
+    {interaction.tension ? <aside className={`competency-tension${completed ? " competency-tension--revealed" : ""}`}><span>À expliquer après le classement</span><h3>{interaction.tension.title}</h3><p><strong>{interaction.tension.prompt}</strong></p>{completed ? <p>{interaction.tension.explanation}</p> : <p>L’explication apparaîtra lorsque le tableau aura été vérifié.</p>}</aside> : null}
+    <footer className="timeline-question__footer"><p role="status" aria-live="polite"><strong>Socrato</strong>{feedback}</p><button type="button" disabled={Object.keys(placements).length !== interaction.items.length || completed} onClick={verify}>{completed ? "Classement vérifié" : attempts ? "Vérifier ma deuxième tentative" : "Vérifier le tableau"}</button></footer>
   </section>;
 }
 
@@ -912,7 +1016,7 @@ function TimelineEntryVisual({ entry, width, height }: { entry: TimelineInteract
   return <div className="timeline-entry-image-pair" role="img" aria-label={entry.imageAlt}>{sources.map((source) => <Image key={source} src={source} alt="" width={Math.round(width / sources.length)} height={height} draggable={false} unoptimized />)}</div>;
 }
 
-function InteractiveTimelineQuestion({ question, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete, classroomMode = false }: ObjectiveQuestionProps & { classroomMode?: boolean }) {
+function InteractiveTimelineQuestion({ question, operationLabel, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete, classroomMode = false }: ObjectiveQuestionProps & { classroomMode?: boolean }) {
   const interaction = question.timelineInteraction as TimelineInteraction;
   const shuffledEntries = useMemo(() => {
     const order = interaction.entries.length === 7 ? [2, 6, 0, 4, 1, 5, 3] : [2, 5, 0, 4, 1, 3];
@@ -974,11 +1078,11 @@ function InteractiveTimelineQuestion({ question, initialAttempts, initialHintLev
     if (nextAttempt >= 2) {
       setAssignments(Object.fromEntries(interaction.entries.map((entry) => [entry.date, entry.id])));
       setCompleted(true);
-      setFeedback(`${correctCount} réponse${correctCount > 1 ? "s" : ""} sur ${interaction.dates.length} étaient correctes. Socrato affiche maintenant l’ordre attendu pour te permettre de le revoir.`);
+      setFeedback(`${correctAnswerCount(correctCount, interaction.dates.length, true)} Socrato affiche maintenant l’ordre attendu pour te permettre de le revoir.`);
       onComplete(false, nextAttempt);
       return;
     }
-    setFeedback(`${correctCount} réponse${correctCount > 1 ? "s sont correctes" : " est correcte"} sur ${interaction.dates.length}. ${question.localHint}`);
+    setFeedback(`${correctAnswerCount(correctCount, interaction.dates.length)} ${question.localHint}`);
   }
 
   function revealTimelineAnswer() {
@@ -988,16 +1092,16 @@ function InteractiveTimelineQuestion({ question, initialAttempts, initialHintLev
   }
 
   return <section className="timeline-question" aria-labelledby="timeline-question-title">
-    <header className="timeline-question__header"><div><p>Question {question.number} · Document chronologique interactif</p><h2 id="timeline-question-title">{question.prompt}</h2><span>{question.instruction}</span></div><button type="button" aria-expanded={showHint} onClick={() => { if (!showHint) onHint(); setShowHint((current) => !current); }}>Obtenir un indice</button></header>
+    <header className="timeline-question__header"><div><p>Question {question.number} · Document chronologique interactif</p>{operationLabel ? <span className="operation-chip">{operationLabel}</span> : null}<h2 id="timeline-question-title">{question.prompt}</h2><span>{question.instruction}</span></div></header>
     {showHint ? <p className="timeline-question__hint" role="status">{question.localHint}</p> : null}
     <div className="timeline-question__dates" aria-label="Dates de la ligne du temps">{interaction.dates.map((date) => {
       const entry = entryById.get(assignments[date]);
       return <div key={date} className={`timeline-date-slot${entry ? " is-filled" : ""}`} onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOnDate(event, date)}>
         <strong>{date}</strong><span className="timeline-date-marker" aria-hidden="true" />
-        {entry ? <article className="timeline-placed-card" draggable={!completed} onDragStart={(event) => beginDrag(event, entry.id)}><TimelineEntryVisual entry={entry} width={360} height={150} /><div className="timeline-placed-card__content"><h3>{entry.title}</h3>{!completed ? <button type="button" onClick={() => setAssignments((current) => Object.fromEntries(Object.entries(current).filter(([slotDate]) => slotDate !== date)))}>Retirer</button> : null}</div></article> : <button type="button" className="timeline-empty-slot" disabled={!selectedEntryId || completed} onClick={() => assignSelectedTo(date)}>{selectedEntryId ? `Placer ici sous ${date}` : "Choisis d’abord une carte"}</button>}
+        {entry ? <article className="timeline-placed-card" draggable={!completed} onDragStart={(event) => beginDrag(event, entry.id)}><TimelineEntryVisual entry={entry} width={360} height={150} />{!completed ? <button className="timeline-placed-card__remove" type="button" aria-label={`Retirer la carte « ${entry.title} »`} title="Retirer cette carte" onClick={() => setAssignments((current) => Object.fromEntries(Object.entries(current).filter(([slotDate]) => slotDate !== date)))}>×</button> : null}<div className="timeline-placed-card__content"><h3>{entry.title}</h3></div></article> : <button type="button" className="timeline-empty-slot" disabled={!selectedEntryId || completed} onClick={() => assignSelectedTo(date)}>{selectedEntryId ? `Placer ici sous ${date}` : "Choisis d’abord une carte"}</button>}
       </div>;
     })}</div>
-    <section className="timeline-card-pool" aria-labelledby="timeline-cards-title"><header><div><h2 id="timeline-cards-title">Cartes à placer</h2><p>{interaction.entries.length - assignedEntryIds.size} restante{interaction.entries.length - assignedEntryIds.size > 1 ? "s" : ""}</p></div><span>Sélectionne ou fais glisser une carte</span></header><div>{shuffledEntries.filter(({ id }) => !assignedEntryIds.has(id)).map((entry) => <button key={entry.id} type="button" draggable={!completed} aria-pressed={selectedEntryId === entry.id} onDragStart={(event) => beginDrag(event, entry.id)} onClick={() => setSelectedEntryId(entry.id)}><TimelineEntryVisual entry={entry} width={320} height={190} /><span><strong>{entry.title}</strong><small>{entry.description}</small></span></button>)}</div></section>
+    <section className="timeline-card-pool" aria-labelledby="timeline-cards-title"><header><div><h2 id="timeline-cards-title">Cartes à placer</h2><p>{interaction.entries.length - assignedEntryIds.size} restante{interaction.entries.length - assignedEntryIds.size > 1 ? "s" : ""}</p></div><span>Sélectionne ou fais glisser une carte</span></header><div>{shuffledEntries.filter(({ id }) => !assignedEntryIds.has(id)).map((entry) => <button key={entry.id} type="button" draggable={!completed} aria-pressed={selectedEntryId === entry.id} onDragStart={(event) => beginDrag(event, entry.id)} onClick={() => setSelectedEntryId(entry.id)}><TimelineEntryVisual entry={entry} width={320} height={190} /><span><strong>{entry.title}</strong></span></button>)}</div></section>
     <footer className="timeline-question__footer"><p role="status" aria-live="polite"><strong>Socrato</strong>{feedback}</p><div className="timeline-question__actions">{classroomMode && !completed ? <button type="button" className="timeline-reveal-answer" onClick={revealTimelineAnswer}>Afficher la réponse</button> : null}<button type="button" disabled={placedCount !== interaction.dates.length || completed} onClick={verifyTimeline}>{completed ? "Réponse vérifiée" : attempts === 0 ? "Vérifier mes réponses" : "Vérifier ma deuxième tentative"}</button></div></footer>
   </section>;
 }
@@ -1008,6 +1112,7 @@ function DocumentsPane({ documents, initialDocumentId, stacked = false }: { docu
   const [selectedId, setSelectedId] = useState(initialDocumentId);
   const [consultedIds, setConsultedIds] = useState(() => new Set(initialDocumentId ? [initialDocumentId] : []));
   const [expanded, setExpanded] = useState(false);
+  const [imageZoom, setImageZoom] = useState(1.5);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const thumbnailRefs = useRef(new Map<string, HTMLButtonElement>());
   const stackedListRef = useRef<HTMLDivElement>(null);
@@ -1101,6 +1206,7 @@ function DocumentsPane({ documents, initialDocumentId, stacked = false }: { docu
   function expandStackedDocument(documentId: string) {
     setSelectedId(documentId);
     setConsultedIds((current) => new Set(current).add(documentId));
+    setImageZoom(1.5);
     setExpanded(true);
   }
 
@@ -1116,11 +1222,14 @@ function DocumentsPane({ documents, initialDocumentId, stacked = false }: { docu
         ) : (
           <>
           <div className={`document-system-card${stacked ? " document-system-card--stacked" : ""}`}>
-            {stacked ? <div ref={stackedListRef} className="stacked-document-list" style={{ gridTemplateRows: `repeat(${documents.length}, minmax(0, 1fr))` }}>{documents.map((document) => <article className="stacked-document" key={document.id}>
+            {stacked ? <div ref={stackedListRef} className="stacked-document-list" style={{ gridTemplateRows: `repeat(${documents.length}, minmax(0, 1fr))` }}>{documents.map((document) => <article className="stacked-document" key={document.id} onClick={(event) => {
+              if ((event.target as HTMLElement).closest("button, details, a")) return;
+              expandStackedDocument(document.id);
+            }}>
               <DocumentContent document={document} compact onExpand={() => expandStackedDocument(document.id)} />
             </article>)}</div> : <>
             <article className="document-preview">
-              <DocumentContent document={selected} onExpand={() => setExpanded(true)} />
+              <DocumentContent document={selected} onExpand={() => { setImageZoom(1.5); setExpanded(true); }} />
             </article>
             <div className="document-separator" aria-hidden="true" />
             <div className="document-navigation" aria-label="Navigation entre les documents">
@@ -1149,7 +1258,7 @@ function DocumentsPane({ documents, initialDocumentId, stacked = false }: { docu
             <div className="document-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeExpandedDocument(); }}>
               <section className="document-modal" role="dialog" aria-modal="true" aria-labelledby="expanded-document-title">
                 <button ref={closeButtonRef} type="button" className="close-document" onClick={closeExpandedDocument} aria-label="Fermer la vue agrandie">×</button>
-                <DocumentContent document={selected} expanded />
+                <DocumentContent document={selected} expanded imageZoom={imageZoom} onImageZoomChange={setImageZoom} />
               </section>
             </div>
           ) : null}
@@ -1161,7 +1270,7 @@ function DocumentsPane({ documents, initialDocumentId, stacked = false }: { docu
 }
 
 function getNeutralDocumentType(document: OrderedDocument) {
-  return document.content.kind === "population_table" || document.content.kind === "comparison_table" ? "Tableau statistique" : document.typeLabel;
+  return document.content.kind === "population_table" || document.content.kind === "comparison_table" ? "Tableau statistique" : document.content.kind === "historical_comparison_chart" ? "Graphique statistique" : document.typeLabel;
 }
 
 function DocumentThumbnailPreview({ document }: { document: OrderedDocument }) {
@@ -1178,6 +1287,9 @@ function DocumentThumbnailPreview({ document }: { document: OrderedDocument }) {
   if (document.content.kind === "comparison_table") {
     return <div className="document-thumbnail-table" aria-hidden="true"><table><tbody>{document.content.rows.slice(0, 3).map((row) => <tr key={row.label}><th>{row.label}</th><td>{row.value}</td></tr>)}</tbody></table></div>;
   }
+  if (document.content.kind === "historical_comparison_chart") {
+    return <div className="document-thumbnail-table" aria-hidden="true"><table><tbody>{document.content.chart.items.slice(0, 3).map((item) => <tr key={item.id}><th>{item.label}</th><td>{item.displayValue}</td></tr>)}</tbody></table></div>;
+  }
   if (document.content.kind === "historical_timeline") {
     return <div className="document-thumbnail-timeline" aria-hidden="true">{document.content.entries.map((entry) => <span key={entry.date}>{entry.date}</span>)}</div>;
   }
@@ -1189,8 +1301,8 @@ function DocumentThumbnailPreview({ document }: { document: OrderedDocument }) {
   return <blockquote className="document-thumbnail-quote" aria-hidden="true">« {document.content.excerpt} »</blockquote>;
 }
 
-function DocumentContent({ document, expanded = false, compact = false, onExpand }: { document: OrderedDocument; expanded?: boolean; compact?: boolean; onExpand?: () => void }) {
-  const identification = document.content.kind === "population_table" || document.content.kind === "comparison_table"
+function DocumentContent({ document, expanded = false, compact = false, onExpand, imageZoom = 1, onImageZoomChange }: { document: OrderedDocument; expanded?: boolean; compact?: boolean; onExpand?: () => void; imageZoom?: number; onImageZoomChange?: (zoom: number) => void }) {
+  const identification = document.content.kind === "population_table" || document.content.kind === "comparison_table" || document.content.kind === "historical_comparison_chart"
     ? [document.sourceLabel, document.dateLabel].filter(Boolean).join(" · ")
     : [document.authorLabel ?? document.institutionLabel ?? document.sourceLabel, document.dateLabel].filter(Boolean).join(" · ");
   const compactTextLength = compact && document.content.kind === "historical_excerpt" ? document.content.excerpt.length : 0;
@@ -1220,6 +1332,8 @@ function DocumentContent({ document, expanded = false, compact = false, onExpand
               <tbody>{document.content.rows.map((row) => <tr key={row.label}><th scope="row">{row.label}</th><td>{row.value}</td></tr>)}</tbody>
             </table>
           </div>
+        ) : document.content.kind === "historical_comparison_chart" ? (
+          <HistoricalComparisonChart chart={document.content.chart} />
         ) : document.content.kind === "historical_timeline" ? (
           <div className="historical-timeline-document">
             {document.content.entries.map((entry) => <article key={entry.date}>
@@ -1233,15 +1347,15 @@ function DocumentContent({ document, expanded = false, compact = false, onExpand
           </div>
         ) : document.content.kind === "political_structure_diagram" && document.content.period === "gouvernement-responsable" ? (
           <div className="student-political-structure responsible-government-structure responsible-government-1848" role="img" aria-label="Schéma du gouvernement responsable de 1848 : la Couronne agit par le gouvernement britannique; le gouvernement britannique recommande la nomination du gouverneur; le gouverneur nomme les conseils; le Conseil exécutif conseille le gouverneur et doit conserver la confiance de l’Assemblée; le Conseil législatif et l’Assemblée adoptent les lois; les électeurs du Haut-Canada et du Bas-Canada élisent chacun 42 députés.">
-            <div className="ps-node rg-crown"><small>Autorité impériale</small><strong>Couronne britannique</strong></div>
+            <div className="ps-node rg-crown"><strong>Couronne britannique</strong></div>
             <div className="rg-link">agit par l’intermédiaire du ↓</div>
             <div className="ps-node rg-british-government"><strong>Gouvernement britannique</strong></div>
             <div className="rg-link">recommande la nomination du ↓</div>
-            <div className="ps-node ps-governor rg-governor"><small>Représentant de la Couronne</small><strong>Gouverneur général</strong><span>Sanctionne les lois</span></div>
-            <div className="rg-two-links"><span><b>nomme le Conseil exécutif ↓</b><em>reçoit ses conseils ↑</em></span><span><b>nomme le Conseil législatif ↓</b><em>reçoit les projets de loi adoptés ↑</em></span></div>
-            <div className="rg-councils"><div className="ps-node ps-ministry"><small>Pouvoir exécutif responsable</small><strong>Conseil exécutif</strong><span>Dirige les affaires intérieures</span></div><div className="ps-node rg-legislative-council"><small>Chambre nommée</small><strong>Conseil législatif</strong><span>Étudie les projets de loi</span></div></div>
-            <div className="rg-two-links rg-assembly-links"><span><b>doit conserver la confiance de ↓</b><em>l’Assemblée accorde ou retire sa confiance ↑</em></span><span><b>adopte les lois avec ↓</b><em>l’Assemblée débat et vote les projets ↑</em></span></div>
-            <div className="ps-node ps-assembly rg-assembly"><small>Chambre élue</small><strong>Assemblée législative · 84 députés</strong><span>Vote les lois, les taxes et les crédits</span></div>
+            <div className="ps-node ps-governor rg-governor"><strong>Gouverneur général</strong><span>Sanctionne les lois</span></div>
+            <div className="rg-two-links"><span><b>nomme ↓</b></span><span><b>nomme ↓</b></span></div>
+            <div className="rg-councils"><div className="ps-node ps-ministry"><strong>Conseil exécutif</strong><span>Le chef de la majorité choisit ses ministres dans le Conseil exécutif.</span><span>Met en application les lois</span></div><div className="ps-node rg-legislative-council"><strong>Conseil législatif</strong><span>Étudie les projets de loi</span></div></div>
+            <div className="rg-two-links rg-assembly-links"><span><b>doit conserver la confiance de ↓</b></span><span><b>adopte les lois avec ↓</b></span></div>
+            <div className="ps-node ps-assembly rg-assembly"><strong>Assemblée législative · 84 députés</strong><span>Vote les lois, les taxes et les crédits</span></div>
             <div className="rg-two-links rg-election-links"><span>élit 42 députés ↑</span><span>élit 42 députés ↑</span></div>
             <div className="rg-populations"><div className="ps-node ps-voters"><strong>Population électorale du Haut-Canada</strong></div><div className="ps-node ps-voters"><strong>Population électorale du Bas-Canada</strong></div></div>
             <div className="responsible-loss"><strong>Si le Conseil exécutif perd la confiance de l’Assemblée</strong><span>Il démissionne ou demande la dissolution du Parlement et la tenue d’élections.</span></div>
@@ -1254,14 +1368,21 @@ function DocumentContent({ document, expanded = false, compact = false, onExpand
             <div className="ps-council-links"><span><b>Le Conseil propose des mesures ↓</b><em>L’Assemblée vote les lois et les crédits ↑</em></span><span><b>Le Conseil étudie et adopte les projets ↓</b><em>L’Assemblée débat, vote et transmet les projets ↑</em></span></div><div className="ps-node ps-assembly"><small>Élue</small><strong>Assemblée législative · 84 députés</strong><span>Débat, vote les lois et les taxes</span><div><b>Canada-Ouest · 42</b><b>Canada-Est · 42</b></div></div><div className="ps-arrow">élisent ↑</div>
             <div className="ps-node ps-voters"><strong>Électeurs admissibles</strong></div>
           </div>
-        ) : document.content.kind === "historical_image" ? (
-          <div className="document-visual-viewport">
-            <figure className="historical-document-figure">
+        ) : document.content.kind === "historical_image" ? (<>
+          {expanded && onImageZoomChange ? <div className="document-image-zoom-controls" role="group" aria-label="Agrandissement de la carte">
+            <button type="button" aria-label="Réduire la carte de 5 %" disabled={imageZoom <= 1} onClick={() => onImageZoomChange(Math.max(1, Number((imageZoom - .05).toFixed(2))))}>−</button>
+            <button type="button" className="document-image-zoom-reset" aria-label="Revenir à la vue agrandie initiale" onClick={() => onImageZoomChange(1.5)}>{Math.round(imageZoom * 100)} %</button>
+            <button type="button" aria-label="Agrandir la carte de 5 %" disabled={imageZoom >= 3} onClick={() => onImageZoomChange(Math.min(3, Number((imageZoom + .05).toFixed(2))))}>+</button>
+          </div> : null}
+          <div className={`document-visual-viewport${expanded ? " document-visual-viewport--expanded" : ""}`}>
+            <figure className={`historical-document-figure${imageZoom > 1 ? " is-zoomed" : ""}`} style={imageZoom > 1 ? { width: `${imageZoom * 100}%` } : undefined}>
               <Image className="historical-document-image" src={document.content.localSrc} alt={document.content.alt} width={1600} height={1100} unoptimized />
-              <figcaption>{document.title}</figcaption>
+              <figcaption className={document.content.visibleCaption ? "historical-document-caption historical-document-caption--expanded" : "historical-document-caption"}>
+                {document.content.visibleCaption ? <><strong>Description traduite</strong><span>{document.content.visibleCaption}</span>{document.content.visibleCaptionNote ? <small>{document.content.visibleCaptionNote}</small> : null}</> : document.title}
+              </figcaption>
             </figure>
           </div>
-        ) : <blockquote>« {document.content.excerpt} »</blockquote>}
+        </>) : <blockquote>« {document.content.excerpt} »</blockquote>}
         {document.content.kind === "historical_excerpt"
           ? <cite className="document-identification">{identification}</cite>
           : <p className="document-identification">{identification}</p>}
@@ -1278,14 +1399,13 @@ function DocumentContent({ document, expanded = false, compact = false, onExpand
           <summary>Détails</summary>
           <dl className="document-metadata">
           <dt>Nature du document</dt><dd>{document.typeLabel}</dd>
-          {document.content.kind === "historical_image" ? <><dt>Description factuelle</dt><dd>{document.content.description}</dd></> : null}
+          {document.content.kind === "historical_image" && document.content.description ? <><dt>Description factuelle</dt><dd>{document.content.description}</dd></> : null}
           {document.dateLabel ? <><dt>Date</dt><dd>{document.dateLabel}</dd></> : null}
           {document.authorLabel ? <><dt>Auteur</dt><dd>{document.authorLabel}</dd></> : null}
           {document.institutionLabel ? <><dt>Institution ou lieu de présentation</dt><dd>{document.institutionLabel}</dd></> : null}
           {document.originalDocumentLabel ? <><dt>Document original</dt><dd>{document.originalDocumentLabel}</dd></> : null}
           {document.publicationLabel ? <><dt>Publication</dt><dd>{document.publicationLabel}</dd></> : null}
           <dt>Source complète</dt><dd>{document.sourceLabel}</dd>
-          {document.editorialNote ? <><dt>Note éditoriale</dt><dd>{document.editorialNote}</dd></> : null}
           <dt>Droits et attribution</dt><dd>{document.rightsLabel}</dd>
           </dl>
           {document.sourceUrls.length ? <ul className="document-links" aria-label="Liens de référence">{document.sourceUrls.map((url, index) => <li key={`${url}-${index}`}><a href={url} target="_blank" rel="noreferrer">Consulter la référence {index + 1}</a></li>)}</ul> : null}

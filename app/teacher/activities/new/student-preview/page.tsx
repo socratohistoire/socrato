@@ -42,7 +42,7 @@ export default async function StudentActivityPreviewPage({ searchParams }: { sea
     primaryOperationId: preview.operationId,
     featuredDocumentId: preview.documents[0]?.id,
     intellectualOperations: [{ id: preview.operationId, label: preview.operationLabel }],
-    historicalKnowledgeIds: [...preview.historicalKnowledgeIds],
+    historicalKnowledgeIds: [...new Set([...preview.historicalKnowledgeIds, ...preview.documents.flatMap((document) => document.historicalKnowledgeIds)])],
     documentRelations: preview.documents.map(({ id }, index) => ({ documentId: id, displayOrder: index + 1 })),
     requiredDocumentIds: preview.documents.map(({ id }) => id),
     localHint: preview.instruction,
@@ -57,5 +57,5 @@ export default async function StudentActivityPreviewPage({ searchParams }: { sea
   const preview = previews[0];
   if (!preview) notFound();
   const resolvedActivityId = published === "1" && (activityId || publishedActivityId) ? (activityId || publishedActivityId)! : data.activityId;
-  return <div className={`student-preview-surface${classroom === "1" ? " student-preview-surface--classroom" : ""}${embedded === "1" ? " student-preview-surface--embedded" : ""}`}><StudentLearningSessionView classroomMode={classroom === "1"} teacherApiTest teacherPreview={classroom !== "1" && embedded !== "1" && published !== "1"} persistProgress={published === "1"} data={{ ...data, id: resolvedActivityId, activityId: resolvedActivityId, activityTitle: config.title, notionTitle: preview.notionTitle, questions, documentCatalog, dashboardHref: `/eleve/tableau-de-bord?activity=${encodeURIComponent(resolvedActivityId)}#activite` }} /></div>;
+  return <div className={`student-preview-surface${classroom === "1" ? " student-preview-surface--classroom" : ""}${embedded === "1" ? " student-preview-surface--embedded" : ""}`}><StudentLearningSessionView classroomMode={classroom === "1"} teacherApiTest teacherPreview={classroom !== "1" && embedded !== "1" && published !== "1"} persistProgress={published === "1"} data={{ ...data, id: resolvedActivityId, activityId: resolvedActivityId, activityTitle: config.title, notionId: notion, notionTitle: preview.notionTitle, questions, documentCatalog, dashboardHref: `/eleve/tableau-de-bord?activity=${encodeURIComponent(resolvedActivityId)}#activite` }} /></div>;
 }

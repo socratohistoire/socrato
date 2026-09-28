@@ -115,14 +115,14 @@ function operationTargetFromRuntime(row: ActivityRow, operations: IntellectualOp
   const priority = runtime.find(({ questionId, attemptNumber, hintLevel, instructionOmissionObserved, lastAnalysis }) => {
     const question = questions.get(questionId);
     const operation = question ? operations.find(({ id }) => id === question.primaryOperationId) : undefined;
-    return Boolean(operation && operation.status === "needs_work"
-      && (attemptNumber > 1 || hintLevel > 0 || instructionOmissionObserved || lastAnalysis?.pedagogicalOutcome !== "satisfactory"));
+    return Boolean(operation && (operation.status === "needs_work" || operation.status === "consolidate")
+      && (attemptNumber >= 3 || hintLevel > 0 || instructionOmissionObserved || lastAnalysis?.pedagogicalOutcome !== "satisfactory"));
   });
   if (!priority) return null;
   const question = questions.get(priority.questionId);
   if (!question) return null;
   const operation = operations.find(({ id }) => id === question.primaryOperationId);
-  if (!operation || operation.status === "mastered" || operation.status === "consolidate") return null;
+  if (!operation || operation.status === "mastered") return null;
   const recordedError = priority.lastAnalysis?.missingElements?.at(-1) ?? priority.observedDifficulties?.at(-1);
   if (!recordedError) return null;
   // Certains replis techniques historiques ont enregistré une phrase passe-partout.

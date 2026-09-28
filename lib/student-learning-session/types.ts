@@ -1,5 +1,6 @@
 import type { HistoricalPeriod } from "../student-dashboard/types.ts";
 import type { StudentProgressContract } from "../student-progress/types.ts";
+import type { HistoricalComparisonChart } from "../pedagogical-reference/historical-comparison-charts.ts";
 
 export type LearningSessionDocumentContent =
   | {
@@ -12,13 +13,14 @@ export type LearningSessionDocumentContent =
       headers: [string, string];
       rows: Array<{ label: string; value: string }>;
     }
+  | { kind: "historical_comparison_chart"; chart: HistoricalComparisonChart }
   | {
       kind: "historical_timeline";
       entries: Array<{ date: string; phase: string; title: string; description: string; imageUrl: string; imageAlt: string; credit: string }>;
     }
   | { kind: "political_structure_diagram"; period?: "acte-union" | "gouvernement-responsable" }
   | { kind: "historical_excerpt"; excerpt: string }
-  | { kind: "historical_image"; localSrc: string; alt: string; description: string };
+  | { kind: "historical_image"; localSrc: string; alt: string; description: string; visibleCaption?: string; visibleCaptionNote?: string };
 
 export type LearningSessionDocument = {
   id: string;
@@ -87,9 +89,12 @@ export type LearningSessionQuestion = {
     }[];
   };
   associationInteraction?: {
-    documentId: string;
-    items: readonly { id: string; label: string }[];
-    targets: readonly { id: string; description: string; correctItemId: string }[];
+    documentId?: string;
+    map?: { imageUrl: string; imageAlt: string };
+    items: readonly { id: string; label: string; imageUrl?: string; imageAlt?: string }[];
+    targets: readonly { id: string; label?: string; description: string; imageUrl?: string; imageAlt?: string; correctItemId: string; zone?: { x: number; y: number; width: number; height: number } }[];
+    categories?: readonly { id: string; label: string; articleLabel: string; description: string; correctItemIds: readonly string[] }[];
+    tension?: { title: string; prompt: string; explanation: string };
   };
   causalChainInteraction?: {
     steps: readonly { id: string; date: string; prompt: string; placeholder: string; acceptedAnswers: readonly string[]; expectedAnswer: string }[];

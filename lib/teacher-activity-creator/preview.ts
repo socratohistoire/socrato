@@ -33,7 +33,7 @@ export function getEligibleActivityQuestions(config: ActivityConfiguration, cata
   const isCompleteActeUnionRevision = config.workType === "revision" && notion.id === "acte-union";
 
   return catalog.questions.filter(({ status, format, relatedKnowledgeHeadingIds, operationId, historicalDocumentIds }) =>
-    status === "approved"
+    (status === "approved" || status === "ready-for-review")
     && relatedKnowledgeHeadingIds.some((id) => selectedNotionIds.has(id))
     && (config.workType === "development" ? format === "development-150" : config.workType === "revision" || format !== "development-150")
     && (!config.operationId || operationId === config.operationId)
@@ -163,11 +163,13 @@ export function createLocalActivityPreview(config: ActivityConfiguration, catalo
     historicalKnowledgeIds: catalogQuestion?.relatedKnowledgeHeadingIds ?? [notion.id],
     question,
     instruction,
-    guidance: [catalogQuestion?.id === CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID
+    guidance: [catalogQuestion?.initialGuidance ?? (catalogQuestion?.id === CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID
       ? "Aujourd’hui, je vais t’aider à comprendre comment déterminer une cause et une conséquence. Commençons simplement : quel est l’événement historique central présenté dans les trois documents?"
       : previewDocuments.length === 0
       ? "J’attends ta réponse…"
-      : "Bonjour, consulte les sources puis réponds à la question."],
+      : previewDocuments.length === 1
+      ? "Bonjour, consulte la source puis réponds à la question."
+      : "Bonjour, consulte les sources puis réponds à la question.")],
     documents: previewDocuments,
     timelineInteraction: catalogQuestion?.timelineInteraction,
     associationInteraction: catalogQuestion?.associationInteraction,

@@ -170,7 +170,10 @@ export function TeacherActivityCreatorView({ catalog, editingActivity = null, co
 
   useEffect(() => {
     let active = true;
-    if (editingActivity || consolidationTarget || classroomMode || initialUnderstandingOperationId) { setDraftReady(true); setDraftTouched(true); return; }
+    if (editingActivity || consolidationTarget || classroomMode || initialUnderstandingOperationId) {
+      const frame = requestAnimationFrame(() => { setDraftReady(true); setDraftTouched(true); });
+      return () => cancelAnimationFrame(frame);
+    }
     void createConfiguredDataRepository(window.localStorage).readActiveDraft(catalog).then((draft) => {
       if (!active || !draft) return;
       const availableGroupIds = new Set(catalog.groups.map(({ id }) => id));
@@ -202,7 +205,7 @@ export function TeacherActivityCreatorView({ catalog, editingActivity = null, co
     if (changesQuestionPool) {
       setQuestionOverrides({});
       setManualQuestionSelection(false);
-      setSelectionSeed(Math.floor(Math.random() * 2_147_483_647));
+      setSelectionSeed(current => (current + 1) % 2_147_483_647);
       setPreviewVariant(0);
     }
     setDemoMessage("");
@@ -317,6 +320,7 @@ export function TeacherActivityCreatorView({ catalog, editingActivity = null, co
       <nav aria-label="Navigation principale">
         <Link href="/teacher"><Icon name="school"/>Espace enseignant</Link>
         <Link href="/teacher/activities/intellectual-operations"><Icon name="target"/>Comprendre les opérations</Link>
+        <Link href="/teacher/activities/industrialisation-partie-b"><Icon name="format"/>Partie B — Industrialisation</Link>
         <Link className="creator-create-link" href={classroomMode ? "/teacher/activities/new?mode=classroom" : "/teacher/activities/new"} aria-current="page"><span className="creator-create-icon"><Icon name="edit"/></span><span>{classroomMode ? "Mode classe" : "Créer une activité"}</span><span className="creator-create-arrow" aria-hidden="true">→</span></Link>
       </nav>
     </aside>

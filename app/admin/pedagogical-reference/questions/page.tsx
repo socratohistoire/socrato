@@ -67,7 +67,7 @@ export default async function PedagogicalQuestionBankPage({ searchParams }: { se
               <h3>{question.prompt}</h3>
               {question.answerOptions ? <ol className="question-answer-options">{question.answerOptions.map((option) => <li key={option.label}><strong>{option.label}</strong><span>{option.text}</span></li>)}</ol> : null}
               {question.format === "interactive-timeline" ? <Link href={`/eleve/activite/demo-activity-timeline?notion=${question.knowledgeHeadingId}&mode=teacher-assigned`}>Essayer la question interactive →</Link> : null}
-              {question.format === "interactive-association" ? <Link href="/eleve/activite/demo-activity-association?notion=acte-union&mode=teacher-assigned">Essayer la question interactive →</Link> : null}
+              {question.format === "interactive-association" ? <Link href={`/teacher/activities/new/student-preview?notion=${encodeURIComponent(question.knowledgeHeadingId)}&notions=${encodeURIComponent(question.knowledgeHeadingId)}&questionIds=${encodeURIComponent(question.id)}&title=${encodeURIComponent("Association d’éléments")}`}>Essayer la question interactive →</Link> : null}
               {question.causalChainInteraction ? <Link href="/preview/gouvernement-responsable-chaine-causale">Essayer la question interactive →</Link> : null}
               <footer><span>{question.status === "approved" ? `Approuvée · version ${question.review.approvedVersion}` : "Brouillon · à essayer et à approuver"}</span><strong>{question.scope === "transversal" ? "Transversale" : "Notionnelle"}</strong></footer>
             </article>)}</div> : <div className="question-category-empty">Aucune question dans cette catégorie pour le moment.</div>}

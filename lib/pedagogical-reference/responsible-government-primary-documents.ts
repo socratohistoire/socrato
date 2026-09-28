@@ -209,6 +209,32 @@ export const RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT = {
   approvedAt: null,
 } as const satisfies HistoricalDocumentRecord;
 
+export const RESPONSIBLE_GOVERNMENT_TORY_MOBILIZATION_DOCUMENT = {
+  schemaVersion: 1,
+  id: "GR-T-014",
+  title: "La mobilisation tory mène à l’émeute du 25 avril 1849",
+  kind: "other",
+  status: "ready-for-review",
+  periodIds: ["1840-1896"],
+  knowledgeHeadingIds: ["gouvernement-responsable"],
+  operationIds: ["causes_and_consequences", "causal_connections"],
+  historicalDate: "25 avril 1849",
+  creator: "Musée canadien de l’histoire",
+  holdingInstitution: "Musée canadien de l’histoire",
+  sourceUrl: "https://www.historymuseum.ca/teachers-zone/stories-of-confederation/road-to-responsible-government/stones-thrown-at-lord-elgin/",
+  sourceLocator: "Zone des enseignants, « Stones thrown at Lord Elgin », sections Essential et In-Depth, paragraphes sur l’opposition tory et les émeutes.",
+  assetUrl: "https://www.historymuseum.ca/teachers-zone/stories-of-confederation/road-to-responsible-government/stones-thrown-at-lord-elgin/",
+  rightsStatement: "Synthèse institutionnelle consultée en 2026; reformulation originale préparée pour Socrato, sans reproduction d’un texte protégé.",
+  transcription: "Les Tories dénoncent la loi d’indemnisation comme une récompense accordée aux rebelles et demandent au gouverneur Elgin de refuser de la sanctionner. Lorsqu’Elgin approuve la loi, le ressentiment tory alimente les rassemblements et les émeutes à Montréal. Une foule attaque sa voiture, envahit le Parlement et incendie l’édifice.",
+  accessibleDescription: "Notice historique expliquant la chaîne causale entre l’opposition tory à la loi d’indemnisation, la mobilisation de ses partisans et l’incendie du Parlement de Montréal.",
+  historicalContext: "La loi indemnise certaines pertes subies pendant les Rébellions de 1837-1838. Les Tories la présentent comme une récompense accordée aux rebelles. Après sa sanction par Elgin, leur mobilisation dégénère en émeute et des émeutiers incendient le Parlement.",
+  observationGuide: ["Repérer ce que les Tories reprochent à la loi.", "Identifier l’effet de la sanction sur leur mobilisation.", "Relier la manifestation, l’émeute et l’incendie sans attribuer le geste à tous les opposants."],
+  interpretationCautions: ["Il s’agit d’une synthèse historique institutionnelle, et non d’un témoignage produit en 1849.", "La source relie le ressentiment tory aux émeutes; elle ne permet pas d’affirmer que chaque Tory a participé à l’incendie.", "Distinguer l’opposition politique, la mobilisation des partisans et les gestes commis par les émeutiers."],
+  pedagogicalUses: ["Expliquer le lien causal entre la loi d’indemnisation et l’incendie du Parlement.", "Préciser le rôle de la mobilisation tory dans le déclenchement de l’émeute."],
+  version: "1.0",
+  approvedAt: null,
+} as const satisfies HistoricalDocumentRecord;
+
 export const RESPONSIBLE_GOVERNMENT_METCALFE_ELGIN_DOCUMENTS = [
   RESPONSIBLE_GOVERNMENT_ELGIN_MINISTRY_APPOINTMENTS_DOCUMENT,
   RESPONSIBLE_GOVERNMENT_ELGIN_GREY_MINISTRY_LETTER_DOCUMENT,
@@ -220,4 +246,5 @@ export const RESPONSIBLE_GOVERNMENT_METCALFE_ELGIN_DOCUMENTS = [
   RESPONSIBLE_GOVERNMENT_METCALFE_RESIGNATION_DOCUMENT,
   RESPONSIBLE_GOVERNMENT_ELGIN_NON_INTERVENTION_DOCUMENT,
   RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT,
+  RESPONSIBLE_GOVERNMENT_TORY_MOBILIZATION_DOCUMENT,
 ] as const;

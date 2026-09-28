@@ -1,13 +1,22 @@
 import type { ApprovedQuestion } from "./types.ts";
 import { ACTE_UNION_HISTORICAL_RECORD } from "./records/acte-union.ts";
 import { RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD } from "./records/responsible-government.ts";
+import { COLONIAL_ECONOMY_HISTORICAL_RECORD } from "./records/economie-coloniale.ts";
+import { INDIAN_AFFAIRS_HISTORICAL_RECORD } from "./records/affaires-indiennes.ts";
+import { BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD } from "./records/acte-amerique-nord-britannique.ts";
 import { ACTE_UNION_POLITICAL_STRUCTURE_DIAGRAM, ACTE_UNION_STUDENT_TIMELINE, RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS, RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE } from "./responsible-government-iconography.ts";
-import { ACTE_UNION_DEBT_COMPARISON_CHART, ACTE_UNION_POPULATION_COMPARISON_CHART } from "./historical-comparison-charts.ts";
+import { ACTE_UNION_DEBT_COMPARISON_CHART, ACTE_UNION_POPULATION_COMPARISON_CHART, COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART } from "./historical-comparison-charts.ts";
 import { ACTE_UNION_DOCUMENT_SOURCE_CATALOG } from "./acte-union-document-source-catalog.ts";
 import { ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT, ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT, ACTE_UNION_MAP_ADAPTATION_DRAFT, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT, ACTE_UNION_SPECIAL_COUNCIL_RESOLUTIONS_DOCUMENT, PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT, RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT, RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT } from "./historical-document-needs.ts";
 import { ACTE_UNION_DURHAM_ADVANCEMENT_ANGLICIZATION_PRESENTATION, ACTE_UNION_DURHAM_ANGLICIZATION_PRESENTATION, ACTE_UNION_DURHAM_CONTINUITIES_PRESENTATION, ACTE_UNION_DURHAM_DOCUMENT, ACTE_UNION_DURHAM_FINANCES_PRESENTATION, ACTE_UNION_DURHAM_RESPONSIBLE_GOVERNMENT_PRESENTATION, ACTE_UNION_DURHAM_UNION_PRESENTATION } from "./historical-document-presentations.ts";
-import { RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT, RESPONSIBLE_GOVERNMENT_DOUBLE_MAJORITY_DEBATE_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_GREY_MINISTRY_LETTER_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_MINISTRY_APPOINTMENTS_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_NON_INTERVENTION_DOCUMENT, RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT, RESPONSIBLE_GOVERNMENT_METCALFE_RESIGNATION_DOCUMENT, RESPONSIBLE_GOVERNMENT_MINISTRY_DEFEAT_1858_DOCUMENT, RESPONSIBLE_GOVERNMENT_SECTIONAL_DIFFICULTIES_1864_DOCUMENT } from "./responsible-government-primary-documents.ts";
+import { RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT, RESPONSIBLE_GOVERNMENT_DOUBLE_MAJORITY_DEBATE_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_GREY_MINISTRY_LETTER_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_MINISTRY_APPOINTMENTS_DOCUMENT, RESPONSIBLE_GOVERNMENT_ELGIN_NON_INTERVENTION_DOCUMENT, RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_SPEECH_DOCUMENT, RESPONSIBLE_GOVERNMENT_METCALFE_RESIGNATION_DOCUMENT, RESPONSIBLE_GOVERNMENT_MINISTRY_DEFEAT_1858_DOCUMENT, RESPONSIBLE_GOVERNMENT_SECTIONAL_DIFFICULTIES_1864_DOCUMENT, RESPONSIBLE_GOVERNMENT_TORY_MOBILIZATION_DOCUMENT } from "./responsible-government-primary-documents.ts";
 import { RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION } from "./responsible-government-electoral-law.ts";
+import { COLONIAL_ECONOMY_CANADA_CORN_LAW_DOCUMENT, COLONIAL_ECONOMY_COBDEN_CORN_LAWS_REPEAL_DOCUMENT, COLONIAL_ECONOMY_CORN_LAWS_REPEAL_CONSEQUENCE_DOCUMENT, COLONIAL_ECONOMY_QUEBEC_BOARD_OF_TRADE_CORN_LAWS_DOCUMENT, COLONIAL_ECONOMY_RECIPROCITY_TRADE_MAP_DOCUMENT, COLONIAL_ECONOMY_RECIPROCITY_TREATY_DOCUMENT, COLONIAL_ECONOMY_SEWARD_RECIPROCITY_TENSIONS_DOCUMENT, COLONIAL_ECONOMY_UNITED_STATES_MARKET_NEGOTIATION_DOCUMENT } from "./colonial-economy-primary-documents.ts";
+import { FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT, FEDERAL_PROVINCIAL_RELATIONS_RED_RIVER_DECLARATION_DOCUMENT, FEDERAL_PROVINCIAL_RELATIONS_RIEL_TRIAL_SPEECH_DOCUMENT } from "./federal-provincial-relations-primary-documents.ts";
+import { INDIAN_AFFAIRS_BAGOT_EDUCATION_DOCUMENT, INDIAN_AFFAIRS_FEDERAL_TUTELAGE_CITIZENSHIP_DOCUMENT, INDIAN_AFFAIRS_ONONDAGA_CHIEFS_ALLIANCE_PETITION_DOCUMENT, INDIAN_AFFAIRS_INDIAN_ACT_DOCUMENT, INDIAN_AFFAIRS_INDIAN_ACT_STATUS_DOCUMENT, INDIAN_AFFAIRS_RESERVES_LAWS_COMBINED_DOCUMENT, INDIAN_AFFAIRS_RYERSON_INDUSTRIAL_SCHOOLS_DOCUMENT, INDIAN_AFFAIRS_SCHOOL_ENROLMENT_TABLE_DOCUMENT } from "./indian-affairs-primary-documents.ts";
+import { INDIAN_AFFAIRS_CARCROSS_NIGHTLY_PRAYERS_DOCUMENT, INDIAN_AFFAIRS_MANIWAKI_RESERVE_PLAN_DOCUMENT, INDIAN_AFFAIRS_QUAPPELLE_FAMILIES_DOCUMENT, INDIAN_AFFAIRS_QUEBEC_RESERVES_STATUS_MAP_DOCUMENT, INDIAN_AFFAIRS_RED_DEER_RELIGIOUS_INSTRUCTION_DOCUMENT, INDIAN_AFFAIRS_THOMAS_MOORE_DOCUMENTS } from "./indian-affairs-iconography.ts";
+import { BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS } from "./british-north-america-act-maps.ts";
+import { BRITISH_NORTH_AMERICA_AMERICAN_THREAT_DOCUMENTS, BRITISH_NORTH_AMERICA_COALITION_CAUSAL_DOCUMENTS, BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS, BRITISH_NORTH_AMERICA_INSULAR_COLONIES_NON_ADHESION_DOCUMENT, BRITISH_NORTH_AMERICA_INTERCOLONIAL_CAUSE_CONSEQUENCE_DOCUMENTS, BRITISH_NORTH_AMERICA_RAILWAY_CONDITION_DOCUMENTS } from "./british-north-america-confederation-documents.ts";
 
 const PILOT_SOURCE_IDS = ["lower-canada-92-resolutions-1834-primary", "uk-russell-resolutions-1837-primary"] as const;
 const pilotSources = [...ACTE_UNION_HISTORICAL_RECORD.sourceCatalog.filter(({ id }) => PILOT_SOURCE_IDS.includes(id as typeof PILOT_SOURCE_IDS[number])), ...ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT.id}`)];
@@ -68,10 +77,77 @@ const parliamentFireSources = [...responsibleFunctioningSources, ...ACTE_UNION_D
   url: parliamentFireDocument.sourceUrl, locator: parliamentFireDocument.sourceLocator,
   rightsNote: parliamentFireDocument.rightsStatement, verificationStatus: "verified" as const,
 }];
-const rebellionLossesConsequencesDocumentIds = [RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.id, manFiredParliamentCartoon.id, hereWeGoCartoon.id];
+const rebellionLossesConsequencesDocumentIds = [RESPONSIBLE_GOVERNMENT_CANADIEN_PARLIAMENT_FIRE_DOCUMENT.id, manFiredParliamentCartoon.id, RESPONSIBLE_GOVERNMENT_TORY_MOBILIZATION_DOCUMENT.id];
 const rebellionLossesConsequencesSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => rebellionLossesConsequencesDocumentIds.some((documentId) => id === `document-source:${documentId}`));
 const responsibleGovernmentReadyReview = { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null } as const;
 const languageArticleSources = [...officialActSource, ...ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT.id}`)];
+const colonialEconomyComparisonDocumentIds = [COLONIAL_ECONOMY_CANADA_CORN_LAW_DOCUMENT.id, COLONIAL_ECONOMY_RECIPROCITY_TREATY_DOCUMENT.id];
+const colonialEconomyComparisonSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => colonialEconomyComparisonDocumentIds.some((documentId) => id === `document-source:${documentId}`));
+const colonialEconomyCornLawSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${COLONIAL_ECONOMY_CANADA_CORN_LAW_DOCUMENT.id}`);
+const colonialEconomyReciprocitySources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${COLONIAL_ECONOMY_RECIPROCITY_TREATY_DOCUMENT.id}`);
+const colonialEconomyReciprocityMapSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${COLONIAL_ECONOMY_RECIPROCITY_TRADE_MAP_DOCUMENT.id}`);
+const colonialEconomyConceptAssociationSources = COLONIAL_ECONOMY_HISTORICAL_RECORD.sourceCatalog.filter(({ id }) => id === "pfeq-hqc-2017" || id === "us-statutes-reciprocity-1854" || id === "statcan-yearbook-1894-reciprocity" || id === "statcan-yearbook-1927-trade");
+const colonialEconomyCornLawsConsequenceDocumentIds = [COLONIAL_ECONOMY_CORN_LAWS_REPEAL_CONSEQUENCE_DOCUMENT.id, COLONIAL_ECONOMY_UNITED_STATES_MARKET_NEGOTIATION_DOCUMENT.id];
+const colonialEconomyCornLawsRepealSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => colonialEconomyCornLawsConsequenceDocumentIds.some((documentId) => id === `document-source:${documentId}`));
+const colonialEconomySewardReciprocitySources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${COLONIAL_ECONOMY_SEWARD_RECIPROCITY_TENSIONS_DOCUMENT.id}`);
+const colonialEconomyExportChartSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART.id}`);
+const colonialEconomyCornLawsViewpointDocumentIds = [COLONIAL_ECONOMY_COBDEN_CORN_LAWS_REPEAL_DOCUMENT.id, COLONIAL_ECONOMY_QUEBEC_BOARD_OF_TRADE_CORN_LAWS_DOCUMENT.id];
+const colonialEconomyCornLawsViewpointSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => colonialEconomyCornLawsViewpointDocumentIds.some((documentId) => id === `document-source:${documentId}`));
+const indianAffairsBagotConsequenceDocuments = [INDIAN_AFFAIRS_BAGOT_EDUCATION_DOCUMENT, INDIAN_AFFAIRS_RYERSON_INDUSTRIAL_SCHOOLS_DOCUMENT];
+const indianAffairsBagotConsequenceSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => indianAffairsBagotConsequenceDocuments.some((document) => id === `document-source:${document.id}`));
+const indianAffairsThomasMooreSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${INDIAN_AFFAIRS_THOMAS_MOORE_DOCUMENTS[0].id}`);
+const indianAffairsQuAppelleSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${INDIAN_AFFAIRS_QUAPPELLE_FAMILIES_DOCUMENT.id}`);
+const indianAffairsChristianizationDocuments = [INDIAN_AFFAIRS_RED_DEER_RELIGIOUS_INSTRUCTION_DOCUMENT, INDIAN_AFFAIRS_CARCROSS_NIGHTLY_PRAYERS_DOCUMENT];
+const indianAffairsChristianizationSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => indianAffairsChristianizationDocuments.some((document) => id === `document-source:${document.id}`));
+const indianAffairsIndianActControlDocuments = [INDIAN_AFFAIRS_INDIAN_ACT_DOCUMENT, INDIAN_AFFAIRS_INDIAN_ACT_STATUS_DOCUMENT];
+const indianAffairsIndianActControlSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => indianAffairsIndianActControlDocuments.some((document) => id === `document-source:${document.id}`));
+const indianAffairsReserveManagementDocuments = [INDIAN_AFFAIRS_RESERVES_LAWS_COMBINED_DOCUMENT, INDIAN_AFFAIRS_MANIWAKI_RESERVE_PLAN_DOCUMENT];
+const indianAffairsReserveManagementSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => indianAffairsReserveManagementDocuments.some((document) => id === `document-source:${document.id}`));
+const indianAffairsSchoolEnrolmentSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => id === `document-source:${INDIAN_AFFAIRS_SCHOOL_ENROLMENT_TABLE_DOCUMENT.id}`);
+const indianAffairsStateRelationsDocumentIds = [INDIAN_AFFAIRS_FEDERAL_TUTELAGE_CITIZENSHIP_DOCUMENT.id, INDIAN_AFFAIRS_ONONDAGA_CHIEFS_ALLIANCE_PETITION_DOCUMENT.id];
+const indianAffairsStateRelationsSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => indianAffairsStateRelationsDocumentIds.some((documentId) => id === `document-source:${documentId}`));
+const indianAffairsReserveExpansionDocuments = [INDIAN_AFFAIRS_QUEBEC_RESERVES_STATUS_MAP_DOCUMENT];
+const indianAffairsReserveExpansionSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => indianAffairsReserveExpansionDocuments.some((document) => id === `document-source:${document.id}`));
+const federalProvincialMetisDocuments = [FEDERAL_PROVINCIAL_RELATIONS_RED_RIVER_DECLARATION_DOCUMENT, FEDERAL_PROVINCIAL_RELATIONS_RIEL_TRIAL_SPEECH_DOCUMENT];
+const federalProvincialMetisSources = federalProvincialMetisDocuments.map((document) => ({
+  id: `document-source:${document.id}`,
+  kind: "museum-or-archive" as const,
+  title: document.title,
+  creator: document.creator,
+  publisher: document.holdingInstitution,
+  publicationYear: document.id === "RFP-T-001" ? 1869 : 1885,
+  url: document.sourceUrl,
+  locator: document.sourceLocator,
+  rightsNote: document.rightsStatement,
+  verificationStatus: "verified" as const,
+}));
+const federalProvincialCompetencySources = [{
+  id: `document-source:${FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT.id}`,
+  kind: "government" as const,
+  title: FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT.title,
+  creator: FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT.creator,
+  publisher: FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT.holdingInstitution,
+  publicationYear: 1867,
+  url: FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT.sourceUrl,
+  locator: FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT.sourceLocator,
+  rightsNote: FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT.rightsStatement,
+  verificationStatus: "verified" as const,
+}];
+const britishNorthAmericaAct1867To1873Maps = BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS.filter(({ id }) => id === "AANB-M-001" || id === "AANB-M-002");
+const britishNorthAmericaAct1867To1873Sources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => britishNorthAmericaAct1867To1873Maps.some((document) => id === `document-source:${document.id}`));
+const britishNorthAmericaActTerritorySources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS.some((document) => id === `document-source:${document.id}`));
+const britishNorthAmericaActExpansionSources = BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD.sourceCatalog.filter(({ id }) => id === "aanb-justice-constitution" || id === "aanb-patrimoine-frontieres");
+const britishNorthAmericaActConferenceSources = BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD.sourceCatalog.filter(({ id }) => id === "aanb-parcs-conferences" || id === "aanb-dbc-conferences");
+const britishNorthAmericaActCompetencySources = BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD.sourceCatalog.filter(({ id }) => id === "aanb-justice-constitution" || id === "aanb-justice-art91" || id === "aanb-justice-art92");
+const britishNorthAmericaActConfederationSources = ACTE_UNION_DOCUMENT_SOURCE_CATALOG.filter(({ id }) => BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS.some((document) => id === `document-source:${document.id}`));
+const britishNorthAmericaActViewpointDocuments = BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS.filter(({ id }) => id === "AANB-T-001" || id === "AANB-T-002" || id === "AANB-T-003");
+const britishNorthAmericaActViewpointSources = britishNorthAmericaActConfederationSources.filter(({ id }) => britishNorthAmericaActViewpointDocuments.some((document) => id === `document-source:${document.id}`));
+const britishNorthAmericaActRailwayConditionSources = britishNorthAmericaActConfederationSources.filter(({ id }) => BRITISH_NORTH_AMERICA_RAILWAY_CONDITION_DOCUMENTS.some((document) => id === `document-source:${document.id}`));
+const britishNorthAmericaActCoalitionCausalSources = britishNorthAmericaActConfederationSources.filter(({ id }) => BRITISH_NORTH_AMERICA_COALITION_CAUSAL_DOCUMENTS.some((document) => id === `document-source:${document.id}`));
+const britishNorthAmericaActIntercolonialSources = britishNorthAmericaActConfederationSources.filter(({ id }) => BRITISH_NORTH_AMERICA_INTERCOLONIAL_CAUSE_CONSEQUENCE_DOCUMENTS.some((document) => id === `document-source:${document.id}`));
+const britishNorthAmericaActAmericanThreatSources = britishNorthAmericaActConfederationSources.filter(({ id }) => BRITISH_NORTH_AMERICA_AMERICAN_THREAT_DOCUMENTS.some((document) => id === `document-source:${document.id}`));
+const britishNorthAmericaActTerritorialFearSources = britishNorthAmericaActConfederationSources.filter(({ id }) => id === "document-source:AANB-I-001");
+const britishNorthAmericaActConferenceParticipationSources = britishNorthAmericaActConfederationSources.filter(({ id }) => id === `document-source:${BRITISH_NORTH_AMERICA_INSULAR_COLONIES_NON_ADHESION_DOCUMENT.id}`);
 const timelineSources = ACTE_UNION_STUDENT_TIMELINE.entries.map((entry, index) => ({
   id: `acte-union-timeline-source-${index + 1}`,
   kind: index === 0 ? "museum-or-archive" as const : index === 2 ? "government" as const : "other" as const,
@@ -826,7 +902,7 @@ export const RESPONSIBLE_GOVERNMENT_COALITION_SHORT_ANSWER_QUESTION = {
   format: "short-answer",
   prompt: "Explique une contrainte qui a poussé Baldwin et La Fontaine à créer une alliance politique en 1841.",
   instruction: "Appuie ta réponse sur le schéma de l’Assemblée, l’adresse de La Fontaine et la lettre de Baldwin.",
-  expectedAnswer: "La représentation égale accorde 42 députés à chaque section dans une même Assemblée. Pour former une majorité capable de gouverner et de faire avancer le gouvernement responsable, les réformistes du Canada-Est et du Canada-Ouest doivent collaborer. La Fontaine affirme que leur unité d’action est nécessaire; Baldwin concrétise cette stratégie en favorisant l’élection de La Fontaine dans le Haut-Canada pour consolider l’union des réformistes.",
+  expectedAnswer: "La représentation égale accorde 42 députés à chaque section dans une même Assemblée. Les réformistes du Canada-Est ou du Canada-Ouest ne peuvent donc pas former seuls une majorité suffisamment forte. Baldwin et La Fontaine doivent unir leurs appuis afin de former une majorité capable de gouverner et de faire avancer le gouvernement responsable. La Fontaine affirme que l’unité d’action est nécessaire, tandis que Baldwin présente leur collaboration comme un moyen de cimenter l’union entre les réformistes des deux sections.",
   historicalDocumentIds: coalitionShortAnswerDocumentIds,
   commonErrors: ["Présenter LaFontaine et Baldwin comme des représentants de la même section.", "Affirmer que l’Acte d’Union instaure immédiatement le gouvernement responsable.", "Nommer l’alliance sans expliquer son lien avec la législature commune."],
   distractors: [],
@@ -840,9 +916,9 @@ export const RESPONSIBLE_GOVERNMENT_COALITION_SHORT_ANSWER_QUESTION = {
 export const RESPONSIBLE_GOVERNMENT_TIMELINE_SHORT_ANSWER_QUESTION = {
   schemaVersion: 1, id: "question:gouvernement-responsable:timeline-001", scope: "notional", knowledgeHeadingId: "gouvernement-responsable", relatedKnowledgeHeadingIds: ["gouvernement-responsable"], referenceCardId: "reference-card:gouvernement-responsable", historicalRecordId: "historical-record:gouvernement-responsable", status: "ready-for-review", format: "interactive-timeline",
   prompt: "Place en ordre chronologique les événements suivants.",
-  instruction: "Place les sept cartes de gauche à droite, de 1841 à 1864, en distinguant l’instabilité ministérielle de la Grande Coalition qui cherche à résoudre l’impasse.",
-  expectedAnswer: "1841 — entrée en vigueur de l’Acte d’Union et développement de l’alliance La Fontaine–Baldwin; 1842-1843 — formation du ministère réformiste puis crise Metcalfe et démission des ministres; 1848 — obtention du gouvernement responsable avec Elgin; 1849 — sanction de la loi d’indemnisation et mise à l’épreuve du nouveau principe; 1854-1864 — instabilité ministérielle; 1864 — Grande Coalition pour sortir de l’impasse.",
-  historicalDocumentIds: [RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.id], commonErrors: ["Commencer avant 1841 plutôt qu’avec l’entrée en vigueur de l’Acte d’Union.", "Placer la crise Metcalfe après 1848.", "Confondre la Grande Coalition de 1864 avec la Confédération de 1867."], distractors: [], operationId: "time_and_space", sourceIds: responsibleTimelineSources.map(({ id }) => id), sourceCatalog: responsibleTimelineSources,
+  instruction: "",
+  expectedAnswer: "1841 — entrée en vigueur de l’Acte d’Union; 1841-1842 — développement de l’alliance La Fontaine–Baldwin; 1848 — obtention du gouvernement responsable avec Elgin; 1849 — sanction de la loi d’indemnisation et mise à l’épreuve du nouveau principe; 1854-1864 — instabilité ministérielle; 1864 — Grande Coalition pour sortir de l’impasse.",
+  historicalDocumentIds: [RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.id], commonErrors: ["Commencer avant 1841 plutôt qu’avec l’entrée en vigueur de l’Acte d’Union.", "Confondre la sanction de la loi d’indemnisation avec l’incendie du Parlement qui suit.", "Confondre la Grande Coalition de 1864 avec la Confédération de 1867."], distractors: [], operationId: "time_and_space", sourceIds: responsibleTimelineSources.map(({ id }) => id), sourceCatalog: responsibleTimelineSources,
   rationale: "La question vérifie la maîtrise de la séquence complète de la notion, de 1841 à 1864, avant que l’élève n’explique les relations entre les événements.", review: responsibleGovernmentReadyReview,
   timelineInteraction: {
     documentId: RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.id,
@@ -862,15 +938,15 @@ export const RESPONSIBLE_GOVERNMENT_TIMELINE_CAUSAL_DEVELOPMENT_QUESTION = {
   status: "ready-for-review",
   format: "development-150",
   prompt: "À l’aide de la ligne du temps, explique comment la lutte pour le gouvernement responsable entraîne une succession de transformations et de crises politiques qui mène à la formation de la Grande Coalition en 1864 (150 mots).",
-  instruction: "Rédige une réponse d’environ 150 mots. Établis un lien entre chacune des sept étapes : l’entrée en vigueur de l’Acte d’Union, l’alliance La Fontaine–Baldwin, la crise Metcalfe, l’obtention du gouvernement responsable, la loi d’indemnisation et l’incendie du Parlement, l’instabilité ministérielle et la Grande Coalition.",
-  expectedAnswer: "L’entrée en vigueur de l’Acte d’Union en 1841 réunit le Canada-Est et le Canada-Ouest dans une même législature sans instaurer le gouvernement responsable. Pour former une majorité et faire avancer leurs réformes, La Fontaine et Baldwin développent alors une alliance. En 1843, la crise Metcalfe et la démission des ministres montrent qu’un ministère ne peut être responsable devant l’Assemblée si le gouverneur agit sans suivre ses avis. Les réformistes poursuivent leur lutte et obtiennent une majorité. En 1848, Elgin appelle La Fontaine et Baldwin à former un ministère soutenu par les élus, ce qui marque l’obtention du gouvernement responsable. En 1849, Elgin respecte ce principe en sanctionnant la loi d’indemnisation malgré l’opposition, qui réagit par des émeutes et l’incendie du Parlement. De 1854 à 1864, les divisions entre les deux sections rendent toutefois les coalitions fragiles et provoquent une instabilité ministérielle. La Grande Coalition est donc formée en 1864 pour sortir de cette impasse et rechercher une nouvelle solution constitutionnelle.",
+  instruction: "Rédige une réponse d’environ 150 mots. Établis un lien entre chacune des six étapes : l’entrée en vigueur de l’Acte d’Union, l’alliance La Fontaine–Baldwin, l’obtention du gouvernement responsable, la sanction de la loi d’indemnisation, l’instabilité ministérielle et la Grande Coalition.",
+  expectedAnswer: "L’entrée en vigueur de l’Acte d’Union en 1841 réunit le Canada-Est et le Canada-Ouest dans une même législature sans instaurer le gouvernement responsable. Pour former une majorité et faire avancer leurs réformes, La Fontaine et Baldwin développent alors une alliance. Les réformistes obtiennent une majorité et, en 1848, Elgin les appelle à former un ministère soutenu par les élus, ce qui marque l’obtention du gouvernement responsable. En 1849, Elgin respecte ce principe en sanctionnant la loi d’indemnisation malgré l’opposition, qui réagit par des émeutes et l’incendie du Parlement. De 1854 à 1864, les divisions entre les deux sections rendent toutefois les coalitions fragiles et provoquent une instabilité ministérielle. La Grande Coalition est donc formée en 1864 pour sortir de cette impasse et rechercher une nouvelle solution constitutionnelle.",
   historicalDocumentIds: [RESPONSIBLE_GOVERNMENT_STUDENT_TIMELINE.id],
   commonErrors: ["Énumérer les événements sans expliquer les liens qui les unissent.", "Affirmer que l’Acte d’Union accorde immédiatement le gouvernement responsable.", "Présenter la Grande Coalition comme une conséquence directe de l’incendie du Parlement.", "Confondre la Grande Coalition de 1864 avec la Confédération de 1867."],
   distractors: [],
   operationId: "causal_connections",
   sourceIds: responsibleTimelineSources.map(({ id }) => id),
   sourceCatalog: responsibleTimelineSources,
-  rationale: "La réponse développée permet de vérifier une chaîne causale nuancée reliant les sept repères de la ligne du temps, de la lutte pour le gouvernement responsable à la recherche d’une sortie de l’impasse politique en 1864.",
+  rationale: "La réponse développée permet de vérifier une chaîne causale nuancée reliant les six repères de la ligne du temps, de la lutte pour le gouvernement responsable à la recherche d’une sortie de l’impasse politique en 1864.",
   review: responsibleGovernmentReadyReview,
 } as const satisfies ApprovedQuestion;
 
@@ -892,11 +968,11 @@ export const RESPONSIBLE_GOVERNMENT_CAUSAL_CHAIN_QUESTION = {
 
 export const RESPONSIBLE_GOVERNMENT_FUNCTIONING_SHORT_ANSWER_QUESTION = {
   schemaVersion: 1, id: "question:gouvernement-responsable:short-answer-003", scope: "notional", knowledgeHeadingId: "gouvernement-responsable", relatedKnowledgeHeadingIds: ["gouvernement-responsable"], referenceCardId: "reference-card:gouvernement-responsable", historicalRecordId: "historical-record:gouvernement-responsable", status: "ready-for-review", format: "short-answer",
-  prompt: "Comment fonctionne le gouvernement responsable? Explique les liens entre l’Assemblée, le ministère et le gouverneur.",
-  instruction: "Réponds en reliant les trois institutions et en utilisant les expressions confiance parlementaire, ministère et gouverneur.",
-  expectedAnswer: "L’Assemblée élue accorde ou retire sa confiance au ministère. Le ministère dirige les affaires intérieures tant qu’il conserve l’appui de la majorité. Le gouverneur nomme officiellement les ministres, mais choisit normalement des personnes capables d’obtenir cette confiance et suit leurs avis. Si le ministère perd un vote de confiance, il doit normalement démissionner ou demander des élections.",
+  prompt: "Explique comment le parti majoritaire, le Conseil exécutif, l’Assemblée et le gouverneur participent au fonctionnement du gouvernement responsable.",
+  instruction: "Relie les quatre éléments dans une même explication.",
+  expectedAnswer: "Le parti majoritaire à l’Assemblée forme le gouvernement : son chef choisit les ministres qui composent le Conseil exécutif. Le gouverneur nomme officiellement ces ministres. Le Conseil exécutif met les lois en application et doit conserver la confiance de la majorité de l’Assemblée. S’il perd cette confiance, il démissionne ou demande au gouverneur de dissoudre le Parlement et de déclencher des élections.",
   historicalDocumentIds: ["GR-D-002"], commonErrors: ["Affirmer que l’Assemblée nomme directement les ministres.", "Présenter le gouverneur comme dépourvu de toute fonction.", "Oublier les conséquences d’une perte de confiance."], distractors: [], operationId: "relationships_between_facts", sourceIds: responsibleFunctioningSources.map(({ id }) => id), sourceCatalog: responsibleFunctioningSources,
-  rationale: "La question oblige l’élève à mettre en relation l’Assemblée, le ministère et le gouverneur plutôt qu’à réciter une définition isolée.", review: responsibleGovernmentReadyReview,
+  rationale: "La question oblige l’élève à mettre en relation l’Assemblée, le parti majoritaire, le Conseil exécutif et le gouverneur plutôt qu’à réciter une définition isolée.", review: responsibleGovernmentReadyReview,
 } as const satisfies ApprovedQuestion;
 
 export const RESPONSIBLE_GOVERNMENT_LIMITED_POLITICAL_PARTICIPATION_QUESTION = {
@@ -1089,15 +1165,15 @@ export const RESPONSIBLE_GOVERNMENT_REBELLION_LOSSES_CONSEQUENCES_DOCUMENT_QUEST
   status: "ready-for-review",
   format: "document-interpretation",
   prompt: "Quelles ont été les conséquences de l’adoption de la loi d’indemnisation en 1849?",
-  instruction: "À l’aide des trois documents, relève les principales conséquences immédiates et politiques de cette décision.",
-  expectedAnswer: "L’adoption et la sanction de la loi d’indemnisation provoquent une forte réaction des opposants : lord Elgin est attaqué, une foule envahit et incendie le Parlement de Montréal, et La Fontaine est accusé de façon satirique d’être responsable de la crise. À la suite des troubles, Montréal perd son rôle de capitale et le gouvernement se déplace vers Toronto.",
+  instruction: "Explique la chaîne causale entre la loi d’indemnisation, la colère et la mobilisation des Tories, puis l’incendie du Parlement. La caricature peut servir d’appui, mais tu n’es pas obligé de l’utiliser dans ta réponse.",
+  expectedAnswer: "La sanction de la loi d’indemnisation provoque la colère des Tories, qui la présentent comme une récompense accordée aux rebelles. Des dirigeants et des journaux tories mobilisent leurs partisans. La manifestation dégénère alors en émeute : des émeutiers envahissent et incendient le Parlement de Montréal.",
   historicalDocumentIds: rebellionLossesConsequencesDocumentIds,
-  commonErrors: ["Affirmer que La Fontaine a matériellement incendié le Parlement.", "Présenter l’incendie comme un accident.", "Oublier le déplacement du gouvernement hors de Montréal.", "Décrire les caricatures sans expliquer les conséquences de la loi."],
+  commonErrors: ["Attribuer l’incendie à tous les Tories sans distinguer l’opposition politique, la mobilisation et le geste des émeutiers.", "Présenter l’incendie comme un accident.", "Décrire seulement la caricature sans établir la chaîne causale."],
   distractors: [],
   operationId: "causes_and_consequences",
   sourceIds: rebellionLossesConsequencesSources.map(({ id }) => id),
   sourceCatalog: rebellionLossesConsequencesSources,
-  rationale: "Les trois sources permettent de distinguer les violences immédiates, l’accusation partisane dirigée contre La Fontaine et la conséquence politique durable du déplacement du gouvernement.",
+  rationale: "Les documents permettent d’établir la chaîne causale entre la sanction de la loi, la mobilisation tory et l’incendie; la caricature demeure un support iconographique facultatif.",
   review: responsibleGovernmentReadyReview,
 } as const satisfies ApprovedQuestion;
 
@@ -1205,9 +1281,912 @@ export const ACTE_UNION_LANGUAGE_SCOPE_SHORT_ANSWER_QUESTION = {
   historicalDocumentIds: [ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT.id], commonErrors: ["Affirmer que le français devient illégal dans toute la Province du Canada.", "Affirmer que les traductions françaises possèdent la même valeur que les originaux anglais.", "Décrire seulement la règle linguistique sans expliquer son impact sur la reconnaissance du français ou sur les Canadiens français.", "Exiger l’énumération des catégories de documents après que l’élève a correctement expliqué l’impact essentiel.", "Confondre la disposition de 1840 avec son abrogation en 1848."], distractors: [], operationId: "causes_and_consequences", sourceIds: languageArticleSources.map(({ id }) => id), sourceCatalog: languageArticleSources, rationale: "La question amène l’élève à expliquer l’impact politique et institutionnel de l’exclusivité de l’anglais dans les documents officiels, tout en tenant compte des traductions françaises permises sans valeur d’original officiel.", review: { documented: true, historicallyVerified: true, pedagogicallyVerified: true, biasAndLanguageReviewed: true, approvedBy: "David Hinse", approvedVersion: "1.1", approvedAt: "2026-08-10T00:00:00.000-04:00" },
 } as const satisfies ApprovedQuestion;
 
+export const COLONIAL_ECONOMY_MARKETS_CHANGE_CONTINUITY_QUESTION = {
+  schemaVersion: 1,
+  id: "question:economie-coloniale:document-interpretation-001",
+  scope: "notional",
+  knowledgeHeadingId: "economie-coloniale",
+  relatedKnowledgeHeadingIds: ["economie-coloniale"],
+  referenceCardId: "reference-card:economie-coloniale",
+  historicalRecordId: COLONIAL_ECONOMY_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Compare les échanges commerciaux de la Province du Canada avant 1846 et pendant le traité de réciprocité. Indique un changement et un élément de continuité.",
+  instruction: "Repère d’abord le principal marché et les produits mentionnés dans chaque document.",
+  expectedAnswer: "Avant 1846, la Province du Canada vend surtout ses produits au Royaume-Uni grâce aux tarifs préférentiels. Avec le traité de réciprocité, elle peut vendre plusieurs produits aux États-Unis sans droits de douane. Le marché principal change, mais le Canada continue surtout d’exporter des ressources naturelles et des produits agricoles.",
+  historicalDocumentIds: colonialEconomyComparisonDocumentIds,
+  commonErrors: ["Affirmer que la Province du Canada cesse complètement de commercer avec le Royaume-Uni après 1846.", "Présenter le traité comme un libre-échange complet couvrant tous les produits.", "Nommer seulement un changement sans relever la continuité des produits agricoles et des ressources naturelles."],
+  distractors: [],
+  operationId: "changes_and_continuities",
+  sourceIds: colonialEconomyComparisonSources.map(({ id }) => id),
+  sourceCatalog: colonialEconomyComparisonSources,
+  rationale: "La comparaison des deux textes officiels fait ressortir le passage d’un débouché britannique préférentiel à un accès réciproque au marché américain, tout en montrant la continuité des exportations de produits agricoles et de ressources naturelles.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const COLONIAL_ECONOMY_CORN_LAWS_MULTIPLE_CHOICE_QUESTION = {
+  schemaVersion: 1,
+  id: "question:economie-coloniale:multiple-choice-001",
+  scope: "notional",
+  knowledgeHeadingId: "economie-coloniale",
+  relatedKnowledgeHeadingIds: ["economie-coloniale"],
+  referenceCardId: "reference-card:economie-coloniale",
+  historicalRecordId: COLONIAL_ECONOMY_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "multiple-choice",
+  prompt: "Dans le contexte de l’économie coloniale, que sont les Corn Laws?",
+  instruction: "Choisis l’affirmation qui décrit correctement leur fonctionnement et leur effet sur le commerce colonial.",
+  expectedAnswer: "B. Des lois britanniques qui imposent des droits de douane sur les céréales étrangères et accordent un avantage aux céréales provenant des colonies britanniques.",
+  historicalDocumentIds: [COLONIAL_ECONOMY_CANADA_CORN_LAW_DOCUMENT.id],
+  commonErrors: ["Présenter les Corn Laws comme une entente commerciale avec les États-Unis.", "Confondre la préférence tarifaire avec une interdiction complète d’exporter vers d’autres marchés.", "Réduire les Corn Laws à des règles de transport maritime."],
+  distractors: ["Des lois canadiennes qui permettent aux produits agricoles américains d’entrer dans la Province du Canada sans droits de douane.", "Des lois qui réservent le transport du blé entre la Province du Canada et le Royaume-Uni aux navires construits dans les colonies.", "Des lois britanniques qui interdisent à la Province du Canada d’exporter son blé vers un autre pays que le Royaume-Uni."],
+  answerOptions: [
+    { label: "A", text: "Des lois canadiennes qui permettent aux produits agricoles américains d’entrer dans la Province du Canada sans droits de douane.", correct: false },
+    { label: "B", text: "Des lois britanniques qui imposent des droits de douane sur les céréales étrangères et accordent un avantage aux céréales provenant des colonies britanniques.", correct: true },
+    { label: "C", text: "Des lois qui réservent le transport du blé entre la Province du Canada et le Royaume-Uni aux navires construits dans les colonies.", correct: false },
+    { label: "D", text: "Des lois britanniques qui interdisent à la Province du Canada d’exporter son blé vers un autre pays que le Royaume-Uni.", correct: false },
+  ],
+  operationId: "establish_facts",
+  sourceIds: colonialEconomyCornLawSources.map(({ id }) => id),
+  sourceCatalog: colonialEconomyCornLawSources,
+  rationale: "La question vérifie la compréhension de la préférence tarifaire britannique en distinguant les Corn Laws du traité de réciprocité, des lois de navigation et d’une interdiction commerciale complète.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const COLONIAL_ECONOMY_RECIPROCITY_MULTIPLE_CHOICE_QUESTION = {
+  schemaVersion: 1,
+  id: "question:economie-coloniale:multiple-choice-002",
+  scope: "notional",
+  knowledgeHeadingId: "economie-coloniale",
+  relatedKnowledgeHeadingIds: ["economie-coloniale"],
+  referenceCardId: "reference-card:economie-coloniale",
+  historicalRecordId: COLONIAL_ECONOMY_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "multiple-choice",
+  prompt: "Qu’est-ce que le traité de réciprocité signé en 1854?",
+  instruction: "Choisis l’affirmation qui décrit correctement les partenaires et les produits visés par l’entente.",
+  expectedAnswer: "C. Une entente entre les États-Unis et les colonies britanniques d’Amérique du Nord qui permet l’échange sans droits de douane de plusieurs produits naturels.",
+  historicalDocumentIds: [COLONIAL_ECONOMY_RECIPROCITY_TREATY_DOCUMENT.id],
+  commonErrors: ["Présenter le traité comme une préférence accordée uniquement sur le marché britannique.", "Décrire une ouverture commerciale à sens unique en faveur des États-Unis.", "Affirmer que l’entente abolit les tarifs sur tous les produits, y compris les produits manufacturés."],
+  distractors: ["Une entente qui réserve le marché britannique aux ressources naturelles de la Province du Canada en échange de tarifs préférentiels.", "Une entente qui permet aux produits américains d’entrer librement dans les colonies britanniques, mais qui maintient les droits de douane sur les produits coloniaux vendus aux États-Unis.", "Une entente qui abolit les droits de douane sur tous les produits agricoles et manufacturés échangés entre le Royaume-Uni, ses colonies et les États-Unis."],
+  answerOptions: [
+    { label: "A", text: "Une entente qui réserve le marché britannique aux ressources naturelles de la Province du Canada en échange de tarifs préférentiels.", correct: false },
+    { label: "B", text: "Une entente qui permet aux produits américains d’entrer librement dans les colonies britanniques, mais qui maintient les droits de douane sur les produits coloniaux vendus aux États-Unis.", correct: false },
+    { label: "C", text: "Une entente entre les États-Unis et les colonies britanniques d’Amérique du Nord qui permet l’échange sans droits de douane de plusieurs produits naturels.", correct: true },
+    { label: "D", text: "Une entente qui abolit les droits de douane sur tous les produits agricoles et manufacturés échangés entre le Royaume-Uni, ses colonies et les États-Unis.", correct: false },
+  ],
+  operationId: "establish_facts",
+  sourceIds: colonialEconomyReciprocitySources.map(({ id }) => id),
+  sourceCatalog: colonialEconomyReciprocitySources,
+  rationale: "La question distingue la réciprocité sur plusieurs produits naturels d’une préférence britannique, d’un avantage unilatéral et d’un libre-échange général incluant les produits manufacturés.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const COLONIAL_ECONOMY_CONCEPTS_ASSOCIATION_QUESTION = {
+  schemaVersion: 1,
+  id: "question:economie-coloniale:interactive-association-001",
+  scope: "notional",
+  knowledgeHeadingId: "economie-coloniale",
+  relatedKnowledgeHeadingIds: ["economie-coloniale"],
+  referenceCardId: "reference-card:economie-coloniale",
+  historicalRecordId: COLONIAL_ECONOMY_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "interactive-association",
+  prompt: "Associe chaque concept économique à la définition qui lui correspond.",
+  instruction: "Sélectionne ou fais glisser chaque concept vers la définition appropriée, puis vérifie tes associations.",
+  expectedAnswer: "A — Protectionnisme; B — Traité de réciprocité; C — Libre-échange; D — Corn Laws.",
+  historicalDocumentIds: [],
+  commonErrors: ["Confondre le protectionnisme avec le libre-échange.", "Présenter le traité de réciprocité comme l’abolition de tous les droits de douane sur tous les produits.", "Confondre les Corn Laws avec une loi adoptée par la Province du Canada."],
+  distractors: [],
+  operationId: "establish_facts",
+  sourceIds: colonialEconomyConceptAssociationSources.map(({ id }) => id),
+  sourceCatalog: colonialEconomyConceptAssociationSources,
+  rationale: "L’association vérifie la maîtrise de quatre concepts essentiels pour comprendre le passage des préférences impériales britanniques au libre-échange et à la réciprocité nord-américaine.",
+  associationInteraction: {
+    items: [
+      { id: "corn-laws", label: "Corn Laws" },
+      { id: "protectionism", label: "Protectionnisme" },
+      { id: "free-trade", label: "Libre-échange" },
+      { id: "reciprocity-treaty", label: "Traité de réciprocité" },
+    ],
+    targets: [
+      { id: "definition-a", label: "A", description: "Politique économique qui aide les producteurs d’un pays en imposant des droits de douane sur les produits étrangers.", correctItemId: "protectionism" },
+      { id: "definition-b", label: "B", description: "Entente conclue en 1854 qui permet l’échange sans droits de douane de plusieurs produits naturels entre les États-Unis et les colonies britanniques d’Amérique du Nord.", correctItemId: "reciprocity-treaty" },
+      { id: "definition-c", label: "C", description: "Politique économique qui favorise les échanges entre les pays en réduisant ou en supprimant les droits de douane.", correctItemId: "free-trade" },
+      { id: "definition-d", label: "D", description: "Lois britanniques qui imposent des droits de douane sur les céréales étrangères et avantagent les céréales provenant des colonies britanniques.", correctItemId: "corn-laws" },
+    ],
+  },
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const COLONIAL_ECONOMY_CORN_LAWS_REPEAL_CONSEQUENCE_QUESTION = {
+  schemaVersion: 1,
+  id: "question:economie-coloniale:document-interpretation-002",
+  scope: "notional",
+  knowledgeHeadingId: "economie-coloniale",
+  relatedKnowledgeHeadingIds: ["economie-coloniale"],
+  referenceCardId: "reference-card:economie-coloniale",
+  historicalRecordId: COLONIAL_ECONOMY_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Explique comment l’abolition des Corn Laws pousse la Province du Canada à développer ses relations commerciales avec les États-Unis.",
+  instruction: "Dans ta réponse, établis le lien entre la perte des tarifs préférentiels, les difficultés économiques et la recherche d’un nouveau marché.",
+  expectedAnswer: "La perte de l’avantage tarifaire britannique cause de lourdes pertes aux entreprises canadiennes ayant investi dans l’exportation de farine. Cette difficulté pousse ensuite la Province du Canada à chercher de nouveaux débouchés et à développer ses relations commerciales avec les États-Unis.",
+  historicalDocumentIds: colonialEconomyCornLawsConsequenceDocumentIds,
+  commonErrors: ["Nommer les deux conséquences sans expliquer comment elles découlent de l’abolition.", "Affirmer que l’abolition augmente la préférence accordée aux produits canadiens.", "Présenter le traité de réciprocité de 1854 comme déjà conclu au moment des démarches de 1849.", "Attribuer toutes les difficultés économiques de la période à cette seule mesure."],
+  distractors: [],
+  operationId: "causal_connections",
+  sourceIds: colonialEconomyCornLawsRepealSources.map(({ id }) => id),
+  sourceCatalog: colonialEconomyCornLawsRepealSources,
+  rationale: "Les deux dépêches permettent de construire une chaîne causale documentée : retrait de la préférence britannique, lourdes pertes au Canada, puis recherche d’un accès réciproque au marché américain.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const COLONIAL_ECONOMY_CIVIL_WAR_RECIPROCITY_CAUSAL_QUESTION = {
+  schemaVersion: 1,
+  id: "question:economie-coloniale:document-interpretation-003",
+  scope: "notional",
+  knowledgeHeadingId: "economie-coloniale",
+  relatedKnowledgeHeadingIds: ["economie-coloniale"],
+  referenceCardId: "reference-card:economie-coloniale",
+  historicalRecordId: COLONIAL_ECONOMY_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Explique comment l’attitude de la Grande-Bretagne envers les États confédérés durant la guerre de Sécession contribue à la fin du traité de réciprocité.",
+  instruction: "Établis un lien entre la reconnaissance officielle des Confédérés comme partie au conflit, la détérioration des relations avec les États-Unis et la volonté américaine de ne pas maintenir le traité dans sa forme existante.",
+  expectedAnswer: "Les États-Unis considèrent que la Grande-Bretagne favorise les Confédérés en les reconnaissant officiellement comme une partie au conflit. Cette attitude détériore les relations entre les deux pays et rend les États-Unis moins disposés à maintenir ou à renouveler le traité de réciprocité avec le Canada. Elle contribue donc à la fin du traité en 1866, sans en être la seule cause.",
+  historicalDocumentIds: [COLONIAL_ECONOMY_SEWARD_RECIPROCITY_TENSIONS_DOCUMENT.id],
+  commonErrors: ["Affirmer que la Grande-Bretagne s’allie officiellement aux États confédérés.", "Présenter les tensions de la guerre comme la seule cause de la fin du traité.", "Confondre la décision américaine de mettre fin au traité avec une décision prise par la Province du Canada.", "Nommer les événements sans expliquer le lien entre eux."],
+  distractors: [],
+  operationId: "causal_connections",
+  sourceIds: colonialEconomySewardReciprocitySources.map(({ id }) => id),
+  sourceCatalog: colonialEconomySewardReciprocitySources,
+  rationale: "La dépêche de Seward permet de relier la perception américaine de l’attitude britannique envers la Confédération à la détérioration des relations et à l’impossibilité politique de renouveler alors la réciprocité, tout en conservant les autres causes économiques.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART_QUESTION = {
+  schemaVersion: 1,
+  id: "question:economie-coloniale:document-interpretation-004",
+  scope: "notional",
+  knowledgeHeadingId: "economie-coloniale",
+  relatedKnowledgeHeadingIds: ["economie-coloniale"],
+  referenceCardId: "reference-card:economie-coloniale",
+  historicalRecordId: COLONIAL_ECONOMY_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "À l’aide du graphique, compare la valeur des exportations de la Province du Canada vers les États-Unis avant et après l’entrée en vigueur du traité de réciprocité.",
+  instruction: "Compare les années 1853-1854 aux années 1855-1856 et appuie ta réponse sur au moins deux valeurs du graphique.",
+  expectedAnswer: "Avant l’entrée en vigueur du traité, la valeur des produits canadiens visés exportés vers les États-Unis est d’environ 2,19 millions de livres en 1853 et 2,08 millions en 1854. Après l’entrée en vigueur, elle atteint environ 4,17 millions en 1855 et 4,42 millions en 1856. La valeur a donc approximativement doublé entre 1854 et 1855 et demeure élevée en 1856. Le graphique montre une forte hausse qui concorde avec l’ouverture commerciale, sans prouver que le traité en est l’unique cause.",
+  historicalDocumentIds: [COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART.id],
+  commonErrors: ["Comparer seulement deux années situées du même côté de l’entrée en vigueur du traité.", "Affirmer que le traité entre pleinement en vigueur dès sa signature en 1854.", "Présenter les valeurs comme des dollars actuels plutôt que comme des livres en monnaie courante de la source.", "Affirmer que le graphique prouve que le traité est l’unique cause de la hausse."],
+  distractors: [],
+  operationId: "changes_and_continuities",
+  sourceIds: colonialEconomyExportChartSources.map(({ id }) => id),
+  sourceCatalog: colonialEconomyExportChartSources,
+  rationale: "Le graphique permet de comparer deux années antérieures à l’entrée en vigueur du traité à deux années postérieures, de quantifier la hausse et de distinguer une concordance chronologique d’une preuve causale exclusive.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const COLONIAL_ECONOMY_CORN_LAWS_VIEWPOINT_COMPARISON_QUESTION = {
+  schemaVersion: 1,
+  id: "question:economie-coloniale:document-interpretation-005",
+  scope: "notional",
+  knowledgeHeadingId: "economie-coloniale",
+  relatedKnowledgeHeadingIds: ["economie-coloniale"],
+  referenceCardId: "reference-card:economie-coloniale",
+  historicalRecordId: COLONIAL_ECONOMY_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Détermine une différence entre le point de vue de Richard Cobden et celui du Bureau de commerce de Québec concernant l’abolition des Corn Laws.",
+  instruction: "Compare leur position sur l’abolition et appuie chaque point de vue sur un élément du document correspondant.",
+  expectedAnswer: "Richard Cobden est favorable à l’abolition des Corn Laws : il appuie la mesure de Robert Peel et souhaite même que l’abolition soit immédiate. À l’inverse, le Bureau de commerce de Québec accueille cette abolition avec inquiétude et alarme, puisqu’elle ferait perdre à la Province du Canada une partie de sa protection sur le marché britannique et pourrait rapprocher son commerce des États-Unis.",
+  historicalDocumentIds: colonialEconomyCornLawsViewpointDocumentIds,
+  commonErrors: ["Présenter Cobden comme opposé à l’abolition.", "Affirmer que le Bureau de commerce de Québec souhaite une abolition immédiate.", "Nommer les deux points de vue sans formuler leur différence.", "Attribuer l’inquiétude du Bureau de commerce à une interdiction complète du commerce avec le Royaume-Uni."],
+  distractors: [],
+  operationId: "differences_and_similarities",
+  sourceIds: colonialEconomyCornLawsViewpointSources.map(({ id }) => id),
+  sourceCatalog: colonialEconomyCornLawsViewpointSources,
+  rationale: "Les deux documents contemporains présentent des positions nettement opposées : un partisan britannique du libre-échange soutient l’abolition immédiate, tandis que des marchands de Québec craignent la perte de la préférence coloniale.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const COLONIAL_ECONOMY_RECIPROCITY_TRADE_MAP_QUESTION = {
+  schemaVersion: 1,
+  id: "question:economie-coloniale:document-interpretation-006",
+  scope: "notional",
+  knowledgeHeadingId: "economie-coloniale",
+  relatedKnowledgeHeadingIds: ["economie-coloniale"],
+  referenceCardId: "reference-card:economie-coloniale",
+  historicalRecordId: COLONIAL_ECONOMY_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Explique un changement provoqué par l’entrée en vigueur du traité de réciprocité entre la Province du Canada et les États-Unis en 1854.",
+  instruction: "Observe les produits et la règle commerciale indiqués sur la carte, puis formule le changement dans une phrase complète.",
+  expectedAnswer: "À partir de 1854, certains produits naturels, comme le blé, le bois et le charbon, peuvent être échangés entre la Province du Canada et les États-Unis sans droits de douane.",
+  historicalDocumentIds: [COLONIAL_ECONOMY_RECIPROCITY_TRADE_MAP_DOCUMENT.id],
+  commonErrors: ["Affirmer que le traité supprime les droits de douane sur tous les produits.", "Nommer seulement un produit sans expliquer le changement commercial.", "Présenter les droits de pêche comme le seul changement montré par la carte.", "Confondre le marché américain avec le marché britannique."],
+  distractors: [],
+  operationId: "changes_and_continuities",
+  sourceIds: colonialEconomyReciprocityMapSources.map(({ id }) => id),
+  sourceCatalog: colonialEconomyReciprocityMapSources,
+  rationale: "La carte permet à l’élève de repérer une nouvelle règle commerciale en vigueur à partir de 1854 : plusieurs produits naturels peuvent désormais circuler entre la Province du Canada et les États-Unis sans droits de douane.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: true, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const INDIAN_AFFAIRS_BAGOT_CONSEQUENCES_QUESTION = {
+  schemaVersion: 1,
+  id: "question:affaires-indiennes:document-interpretation-001",
+  scope: "notional",
+  knowledgeHeadingId: "affaires-indiennes",
+  relatedKnowledgeHeadingIds: ["affaires-indiennes"],
+  referenceCardId: "reference-card:affaires-indiennes",
+  historicalRecordId: INDIAN_AFFAIRS_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Explique comment les recommandations de la commission Bagot contribuent au développement d’un modèle colonial d’éducation destiné aux enfants des Premières Nations.",
+  instruction: "Dans le document 1, relève deux recommandations de la commission Bagot. Dans le document 2, montre comment Ryerson les transforme en un projet scolaire plus précis en 1847.",
+  expectedAnswer: "La commission Bagot recommande d’utiliser l’éducation pour transformer les jeunes Autochtones, de créer des écoles industrielles et de faire participer les organisations religieuses. En 1847, à la demande des Affaires indiennes, Ryerson précise ce modèle : les élèves doivent résider ensemble, recevoir une éducation en anglais, apprendre surtout l’agriculture et certains travaux, et suivre une instruction chrétienne. Il propose aussi que des organisations religieuses administrent localement les écoles sous la surveillance et avec l’aide financière du gouvernement. Une conséquence de la commission est donc le développement rapide d’un projet plus structuré d’écoles industrielles, qui contribue à une politique éducative assimilationniste et influence l’évolution ultérieure des pensionnats. Le rapport Bagot ne crée cependant pas, à lui seul et immédiatement, le réseau fédéral obligatoire qui se développera plus tard.",
+  historicalDocumentIds: indianAffairsBagotConsequenceDocuments.map(({ id }) => id),
+  commonErrors: ["Affirmer que la commission Bagot crée immédiatement tout le réseau canadien des pensionnats.", "Présenter les deux documents comme s’ils avaient été rédigés la même année et par la même personne.", "Nommer l’éducation ou la religion sans expliquer le passage des recommandations au projet de 1847.", "Présenter le point de vue colonial des auteurs comme celui des Premières Nations."],
+  distractors: [],
+  operationId: "causal_connections",
+  sourceIds: indianAffairsBagotConsequenceSources.map(({ id }) => id),
+  sourceCatalog: indianAffairsBagotConsequenceSources,
+  rationale: "Les deux sources primaires sont séparées par trois ans et montrent une séquence vérifiable : la commission recommande des écoles industrielles et une collaboration religieuse, puis les Affaires indiennes demandent à Ryerson de définir concrètement la résidence, l’enseignement, la religion et la gestion de ces écoles.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const INDIAN_AFFAIRS_THOMAS_MOORE_ASSIMILATION_QUESTION = {
+  schemaVersion: 1,
+  id: "question:affaires-indiennes:document-interpretation-002",
+  scope: "notional",
+  knowledgeHeadingId: "affaires-indiennes",
+  relatedKnowledgeHeadingIds: ["affaires-indiennes"],
+  referenceCardId: "reference-card:affaires-indiennes",
+  historicalRecordId: INDIAN_AFFAIRS_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "À l’aide des deux photographies de Thomas Moore, détermine deux changements visibles entre son admission et la photographie prise après sa scolarisation, puis explique ce que cette mise en scène révèle de l’objectif d’assimilation culturelle des écoles industrielles.",
+  instruction: "Compare notamment les cheveux, les vêtements et les éléments du décor. Distingue ce que les photographies montrent de ce que le gouvernement voulait faire croire au public.",
+  expectedAnswer: "Entre les deux photographies, les cheveux longs et tressés de Thomas Moore ont été coupés et ses vêtements ornés ont été remplacés par un costume, des bottes et un chapeau de style eurocanadien. Le décor change également : la fourrure et le pistolet de la première mise en scène cèdent la place à une plante et à une balustrade de studio associées à la respectabilité bourgeoise. En publiant ces images l’une à la suite de l’autre dans son rapport annuel, le ministère des Affaires indiennes présente l’école industrielle comme capable de transformer l’apparence et les habitudes culturelles d’un enfant autochtone selon les normes de la société dominante. Le montage révèle donc l’objectif d’assimilation culturelle et le point de vue promotionnel du gouvernement. Il ne prouve toutefois ni le consentement de Thomas Moore, ni ses sentiments, ni l’ensemble de son expérience à l’école.",
+  historicalDocumentIds: INDIAN_AFFAIRS_THOMAS_MOORE_DOCUMENTS.map(({ id }) => id),
+  commonErrors: ["Énumérer des différences sans les relier à l’objectif d’assimilation culturelle.", "Affirmer que les photographies prouvent que Thomas Moore a volontairement abandonné sa culture.", "Traiter les portraits comme des photographies neutres et spontanées.", "Présenter une apparence comme supérieure à l’autre en reprenant le jugement colonial suggéré par le montage."],
+  distractors: [],
+  operationId: "changes_and_continuities",
+  sourceIds: indianAffairsThomasMooreSources.map(({ id }) => id),
+  sourceCatalog: indianAffairsThomasMooreSources,
+  rationale: "La comparaison de deux photographies publiées successivement dans le rapport annuel des Affaires indiennes permet d’établir des changements visibles, puis d’interpréter le récit de transformation construit par l’institution. La consigne ajoute une critique de source essentielle : les images sont mises en scène et renseignent d’abord sur l’intention assimilationniste et promotionnelle du gouvernement.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const INDIAN_AFFAIRS_QUAPPELLE_FAMILY_SEPARATION_QUESTION = {
+  schemaVersion: 1,
+  id: "question:affaires-indiennes:document-interpretation-003",
+  scope: "notional",
+  knowledgeHeadingId: "affaires-indiennes",
+  relatedKnowledgeHeadingIds: ["affaires-indiennes"],
+  referenceCardId: "reference-card:affaires-indiennes",
+  historicalRecordId: INDIAN_AFFAIRS_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Quelle conséquence le système des pensionnats a eu sur les familles ?",
+  instruction: "Relève deux éléments précis dans la photographie ou sa description, puis relie-les à la séparation familiale et à l’objectif d’assimilation. Distingue ce que l’image montre directement de ce que la légende affirme.",
+  expectedAnswer: "La photographie montre les bâtiments de l’école derrière une clôture et, à l’extérieur de l’enceinte, un campement comprenant des tentes, des tipis et des charrettes. La description indique que des parents campent près de l’école pour rendre visite à leurs enfants. Ces éléments illustrent une conséquence du système : les enfants étaient éloignés de leur famille et les contacts familiaux étaient soumis au contrôle de l’établissement et des autorités. Cette séparation pouvait affaiblir la transmission des langues, des pratiques culturelles et des liens familiaux, ce qui servait l’objectif d’assimilation. La photographie montre toutefois une scène précise : elle ne permet pas d’identifier avec certitude toutes les personnes ni de généraliser cette situation à toutes les familles et à tous les pensionnats.",
+  historicalDocumentIds: [INDIAN_AFFAIRS_QUAPPELLE_FAMILIES_DOCUMENT.id],
+  commonErrors: ["Décrire seulement les bâtiments sans expliquer une conséquence pour les familles.", "Affirmer que la photographie permet d’identifier avec certitude toutes les personnes du campement.", "Présenter comme certaines l’identité ou les intentions de toutes les personnes à partir de la seule photographie.", "Généraliser cette seule scène à toutes les familles et à tous les pensionnats sans nuance."],
+  distractors: [],
+  operationId: "causes_and_consequences",
+  sourceIds: indianAffairsQuAppelleSources.map(({ id }) => id),
+  sourceCatalog: indianAffairsQuAppelleSources,
+  rationale: "La photographie permet d’observer une séparation spatiale entre l’établissement et un campement familial. Sa description fournit un contexte sur les visites, tandis que la notice archivistique oblige l’élève à exercer une critique de source. L’ensemble permet d’expliquer une conséquence du système des pensionnats sans attribuer à l’image davantage qu’elle ne démontre.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const INDIAN_AFFAIRS_CHRISTIANIZATION_CONSEQUENCE_QUESTION = {
+  schemaVersion: 1,
+  id: "question:affaires-indiennes:document-interpretation-004",
+  scope: "notional",
+  knowledgeHeadingId: "affaires-indiennes",
+  relatedKnowledgeHeadingIds: ["affaires-indiennes"],
+  referenceCardId: "reference-card:affaires-indiennes",
+  historicalRecordId: INDIAN_AFFAIRS_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Explique une conséquence culturelle durable du système des pensionnats sur l’éducation des enfants autochtones.",
+  instruction: "Relève dans chaque document un élément précis lié à la religion chrétienne, puis explique comment ces pratiques pouvaient contribuer à l’assimilation culturelle. Distingue les pratiques imposées par les établissements des croyances personnelles des enfants.",
+  expectedAnswer: "Dans la classe de Red Deer, l’inscription « Looking Unto Jesus » place un message chrétien au-dessus d’un exercice d’écriture. Au pensionnat de Carcross, les garçons récitent les prières du soir dans le dortoir sous la surveillance d’une adulte. Les deux documents montrent donc que l’enseignement chrétien ne se limite pas à un cours de religion : il est intégré aux apprentissages et à la routine quotidienne, et cette pratique se poursuit de 1914-1919 jusqu’en 1964. Cette christianisation institutionnelle cherche à remplacer ou à marginaliser les spiritualités, les langues et les pratiques éducatives autochtones par des normes chrétiennes eurocanadiennes. Elle peut affaiblir la transmission culturelle entre les enfants, leurs familles et leurs communautés. Les photographies montrent toutefois les pratiques de l’institution, non les croyances ou les réactions personnelles des élèves, et elles ne prouvent pas la disparition des cultures autochtones.",
+  historicalDocumentIds: indianAffairsChristianizationDocuments.map(({ id }) => id),
+  commonErrors: ["Nommer seulement la présence de la religion sans expliquer une conséquence culturelle.", "Affirmer que les photographies prouvent que les enfants adhéraient personnellement au christianisme.", "Prétendre que les cultures et les spiritualités autochtones ont entièrement disparu.", "Oublier que les deux documents datent de périodes différentes et montrent la durée du modèle institutionnel."],
+  distractors: [],
+  operationId: "causes_and_consequences",
+  sourceIds: indianAffairsChristianizationSources.map(({ id }) => id),
+  sourceCatalog: indianAffairsChristianizationSources,
+  rationale: "Les deux photographies montrent la présence de la religion chrétienne dans deux espaces complémentaires, la classe et le dortoir, à plusieurs décennies d’intervalle. Leur comparaison permet d’expliquer la christianisation comme une conséquence culturelle durable du système tout en évitant d’attribuer aux enfants des convictions que les images ne documentent pas.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const INDIAN_AFFAIRS_INDIAN_ACT_CONTROL_QUESTION = {
+  schemaVersion: 1,
+  id: "question:affaires-indiennes:document-interpretation-005",
+  scope: "notional",
+  knowledgeHeadingId: "affaires-indiennes",
+  relatedKnowledgeHeadingIds: ["affaires-indiennes"],
+  referenceCardId: "reference-card:affaires-indiennes",
+  historicalRecordId: INDIAN_AFFAIRS_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Suite à la création de la Loi sur les Indiens de 1876, détermine deux aspects de la vie des Premières Nations placés sous le contrôle du gouvernement fédéral.",
+  instruction: "Relève un aspect dans chacun des deux extraits et appuie chaque réponse sur un élément précis du texte.",
+  expectedAnswer: "Le gouvernement fédéral contrôle d’abord les réserves, les terres, les sommes et les biens des Premières Nations par l’intermédiaire du ministre de l’Intérieur, qui devient surintendant général des Affaires indiennes. Il intervient aussi dans le statut juridique et l’appartenance : la loi détermine qui est considéré comme « Indien » selon la filiation et le mariage. Elle impose notamment des règles discriminatoires envers les femmes, puisque leur statut peut dépendre de celui de leur mari. Deux aspects possibles sont donc la gestion des terres et des ressources, puis la définition du statut juridique et de l’appartenance.",
+  historicalDocumentIds: indianAffairsIndianActControlDocuments.map(({ id }) => id),
+  commonErrors: ["Nommer deux éléments du premier extrait sans identifier le contrôle exercé sur le statut dans le second.", "Affirmer que les catégories créées par la loi définissent l’identité personnelle ou culturelle des membres des Premières Nations.", "Présenter la gestion fédérale comme une décision prise par les Premières Nations elles-mêmes.", "Oublier d’appuyer la réponse sur des éléments précis des extraits."],
+  distractors: [],
+  operationId: "establish_facts",
+  sourceIds: indianAffairsIndianActControlSources.map(({ id }) => id),
+  sourceCatalog: indianAffairsIndianActControlSources,
+  rationale: "Les articles 2 et 3 de la Loi sur les Indiens de 1876 rendent visibles deux dimensions complémentaires de l’intervention fédérale : l’administration des terres, des sommes et des biens, puis l’imposition d’une définition juridique du statut et de l’appartenance.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const INDIAN_AFFAIRS_RESERVE_MANAGEMENT_QUESTION = {
+  schemaVersion: 1,
+  id: "question:affaires-indiennes:document-interpretation-006",
+  scope: "notional",
+  knowledgeHeadingId: "affaires-indiennes",
+  relatedKnowledgeHeadingIds: ["affaires-indiennes"],
+  referenceCardId: "reference-card:affaires-indiennes",
+  historicalRecordId: INDIAN_AFFAIRS_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Comment les lois de 1850 et de 1851 modifient-elles la gestion des terres des Premières Nations au Bas-Canada ?",
+  instruction: "Dans le document écrit, relève le rôle confié aux commissaires et les opérations appliquées aux terres. Dans le plan, repère deux traces visibles de cette nouvelle gestion territoriale.",
+  expectedAnswer: "La loi de 1850 confie la protection et la gestion juridique de certaines terres à un commissaire colonial. La loi de 1851 autorise ensuite l’administration à décrire, arpenter et mettre à part jusqu’à 230 000 acres pour différentes Premières Nations, tout en maintenant la gestion entre les mains du commissaire. Le plan de Maniwaki montre un résultat concret de ce processus : le territoire est délimité, divisé en rangs et en lots et mesuré en acres. Les lois cherchent donc à protéger certaines terres contre les empiètements, mais elles renforcent aussi le contrôle administratif de l’État sur leur délimitation et leur gestion.",
+  historicalDocumentIds: indianAffairsReserveManagementDocuments.map(({ id }) => id),
+  commonErrors: ["Affirmer que les lois accordent une propriété privée ordinaire aux membres des Premières Nations.", "Présenter les 230 000 acres comme la superficie de chaque réserve plutôt que comme un maximum total.", "Oublier que le plan de 1891 est postérieur aux lois et qu’il illustre leur mise en œuvre à long terme.", "Confondre les limites de la réserve représentée avec l’ensemble du territoire ancestral des Anishinabeg."],
+  distractors: [],
+  operationId: "relationships_between_facts",
+  sourceIds: indianAffairsReserveManagementSources.map(({ id }) => id),
+  sourceCatalog: indianAffairsReserveManagementSources,
+  rationale: "Le document écrit présente les mécanismes juridiques de protection, d’arpentage, de mise à part et de gestion. Le plan cadastral de Maniwaki permet d’observer leur traduction territoriale ultérieure dans les limites, les rangs, les lots et les superficies.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const INDIAN_AFFAIRS_SCHOOL_ENROLMENT_CHANGE_QUESTION = {
+  schemaVersion: 1,
+  id: "question:affaires-indiennes:document-interpretation-007",
+  scope: "notional",
+  knowledgeHeadingId: "affaires-indiennes",
+  relatedKnowledgeHeadingIds: ["affaires-indiennes"],
+  referenceCardId: "reference-card:affaires-indiennes",
+  historicalRecordId: INDIAN_AFFAIRS_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Comment le nombre d’élèves autochtones inscrits dans les écoles relevant des Affaires indiennes évolue-t-il entre 1890 et 1897? Appuie ta réponse sur deux données.",
+  instruction: "Compare les valeurs du tableau et formule un constat précis sur leur évolution. Le tableau présente les inscriptions déclarées, et non la fréquentation quotidienne.",
+  expectedAnswer: "Le nombre d’élèves autochtones inscrits augmente entre 1890 et 1897. Il passe de 6 671 élèves en 1890 à 7 554 en 1891, puis à 9 628 en 1897. Cela représente une hausse de 2 957 inscriptions entre 1890 et 1897, soit environ 44 %. Cette progression montre l’expansion du réseau scolaire encadré ou financé par le gouvernement fédéral. Le tableau ne permet toutefois pas de connaître les conditions vécues par les élèves ni le consentement des familles.",
+  historicalDocumentIds: [INDIAN_AFFAIRS_SCHOOL_ENROLMENT_TABLE_DOCUMENT.id],
+  commonErrors: ["Présenter les valeurs comme le nombre de nouvelles écoles ouvertes.", "Confondre les inscriptions avec la fréquentation quotidienne.", "Affirmer que la hausse prouve le consentement des enfants ou des familles.", "Donner seulement une impression générale sans citer deux valeurs du tableau."],
+  distractors: [],
+  operationId: "changes_and_continuities",
+  sourceIds: indianAffairsSchoolEnrolmentSources.map(({ id }) => id),
+  sourceCatalog: indianAffairsSchoolEnrolmentSources,
+  rationale: "Le tableau emploie un même indicateur national pour trois années repères. Il permet d’établir une hausse mesurable tout en initiant l’élève aux limites d’une statistique administrative.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: true, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const INDIAN_AFFAIRS_1876_STATE_RELATIONS_VIEWPOINT_COMPARISON_QUESTION = {
+  schemaVersion: 1,
+  id: "question:affaires-indiennes:document-interpretation-008",
+  scope: "notional",
+  knowledgeHeadingId: "affaires-indiennes",
+  relatedKnowledgeHeadingIds: ["affaires-indiennes"],
+  referenceCardId: "reference-card:affaires-indiennes",
+  historicalRecordId: INDIAN_AFFAIRS_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Dégage une différence entre le point de vue du gouvernement canadien et celui des chefs onondagas concernant les relations entre l’État et les Premières Nations au moment de l’adoption de la Loi sur les Indiens.",
+  instruction: "Présente la relation privilégiée dans chaque document et appuie chaque point de vue sur un élément précis du texte correspondant.",
+  expectedAnswer: "Le gouvernement canadien présente les Premières Nations dans une relation de tutelle et propose de les éduquer afin qu’elles accèdent progressivement à la pleine citoyenneté selon les normes de l’État. Les chefs onondagas refusent plutôt d’être considérés comme des sujets placés sous le contrôle des lois fédérales : ils se définissent comme des alliés de la Couronne et veulent continuer à suivre leurs propres lois. Le gouvernement privilégie donc une transformation et une intégration dirigées par l’État, tandis que les chefs revendiquent une relation d’alliance et leur autonomie politique.",
+  historicalDocumentIds: indianAffairsStateRelationsDocumentIds,
+  commonErrors: ["Présenter les chefs onondagas comme favorables au contrôle fédéral.", "Confondre leur revendication d’alliance avec une demande de pleine citoyenneté individuelle.", "Généraliser la position des 33 signataires à toutes les Premières Nations.", "Dire que le rapport fédéral défend simplement le maintien permanent de la tutelle sans relever son projet d’éducation et d’émancipation."],
+  distractors: [],
+  operationId: "differences_and_similarities",
+  sourceIds: indianAffairsStateRelationsSources.map(({ id }) => id),
+  sourceCatalog: indianAffairsStateRelationsSources,
+  rationale: "Deux textes de 1876 opposent directement une politique fédérale de tutelle menant à la citoyenneté définie par l’État et une conception onondaga fondée sur l’alliance avec la Couronne, l’autonomie politique et le maintien des lois ancestrales.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: true, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const INDIAN_AFFAIRS_RESERVES_EXPANSION_CHANGE_CONTINUITY_QUESTION = {
+  schemaVersion: 1,
+  id: "question:affaires-indiennes:document-interpretation-009",
+  scope: "notional",
+  knowledgeHeadingId: "affaires-indiennes",
+  relatedKnowledgeHeadingIds: ["affaires-indiennes"],
+  referenceCardId: "reference-card:affaires-indiennes",
+  historicalRecordId: INDIAN_AFFAIRS_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Détermine un changement dans le développement du système des réserves autochtones au Québec avec la loi de 1851.",
+  instruction: "Compare les symboles qui désignent les réserves antérieures à 1851 et celles créées en vertu de la loi de 1851. Appuie le changement sur une observation précise de la carte.",
+  initialGuidance: "J’attends ta réponse…",
+  expectedAnswer: "La loi de 1851 entraîne la création de nouvelles réserves autochtones dans plusieurs régions du Québec.",
+  historicalDocumentIds: indianAffairsReserveExpansionDocuments.map(({ id }) => id),
+  commonErrors: ["Présenter la carte comme une carte dessinée en 1851 plutôt que comme une synthèse historique.", "Affirmer que toutes les réserves représentées ont été créées par la loi de 1851.", "Affirmer que les espaces sans symbole étaient inhabités par les peuples autochtones.", "Confondre les réserves administratives avec l’ensemble des territoires ancestraux.", "Nommer seulement des lieux sans formuler clairement le changement."],
+  distractors: [],
+  operationId: "changes_and_continuities",
+  sourceIds: indianAffairsReserveExpansionSources.map(({ id }) => id),
+  sourceCatalog: indianAffairsReserveExpansionSources,
+  rationale: "La légende distingue directement les réserves antérieures à 1851 de celles créées en vertu de la loi. Cette comparaison interne à la carte permet de dégager l’ajout de nouvelles réserves dans plusieurs régions du Québec.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: true, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_EVOLUTION_QUESTION = {
+  schemaVersion: 1,
+  id: "question:acte-de-l-amerique-du-nord-britannique:document-interpretation-001",
+  scope: "notional",
+  knowledgeHeadingId: "acte-de-l-amerique-du-nord-britannique",
+  relatedKnowledgeHeadingIds: ["acte-de-l-amerique-du-nord-britannique"],
+  referenceCardId: "reference-card:acte-de-l-amerique-du-nord-britannique",
+  historicalRecordId: BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Explique comment le territoire du Dominion du Canada évolue entre 1867 et 1873. Appuie ta réponse sur deux changements territoriaux.",
+  instruction: "Compare les deux cartes. Présente d’abord le territoire du Dominion en 1867, puis nomme et date au moins deux changements visibles sur la carte de 1873.",
+  expectedAnswer: "En 1867, le Dominion du Canada comprend quatre provinces : l’Ontario, le Québec, le Nouveau-Brunswick et la Nouvelle-Écosse. Il s’agrandit ensuite considérablement : le Manitoba est créé et les Territoires du Nord-Ouest sont intégrés au Canada en 1870; la Colombie-Britannique se joint au Dominion en 1871; l’Île-du-Prince-Édouard s’y joint en 1873. Le territoire canadien s’étend ainsi de l’Atlantique au Pacifique. Deux de ces changements, correctement expliqués, répondent à la consigne.",
+  historicalDocumentIds: britishNorthAmericaAct1867To1873Maps.map(({ id }) => id),
+  commonErrors: ["Inclure l’Île-du-Prince-Édouard parmi les provinces fondatrices de 1867.", "Affirmer que Terre-Neuve fait partie du Dominion en 1873.", "Présenter les territoires de l’Ouest et du Nord comme des espaces inhabités.", "Énumérer des provinces sans expliquer l’agrandissement du Dominion."],
+  distractors: [],
+  operationId: "changes_and_continuities",
+  sourceIds: britishNorthAmericaAct1867To1873Sources.map(({ id }) => id),
+  sourceCatalog: britishNorthAmericaAct1867To1873Sources,
+  rationale: "La comparaison de deux cartes produites selon les mêmes conventions permet d’observer une situation initiale et un état ultérieur. L’élève doit établir la continuité des quatre provinces fondatrices et expliquer au moins deux ajouts territoriaux directement liés à la précision officielle « Territoire du Dominion du Canada ».",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: true, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const BRITISH_NORTH_AMERICA_ACT_CONFEDERATION_VIEWPOINTS_QUESTION = {
+  schemaVersion: 1,
+  id: "question:acte-de-l-amerique-du-nord-britannique:document-interpretation-002",
+  scope: "notional",
+  knowledgeHeadingId: "acte-de-l-amerique-du-nord-britannique",
+  relatedKnowledgeHeadingIds: ["acte-de-l-amerique-du-nord-britannique"],
+  referenceCardId: "reference-card:acte-de-l-amerique-du-nord-britannique",
+  historicalRecordId: BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Dégage une différence entre les points de vue de John A. Macdonald, de George-Étienne Cartier et d’Antoine-Aimé Dorion concernant la création du Dominion du Canada.",
+  instruction: "Présente la priorité de chacun des trois acteurs et appuie ta comparaison sur un élément précis de chaque document.",
+  expectedAnswer: "Macdonald appuie la création du Dominion parce qu’il souhaite unir les colonies sous un gouvernement central fort, notamment pour administrer les questions communes et assurer leur défense. Cartier est également favorable au projet, mais il insiste davantage sur le rôle des gouvernements provinciaux pour protéger les institutions, la religion et la nationalité des Canadiens français. Dorion s’oppose au projet proposé, car il craint que le pouvoir central et la majorité anglophone dominent le Canada-Est et que les garanties provinciales soient insuffisantes. Macdonald privilégie donc la force du centre, Cartier recherche un équilibre entre l’union et l’autonomie provinciale, tandis que Dorion doute que cet équilibre protège réellement le Canada-Est.",
+  historicalDocumentIds: britishNorthAmericaActViewpointDocuments.map(({ id }) => id),
+  commonErrors: ["Présenter les trois acteurs comme également favorables au projet.", "Affirmer que Cartier souhaite abolir les gouvernements provinciaux.", "Réduire l’opposition de Dorion à un simple refus de toute forme de fédération.", "Nommer les positions sans formuler clairement une différence entre elles."],
+  distractors: [],
+  operationId: "differences_and_similarities",
+  sourceIds: britishNorthAmericaActViewpointSources.map(({ id }) => id),
+  sourceCatalog: britishNorthAmericaActViewpointSources,
+  rationale: "Trois interventions contemporaines permettent de distinguer une préférence pour un centre puissant, un fédéralisme conçu comme protection des particularités locales et une opposition fondée sur la crainte de la centralisation et de la domination majoritaire.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: true, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const BRITISH_NORTH_AMERICA_ACT_RAILWAY_CONDITION_QUESTION = {
+  schemaVersion: 1,
+  id: "question:acte-de-l-amerique-du-nord-britannique:document-interpretation-003",
+  scope: "notional",
+  knowledgeHeadingId: "acte-de-l-amerique-du-nord-britannique",
+  relatedKnowledgeHeadingIds: ["acte-de-l-amerique-du-nord-britannique"],
+  referenceCardId: "reference-card:acte-de-l-amerique-du-nord-britannique",
+  historicalRecordId: BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Indique une condition jugée importante par la Nouvelle-Écosse et le Nouveau-Brunswick dans le contexte de leur adhésion à la Confédération.",
+  instruction: "Appuie ta réponse sur un élément précis de chacun des deux documents.",
+  expectedAnswer: "La construction d’un chemin de fer reliant les colonies est une condition importante pour les deux provinces. William Annand affirme que le chemin de fer doit être construit avant que la Nouvelle-Écosse accepte l’union. Au Nouveau-Brunswick, la résolution de Charles Fisher demande qu’une disposition prévoie la construction immédiate du chemin de fer Intercolonial. Les deux documents accordent donc une grande importance à cette liaison ferroviaire, même si Annand exige qu’elle précède l’union tandis que Fisher l’intègre aux conditions de sa réalisation.",
+  historicalDocumentIds: BRITISH_NORTH_AMERICA_RAILWAY_CONDITION_DOCUMENTS.map(({ id }) => id),
+  commonErrors: ["Nommer seulement le commerce sans préciser le chemin de fer.", "Affirmer que les deux documents exigent exactement le même ordre de construction.", "Présenter Annand comme un partisan du projet gouvernemental.", "Confondre le chemin de fer Intercolonial avec une liaison ferroviaire vers l’Ouest canadien."],
+  distractors: [],
+  operationId: "establish_facts",
+  sourceIds: britishNorthAmericaActRailwayConditionSources.map(({ id }) => id),
+  sourceCatalog: britishNorthAmericaActRailwayConditionSources,
+  rationale: "Les deux documents contemporains permettent d’établir une condition commune — la liaison ferroviaire entre les colonies — tout en distinguant la chronologie défendue par Annand de la disposition immédiate réclamée par Fisher.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: true, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const BRITISH_NORTH_AMERICA_ACT_COALITION_CAUSAL_QUESTION = {
+  schemaVersion: 1,
+  id: "question:acte-de-l-amerique-du-nord-britannique:document-interpretation-004",
+  scope: "notional",
+  knowledgeHeadingId: "acte-de-l-amerique-du-nord-britannique",
+  relatedKnowledgeHeadingIds: ["acte-de-l-amerique-du-nord-britannique"],
+  referenceCardId: "reference-card:acte-de-l-amerique-du-nord-britannique",
+  historicalRecordId: BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Établis un lien entre l’instabilité politique de la Province du Canada, la formation de la Grande Coalition et la création du Dominion du Canada.",
+  instruction: "Construis une chaîne causale en utilisant au moins un élément précis de chacun des trois documents.",
+  expectedAnswer: "La succession rapide des gouvernements et les conflits entre les partis rendent la Province du Canada difficile à gouverner. Pour sortir de cette impasse, des adversaires comme George Brown, John A. Macdonald et George-Étienne Cartier forment la Grande Coalition et recherchent ensemble une solution constitutionnelle. Le gouvernement de coalition ouvre ensuite des négociations avec les autres colonies et participe aux conférences de Charlottetown et de Québec. Les Résolutions de Québec établissent les principes du projet fédéral qui mène à la création du Dominion du Canada en 1867.",
+  historicalDocumentIds: BRITISH_NORTH_AMERICA_COALITION_CAUSAL_DOCUMENTS.map(({ id }) => id),
+  commonErrors: ["Énumérer les trois événements sans expliquer leurs liens.", "Présenter la Grande Coalition comme le Dominion lui-même.", "Affirmer que l’instabilité politique disparaît avant la formation de la coalition.", "Oublier le rôle des conférences et des Résolutions de Québec dans le passage de la coalition au projet fédéral."],
+  distractors: [],
+  operationId: "causal_connections",
+  sourceIds: britishNorthAmericaActCoalitionCausalSources.map(({ id }) => id),
+  sourceCatalog: britishNorthAmericaActCoalitionCausalSources,
+  rationale: "Les trois documents forment une chaîne explicite : l’instabilité rend nécessaire une alliance politique; cette alliance élabore une solution constitutionnelle; son gouvernement organise les négociations qui produisent le projet fédéral.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: true, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const BRITISH_NORTH_AMERICA_ACT_INTERCOLONIAL_CAUSE_CONSEQUENCE_QUESTION = {
+  schemaVersion: 1,
+  id: "question:acte-de-l-amerique-du-nord-britannique:document-interpretation-005",
+  scope: "notional",
+  knowledgeHeadingId: "acte-de-l-amerique-du-nord-britannique",
+  relatedKnowledgeHeadingIds: ["acte-de-l-amerique-du-nord-britannique"],
+  referenceCardId: "reference-card:acte-de-l-amerique-du-nord-britannique",
+  historicalRecordId: BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Détermine une cause de la construction du chemin de fer Intercolonial et une conséquence économique de son achèvement. Appuie chaque élément de ta réponse sur un document.",
+  instruction: "Utilise la carte pour expliquer pourquoi une liaison ferroviaire entre les provinces était recherchée, puis compare deux données du tableau pour établir une conséquence économique.",
+  expectedAnswer: "Une cause de la construction de l’Intercolonial est la volonté de relier le Québec, le Nouveau-Brunswick et la Nouvelle-Écosse au sein du nouveau Dominion et de faciliter leurs communications. La carte montre que la ligne rejoint notamment Rivière-du-Loup, Moncton et Halifax. Une conséquence économique de son achèvement est l’augmentation des marchandises transportées : leur volume passe de 342 196 tonnes en 1875-1876, avant l’achèvement de la liaison continue, à 522 710 tonnes en 1877-1878, soit une hausse d’environ 53 %. Cette augmentation montre une activité commerciale ferroviaire plus importante, sans prouver que toutes les marchandises ont circulé entre deux provinces différentes.",
+  historicalDocumentIds: BRITISH_NORTH_AMERICA_INTERCOLONIAL_CAUSE_CONSEQUENCE_DOCUMENTS.map(({ id }) => id),
+  commonErrors: ["Donner seulement le tracé de la ligne sans formuler une cause.", "Nommer une augmentation sans comparer deux données du tableau.", "Affirmer que toutes les marchandises transportées franchissent une frontière provinciale.", "Présenter 1875-1876 comme une période sans aucun chemin de fer plutôt que comme l’année précédant l’achèvement de la liaison continue."],
+  distractors: [],
+  operationId: "causes_and_consequences",
+  sourceIds: britishNorthAmericaActIntercolonialSources.map(({ id }) => id),
+  sourceCatalog: britishNorthAmericaActIntercolonialSources,
+  rationale: "La carte permet d’établir le besoin de relier les provinces fondatrices, tandis que le tableau permet de constater une augmentation mesurable des marchandises transportées après l’achèvement de la liaison continue. La consigne distingue explicitement la cause de la conséquence.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: true, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const BRITISH_NORTH_AMERICA_ACT_AMERICAN_THREAT_QUESTION = {
+  schemaVersion: 1,
+  id: "question:acte-de-l-amerique-du-nord-britannique:document-interpretation-006",
+  scope: "notional",
+  knowledgeHeadingId: "acte-de-l-amerique-du-nord-britannique",
+  relatedKnowledgeHeadingIds: ["acte-de-l-amerique-du-nord-britannique"],
+  referenceCardId: "reference-card:acte-de-l-amerique-du-nord-britannique",
+  historicalRecordId: BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "En 1865, explique une crainte exprimée par des députés de la Province du Canada et la solution qu’ils proposent pour y répondre.",
+  instruction: "Appuie la crainte et la solution sur des éléments précis des documents.",
+  expectedAnswer: "La caricature représente les États-Unis sous les traits d’un Abraham Lincoln armé et dominant, ce qui traduit la perception d’une puissance militaire menaçante pendant la guerre de Sécession. Cartier affirme que les colonies britanniques séparées seraient incapables de se défendre seules et que leur union permettrait d’organiser une protection commune avec l’appui de la Grande-Bretagne. Cauchon ajoute que l’union rendrait nécessaire la construction du chemin de fer Intercolonial, qui permettrait de déplacer rapidement les troupes vers les régions menacées. La crainte d’une invasion américaine sert donc à présenter la Confédération comme un moyen de réunir les forces militaires et d’améliorer leur déplacement.",
+  historicalDocumentIds: BRITISH_NORTH_AMERICA_AMERICAN_THREAT_DOCUMENTS.map(({ id }) => id),
+  commonErrors: ["Présenter la caricature comme la preuve qu’une invasion était officiellement annoncée.", "Décrire les trois documents sans expliquer comment ils justifient l’union.", "Affirmer que Cartier promet que la Grande-Bretagne défendra seule les colonies.", "Présenter l’Intercolonial uniquement comme un chemin de fer commercial sans mentionner le déplacement des troupes."],
+  distractors: [],
+  operationId: "causes_and_consequences",
+  sourceIds: britishNorthAmericaActAmericanThreatSources.map(({ id }) => id),
+  sourceCatalog: britishNorthAmericaActAmericanThreatSources,
+  rationale: "Les trois documents font progresser un même argument : la puissance militaire américaine nourrit une crainte; les colonies séparées sont jugées vulnérables; l’union et l’Intercolonial sont présentés comme des moyens d’organiser et de déplacer une défense commune.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: true, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_FEAR_QUESTION = {
+  schemaVersion: 1,
+  id: "question:acte-de-l-amerique-du-nord-britannique:document-interpretation-007",
+  scope: "notional",
+  knowledgeHeadingId: "acte-de-l-amerique-du-nord-britannique",
+  relatedKnowledgeHeadingIds: ["acte-de-l-amerique-du-nord-britannique"],
+  referenceCardId: "reference-card:acte-de-l-amerique-du-nord-britannique",
+  historicalRecordId: BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "À la veille de la création du Dominion du Canada en 1867, quelle crainte concernant le territoire des colonies britanniques d’Amérique du Nord cette caricature illustre-t-elle?",
+  instruction: "Appuie ta réponse sur un élément précis de la caricature.",
+  expectedAnswer: "Les colonies britanniques craignent que les États-Unis profitent de leur puissance militaire pour envahir ou annexer leur territoire. Dans la caricature, Abraham Lincoln est représenté armé et dominant face aux fortifications et aux soldats des colonies, ce qui évoque cette menace territoriale.",
+  historicalDocumentIds: ["AANB-I-001"],
+  commonErrors: ["Affirmer que la caricature prouve qu’une invasion était officiellement annoncée.", "Nommer seulement la guerre de Sécession sans préciser la crainte pour le territoire des colonies.", "Décrire Lincoln sans relier sa représentation à la menace d’invasion ou d’annexion."],
+  distractors: [],
+  operationId: "establish_facts",
+  sourceIds: britishNorthAmericaActTerritorialFearSources.map(({ id }) => id),
+  sourceCatalog: britishNorthAmericaActTerritorialFearSources,
+  rationale: "La question demande d’identifier, dans une source contemporaine, la crainte d’une invasion ou d’une annexion du territoire des colonies britanniques par les États-Unis.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: true, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_DATES_ASSOCIATION_QUESTION = {
+  schemaVersion: 1,
+  id: "question:acte-de-l-amerique-du-nord-britannique:interactive-association-001",
+  scope: "notional",
+  knowledgeHeadingId: "acte-de-l-amerique-du-nord-britannique",
+  relatedKnowledgeHeadingIds: ["acte-de-l-amerique-du-nord-britannique"],
+  referenceCardId: "reference-card:acte-de-l-amerique-du-nord-britannique",
+  historicalRecordId: BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "interactive-association",
+  prompt: "Associe chacune des cartes à l’année qui correspond à la situation territoriale représentée.",
+  instruction: "Observe les frontières, les noms des territoires et l’étendue du Canada. Sélectionne ou fais glisser chaque carte vers l’année correspondante sur la ligne du temps.",
+  expectedAnswer: "Carte A — 1873; carte B — 1849; carte C — 1949; carte D — 1867.",
+  historicalDocumentIds: BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS.map(({ id }) => id),
+  commonErrors: ["Associer la carte montrant la Province du Canada avant la Confédération à 1867.", "Confondre la carte du Dominion formé de quatre provinces avec celle de 1873.", "Associer l’entrée de Terre-Neuve à une date antérieure à 1949.", "Se fier seulement au nombre de couleurs sans lire les noms et les frontières."],
+  distractors: [],
+  operationId: "time_and_space",
+  sourceIds: britishNorthAmericaActTerritorySources.map(({ id }) => id),
+  sourceCatalog: britishNorthAmericaActTerritorySources,
+  rationale: "L’association de cartes anonymisées à quatre dates oblige l’élève à mobiliser des repères territoriaux distinctifs : la Province du Canada avant la Confédération, les quatre provinces fondatrices, l’expansion jusqu’au Pacifique et l’entrée de Terre-Neuve.",
+  associationInteraction: {
+    items: [
+      { id: "map-a", label: "Carte A", imageUrl: "/historical-documents/aanb-dominion-1873.png", imageAlt: "Carte historique A montrant l’étendue du Canada et les territoires voisins, sans date." },
+      { id: "map-b", label: "Carte B", imageUrl: "/historical-documents/aanb-province-canada-1849-complete.png", imageAlt: "Carte historique B montrant en entier la Province du Canada et les territoires de l’Amérique du Nord britannique, sans date." },
+      { id: "map-c", label: "Carte C", imageUrl: "/historical-documents/aanb-dominion-1949.png", imageAlt: "Carte historique C montrant le Canada d’un océan à l’autre, sans date." },
+      { id: "map-d", label: "Carte D", imageUrl: "/historical-documents/aanb-dominion-1867.png", imageAlt: "Carte historique D montrant le Dominion et les territoires voisins, sans date." },
+    ],
+    targets: [
+      { id: "year-1849", label: "1849", description: "1849", correctItemId: "map-b" },
+      { id: "year-1867", label: "1867", description: "1867", correctItemId: "map-d" },
+      { id: "year-1873", label: "1873", description: "1873", correctItemId: "map-a" },
+      { id: "year-1949", label: "1949", description: "1949", correctItemId: "map-c" },
+    ],
+  },
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: true, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const BRITISH_NORTH_AMERICA_ACT_PROVINCES_EXPANSION_ASSOCIATION_QUESTION = {
+  schemaVersion: 1,
+  id: "question:acte-de-l-amerique-du-nord-britannique:interactive-association-002",
+  scope: "notional",
+  knowledgeHeadingId: "acte-de-l-amerique-du-nord-britannique",
+  relatedKnowledgeHeadingIds: ["acte-de-l-amerique-du-nord-britannique"],
+  referenceCardId: "reference-card:acte-de-l-amerique-du-nord-britannique",
+  historicalRecordId: BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "interactive-association",
+  prompt: "Associe chaque date à la ou aux provinces qui fondent le Dominion du Canada ou qui se joignent ensuite à la fédération.",
+  instruction: "Sélectionne ou fais glisser chaque groupe de provinces vers la date correspondante afin de retracer l’expansion territoriale du Canada de 1867 à 1949.",
+  expectedAnswer: "1867 — Ontario, Québec, Nouveau-Brunswick et Nouvelle-Écosse; 1870 — Manitoba; 1871 — Colombie-Britannique; 1873 — Île-du-Prince-Édouard; 1905 — Alberta et Saskatchewan; 1949 — Terre-Neuve (aujourd’hui Terre-Neuve-et-Labrador).",
+  historicalDocumentIds: [],
+  commonErrors: ["Présenter le Manitoba comme une province fondatrice de 1867.", "Confondre les dates d’entrée de la Colombie-Britannique et de l’Île-du-Prince-Édouard.", "Séparer l’Alberta et la Saskatchewan alors que les deux provinces sont créées en 1905.", "Présenter le Labrador comme une province distincte de Terre-Neuve."],
+  distractors: [],
+  operationId: "time_and_space",
+  sourceIds: britishNorthAmericaActExpansionSources.map(({ id }) => id),
+  sourceCatalog: britishNorthAmericaActExpansionSources,
+  rationale: "Cette association fait distinguer les quatre provinces fondatrices de 1867 des provinces admises ou créées par la suite. Elle mobilise directement la précision officielle « Territoire du Dominion du Canada » et ordonne six repères essentiels de son expansion.",
+  associationInteraction: {
+    items: [
+      { id: "provinces-1905", label: "Alberta et Saskatchewan" },
+      { id: "provinces-1867", label: "Ontario, Québec, Nouveau-Brunswick et Nouvelle-Écosse" },
+      { id: "province-1949", label: "Terre-Neuve (aujourd’hui Terre-Neuve-et-Labrador)" },
+      { id: "province-1871", label: "Colombie-Britannique" },
+      { id: "province-1870", label: "Manitoba" },
+      { id: "province-1873", label: "Île-du-Prince-Édouard" },
+    ],
+    targets: [
+      { id: "date-1867", label: "1867", description: "1867", correctItemId: "provinces-1867" },
+      { id: "date-1870", label: "1870", description: "1870", correctItemId: "province-1870" },
+      { id: "date-1871", label: "1871", description: "1871", correctItemId: "province-1871" },
+      { id: "date-1873", label: "1873", description: "1873", correctItemId: "province-1873" },
+      { id: "date-1905", label: "1905", description: "1905", correctItemId: "provinces-1905" },
+      { id: "date-1949", label: "1949", description: "1949", correctItemId: "province-1949" },
+    ],
+  },
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: true, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const BRITISH_NORTH_AMERICA_ACT_MAP_ADHESION_DATES_QUESTION = {
+  schemaVersion: 1,
+  id: "question:acte-de-l-amerique-du-nord-britannique:interactive-association-004",
+  scope: "notional",
+  knowledgeHeadingId: "acte-de-l-amerique-du-nord-britannique",
+  relatedKnowledgeHeadingIds: ["acte-de-l-amerique-du-nord-britannique"],
+  referenceCardId: "reference-card:acte-de-l-amerique-du-nord-britannique",
+  historicalRecordId: BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "interactive-association",
+  prompt: "Place sur la carte les dates de création ou d’adhésion des provinces et des territoires du Canada.",
+  instruction: "Sélectionne une date, puis dépose-la dans la zone correspondante. Les provinces ou territoires créés ou intégrés la même année sont regroupés dans une seule zone.",
+  expectedAnswer: "1867 — Ontario, Québec, Nouveau-Brunswick et Nouvelle-Écosse; 1870 — Manitoba et Territoires du Nord-Ouest; 1871 — Colombie-Britannique; 1873 — Île-du-Prince-Édouard; 1898 — Yukon; 1905 — Alberta et Saskatchewan; 1949 — Terre-Neuve (aujourd’hui Terre-Neuve-et-Labrador); 1999 — Nunavut.",
+  historicalDocumentIds: [],
+  commonErrors: ["Présenter le Manitoba comme une province fondatrice de 1867.", "Inverser 1871 et 1873 pour la Colombie-Britannique et l’Île-du-Prince-Édouard.", "Donner deux dates différentes à l’Alberta et à la Saskatchewan.", "Confondre la création du Yukon en 1898 et celle du Nunavut en 1999.", "Oublier que le Manitoba et les Territoires du Nord-Ouest partagent le repère de 1870."],
+  distractors: [],
+  operationId: "time_and_space",
+  sourceIds: britishNorthAmericaActExpansionSources.map(({ id }) => id),
+  sourceCatalog: britishNorthAmericaActExpansionSources,
+  rationale: "Le placement spatial des huit dates sur une carte politique oblige l’élève à coordonner les repères chronologiques et la localisation de toutes les provinces et de tous les territoires. Les créations ou adhésions simultanées sont regroupées dans une même zone.",
+  associationInteraction: {
+    map: { imageUrl: "/historical-documents/carte-politique-canada-interactive.svg", imageAlt: "Carte politique du Canada montrant les provinces et les territoires." },
+    items: [
+      { id: "date-map-1873", label: "1873" },
+      { id: "date-map-1905", label: "1905" },
+      { id: "date-map-1867", label: "1867" },
+      { id: "date-map-1949", label: "1949" },
+      { id: "date-map-1871", label: "1871" },
+      { id: "date-map-1870", label: "1870" },
+      { id: "date-map-1898", label: "1898" },
+      { id: "date-map-1999", label: "1999" },
+    ],
+    targets: [
+      { id: "map-zone-yukon", label: "Yukon", description: "Yukon", correctItemId: "date-map-1898", zone: { x: 5.5, y: 43.5, width: 8, height: 5 } },
+      { id: "map-zone-nunavut", label: "Nunavut", description: "Nunavut", correctItemId: "date-map-1999", zone: { x: 45.5, y: 39, width: 9, height: 5 } },
+      { id: "map-zone-bc", label: "Colombie-Britannique", description: "Colombie-Britannique", correctItemId: "date-map-1871", zone: { x: 8, y: 68.5, width: 10, height: 5 } },
+      { id: "map-zone-ab-sk", label: "Alberta et Saskatchewan", description: "Alberta et Saskatchewan", correctItemId: "date-map-1905", zone: { x: 20.75, y: 56, width: 8.5, height: 5 } },
+      { id: "map-zone-mb-nwt", label: "Manitoba et Territoires du Nord-Ouest", description: "Manitoba et Territoires du Nord-Ouest", correctItemId: "date-map-1870", zone: { x: 34.5, y: 59, width: 12, height: 5 } },
+      { id: "map-zone-founders", label: "Ontario, Québec, Nouveau-Brunswick et Nouvelle-Écosse", description: "Ontario, Québec, Nouveau-Brunswick et Nouvelle-Écosse", correctItemId: "date-map-1867", zone: { x: 58.5, y: 73, width: 15, height: 5 } },
+      { id: "map-zone-pei", label: "Île-du-Prince-Édouard", description: "Île-du-Prince-Édouard", correctItemId: "date-map-1873", zone: { x: 76.5, y: 67.5, width: 9, height: 5 } },
+      { id: "map-zone-nl", label: "Terre-Neuve", description: "Terre-Neuve", correctItemId: "date-map-1949", zone: { x: 85, y: 66, width: 9, height: 5 } },
+    ],
+  },
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: true, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const BRITISH_NORTH_AMERICA_ACT_CONFERENCES_ASSOCIATION_QUESTION = {
+  schemaVersion: 1,
+  id: "question:acte-de-l-amerique-du-nord-britannique:interactive-association-003",
+  scope: "notional",
+  knowledgeHeadingId: "acte-de-l-amerique-du-nord-britannique",
+  relatedKnowledgeHeadingIds: ["acte-de-l-amerique-du-nord-britannique"],
+  referenceCardId: "reference-card:acte-de-l-amerique-du-nord-britannique",
+  historicalRecordId: BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "interactive-association",
+  prompt: "Associe chaque conférence à son objectif principal et à son résultat dans la création du Dominion du Canada.",
+  instruction: "Déplace le nom de chaque conférence vers la description correspondante. Distingue l’accord de principe, la définition du projet et la préparation de la loi.",
+  expectedAnswer: "Charlottetown — élargir le projet initial d’union des Maritimes et obtenir un accord de principe sur une union fédérale; Québec — préciser le fonctionnement de la fédération et produire les 72 Résolutions; Londres — transformer les arrangements en projet de loi britannique menant à l’AANB.",
+  historicalDocumentIds: [],
+  commonErrors: ["Associer les 72 Résolutions à la conférence de Charlottetown.", "Affirmer que l’AANB est adoptée à la conférence de Québec.", "Présenter Londres comme le lieu où l’idée d’une union élargie est proposée pour la première fois.", "Confondre la préparation du projet de loi à Londres avec son entrée en vigueur le 1er juillet 1867."],
+  distractors: [],
+  operationId: "differences_and_similarities",
+  sourceIds: britishNorthAmericaActConferenceSources.map(({ id }) => id),
+  sourceCatalog: britishNorthAmericaActConferenceSources,
+  rationale: "L’association oblige l’élève à distinguer la fonction successive des trois conférences plutôt qu’à mémoriser seulement leur lieu et leur date : accord de principe, arrangements constitutionnels, puis mise en forme législative.",
+  associationInteraction: {
+    items: [
+      { id: "conference-quebec", label: "Conférence de Québec" },
+      { id: "conference-london", label: "Conférence de Londres" },
+      { id: "conference-charlottetown", label: "Conférence de Charlottetown" },
+    ],
+    targets: [
+      { id: "result-principle", description: "Élargir le projet initial d’union des Maritimes et convenir de poursuivre la création d’une fédération des colonies britanniques.", correctItemId: "conference-charlottetown" },
+      { id: "result-resolutions", description: "Préciser les institutions, la représentation et le partage des pouvoirs dans les 72 Résolutions.", correctItemId: "conference-quebec" },
+      { id: "result-legislation", description: "Mettre les arrangements en forme législative avec les autorités britanniques avant leur adoption par le Parlement britannique.", correctItemId: "conference-london" },
+    ],
+  },
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: true, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const BRITISH_NORTH_AMERICA_ACT_COMPETENCIES_ASSOCIATION_QUESTION = {
+  schemaVersion: 1,
+  id: "question:acte-de-l-amerique-du-nord-britannique:interactive-association-005",
+  scope: "notional",
+  knowledgeHeadingId: "acte-de-l-amerique-du-nord-britannique",
+  relatedKnowledgeHeadingIds: ["acte-de-l-amerique-du-nord-britannique"],
+  referenceCardId: "reference-card:acte-de-l-amerique-du-nord-britannique",
+  historicalRecordId: BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "interactive-association",
+  prompt: "Associe chaque compétence à l’ordre de gouvernement auquel elle est attribuée par l’AANB de 1867.",
+  instruction: "Classe chaque compétence dans l’une des trois catégories : fédéral, provincial ou fédéral et provincial.",
+  expectedAnswer: "Fédéral — défense; monnaie et banques; service postal; droit criminel; affaires indiennes. Provincial — municipalités; hôpitaux; propriété et droits civils; éducation. Fédéral et provincial — agriculture; immigration.",
+  historicalDocumentIds: [],
+  commonErrors: ["Classer l’éducation comme une compétence fédérale.", "Classer l’agriculture ou l’immigration dans un seul ordre de gouvernement.", "Classer les affaires indiennes comme une compétence provinciale.", "Confondre les institutions administrées par les provinces avec les domaines communs confiés au Parlement fédéral."],
+  distractors: [],
+  operationId: "relationships_between_facts",
+  sourceIds: britishNorthAmericaActCompetencySources.map(({ id }) => id),
+  sourceCatalog: britishNorthAmericaActCompetencySources,
+  rationale: "Le classement met directement en relation les principales compétences constitutionnelles avec les trois formes d’attribution prévues en 1867 : fédérale, provinciale et concurrente. Il couvre ainsi un élément central de la précision « Structure du fédéralisme canadien » sans traiter les conflits fédéraux-provinciaux ultérieurs.",
+  associationInteraction: {
+    items: [
+      { id: "aanb-defence", label: "Défense" },
+      { id: "aanb-currency-banks", label: "Monnaie et banques" },
+      { id: "aanb-postal", label: "Service postal" },
+      { id: "aanb-criminal-law", label: "Droit criminel" },
+      { id: "aanb-indian-affairs", label: "Affaires indiennes" },
+      { id: "aanb-municipalities", label: "Municipalités" },
+      { id: "aanb-hospitals", label: "Hôpitaux" },
+      { id: "aanb-property-civil-rights", label: "Propriété et droits civils" },
+      { id: "aanb-education", label: "Éducation" },
+      { id: "aanb-agriculture", label: "Agriculture" },
+      { id: "aanb-immigration", label: "Immigration" },
+    ],
+    targets: [],
+    categories: [
+      { id: "aanb-federal", label: "Fédéral", articleLabel: "Article 91", description: "Compétences attribuées au Parlement du Canada.", correctItemIds: ["aanb-defence", "aanb-currency-banks", "aanb-postal", "aanb-criminal-law", "aanb-indian-affairs"] },
+      { id: "aanb-provincial", label: "Provincial", articleLabel: "Articles 92 et 93", description: "Compétences attribuées aux législatures provinciales.", correctItemIds: ["aanb-municipalities", "aanb-hospitals", "aanb-property-civil-rights", "aanb-education"] },
+      { id: "aanb-shared", label: "Fédéral et provincial", articleLabel: "Article 95", description: "Compétences exercées par les deux ordres de gouvernement.", correctItemIds: ["aanb-agriculture", "aanb-immigration"] },
+    ],
+  },
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: true, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const BRITISH_NORTH_AMERICA_ACT_CONFERENCE_PARTICIPATION_QUESTION = {
+  schemaVersion: 1,
+  id: "question:acte-de-l-amerique-du-nord-britannique:short-answer-001",
+  scope: "notional",
+  knowledgeHeadingId: "acte-de-l-amerique-du-nord-britannique",
+  relatedKnowledgeHeadingIds: ["acte-de-l-amerique-du-nord-britannique"],
+  referenceCardId: "reference-card:acte-de-l-amerique-du-nord-britannique",
+  historicalRecordId: BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD.id,
+  status: "ready-for-review",
+  format: "short-answer",
+  prompt: "Pourquoi la participation de l’Île-du-Prince-Édouard et de Terre-Neuve aux conférences sur la Confédération ne fait-elle pas de ces colonies des provinces fondatrices du Dominion du Canada en 1867?",
+  instruction: "Distingue leur participation aux discussions de leur décision concernant l’adhésion au Dominion.",
+  expectedAnswer: "L’Île-du-Prince-Édouard et Terre-Neuve participent au processus, mais refusent alors les conditions proposées et ne deviennent pas des provinces fondatrices.",
+  historicalDocumentIds: [BRITISH_NORTH_AMERICA_INSULAR_COLONIES_NON_ADHESION_DOCUMENT.id],
+  commonErrors: ["Présenter l’Île-du-Prince-Édouard et Terre-Neuve comme des provinces fondatrices parce qu’elles participent aux conférences.", "Affirmer que toutes les colonies présentes aux discussions adhèrent automatiquement au Dominion.", "Confondre la participation aux conférences avec l’adoption de l’AANB.", "Oublier de préciser que les deux colonies refusent alors les conditions proposées."],
+  distractors: [],
+  operationId: "relationships_between_facts",
+  sourceIds: britishNorthAmericaActConferenceParticipationSources.map(({ id }) => id),
+  sourceCatalog: britishNorthAmericaActConferenceParticipationSources,
+  rationale: "La question oblige l’élève à mettre en relation deux faits distincts : la participation aux négociations et la décision d’adhérer ou non au Dominion. Elle corrige l’idée fréquente selon laquelle toutes les colonies présentes aux conférences deviennent automatiquement des provinces fondatrices.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: true, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const FEDERAL_PROVINCIAL_RELATIONS_METIS_COMPARISON_QUESTION = {
+  schemaVersion: 1,
+  id: "question:relations-federales-provinciales:document-interpretation-001",
+  scope: "notional",
+  knowledgeHeadingId: "relations-federales-provinciales",
+  relatedKnowledgeHeadingIds: ["relations-federales-provinciales"],
+  referenceCardId: "reference-card:relations-federales-provinciales",
+  historicalRecordId: "historical-record:relations-federales-provinciales",
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Compare les causes, les moyens et les issues des résistances métisses de 1869-1870 et de 1885.",
+  instruction: "À l’aide des deux documents et de leur mise en contexte, présente au moins une cause commune, distingue les moyens employés dans chaque résistance et explique pourquoi leurs issues sont différentes.",
+  expectedAnswer: "Les deux résistances naissent de la crainte de perdre les terres métisses et du manque de consultation ou de représentation auprès du gouvernement canadien. En 1869-1870, les Métis bloquent l’entrée des représentants canadiens, occupent Upper Fort Garry et forment un gouvernement provisoire qui négocie avec Ottawa. Cette stratégie mène à la création du Manitoba et à certaines garanties dans la Loi sur le Manitoba. En 1885, après plusieurs pétitions restées sans réponse satisfaisante, les Métis de la Saskatchewan forment aussi un gouvernement provisoire, mais la résistance devient armée. Les troupes fédérales remportent la bataille de Batoche; Riel se rend, est jugé puis exécuté. Les causes et certains moyens politiques se ressemblent donc, mais la première résistance aboutit à une négociation constitutionnelle tandis que la seconde se termine par une défaite militaire et une répression judiciaire.",
+  historicalDocumentIds: federalProvincialMetisDocuments.map(({ id }) => id),
+  commonErrors: ["Présenter les deux résistances comme des événements identiques séparés seulement par leur date.", "Oublier les pétitions et les gouvernements provisoires pour ne retenir que les combats.", "Affirmer que la résistance de 1869-1870 se termine par la défaite militaire des Métis.", "Affirmer que la Loi sur le Manitoba règle immédiatement et complètement toutes les revendications territoriales métisses."],
+  distractors: [],
+  operationId: "causes_and_consequences",
+  sourceIds: federalProvincialMetisSources.map(({ id }) => id),
+  sourceCatalog: federalProvincialMetisSources,
+  rationale: "Les deux sources expriment le point de vue des dirigeants des résistances à deux moments comparables. La déclaration de 1869 documente la cause, le gouvernement provisoire et la volonté de négocier; le discours judiciaire de 1885 documente les griefs, les pétitions, le passage à l’affrontement et la défaite personnelle de Riel. Leur confrontation permet de déterminer des causes et des conséquences tout en distinguant les moyens et les issues.",
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+export const FEDERAL_PROVINCIAL_RELATIONS_COMPETENCIES_ASSOCIATION_QUESTION = {
+  schemaVersion: 1,
+  id: "question:relations-federales-provinciales:interactive-association-001",
+  scope: "notional",
+  knowledgeHeadingId: "relations-federales-provinciales",
+  relatedKnowledgeHeadingIds: ["relations-federales-provinciales"],
+  referenceCardId: "reference-card:relations-federales-provinciales",
+  historicalRecordId: "historical-record:relations-federales-provinciales",
+  status: "ready-for-review",
+  format: "interactive-association",
+  prompt: "Classe chaque compétence sous le bon ordre de gouvernement.",
+  instruction: "Déplace chaque étiquette dans la colonne « Fédéral — article 91 » ou « Provincial — article 92 ». Porte une attention particulière à l’éducation, puis lis la zone de tension après la vérification.",
+  expectedAnswer: "Fédéral — commerce et échanges; défense et milice; service postal; monnaie et banques; droit criminel; affaires indiennes et terres réservées aux Indiens. Provincial — taxation directe dans la province; municipalités; hôpitaux; propriété et droits civils; administration de la justice; matières locales ou privées; éducation. Zone de tension — l’éducation relève des provinces en vertu de l’article 93, mais elle est encadrée par des garanties confessionnelles; le pouvoir fédéral de désaveu et la possibilité d’une intervention réparatrice peuvent alors entrer en tension avec l’autonomie provinciale.",
+  historicalDocumentIds: [FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT.id],
+  commonErrors: ["Classer l’éducation comme une compétence fédérale.", "Confondre le pouvoir fédéral général de taxation avec la taxation directe attribuée aux provinces.", "Présenter le désaveu comme une compétence provinciale ou comme une décision d’un tribunal.", "Conclure qu’une intervention fédérale retire définitivement l’éducation aux provinces."],
+  distractors: [],
+  operationId: "establish_facts",
+  sourceIds: federalProvincialCompetencySources.map(({ id }) => id),
+  sourceCatalog: federalProvincialCompetencySources,
+  rationale: "Le classement oblige l’élève à repérer des faits constitutionnels essentiels dans les articles 91 et 92. La mise en évidence de l’éducation prépare ensuite l’explication d’une tension entre compétence provinciale, garanties scolaires et pouvoirs fédéraux d’intervention.",
+  associationInteraction: {
+    documentId: FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT.id,
+    items: [
+      { id: "trade", label: "Commerce et échanges" },
+      { id: "defence", label: "Défense et milice" },
+      { id: "postal", label: "Service postal" },
+      { id: "currency-banks", label: "Monnaie et banques" },
+      { id: "criminal-law", label: "Droit criminel" },
+      { id: "indian-affairs", label: "Affaires indiennes et terres réservées" },
+      { id: "direct-taxation", label: "Taxation directe dans la province" },
+      { id: "municipalities", label: "Municipalités" },
+      { id: "hospitals", label: "Hôpitaux" },
+      { id: "property-civil-rights", label: "Propriété et droits civils" },
+      { id: "justice", label: "Administration de la justice" },
+      { id: "local-matters", label: "Matières locales ou privées" },
+      { id: "education", label: "Éducation" },
+    ],
+    targets: [],
+    categories: [
+      { id: "federal", label: "Ordre fédéral", articleLabel: "Article 91", description: "Compétences exercées par le Parlement du Canada.", correctItemIds: ["trade", "defence", "postal", "currency-banks", "criminal-law", "indian-affairs"] },
+      { id: "provincial", label: "Ordre provincial", articleLabel: "Article 92 — et article 93 pour l’éducation", description: "Compétences exercées par les législatures provinciales.", correctItemIds: ["direct-taxation", "municipalities", "hospitals", "property-civil-rights", "justice", "local-matters", "education"] },
+    ],
+    tension: {
+      title: "Zone de tension : l’éducation et le désaveu",
+      prompt: "Pourquoi une compétence provinciale comme l’éducation peut-elle provoquer un conflit avec le gouvernement fédéral?",
+      explanation: "L’éducation relève des provinces, mais l’article 93 protège certains droits scolaires confessionnels. Une minorité peut demander une intervention fédérale, tandis que le pouvoir de désaveu permet à Ottawa de faire cesser l’effet d’une loi provinciale. Cette possibilité d’intervention entre en tension avec l’autonomie provinciale sans transformer l’éducation en compétence fédérale.",
+    },
+  },
+  review: { documented: true, historicallyVerified: true, pedagogicallyVerified: false, biasAndLanguageReviewed: false, approvedBy: null, approvedVersion: null, approvedAt: null },
+} as const satisfies ApprovedQuestion;
+
+
 // Source unique de toutes les questions, quel que soit leur point d’entrée.
 // Les vues par notion et la vue transversale filtrent ce même catalogue.
-export const PEDAGOGICAL_QUESTION_CATALOG: readonly ApprovedQuestion[] = [ACTE_UNION_CAUSAL_PILOT_QUESTION, ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION, ACTE_UNION_TIMELINE_CAUSAL_DEVELOPMENT_QUESTION, ACTE_UNION_DEFINITION_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_DURHAM_DEFINITION_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_EQUAL_REPRESENTATION_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_LANGUAGE_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_PROVINCE_SECTIONS_SHORT_ANSWER_QUESTION, ACTE_UNION_RESPONSIBLE_GOVERNMENT_SHORT_ANSWER_QUESTION, ACTE_UNION_SHARED_DEBT_SHORT_ANSWER_QUESTION, ACTE_UNION_LAFONTAINE_OPPOSITION_SHORT_ANSWER_QUESTION, ACTE_UNION_1840_1841_SHORT_ANSWER_QUESTION, ACTE_UNION_POLITICAL_TRANSFORMATION_DOCUMENT_QUESTION, ACTE_UNION_RUSSELL_LAFONTAINE_COMPARISON_QUESTION, ACTE_UNION_DURHAM_ACT_COMPARISON_QUESTION, ACTE_UNION_DEBT_STRUCTURE_RELATIONSHIP_QUESTION, ACTE_UNION_DEBT_OPPOSITION_CAUSAL_QUESTION, ACTE_UNION_SOLUTION_INJUSTICE_DOCUMENT_QUESTION, ACTE_UNION_DURHAM_RECOMMENDATIONS_DOCUMENT_QUESTION, ACTE_UNION_DURHAM_ASSIMILATION_CAUSAL_QUESTION, ACTE_UNION_DURHAM_CONTINUITY_DOCUMENT_QUESTION, ACTE_UNION_DURHAM_FINANCIAL_CAUSES_CONSEQUENCES_QUESTION, ACTE_UNION_WYLD_TERRITORIAL_TRANSFORMATION_QUESTION, ACTE_UNION_WYLD_TERRITORIES_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_REBELLION_CONSEQUENCES_DOCUMENT_QUESTION, ACTE_UNION_CAUSES_CONSEQUENCES_DEVELOPMENT_QUESTION, ACTE_UNION_DURHAM_ACT_DEVELOPMENT_QUESTION, ACTE_UNION_DEBT_REPRESENTATION_DEVELOPMENT_QUESTION, ACTE_UNION_DURHAM_OPPOSITION_CAUSAL_DEVELOPMENT_QUESTION, ACTE_UNION_REPRESSION_DOCUMENT_MULTIPLE_CHOICE_QUESTION, RESPONSIBLE_GOVERNMENT_COALITION_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_TIMELINE_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_TIMELINE_CAUSAL_DEVELOPMENT_QUESTION, RESPONSIBLE_GOVERNMENT_CAUSAL_CHAIN_QUESTION, RESPONSIBLE_GOVERNMENT_FUNCTIONING_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_LIMITED_POLITICAL_PARTICIPATION_QUESTION, RESPONSIBLE_GOVERNMENT_LOSS_OF_CONFIDENCE_MULTIPLE_CHOICE_QUESTION, RESPONSIBLE_GOVERNMENT_ELGIN_ROLE_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_ELGIN_GREY_DOCUMENT_INTERPRETATION_QUESTION, RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_INTERPRETATION_QUESTION, RESPONSIBLE_GOVERNMENT_METCALFE_ELGIN_COMPARISON_QUESTION, RESPONSIBLE_GOVERNMENT_INSTABILITY_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_DOCUMENT_QUESTION, RESPONSIBLE_GOVERNMENT_REBELLION_LOSSES_CONSEQUENCE_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_REBELLION_LOSSES_CONSEQUENCES_DOCUMENT_QUESTION, ACTE_UNION_SYDENHAM_ROLE_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_POLITICAL_INSTITUTIONS_ASSOCIATION_QUESTION, ACTE_UNION_ADOPTION_SEQUENCE_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_LANGUAGE_SCOPE_SHORT_ANSWER_QUESTION];
+export const PEDAGOGICAL_QUESTION_CATALOG: readonly ApprovedQuestion[] = [ACTE_UNION_CAUSAL_PILOT_QUESTION, ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION, ACTE_UNION_TIMELINE_CAUSAL_DEVELOPMENT_QUESTION, ACTE_UNION_DEFINITION_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_DURHAM_DEFINITION_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_EQUAL_REPRESENTATION_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_LANGUAGE_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_PROVINCE_SECTIONS_SHORT_ANSWER_QUESTION, ACTE_UNION_RESPONSIBLE_GOVERNMENT_SHORT_ANSWER_QUESTION, ACTE_UNION_SHARED_DEBT_SHORT_ANSWER_QUESTION, ACTE_UNION_LAFONTAINE_OPPOSITION_SHORT_ANSWER_QUESTION, ACTE_UNION_1840_1841_SHORT_ANSWER_QUESTION, ACTE_UNION_POLITICAL_TRANSFORMATION_DOCUMENT_QUESTION, ACTE_UNION_RUSSELL_LAFONTAINE_COMPARISON_QUESTION, ACTE_UNION_DURHAM_ACT_COMPARISON_QUESTION, ACTE_UNION_DEBT_STRUCTURE_RELATIONSHIP_QUESTION, ACTE_UNION_DEBT_OPPOSITION_CAUSAL_QUESTION, ACTE_UNION_SOLUTION_INJUSTICE_DOCUMENT_QUESTION, ACTE_UNION_DURHAM_RECOMMENDATIONS_DOCUMENT_QUESTION, ACTE_UNION_DURHAM_ASSIMILATION_CAUSAL_QUESTION, ACTE_UNION_DURHAM_CONTINUITY_DOCUMENT_QUESTION, ACTE_UNION_DURHAM_FINANCIAL_CAUSES_CONSEQUENCES_QUESTION, ACTE_UNION_WYLD_TERRITORIAL_TRANSFORMATION_QUESTION, ACTE_UNION_WYLD_TERRITORIES_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_REBELLION_CONSEQUENCES_DOCUMENT_QUESTION, ACTE_UNION_CAUSES_CONSEQUENCES_DEVELOPMENT_QUESTION, ACTE_UNION_DURHAM_ACT_DEVELOPMENT_QUESTION, ACTE_UNION_DEBT_REPRESENTATION_DEVELOPMENT_QUESTION, ACTE_UNION_DURHAM_OPPOSITION_CAUSAL_DEVELOPMENT_QUESTION, ACTE_UNION_REPRESSION_DOCUMENT_MULTIPLE_CHOICE_QUESTION, RESPONSIBLE_GOVERNMENT_COALITION_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_TIMELINE_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_TIMELINE_CAUSAL_DEVELOPMENT_QUESTION, RESPONSIBLE_GOVERNMENT_CAUSAL_CHAIN_QUESTION, RESPONSIBLE_GOVERNMENT_FUNCTIONING_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_LIMITED_POLITICAL_PARTICIPATION_QUESTION, RESPONSIBLE_GOVERNMENT_LOSS_OF_CONFIDENCE_MULTIPLE_CHOICE_QUESTION, RESPONSIBLE_GOVERNMENT_ELGIN_ROLE_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_ELGIN_GREY_DOCUMENT_INTERPRETATION_QUESTION, RESPONSIBLE_GOVERNMENT_GEORGE_BROWN_COALITION_INTERPRETATION_QUESTION, RESPONSIBLE_GOVERNMENT_METCALFE_ELGIN_COMPARISON_QUESTION, RESPONSIBLE_GOVERNMENT_INSTABILITY_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_DOCUMENT_QUESTION, RESPONSIBLE_GOVERNMENT_REBELLION_LOSSES_CONSEQUENCE_SHORT_ANSWER_QUESTION, RESPONSIBLE_GOVERNMENT_REBELLION_LOSSES_CONSEQUENCES_DOCUMENT_QUESTION, ACTE_UNION_SYDENHAM_ROLE_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_POLITICAL_INSTITUTIONS_ASSOCIATION_QUESTION, ACTE_UNION_ADOPTION_SEQUENCE_MULTIPLE_CHOICE_QUESTION, ACTE_UNION_LANGUAGE_SCOPE_SHORT_ANSWER_QUESTION, COLONIAL_ECONOMY_MARKETS_CHANGE_CONTINUITY_QUESTION, COLONIAL_ECONOMY_CORN_LAWS_MULTIPLE_CHOICE_QUESTION, COLONIAL_ECONOMY_RECIPROCITY_MULTIPLE_CHOICE_QUESTION, COLONIAL_ECONOMY_CONCEPTS_ASSOCIATION_QUESTION, COLONIAL_ECONOMY_CORN_LAWS_REPEAL_CONSEQUENCE_QUESTION, COLONIAL_ECONOMY_CIVIL_WAR_RECIPROCITY_CAUSAL_QUESTION, COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART_QUESTION, COLONIAL_ECONOMY_CORN_LAWS_VIEWPOINT_COMPARISON_QUESTION, COLONIAL_ECONOMY_RECIPROCITY_TRADE_MAP_QUESTION, INDIAN_AFFAIRS_BAGOT_CONSEQUENCES_QUESTION, INDIAN_AFFAIRS_THOMAS_MOORE_ASSIMILATION_QUESTION, INDIAN_AFFAIRS_QUAPPELLE_FAMILY_SEPARATION_QUESTION, INDIAN_AFFAIRS_CHRISTIANIZATION_CONSEQUENCE_QUESTION, INDIAN_AFFAIRS_INDIAN_ACT_CONTROL_QUESTION, INDIAN_AFFAIRS_RESERVE_MANAGEMENT_QUESTION, INDIAN_AFFAIRS_SCHOOL_ENROLMENT_CHANGE_QUESTION, INDIAN_AFFAIRS_1876_STATE_RELATIONS_VIEWPOINT_COMPARISON_QUESTION, INDIAN_AFFAIRS_RESERVES_EXPANSION_CHANGE_CONTINUITY_QUESTION, BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_EVOLUTION_QUESTION, BRITISH_NORTH_AMERICA_ACT_CONFEDERATION_VIEWPOINTS_QUESTION, BRITISH_NORTH_AMERICA_ACT_RAILWAY_CONDITION_QUESTION, BRITISH_NORTH_AMERICA_ACT_COALITION_CAUSAL_QUESTION, BRITISH_NORTH_AMERICA_ACT_INTERCOLONIAL_CAUSE_CONSEQUENCE_QUESTION, BRITISH_NORTH_AMERICA_ACT_AMERICAN_THREAT_QUESTION, BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_FEAR_QUESTION, BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_DATES_ASSOCIATION_QUESTION, BRITISH_NORTH_AMERICA_ACT_PROVINCES_EXPANSION_ASSOCIATION_QUESTION, BRITISH_NORTH_AMERICA_ACT_MAP_ADHESION_DATES_QUESTION, BRITISH_NORTH_AMERICA_ACT_CONFERENCES_ASSOCIATION_QUESTION, BRITISH_NORTH_AMERICA_ACT_COMPETENCIES_ASSOCIATION_QUESTION, BRITISH_NORTH_AMERICA_ACT_CONFERENCE_PARTICIPATION_QUESTION, FEDERAL_PROVINCIAL_RELATIONS_METIS_COMPARISON_QUESTION, FEDERAL_PROVINCIAL_RELATIONS_COMPETENCIES_ASSOCIATION_QUESTION];
 
 export function getQuestionsForKnowledgeHeading(knowledgeHeadingId: string) {
   return PEDAGOGICAL_QUESTION_CATALOG.filter(({ relatedKnowledgeHeadingIds }) => relatedKnowledgeHeadingIds.includes(knowledgeHeadingId));

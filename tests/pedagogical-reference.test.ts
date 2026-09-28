@@ -1,12 +1,28 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  COLONIAL_ECONOMY_HISTORICAL_RECORD,
   getSecondaryFourKnowledgeHeading,
   getSecondaryFourPeriod,
   SECONDARY_FOUR_KNOWLEDGE_HEADINGS,
   SECONDARY_FOUR_PERIODS,
   SECONDARY_FOUR_PROGRAM_SOURCE,
 } from "../lib/pedagogical-reference/index.ts";
+import { validateHistoricalRecord } from "../lib/pedagogical-reference/historical-record.ts";
+
+test("documente complètement la notion Économie coloniale sans l’approuver automatiquement", () => {
+  const record = COLONIAL_ECONOMY_HISTORICAL_RECORD;
+  assert.equal(record.id, "historical-record:economie-coloniale");
+  assert.equal(record.status, "draft");
+  assert.deepEqual(record.knowledgePrecisions.map(({ officialLabel }) => officialLabel), [
+    "Adoption du libre-échange par le Royaume-Uni",
+    "Traité de réciprocité avec les États-Unis",
+  ]);
+  assert.ok(record.manual.sections.length >= 6);
+  assert.ok(record.sourceCatalog.length >= 8);
+  assert.ok(record.sourceCatalog.every(({ verificationStatus, locator }) => verificationStatus === "verified" && locator.length > 10));
+  assert.deepEqual(validateHistoricalRecord({ ...record, status: "ready-for-review" }), {});
+});
 
 test("identifie la source ministérielle officielle et ses pages de synthèse", () => {
   assert.equal(SECONDARY_FOUR_PROGRAM_SOURCE.publisher, "Gouvernement du Québec");
