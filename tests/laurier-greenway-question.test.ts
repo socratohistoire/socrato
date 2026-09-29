@@ -9,7 +9,8 @@ test("Laurier-Greenway comparison distinguishes conditional concessions from res
   assert.ok(PEDAGOGICAL_QUESTION_CATALOG.some(({ id }) => id === q.id));
   assert.deepEqual(q.historicalDocumentIds, ["RFP-T-006", "RFP-T-008"]);
   assert.equal(q.operationId, "changes_and_continuities");
-  assert.match(q.expectedAnswer, /^Non/);
+  assert.equal(q.prompt, "Quelles concessions le compromis Laurier-Greenway de 1896 accorde-t-il à la minorité catholique du Manitoba, et pourquoi ne répondent-elles pas entièrement à ses revendications scolaires?");
+  assert.match(q.instruction, /explique leurs limites/);
   assert.match(q.expectedAnswer, /ne rétablit pas/);
   assert.equal(q.sourceCatalog.length, 2);
   assert.equal(q.review.approvedAt, null);
