@@ -95,7 +95,7 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
   ...FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS.map((document) => ({
     id: document.id,
     title: document.title,
-    typeLabel: document.kind === "image" ? "Illustration commémorative" : document.id === "RFP-T-004" ? "Discours politique" : document.id === "RFP-T-001" ? "Déclaration politique" : document.id === "RFP-T-002" ? "Déclaration judiciaire" : "Texte constitutionnel",
+    typeLabel: document.kind === "image" ? "Illustration commémorative" : (document.id === "RFP-T-004" || document.id === "RFP-T-007") ? "Discours politique" : document.id === "RFP-T-001" ? "Déclaration politique" : document.id === "RFP-T-002" ? "Déclaration judiciaire" : "Texte constitutionnel",
     dateLabel: document.historicalDate,
     authorLabel: document.creator,
     institutionLabel: document.holdingInstitution,
@@ -104,7 +104,7 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
     rightsLabel: document.rightsStatement,
     editorialNote: document.interpretationCautions[0],
     content: document.kind === "image" ? { kind: "historical_image" as const, localSrc: document.assetUrl, alt: document.accessibleDescription, description: "Portrait publié dans À la mémoire de Louis Riel : la Marseillaise canadienne, Imprimerie Carmel, Montréal, 1885, p. 4." } : { kind: "historical_excerpt" as const, excerpt: document.transcription },
-    historicalKnowledgeIds: document.id === "RFP-T-006" ? ["relations-federales-provinciales", "question-des-ecoles-du-manitoba"] : document.id === "RFP-T-005" ? ["relations-federales-provinciales", "soulevements-metis", "riviere-rouge"] : ["relations-federales-provinciales", "soulevements-metis", "riviere-rouge", "batoche"],
+    historicalKnowledgeIds: document.id === "RFP-T-007" ? ["relations-federales-provinciales", "question-des-ecoles-du-nouveau-brunswick"] : document.id === "RFP-T-006" ? ["relations-federales-provinciales", "question-des-ecoles-du-manitoba"] : document.id === "RFP-T-005" ? ["relations-federales-provinciales", "soulevements-metis", "riviere-rouge"] : ["relations-federales-provinciales", "soulevements-metis", "riviere-rouge", "batoche"],
     intellectualOperationIds: [...document.operationIds],
   })),
   ...INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.map((document) => ({

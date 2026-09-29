@@ -154,10 +154,29 @@ export const MANITOBA_SCHOOLS_DOCUMENT = {
   version: "1.0", approvedAt: null,
 } as const satisfies HistoricalDocumentRecord;
 
+export const NEW_BRUNSWICK_SCHOOLS_DOCUMENT = {
+  schemaVersion: 1, id: "RFP-T-007", title: "Discours sur les écoles du Nouveau-Brunswick", kind: "other", status: "ready-for-review",
+  periodIds: ["1840-1896"], knowledgeHeadingIds: ["relations-federales-provinciales"], operationIds: ["establish_facts", "causes_and_consequences"],
+  historicalDate: "14 mai 1873 (édition de 1890)", creator: "Honoré Mercier, député de Rouville; discours recueilli par Joseph-Octave Pelland",
+  holdingInstitution: "Wikisource, transcription du recueil de Joseph-Octave Pelland",
+  sourceUrl: "https://fr.wikisource.org/wiki/Biographie,_discours,_conférences,_etc._de_l’Hon._Honoré_Mercier/Question_des_Écoles_du_Nouveau-Brunswick",
+  sourceLocator: "Joseph-Octave Pelland, Biographie, discours, conférences, etc. de l’Hon. Honoré Mercier, Montréal, 1890, p. 43-44 : discours à la Chambre des communes du 14 mai 1873.",
+  assetUrl: "https://fr.wikisource.org/wiki/Biographie,_discours,_conférences,_etc._de_l’Hon._Honoré_Mercier/Question_des_Écoles_du_Nouveau-Brunswick#43",
+  rightsStatement: "Discours de 1873 publié en 1890, domaine public. Trois phrases françaises non consécutives, sans reformulation; […] signale les coupures.",
+  transcription: "Cette loi rappelle l’acte de 1858 et décrète qu’à l’avenir les écoles, dans le Nouveau-Brunswick, seront non-sectaires, c’est-à-dire non confessionnelles. […] Cette conséquence terrible pour les catholiques est rendue inévitable par la section 58 § 12 qui déclare qu’aucun argent ne sera donné en faveur de toute école qui ne sera pas conduite suivant les dispositions ci-dessus, c’est-à-dire à une école qui sera catholique. […] Voilà quelques-unes des dispositions de cette loi de 1871 ; elles sécularisent l’enseignement et chassent la religion de l’école.",
+  accessibleDescription: "Mercier décrit le caractère non confessionnel imposé aux écoles financées publiquement et dénonce ses conséquences pour l’enseignement catholique.",
+  historicalContext: "La Common Schools Act de 1871 instaure au Nouveau-Brunswick un réseau public non confessionnel financé par une taxe scolaire. Les écoles confessionnelles ne sont plus admissibles au financement public prévu par ce régime. Des catholiques s’opposent à cette réforme parce qu’ils souhaitent conserver un enseignement conforme à leur religion et doivent contribuer au réseau public même s’ils financent leurs propres écoles. Mercier intervient aux Communes pour soutenir leurs revendications.",
+  observationGuide: ["Repérer le changement dans le caractère religieux des écoles.", "Relever la condition imposée pour obtenir des fonds publics.", "Distinguer la description de la réforme des expressions qui montrent l’opposition de Mercier."],
+  interpretationCautions: ["Le mot rappelle signifie ici abroge; deniers publics signifie fonds publics.", "Mercier défend les catholiques opposés à la réforme : conséquence terrible et chassent la religion expriment son jugement, non une description neutre.", "La loi impose la non-confessionnalité aux écoles relevant du régime public; elle n’interdit pas toute école catholique privée ni toute pratique religieuse. Non confessionnel ne signifie pas entièrement dépourvu de références chrétiennes.", "Ne pas assimiler cette réforme à une interdiction générale du français ni à la crise manitobaine de 1890."],
+  pedagogicalUses: ["Identifier le changement scolaire de 1871 qui provoque l’opposition catholique.", "Appuyer une réponse sur un témoignage parlementaire d’époque en tenant compte de son point de vue."],
+  version: "1.0", approvedAt: null,
+} as const satisfies HistoricalDocumentRecord;
+
 export const FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS = [
   ...FEDERAL_PROVINCIAL_RELATIONS_METIS_PRIMARY_DOCUMENTS,
   FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT,
   ...RIEL_EXECUTION_DOCUMENTS,
   MANITOBA_1870_DOCUMENT,
   MANITOBA_SCHOOLS_DOCUMENT,
+  NEW_BRUNSWICK_SCHOOLS_DOCUMENT,
 ] as const satisfies readonly HistoricalDocumentRecord[];
