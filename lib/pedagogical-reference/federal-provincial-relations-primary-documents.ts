@@ -136,9 +136,28 @@ export const MANITOBA_1870_DOCUMENT = {
   version: "1.0", approvedAt: null,
 } as const satisfies HistoricalDocumentRecord;
 
+export const MANITOBA_SCHOOLS_DOCUMENT = {
+  schemaVersion: 1, id: "RFP-T-006", title: "L’éducation dans la Loi sur le Manitoba", kind: "law-or-official-text", status: "ready-for-review",
+  periodIds: ["1840-1896"], knowledgeHeadingIds: ["relations-federales-provinciales"], operationIds: ["causal_connections"],
+  historicalDate: "12 mai 1870", creator: "Parlement du Canada",
+  holdingInstitution: "Recueil des textes constitutionnels · DocumentsPrimaires.ca",
+  sourceUrl: "https://primarydocuments.ca/wp-content/uploads/2017/12/ManAct81870May12.pdf",
+  sourceLocator: "Loi de 1870 sur le Manitoba, 33 Victoria, chapitre 3, article 22, dispositions introductives et paragraphes 1 à 3; recueil bilingue, no 8, p. 6.",
+  assetUrl: "https://primarydocuments.ca/wp-content/uploads/2017/12/ManAct81870May12.pdf#page=6",
+  rightsStatement: "Texte législatif de 1870, domaine public. Extrait français vérifié sur la page numérisée; […] signale les coupures. Numérotation retirée, ponctuation ajustée et majuscule initiale ajoutée au dernier passage.",
+  transcription: "Dans la province, la législature pourra exclusivement décréter des lois relatives à l’éducation, sujettes et conformes aux dispositions suivantes : […] Rien dans ces lois ne devra préjudicier à aucun droit ou privilège conféré, lors de l’Union, par la loi ou par la coutume à aucune classe particulière de personnes dans la province, relativement aux écoles séparées (denominational schools). Il pourra être interjeté appel au gouverneur-général en conseil de tout acte ou décision de la législature de la province ou de toute autorité provinciale affectant quelqu’un des droits ou privilèges de la minorité protestante ou catholique romaine des sujets de Sa Majesté relativement à l’éducation. […] Dans le cas où quelque décision du gouverneur-général en conseil, sur appel interjeté en vertu de cet article, ne serait pas dûment mise à exécution par l’autorité provinciale compétente, […] le parlement du Canada pourra décréter des lois propres à y remédier […].",
+  accessibleDescription: "Passages de l’article 22 établissant la compétence provinciale en éducation, des garanties confessionnelles, un recours au gouverneur général en conseil et un pouvoir fédéral de réparation.",
+  historicalContext: "En 1890, le Manitoba remplace le système scolaire confessionnel financé publiquement par un système public non confessionnel, privant les écoles catholiques de financement public. La minorité catholique réclame une intervention fédérale. L’article 22 fournit le cadre du recours : autonomie provinciale et protection des droits scolaires minoritaires entrent en tension. En 1895, le Comité judiciaire du Conseil privé reconnaît la possibilité du recours fédéral, malgré la validité de la loi provinciale reconnue auparavant.",
+  observationGuide: ["Repérer l’ordre de gouvernement responsable de l’éducation.", "Identifier les droits et les minorités mentionnés.", "Expliquer comment l’appel puis une loi réparatrice peuvent mettre en jeu les autorités fédérales."],
+  interpretationCautions: ["Le texte date de 1870 : il établit le cadre du conflit de 1890, sans raconter celui-ci.", "Les écoles séparées sont ici confessionnelles. Les droits religieux et les droits linguistiques ne sont pas identiques.", "Le gouverneur général en conseil désigne ici l’exécutif fédéral, non le Comité judiciaire du Conseil privé de Londres.", "Le paragraphe 3 est abrégé : le passage conserve le cas d’une décision sur appel non exécutée; le pouvoir réparateur est conditionnel et limité aux circonstances. Ce n’est ni un transfert général de l’éducation au fédéral ni le désaveu d’une loi.", "Ne pas présenter la loi scolaire de 1890 comme automatiquement inconstitutionnelle : le recours réparateur et le contrôle de validité sont distincts."],
+  pedagogicalUses: ["Expliquer pourquoi une politique scolaire provinciale peut susciter une intervention fédérale et un conflit entre les deux ordres de gouvernement."],
+  version: "1.0", approvedAt: null,
+} as const satisfies HistoricalDocumentRecord;
+
 export const FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS = [
   ...FEDERAL_PROVINCIAL_RELATIONS_METIS_PRIMARY_DOCUMENTS,
   FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT,
   ...RIEL_EXECUTION_DOCUMENTS,
   MANITOBA_1870_DOCUMENT,
+  MANITOBA_SCHOOLS_DOCUMENT,
 ] as const satisfies readonly HistoricalDocumentRecord[];
