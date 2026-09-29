@@ -102,7 +102,7 @@ function ReviewableTextDocument({ document }: { document: HistoricalDocumentReco
     <div className="document-bank__section-title"><p>Document à réviser · {document.id}</p><h2 id={`${document.id}-title`}>{document.title}</h2><span>{document.creator} · {document.historicalDate}</span></div>
     <div><article className="document-candidate document-candidate--preferred">
       <header><div><small>Source primaire · {document.historicalDate}</small><h3>{document.title}</h3><p>{document.holdingInstitution}</p></div><strong>Prêt pour révision</strong></header>
-      <section><h4>Extrait adapté pour l’élève</h4><HistoricalExcerpt text={document.transcription} attribution={document.creator} /></section>
+      {document.kind === "image" ? <figure><Image src={document.assetUrl} alt={document.accessibleDescription} width={601} height={950} style={{ width: "100%", maxWidth: 480, height: "auto" }} /><figcaption>{document.sourceLocator}</figcaption></figure> : <section><h4>Extrait pour l’élève</h4><HistoricalExcerpt text={document.transcription} attribution={document.creator} /></section>}
       <details className="document-verification-details"><summary>Détails de vérification</summary><div>
         <dl><div><dt>Code documentaire</dt><dd>{document.id}</dd></div><div><dt>Référence</dt><dd>{document.sourceLocator}</dd></div><div><dt>Traitement éditorial</dt><dd>{document.interpretationCautions[0]}</dd></div><div><dt>Droits</dt><dd>{document.rightsStatement}</dd></div></dl>
         <div className="document-candidate__assessment"><section><h4>Mise en contexte · enseignant seulement</h4><p>{document.historicalContext}</p></section><section><h4>Éléments à observer</h4><ul>{document.observationGuide.map((item) => <li key={item}>{item}</li>)}</ul></section></div>

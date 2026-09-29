@@ -83,7 +83,43 @@ export const FEDERAL_PROVINCIAL_RELATIONS_METIS_PRIMARY_DOCUMENTS = [
   FEDERAL_PROVINCIAL_RELATIONS_RIEL_TRIAL_SPEECH_DOCUMENT,
 ] as const satisfies readonly HistoricalDocumentRecord[];
 
+export const RIEL_EXECUTION_DOCUMENTS = [
+  {
+    schemaVersion: 1, id: "RFP-I-001", title: "Louis Riel dans une brochure commémorative", kind: "image", status: "ready-for-review",
+    periodIds: ["1840-1896"], knowledgeHeadingIds: ["relations-federales-provinciales"], operationIds: ["causal_connections"],
+    historicalDate: "1885", creator: "Illustrateur non identifié; Imprimerie Carmel, Montréal",
+    holdingInstitution: "Reproduction numérique diffusée sur Wikimedia Commons",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:A_la_memoire_de_Louis_Riel_-_la_Marseillaise_canadienne_(1885)_p4.png",
+    sourceLocator: "À la mémoire de Louis Riel : la Marseillaise canadienne, Montréal, Imprimerie Carmel, 1885, p. 4.",
+    assetUrl: "/historical-documents/riel-memoire-1885.png",
+    rightsStatement: "Illustration publiée en 1885; reproduction signalée comme appartenant au domaine public sur Wikimedia Commons. Image intégrale, non retouchée.",
+    transcription: "Louis Riel.",
+    accessibleDescription: "Portrait imprimé de Louis Riel en buste, entouré d’un encadrement décoratif, avec son nom sous le portrait. Page d’une brochure intitulée À la mémoire de Louis Riel, publiée en 1885.",
+    historicalContext: "Après l’exécution de Riel, des publications entretiennent sa mémoire. Le titre commémoratif de cette brochure est un indice d’hommage, mais le portrait seul ne permet pas de connaître les opinions de toute la population.",
+    observationGuide: ["Observer la place du portrait et du nom.", "Utiliser le titre et la date de la brochure pour interpréter la fonction de cette image.", "Relier cet hommage aux propos de Mercier sans prétendre que l’image prouve une réaction unanime."],
+    interpretationCautions: ["Il s’agit d’une illustration imprimée d’époque, et non d’une photographie de l’exécution.", "Le portrait et sa provenance documentent un hommage; ils ne mesurent pas l’adhésion de la population et ne montrent pas une manifestation."],
+    pedagogicalUses: ["Interpréter une publication commémorative en la confrontant à un discours politique de 1885."], version: "1.0", approvedAt: null,
+  },
+  {
+    schemaVersion: 1, id: "RFP-T-004", title: "Discours d’Honoré Mercier au Champ-de-Mars", kind: "other", status: "ready-for-review",
+    periodIds: ["1840-1896"], knowledgeHeadingIds: ["relations-federales-provinciales"], operationIds: ["causal_connections"],
+    historicalDate: "22 novembre 1885 (édition de 1890)", creator: "Honoré Mercier; discours recueilli par Joseph-Octave Pelland",
+    holdingInstitution: "Wikisource, transcription du recueil de Joseph-Octave Pelland",
+    sourceUrl: "https://fr.wikisource.org/wiki/Biographie,_discours,_conférences,_etc._de_l’Hon._Honoré_Mercier/Discours_prononcé_sur_le_Champ_de_Mars,_le_22_novembre_1885",
+    sourceLocator: "Joseph-Octave Pelland, Biographie, discours, conférences, etc. de l’Hon. Honoré Mercier, Montréal, 1890, p. 328-333 : discours prononcé le 22 novembre 1885.",
+    assetUrl: "https://fr.wikisource.org/wiki/Biographie,_discours,_conférences,_etc._de_l’Hon._Honoré_Mercier/Discours_prononcé_sur_le_Champ_de_Mars,_le_22_novembre_1885",
+    rightsStatement: "Discours de 1885 publié en 1890, domaine public. Extrait français de trois phrases; […] indique les coupures, sans reformulation des propos.",
+    transcription: "Riel, notre frère, est mort, victime de son dévouement à la cause des Métis dont il était le chef, victime du fanatisme et de la trahison ; du fanatisme de Sir John et de quelques-uns de ses amis ; de la trahison de trois des nôtres qui, pour garder leur portefeuille, ont vendu leur frère. […] En tuant Riel, Sir John n’a pas seulement frappé notre race au cœur, mais il a surtout frappé la cause de la justice et de l’humanité qui, représentée dans toutes les langues et sanctifiée par toutes les croyances religieuses, demandait grâce pour le prisonnier de Régina, notre pauvre frère du Nord-Ouest. […] Nous avons trois choses à faire : nous unir pour punir les coupables ; briser l’alliance que nos députés ont faite avec l’orangisme et chercher dans une alliance plus naturelle et moins dangereuse, la protection de nos intérêts nationaux.",
+    accessibleDescription: "Trois phrases du discours de Mercier : solidarité avec Riel, accusation contre Macdonald et des ministres canadiens-français, appel à une nouvelle alliance politique.",
+    historicalContext: "Riel est exécuté le 16 novembre 1885. Six jours plus tard, Honoré Mercier, chef libéral de l’opposition au Québec, prononce ce discours à Montréal. Sir John désigne le premier ministre fédéral John A. Macdonald. Les trois ministres visés sont Langevin, Chapleau et Caron.",
+    observationGuide: ["Interpréter l’expression notre frère.", "Identifier les dirigeants auxquels Mercier attribue une responsabilité.", "Relier l’indignation à l’appel à une action politique."],
+    interpretationCautions: ["Extrait de trois phrases non consécutives : les coupures sont signalées par […].", "Mercier est un adversaire politique du gouvernement : ses accusations sont un point de vue, non un constat neutre ni l’opinion de tous les Canadiens français.", "Race est un terme d’époque désignant ici une communauté d’origine et de culture; portefeuille désigne une fonction ministérielle. L’orangisme est un mouvement protestant associé à la loyauté britannique."],
+    pedagogicalUses: ["Expliquer comment la solidarité avec Riel et la responsabilité attribuée au gouvernement alimentent une opposition politique."], version: "1.0", approvedAt: null,
+  },
+] as const satisfies readonly HistoricalDocumentRecord[];
+
 export const FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS = [
   ...FEDERAL_PROVINCIAL_RELATIONS_METIS_PRIMARY_DOCUMENTS,
   FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT,
+  ...RIEL_EXECUTION_DOCUMENTS,
 ] as const satisfies readonly HistoricalDocumentRecord[];
