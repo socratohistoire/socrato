@@ -48,6 +48,8 @@ import "../pedagogical-reference.css";
 import "./historical-documents.css";
 import "./timeline-extension.css";
 import { NotionTabs } from "../notion-tabs";
+import { BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS } from "@/lib/pedagogical-reference/british-north-america-confederation-documents";
+import { BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS } from "@/lib/pedagogical-reference/british-north-america-act-maps";
 
 function DurhamStudentCardPreview({ presentation, number }: { presentation: HistoricalDocumentStudentPresentation; number: number }) {
   return <div className="student-document-preview" aria-label={`Aperçu de la carte élève : ${presentation.title}`}>
@@ -102,7 +104,7 @@ function ReviewableTextDocument({ document }: { document: HistoricalDocumentReco
     <div className="document-bank__section-title"><p>Document à réviser · {document.id}</p><h2 id={`${document.id}-title`}>{document.title}</h2><span>{document.creator} · {document.historicalDate}</span></div>
     <div><article className="document-candidate document-candidate--preferred">
       <header><div><small>Source primaire · {document.historicalDate}</small><h3>{document.title}</h3><p>{document.holdingInstitution}</p></div><strong>Prêt pour révision</strong></header>
-      {document.kind === "image" ? <figure><Image src={document.assetUrl} alt={document.accessibleDescription} width={601} height={950} style={{ width: "100%", maxWidth: 480, height: "auto" }} /><figcaption>{document.sourceLocator}</figcaption></figure> : <section><h4>Extrait pour l’élève</h4><HistoricalExcerpt text={document.transcription} attribution={document.creator} /></section>}
+      {document.kind === "image" || document.kind === "map" ? <figure><Image src={document.assetUrl} alt={document.accessibleDescription} width={1200} height={950} style={{ width: "100%", maxWidth: document.kind === "map" ? 1000 : 480, height: "auto" }} /><figcaption>{document.sourceLocator}</figcaption></figure> : <section><h4>Extrait pour l’élève</h4><HistoricalExcerpt text={document.transcription} attribution={document.creator} /></section>}
       <details className="document-verification-details"><summary>Détails de vérification</summary><div>
         <dl><div><dt>Code documentaire</dt><dd>{document.id}</dd></div><div><dt>Référence</dt><dd>{document.sourceLocator}</dd></div><div><dt>Traitement éditorial</dt><dd>{document.interpretationCautions[0]}</dd></div><div><dt>Droits</dt><dd>{document.rightsStatement}</dd></div></dl>
         <div className="document-candidate__assessment"><section><h4>Mise en contexte · enseignant seulement</h4><p>{document.historicalContext}</p></section><section><h4>Éléments à observer</h4><ul>{document.observationGuide.map((item) => <li key={item}>{item}</li>)}</ul></section></div>
@@ -117,7 +119,7 @@ function ReviewableTextDocument({ document }: { document: HistoricalDocumentReco
 export function HistoricalDocumentsNotionPage({ notionId }: { notionId: string }) {
   const officialHeading = SECONDARY_FOUR_PERIODS.flatMap(({ knowledgeHeadings }) => knowledgeHeadings).find(({ id }) => id === notionId);
   const notionLabel = notionId === "rebellions-1837-1838" ? "Rébellions de 1837-1838" : officialHeading?.officialLabel ?? notionId;
-  const hasDocuments = ["acte-union", "gouvernement-responsable", "rebellions-1837-1838", "economie-coloniale", "affaires-indiennes", "relations-federales-provinciales", "premiere-phase-d-industrialisation"].includes(notionId);
+  const hasDocuments = ["acte-union", "acte-de-l-amerique-du-nord-britannique", "gouvernement-responsable", "rebellions-1837-1838", "economie-coloniale", "affaires-indiennes", "relations-federales-provinciales", "premiere-phase-d-industrialisation"].includes(notionId);
   return <main className="reference-admin document-bank">
     <header className="reference-admin__header">
       <div><p>Administration · Référentiel pédagogique</p><h1>{notionLabel}</h1><span>{officialHeading ? `${SECONDARY_FOUR_PERIODS.find(({ id }) => id === officialHeading.periodId)?.officialPeriodLabel} · Dossier de la notion` : "Notion historique"}</span></div>
@@ -126,6 +128,7 @@ export function HistoricalDocumentsNotionPage({ notionId }: { notionId: string }
     <NotionTabs notionId={notionId} activeSection="documents" />
     <section className="document-bank__notion-title" aria-labelledby="pilot-title"><div className="document-bank__section-title"><p>Section de la notion</p><h2 id="pilot-title">Banque de documents historiques</h2><span>Documents originaux, notices de Socrato et usages pédagogiques approuvés</span></div></section>
     {!hasDocuments && <section className="document-bank__empty"><h2>Aucun document pour le moment</h2><p>Cette page est prête à recevoir les documents historiques associés à cette notion.</p></section>}
+    {notionId === "acte-de-l-amerique-du-nord-britannique" && [...BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS, ...BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS].map((document) => <ReviewableTextDocument document={document} key={document.id} />)}
 
     {notionId === "economie-coloniale" && <><ComparisonChartDocument chart={COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART} />{COLONIAL_ECONOMY_PRIMARY_DOCUMENTS.map((document) => <ReviewableTextDocument document={document} key={document.id} />)}</>}
     {notionId === "premiere-phase-d-industrialisation" && <section className="document-bank__iconography" aria-labelledby="industrialization-iconography-title">
