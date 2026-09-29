@@ -231,6 +231,25 @@ export const GOVERNMENT_REVENUE_DOCUMENTS = [
   },
 ] as const satisfies readonly HistoricalDocumentRecord[];
 
+export const MANITOBA_CARTOON_TRANSLATION = "Sur la tombe : « Ici repose pour de bon la question des écoles du Manitoba, réglée pacifiquement. Qu’elle repose en paix. » Titre : « Le début de la fin ». Légende : Laurier — « Maintenant, Greenway, mon garçon, il ne reste plus qu’à préparer les “restes”. » Sur les pelles : « Conciliation » (Greenway, à gauche) et « Compromis » (Laurier, à droite). Traduction française par Socrato; inscriptions originales conservées dans l’image.";
+
+export const MANITOBA_NEGOTIATION_CARTOON = {
+  schemaVersion: 1, id: "RFP-I-002", title: "The Beginning of the End — Le début de la fin", kind: "image", status: "ready-for-review",
+  periodIds: ["1840-1896"], knowledgeHeadingIds: ["relations-federales-provinciales"], operationIds: ["relationships_between_facts"],
+  historicalDate: "24 octobre 1896", creator: "J. W. Bengough",
+  holdingInstitution: "Victoria Daily Times · exemplaire numérisé diffusé sur Wikimedia Commons / Internet Archive",
+  sourceUrl: "https://upload.wikimedia.org/wikipedia/commons/9/9e/Victoria_Daily_Times_%281896-10-24%29_%28IA_victoriadailytimes18961024%29.pdf#page=3",
+  sourceLocator: "J. W. Bengough, « The Beginning of the End », Victoria Daily Times, 24 octobre 1896, p. 3.",
+  assetUrl: "/historical-documents/manitoba-beginning-end-1896.png",
+  rightsStatement: "Caricature publiée en 1896, domaine public. Zone de la caricature extraite de la page numérisée, titre, signature et légende conservés; dessin non retouché. Traduction française présentée séparément.",
+  transcription: "Tombe : HERE REPOSES FOR GOOD, THE MANITOBA SCHOOL QUESTION PEACEFULLY SETTLED. R.I.P. Titre : THE BEGINNING OF THE END. Légende : LAURIER—Now Greenway, my boy, there is nothing more to be done but to get the ‘remains’ ready. Pelles : CONCILIATION; COMPROMISE.",
+  accessibleDescription: "Greenway, à gauche, et Laurier, à droite, munis de pelles, se tiennent devant une fosse ouverte et vide. Une pierre tombale annonce que la question des écoles du Manitoba est réglée pacifiquement. La signature, le titre et la légende sont conservés sous le dessin.",
+  historicalContext: "Laurier dirige le gouvernement fédéral et Greenway celui du Manitoba. La caricature est publiée le 24 octobre 1896, avant l’accord du 16 novembre. Elle met en scène la recherche d’un règlement négocié du conflit scolaire, tout en jouant sur le contraste entre une épitaphe déjà prête et une tombe encore vide.",
+  observationGuide: ["Identifier les deux ordres de gouvernement représentés.", "Mettre en relation les mots sur les pelles et l’annonce sur la tombe.", "Confronter la fosse vide à la légende attribuée à Laurier."],
+  interpretationCautions: ["Recadrage documentaire de la page 3, sans modification du dessin; traduction séparée pour conserver la source originale.", "La caricature précède l’accord du 16 novembre 1896 : elle ne démontre ni son application ni la satisfaction de la minorité catholique.", "La tombe symbolise la fin espérée d’un conflit, pas la mort de personnes.", "Accepter une lecture de confiance dans la négociation ou d’ironie sur un règlement encore inachevé si elle s’appuie sur des indices visuels et la légende."],
+  pedagogicalUses: ["Interpréter le message d’un caricaturiste sur la négociation fédérale-provinciale en justifiant par deux indices."], version: "1.0", approvedAt: null,
+} as const satisfies HistoricalDocumentRecord;
+
 export const FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS = [
   ...FEDERAL_PROVINCIAL_RELATIONS_METIS_PRIMARY_DOCUMENTS,
   FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT,
@@ -240,4 +259,5 @@ export const FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS = [
   NEW_BRUNSWICK_SCHOOLS_DOCUMENT,
   LAURIER_GREENWAY_AGREEMENT_DOCUMENT,
   ...GOVERNMENT_REVENUE_DOCUMENTS,
+  MANITOBA_NEGOTIATION_CARTOON,
 ] as const satisfies readonly HistoricalDocumentRecord[];

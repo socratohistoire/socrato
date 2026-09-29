@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { MANITOBA_CARTOON_TRANSLATION } from "@/lib/pedagogical-reference/federal-provincial-relations-primary-documents";
 import { FEDERAL_REVENUE_TABLE } from "@/lib/pedagogical-reference/federal-provincial-relations-primary-documents";
 import Link from "next/link";
 import { HistoricalComparisonChart } from "@/app/components/historical-comparison-chart";
@@ -106,6 +107,7 @@ function ReviewableTextDocument({ document }: { document: HistoricalDocumentReco
     <div><article className="document-candidate document-candidate--preferred">
       <header><div><small>Source primaire · {document.historicalDate}</small><h3>{document.title}</h3><p>{document.holdingInstitution}</p></div><strong>Prêt pour révision</strong></header>
       {document.id === "RFP-S-001" ? <table className="document-revenue-table"><caption>{FEDERAL_REVENUE_TABLE.caption}</caption><thead><tr>{FEDERAL_REVENUE_TABLE.headers.map(header => <th key={header} scope="col">{header}</th>)}</tr></thead><tbody>{FEDERAL_REVENUE_TABLE.rows.map(row => <tr key={row.label}><th scope="row">{row.label}</th><td>{row.value}</td></tr>)}</tbody></table> : document.kind === "image" || document.kind === "map" ? <figure><Image src={document.assetUrl} alt={document.accessibleDescription} width={1200} height={950} style={{ width: "100%", maxWidth: document.kind === "map" ? 1000 : 480, height: "auto" }} /><figcaption>{document.sourceLocator}</figcaption></figure> : <section><h4>Extrait pour l’élève</h4><HistoricalExcerpt text={document.transcription} attribution={document.creator} /></section>}
+      {document.id === "RFP-I-002" && <section className="historical-excerpt"><h4>Traduction des inscriptions</h4><p>{MANITOBA_CARTOON_TRANSLATION}</p></section>}
       <details className="document-verification-details"><summary>Détails de vérification</summary><div>
         <dl><div><dt>Code documentaire</dt><dd>{document.id}</dd></div><div><dt>Référence</dt><dd>{document.sourceLocator}</dd></div><div><dt>Traitement éditorial</dt><dd>{document.interpretationCautions[0]}</dd></div><div><dt>Droits</dt><dd>{document.rightsStatement}</dd></div></dl>
         <div className="document-candidate__assessment"><section><h4>Mise en contexte · enseignant seulement</h4><p>{document.historicalContext}</p></section><section><h4>Éléments à observer</h4><ul>{document.observationGuide.map((item) => <li key={item}>{item}</li>)}</ul></section></div>

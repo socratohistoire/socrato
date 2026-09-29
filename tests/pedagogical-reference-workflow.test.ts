@@ -67,7 +67,7 @@ test("documente les cinq précisions des relations fédérales-provinciales sans
   assert.deepEqual(validateHistoricalRecord(record), {});
   assert.deepEqual(validateHistoricalRecord({ ...record, status: "ready-for-review" }), {});
   const questions = getQuestionsForKnowledgeHeading(record.knowledgeHeadingId);
-  assert.equal(questions.length, 8);
+  assert.equal(questions.length, 9);
   const metisComparison = questions.find(({ id }) => id === "question:relations-federales-provinciales:document-interpretation-001");
   assert.deepEqual(metisComparison?.historicalDocumentIds, ["RFP-T-001", "RFP-T-002"]);
   assert.equal(metisComparison?.operationId, "causes_and_consequences");
@@ -339,7 +339,7 @@ test("prépare les dossiers pilotes, les questions approuvées et les questions 
     "revolution-tranquille",
   ]);
   assert.ok(PEDAGOGICAL_REFERENCE_PILOTS.every(({ questionDraft }) => questionDraft.status === "not-started" && !questionDraft.prompt));
-  assert.equal(PEDAGOGICAL_QUESTION_CATALOG.length, 88);
+  assert.equal(PEDAGOGICAL_QUESTION_CATALOG.length, 89);
   assert.equal(PEDAGOGICAL_QUESTION_CATALOG.filter(({ status }) => status === "approved").length, 35);
   assert.ok(PEDAGOGICAL_QUESTION_CATALOG.every((question) => Object.keys(validateApprovedQuestion(question)).length === 0));
   assert.equal(getQuestionsForKnowledgeHeading("acte-union").length, 34);
@@ -384,7 +384,7 @@ test("prépare les dossiers pilotes, les questions approuvées et les questions 
   assert.deepEqual(indianAffairsQuestions[8]?.historicalDocumentIds, ["AI-I-007"]);
   assert.match(indianAffairsQuestions[8]?.expectedAnswer ?? "", /loi de 1851.*création.*nouvelles réserves/);
   const federalProvincialQuestions = getQuestionsForKnowledgeHeading("relations-federales-provinciales");
-  assert.equal(federalProvincialQuestions.length, 8);
+  assert.equal(federalProvincialQuestions.length, 9);
   assert.ok(federalProvincialQuestions.every(({ status }) => status === "ready-for-review"));
   assert.deepEqual(federalProvincialQuestions[0]?.historicalDocumentIds, ["RFP-T-001", "RFP-T-002"]);
   assert.match(federalProvincialQuestions[0]?.expectedAnswer ?? "", /cause commune/);
