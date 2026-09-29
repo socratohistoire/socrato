@@ -71,7 +71,7 @@ test("documente les cinq précisions des relations fédérales-provinciales sans
   const metisComparison = questions.find(({ id }) => id === "question:relations-federales-provinciales:document-interpretation-001");
   assert.deepEqual(metisComparison?.historicalDocumentIds, ["RFP-T-001", "RFP-T-002"]);
   assert.equal(metisComparison?.operationId, "causes_and_consequences");
-  assert.match(metisComparison?.prompt ?? "", /causes, les moyens et les issues/);
+  assert.equal(metisComparison?.prompt, "Compare les causes des résistances métisses de 1869-1870 et de 1885.");
   const competencyAssociation = questions.find(({ id }) => id === "question:relations-federales-provinciales:interactive-association-001");
   assert.equal(competencyAssociation?.operationId, "establish_facts");
   assert.deepEqual(competencyAssociation?.historicalDocumentIds, ["RFP-T-003"]);
@@ -387,7 +387,8 @@ test("prépare les dossiers pilotes, les questions approuvées et les questions 
   assert.equal(federalProvincialQuestions.length, 2);
   assert.ok(federalProvincialQuestions.every(({ status }) => status === "ready-for-review"));
   assert.deepEqual(federalProvincialQuestions[0]?.historicalDocumentIds, ["RFP-T-001", "RFP-T-002"]);
-  assert.match(federalProvincialQuestions[0]?.expectedAnswer ?? "", /Batoche/);
+  assert.match(federalProvincialQuestions[0]?.expectedAnswer ?? "", /cause commune/);
+  assert.doesNotMatch(federalProvincialQuestions[0]?.expectedAnswer ?? "", /Batoche/);
   assert.equal(federalProvincialQuestions[1]?.format, "interactive-association");
   assert.equal(federalProvincialQuestions[1]?.associationInteraction?.categories?.length, 2);
   const colonialEconomyQuestions = getQuestionsForKnowledgeHeading("economie-coloniale");
