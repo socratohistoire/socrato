@@ -118,8 +118,27 @@ export const RIEL_EXECUTION_DOCUMENTS = [
   },
 ] as const satisfies readonly HistoricalDocumentRecord[];
 
+export const MANITOBA_1870_DOCUMENT = {
+  schemaVersion: 1, id: "RFP-T-005", title: "Extraits d’une loi canadienne de 1870", kind: "law-or-official-text", status: "ready-for-review",
+  periodIds: ["1840-1896"], knowledgeHeadingIds: ["relations-federales-provinciales"], operationIds: ["causes_and_consequences", "establish_facts"],
+  historicalDate: "12 mai 1870 (sanction)", creator: "Parlement du Canada",
+  holdingInstitution: "Recueil des textes constitutionnels · DocumentsPrimaires.ca",
+  sourceUrl: "https://primarydocuments.ca/wp-content/uploads/2017/12/ManAct81870May12.pdf",
+  sourceLocator: "Loi de 1870 sur le Manitoba, 33 Victoria, chapitre 3, articles 1, 4 et 9; recueil bilingue, no 8, p. 2-3.",
+  assetUrl: "https://primarydocuments.ca/wp-content/uploads/2017/12/ManAct81870May12.pdf#page=2",
+  rightsStatement: "Texte législatif de 1870, domaine public. Trois passages du texte français reproduits sans reformulation; les coupures sont indiquées par […]. Majuscule initiale et ponctuation de fin de passage ajustées.",
+  transcription: "[…] Il sera constitué dans ces territoires une province qui sera l’une des provinces de la Puissance du Canada, et qui sera dénommée la province de Manitoba […]. Cette province sera, en premier lieu, représentée dans la Chambre des Communes du Canada par quatre membres […]. Il y aura, pour la province, une législature composée du lieutenant-gouverneur et de deux Chambres appelées le Conseil Législatif de Manitoba et l’Assemblée Législative de Manitoba.",
+  accessibleDescription: "Trois passages de la loi : constitution d’une province, représentation au Parlement canadien et institutions provinciales.",
+  historicalContext: "La résistance de la rivière Rouge en 1869-1870 et les négociations des délégués du gouvernement provisoire avec Ottawa conduisent à la Loi sur le Manitoba. Sanctionnée le 12 mai 1870, elle prévoit une nouvelle province qui entre dans la fédération le 15 juillet 1870 : le Manitoba devient la cinquième province du Canada.",
+  observationGuide: ["Repérer le changement apporté à la composition du Canada.", "Identifier les institutions et la représentation politique prévues.", "Relier la date du texte à la résistance de 1869-1870."],
+  interpretationCautions: ["Les articles 1 et 4 sont abrégés; l’article 9 est reproduit intégralement. Les passages proviennent de trois articles distincts.", "La loi établit le résultat politique, mais n’explique pas à elle seule le rôle de la résistance et des négociations.", "Ne pas confondre la sanction du 12 mai avec l’entrée dans la fédération du 15 juillet 1870, ni avec la résistance de 1885.", "La création de la province ne signifie pas que toutes les revendications et garanties métisses ont été respectées par la suite."],
+  pedagogicalUses: ["Déterminer une conséquence politique de la résistance de 1869-1870.", "Choisir un document pertinent pour établir l’entrée du Manitoba dans la fédération."],
+  version: "1.0", approvedAt: null,
+} as const satisfies HistoricalDocumentRecord;
+
 export const FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS = [
   ...FEDERAL_PROVINCIAL_RELATIONS_METIS_PRIMARY_DOCUMENTS,
   FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT,
   ...RIEL_EXECUTION_DOCUMENTS,
+  MANITOBA_1870_DOCUMENT,
 ] as const satisfies readonly HistoricalDocumentRecord[];

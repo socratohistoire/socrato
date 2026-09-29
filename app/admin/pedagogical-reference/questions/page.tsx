@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS } from "@/lib/pedagogical-reference/british-north-america-confederation-documents";
 import {
   getIntellectualOperation,
   getSecondaryFourKnowledgeHeading,
@@ -9,6 +10,10 @@ import "../pedagogical-reference.css";
 import "./question-bank-layout.css";
 
 type QuestionBankQuery = { notion?: string; scope?: string };
+
+function documentNotionId(documentId: string, questionNotionId: string) {
+  return BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS.find(({ id }) => id === documentId)?.knowledgeHeadingIds[0] ?? questionNotionId;
+}
 
 const QUESTION_CATEGORIES = [
   { format: "multiple-choice", label: "Choix de réponse", description: "Questions proposant plusieurs réponses possibles." },
@@ -63,7 +68,7 @@ export default async function PedagogicalQuestionBankPage({ searchParams }: { se
           return <section className="question-category" key={category.format} aria-labelledby={`question-category-${category.format}`}>
             <header><div><h3 id={`question-category-${category.format}`}>{category.label}</h3><p>{category.description}</p></div><strong>{categoryQuestions.length}</strong></header>
             {categoryQuestions.length > 0 ? <div className="question-bank-list">{categoryQuestions.map((question) => <article key={question.id}>
-              <dl><div><dt>Notion</dt><dd>{getSecondaryFourKnowledgeHeading(question.knowledgeHeadingId)?.officialLabel ?? question.knowledgeHeadingId}</dd></div><div><dt>Opération</dt><dd>{getIntellectualOperation(question.operationId).officialLabel}</dd></div>{question.historicalDocumentIds.length > 0 ? <div className="question-documents-link"><dt>Documents</dt><dd>{question.historicalDocumentIds.map((documentId, index) => <Link key={documentId} href={`/admin/pedagogical-reference/documents/${question.knowledgeHeadingId}#${documentId}`} aria-label={`Voir le document historique ${index + 1}`}>Document {index + 1} →</Link>)}</dd></div> : null}</dl>
+              <dl><div><dt>Notion</dt><dd>{getSecondaryFourKnowledgeHeading(question.knowledgeHeadingId)?.officialLabel ?? question.knowledgeHeadingId}</dd></div><div><dt>Opération</dt><dd>{getIntellectualOperation(question.operationId).officialLabel}</dd></div>{question.historicalDocumentIds.length > 0 ? <div className="question-documents-link"><dt>Documents</dt><dd>{question.historicalDocumentIds.map((documentId, index) => <Link key={documentId} href={`/admin/pedagogical-reference/documents/${documentNotionId(documentId, question.knowledgeHeadingId)}#${documentId}`} aria-label={`Voir le document historique ${index + 1}`}>Document {index + 1} →</Link>)}</dd></div> : null}</dl>
               <h3>{question.prompt}</h3>
               {question.answerOptions ? <ol className="question-answer-options">{question.answerOptions.map((option) => <li key={option.label}><strong>{option.label}</strong><span>{option.text}</span></li>)}</ol> : null}
               {question.format === "interactive-timeline" ? <Link href={`/eleve/activite/demo-activity-timeline?notion=${question.knowledgeHeadingId}&mode=teacher-assigned`}>Essayer la question interactive →</Link> : null}
