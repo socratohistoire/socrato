@@ -1,4 +1,5 @@
 import type { LearningSessionDocument } from "./types.ts";
+import { FEDERAL_REVENUE_TABLE } from "../pedagogical-reference/federal-provincial-relations-primary-documents.ts";
 import { ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_CONSOLIDATED_REVENUE_FUND_DOCUMENT, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT, ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT, ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT, ACTE_UNION_MAP_ADAPTATION_DRAFT, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT, PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT, RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT, RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT } from "../pedagogical-reference/historical-document-needs.ts";
 import { ACTE_UNION_DURHAM_DOCUMENT, ACTE_UNION_DURHAM_PRESENTATIONS } from "../pedagogical-reference/historical-document-presentations.ts";
 import { ACTE_UNION_DEBT_COMPARISON_CHART, ACTE_UNION_POPULATION_COMPARISON_CHART, COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART } from "../pedagogical-reference/historical-comparison-charts.ts";
@@ -95,7 +96,7 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
   ...FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS.map((document) => ({
     id: document.id,
     title: document.title,
-    typeLabel: document.kind === "image" ? "Illustration commémorative" : (document.id === "RFP-T-004" || document.id === "RFP-T-007") ? "Discours politique" : document.id === "RFP-T-001" ? "Déclaration politique" : document.id === "RFP-T-002" ? "Déclaration judiciaire" : "Texte constitutionnel",
+    typeLabel: document.id === "RFP-S-001" ? "Tableau de recettes" : document.kind === "image" ? "Illustration commémorative" : (document.id === "RFP-T-004" || document.id === "RFP-T-007") ? "Discours politique" : document.id === "RFP-T-001" ? "Déclaration politique" : document.id === "RFP-T-002" ? "Déclaration judiciaire" : "Texte constitutionnel",
     dateLabel: document.historicalDate,
     authorLabel: document.creator,
     institutionLabel: document.holdingInstitution,
@@ -103,8 +104,8 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
     sourceUrls: [document.sourceUrl, document.assetUrl],
     rightsLabel: document.rightsStatement,
     editorialNote: document.interpretationCautions[0],
-    content: document.kind === "image" ? { kind: "historical_image" as const, localSrc: document.assetUrl, alt: document.accessibleDescription, description: "Portrait publié dans À la mémoire de Louis Riel : la Marseillaise canadienne, Imprimerie Carmel, Montréal, 1885, p. 4." } : { kind: "historical_excerpt" as const, excerpt: document.transcription },
-    historicalKnowledgeIds: document.id === "RFP-T-007" ? ["relations-federales-provinciales", "question-des-ecoles-du-nouveau-brunswick"] : (document.id === "RFP-T-006" || document.id === "RFP-T-008") ? ["relations-federales-provinciales", "question-des-ecoles-du-manitoba"] : document.id === "RFP-T-005" ? ["relations-federales-provinciales", "soulevements-metis", "riviere-rouge"] : ["relations-federales-provinciales", "soulevements-metis", "riviere-rouge", "batoche"],
+    content: document.id === "RFP-S-001" ? { kind: "comparison_table" as const, ...FEDERAL_REVENUE_TABLE } : document.kind === "image" ? { kind: "historical_image" as const, localSrc: document.assetUrl, alt: document.accessibleDescription, description: "Portrait publié dans À la mémoire de Louis Riel : la Marseillaise canadienne, Imprimerie Carmel, Montréal, 1885, p. 4." } : { kind: "historical_excerpt" as const, excerpt: document.transcription },
+    historicalKnowledgeIds: (document.id === "RFP-S-001" || document.id === "RFP-T-009") ? ["relations-federales-provinciales", "repartition-des-revenus"] : document.id === "RFP-T-007" ? ["relations-federales-provinciales", "question-des-ecoles-du-nouveau-brunswick"] : (document.id === "RFP-T-006" || document.id === "RFP-T-008") ? ["relations-federales-provinciales", "question-des-ecoles-du-manitoba"] : document.id === "RFP-T-005" ? ["relations-federales-provinciales", "soulevements-metis", "riviere-rouge"] : ["relations-federales-provinciales", "soulevements-metis", "riviere-rouge", "batoche"],
     intellectualOperationIds: [...document.operationIds],
   })),
   ...INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.map((document) => ({

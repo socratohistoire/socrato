@@ -190,6 +190,47 @@ export const LAURIER_GREENWAY_AGREEMENT_DOCUMENT = {
   version: "1.0", approvedAt: null,
 } as const satisfies HistoricalDocumentRecord;
 
+export const FEDERAL_REVENUE_TABLE = {
+  caption: "Quelques recettes du gouvernement fédéral — avril 1868 (dollars courants)",
+  headers: ["Source de revenus", "Recettes du mois ($)"] as [string, string],
+  rows: [{ label: "Droits de douane", value: "757 409,97" }, { label: "Droits d’accise", value: "357 791,00" }, { label: "Service postal", value: "62 840,52" }],
+};
+
+export const GOVERNMENT_REVENUE_DOCUMENTS = [
+  {
+    schemaVersion: 1, id: "RFP-S-001", title: "Recettes fédérales en avril 1868", kind: "statistics", status: "ready-for-review",
+    periodIds: ["1840-1896"], knowledgeHeadingIds: ["relations-federales-provinciales"], operationIds: ["differences_and_similarities", "establish_facts"],
+    historicalDate: "Avril 1868; publication du 5 juin 1868", creator: "John Langton, vérificateur, Bureau de la vérification, Ottawa",
+    holdingInstitution: "Gazette du Canada · transcription sur Wikisource",
+    sourceUrl: "https://en.wikisource.org/wiki/Canada_Gazette/Volume_I/No._50/Statement_of_Revenue,_June_5,_1868",
+    sourceLocator: "Canada Gazette, vol. I, no 50, Statement of Revenue, 5 juin 1868 : état du mois terminé le 30 avril 1868, rubriques Customs, Excise et Post Office.",
+    assetUrl: "https://en.wikisource.org/wiki/Canada_Gazette/Volume_I/No._50/Statement_of_Revenue,_June_5,_1868",
+    rightsStatement: "État financier officiel de 1868, domaine public. Sélection de trois lignes, libellés traduits en français et notation des nombres francisée; montants conservés.",
+    transcription: "Droits de douane : 757 409,97 $; droits d’accise : 357 791,00 $; service postal : 62 840,52 $. Recettes du gouvernement fédéral pour avril 1868; sélection non exhaustive.",
+    accessibleDescription: "Tableau de trois recettes mensuelles fédérales : douanes, accise et poste, avec leurs montants en dollars de 1868.",
+    historicalContext: "Au début de la fédération, les douanes et l’accise constituent des sources importantes de recettes fédérales. Ce relevé mensuel fournit un exemple de recettes effectivement perçues, à distinguer des pouvoirs fiscaux établis par la Constitution.",
+    observationGuide: ["Identifier l’ordre de gouvernement concerné et le mois couvert.", "Distinguer droits de douane, droits d’accise et recettes postales.", "Comparer ces recettes aux ressources provinciales décrites dans le document constitutionnel."],
+    interpretationCautions: ["Le tableau est une sélection de trois rubriques : il ne représente pas la totalité des revenus fédéraux et ne comporte pas de total.", "Les valeurs concernent un mois seulement, pas une année; ne pas en déduire des parts annuelles.", "Les douanes portent notamment sur les importations; l’accise est un prélèvement sur certaines productions ou marchandises intérieures. Les recettes postales ne sont pas des impôts.", "Le pouvoir fédéral de taxation ne se limite pas constitutionnellement aux taxes indirectes."],
+    pedagogicalUses: ["Distinguer des revenus fédéraux observés des sources de revenus provinciales prévues en 1867."], version: "1.0", approvedAt: null,
+  },
+  {
+    schemaVersion: 1, id: "RFP-T-009", title: "Dispositions financières de l’AANB de 1867", kind: "law-or-official-text", status: "ready-for-review",
+    periodIds: ["1840-1896"], knowledgeHeadingIds: ["relations-federales-provinciales"], operationIds: ["differences_and_similarities", "establish_facts"],
+    historicalDate: "1867", creator: "Parlement du Royaume-Uni",
+    holdingInstitution: "Ministère de la Justice du Canada",
+    sourceUrl: "https://laws-lois.justice.gc.ca/fra/Const/TexteComplet.html",
+    sourceLocator: "Loi constitutionnelle de 1867, articles 91(3), 92(2), 92(5), 92(9) et article 118 original, reproduit dans la note de fin de page 59.",
+    assetUrl: "https://laws-lois.justice.gc.ca/fra/Const/TexteComplet.html",
+    rightsStatement: "Texte constitutionnel de 1867, domaine public. Sélection de passages français, avec étiquettes explicatives entre crochets, coupures […] et ponctuation de raccord. L’article 118 est cité dans sa version originale, et non comme disposition actuellement en vigueur.",
+    transcription: "[Parlement du Canada, art. 91(3)] Le prélèvement de deniers par tous modes ou systèmes de taxation. […] [Législatures provinciales, art. 92] La taxation directe dans les limites de la province, dans le but de prélever un revenu pour des objets provinciaux; […] L’administration et la vente des terres publiques appartenant à la province, et des bois et forêts qui s’y trouvent; […] Les licences de boutiques, de cabarets, d’auberges, d’encanteurs et autres licences, dans le but de prélever un revenu pour des objets provinciaux, locaux, ou municipaux. […] [Art. 118 original] Les sommes suivantes seront annuellement payées par le Canada aux diverses provinces pour le maintien de leurs gouvernements et législatures : […] Et chaque province aura droit à une subvention annuelle de quatre-vingts centins par chaque tête de la population, constatée par le recensement de mil huit cent soixante-et-un […].",
+    accessibleDescription: "Passages sur le pouvoir de taxation fédéral, la taxation directe provinciale, les terres et forêts provinciales, les licences et les subventions fédérales aux provinces.",
+    historicalContext: "Le partage financier de 1867 accorde au fédéral un large pouvoir de taxation. Les provinces disposent notamment de taxation directe, de licences, de revenus de leurs terres et forêts et de subventions fédérales. Les pouvoirs prévus ne mesurent pas les recettes effectivement perçues par chaque province.",
+    observationGuide: ["Repérer les ressources propres des provinces.", "Identifier le sens du transfert financier prévu à l’article 118.", "Comparer les pouvoirs de taxation sans réserver toute taxation directe aux provinces."],
+    interpretationCautions: ["Extraits de plusieurs articles, non texte continu; la liste détaillée des subventions fixes et les conditions démographiques particulières ont été retranchées.", "L’article 118 original a été remplacé dans l’évolution du financement provincial : l’activité porte sur les dispositions de 1867.", "Les recettes foncières visées proviennent des terres et forêts appartenant aux provinces, non de toutes les terres du Canada.", "Ne pas confondre une source autorisée et une recette effectivement encaissée, ni une subvention reçue par une province et un revenu fédéral.", "La taxation directe n’est pas exclusivement provinciale : l’article 91(3) confère aussi au fédéral un pouvoir général de taxation."],
+    pedagogicalUses: ["Classer les sources de revenus et distinguer ressources propres provinciales et transferts fédéraux."], version: "1.0", approvedAt: null,
+  },
+] as const satisfies readonly HistoricalDocumentRecord[];
+
 export const FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS = [
   ...FEDERAL_PROVINCIAL_RELATIONS_METIS_PRIMARY_DOCUMENTS,
   FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT,
@@ -198,4 +239,5 @@ export const FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS = [
   MANITOBA_SCHOOLS_DOCUMENT,
   NEW_BRUNSWICK_SCHOOLS_DOCUMENT,
   LAURIER_GREENWAY_AGREEMENT_DOCUMENT,
+  ...GOVERNMENT_REVENUE_DOCUMENTS,
 ] as const satisfies readonly HistoricalDocumentRecord[];
