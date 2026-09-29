@@ -172,6 +172,24 @@ export const NEW_BRUNSWICK_SCHOOLS_DOCUMENT = {
   version: "1.0", approvedAt: null,
 } as const satisfies HistoricalDocumentRecord;
 
+export const LAURIER_GREENWAY_AGREEMENT_DOCUMENT = {
+  schemaVersion: 1, id: "RFP-T-008", title: "Accord scolaire du 16 novembre 1896", kind: "law-or-official-text", status: "ready-for-review",
+  periodIds: ["1840-1896"], knowledgeHeadingIds: ["relations-federales-provinciales"], operationIds: ["changes_and_continuities"],
+  historicalDate: "16 novembre 1896", creator: "Gouvernements du Canada et du Manitoba",
+  holdingInstitution: "Documents de la session du Canada · transcription diffusée par Canada History",
+  sourceUrl: "https://www.canadahistory.com/sections/documents/frontier/manitobaschoolagreement.html",
+  sourceLocator: "Terms of Agreement between the Government of Canada and the Government of Manitoba for the Settlement of the School Question, 16 novembre 1896, article 2, paragraphes 2, 3, 8 et 10; Canada, Sessional Papers, 1897, no 35, p. 1-2.",
+  assetUrl: "https://www.canadahistory.com/sections/documents/frontier/manitobaschoolagreement.html",
+  rightsStatement: "Accord de 1896, domaine public. Traduction française par Socrato de quatre passages du texte anglais transcrit; […] marque les coupures et les crochets explicitent le raccord grammatical. Ne pas confondre cette transcription primaire avec l’analyse moderne qui la précède sur le site.",
+  transcription: "[L’enseignement religieux sera dispensé si] une pétition est présentée au conseil des commissaires scolaires pour le demander, signée par les parents ou tuteurs d’au moins dix enfants fréquentant l’école dans un district rural, ou d’au moins vingt-cinq enfants fréquentant l’école dans une ville ou un village. […] Cet enseignement religieux aura lieu entre quinze heures trente et seize heures […]. Aucune séparation des élèves selon leur confession religieuse n’aura lieu pendant l’enseignement des matières non religieuses. […] Lorsque dix élèves d’une école ont le français (ou une langue autre que l’anglais) comme langue maternelle, l’enseignement de ces élèves sera dispensé en français (ou dans cette autre langue) et en anglais, selon le système bilingue.",
+  accessibleDescription: "Quatre passages de l’accord : demande d’enseignement religieux, plage horaire limitée, absence de séparation confessionnelle pour les matières non religieuses et enseignement bilingue conditionnel.",
+  historicalContext: "Avant 1890, le Manitoba possède un système scolaire public confessionnel comprenant des écoles catholiques et protestantes. La réforme de 1890 retire le financement public aux écoles confessionnelles. L’accord négocié en 1896 par les gouvernements Laurier et Greenway, mis en œuvre par la législation manitobaine de 1897, prévoit des concessions au sein du réseau public sans rétablir le réseau séparé catholique financé publiquement.",
+  observationGuide: ["Identifier les conditions et l’horaire de l’enseignement religieux.", "Repérer la règle applicable pendant l’enseignement des matières non religieuses.", "Identifier le seuil et les deux langues prévus pour l’enseignement bilingue.", "Distinguer des concessions dans le réseau public du rétablissement d’un réseau confessionnel séparé."],
+  interpretationCautions: ["Il s’agit d’une traduction de passages de l’accord, non d’une citation française originale. La première phrase rétablit le sujet de la clause introductive entre crochets.", "L’extrait ne reproduit pas toutes les dispositions : le paragraphe 1 permet aussi une autorisation par résolution des commissaires; la pétition n’est donc pas l’unique voie. Le consentement des parents à la participation de leurs enfants est requis par le paragraphe 11.", "Le seuil de dix élèves pour l’enseignement bilingue diffère des seuils de la pétition religieuse et de ceux prévus pour engager un enseignant d’une confession donnée.", "La Loi de 1870 établit des garanties, mais ne décrit pas à elle seule toute l’organisation du réseau scolaire de 1871 à 1889.", "Les concessions de 1896 ne rétablissent ni un réseau séparé catholique financé publiquement ni l’ensemble de la situation antérieure à 1890."],
+  pedagogicalUses: ["Justifier le caractère partiel du compromis de 1896 en confrontant les concessions de l’accord au cadre antérieur à 1890."],
+  version: "1.0", approvedAt: null,
+} as const satisfies HistoricalDocumentRecord;
+
 export const FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS = [
   ...FEDERAL_PROVINCIAL_RELATIONS_METIS_PRIMARY_DOCUMENTS,
   FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT,
@@ -179,4 +197,5 @@ export const FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS = [
   MANITOBA_1870_DOCUMENT,
   MANITOBA_SCHOOLS_DOCUMENT,
   NEW_BRUNSWICK_SCHOOLS_DOCUMENT,
+  LAURIER_GREENWAY_AGREEMENT_DOCUMENT,
 ] as const satisfies readonly HistoricalDocumentRecord[];
