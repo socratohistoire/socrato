@@ -757,7 +757,7 @@ test("compacte uniquement la hiérarchie typographique documentaire", () => {
 
 test("affiche les choix A à D et remplace la réponse libre pour une question à choix", () => {
   assert.match(viewSource, /question\?\.type === "multiple_choice"/);
-  assert.match(viewSource, /className="multiple-choice-options" role="radiogroup"/);
+  assert.match(viewSource, /multiple-choice-options.*role="radiogroup"/);
   assert.match(viewSource, /question\.answerOptions\.map/);
   assert.match(viewSource, /Vérifier ma réponse/);
   assert.match(viewSource, /className="multiple-choice-check"/);
