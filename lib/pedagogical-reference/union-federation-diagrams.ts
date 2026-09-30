@@ -25,11 +25,13 @@ export const UNION_FEDERATION_DIAGRAMS = [
   },
   {...shared, id: "AANB-D-002", title: "Le Dominion du Canada en 1867", historicalDate: "1867",
     sourceUrl: "https://laws-lois.justice.gc.ca/fra/Const/TexteComplet.html",
-    sourceLocator: "AANB (1867), articles 6, 17, 69, 71, 88 et 91 à 93. Dispositions historiques de 1867, non composition actuelle des institutions.",
+    sourceLocator: "AANB (1867), articles 6, 9 à 17, 24 à 25, 37, 55, 58, 63, 69 à 72, 88 et 90 à 93. Dispositions historiques de 1867. Les liens de confiance relèvent des conventions du gouvernement responsable.",
     assetUrl: "/historical-documents/federation-1867-legislatures.svg",
     transcription: "",
-    accessibleDescription: "Deux ordres aux compétences constitutionnelles : le Parlement fédéral (Couronne, Sénat, Chambre des communes) pour les quatre provinces; les législatures provinciales, dont celles de l’Ontario et du Québec. L’Ontario a un lieutenant-gouverneur et une Assemblée; le Québec a aussi un Conseil législatif. Défense, monnaie et poste sont fédérales; éducation sous garanties constitutionnelles et municipalités sont provinciales.",
-    historicalContext: "L’ancienne Province du Canada est divisée en Ontario et Québec au sein du Dominion avec le Nouveau-Brunswick et la Nouvelle-Écosse. La juxtaposition des deux ordres ne représente pas une chaîne hiérarchique ni l’indépendance des provinces."
+    accessibleDescription: "La Couronne britannique nomme le gouverneur général. Celui-ci nomme en conseil les lieutenants-gouverneurs. Au fédéral, le cabinet doit conserver la confiance de la Chambre des communes élue; le Sénat est nommé. Au Québec, le Conseil exécutif doit conserver la confiance de l’Assemblée législative élue; le Conseil législatif est nommé. L’Ontario possède sa propre législature sans Conseil législatif. Le Nouveau-Brunswick et la Nouvelle-Écosse ont aussi leurs institutions provinciales. Les compétences sont réparties par l’AANB.",
+    historicalContext: "L’ancienne Province du Canada est divisée en Ontario et Québec au sein du Dominion avec le Nouveau-Brunswick et la Nouvelle-Écosse. Le Québec illustre l’ordre provincial, sans généraliser son organisation à toutes les provinces.",
+    interpretationCautions: ["Schéma pédagogique simplifié, non source primaire. Le désaveu et tous les mécanismes constitutionnels ne sont pas représentés.", "La responsabilité du cabinet devant la chambre élue relève des conventions constitutionnelles. Les nominations s’inscrivent dans le gouvernement responsable.", "Les premiers sénateurs sont désignés par la Reine dans la proclamation de 1867 (article 25 original).", "Électeurs admissibles ne signifie pas suffrage universel."],
+    version: "1.1"
   },
 ] as const satisfies readonly HistoricalDocumentRecord[];
 
