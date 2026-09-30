@@ -105,7 +105,7 @@ export const RIEL_EXECUTION_DOCUMENTS = [
   },
   {
     schemaVersion: 1, id: "RFP-T-004", title: "Discours d’Honoré Mercier au Champ-de-Mars", kind: "other", status: "ready-for-review",
-    periodIds: ["1840-1896"], knowledgeHeadingIds: ["relations-federales-provinciales"], operationIds: ["causal_connections"],
+    periodIds: ["1840-1896"], knowledgeHeadingIds: ["relations-federales-provinciales"], operationIds: ["causal_connections", "differences_and_similarities"],
     historicalDate: "22 novembre 1885 (édition de 1890)", creator: "Honoré Mercier; discours recueilli par Joseph-Octave Pelland",
     holdingInstitution: "Wikisource, transcription du recueil de Joseph-Octave Pelland",
     sourceUrl: "https://fr.wikisource.org/wiki/Biographie,_discours,_conférences,_etc._de_l’Hon._Honoré_Mercier/Discours_prononcé_sur_le_Champ_de_Mars,_le_22_novembre_1885",
@@ -123,7 +123,7 @@ export const RIEL_EXECUTION_DOCUMENTS = [
 
 export const MANITOBA_1870_DOCUMENT = {
   schemaVersion: 1, id: "RFP-T-005", title: "Extraits d’une loi canadienne de 1870", kind: "law-or-official-text", status: "ready-for-review",
-  periodIds: ["1840-1896"], knowledgeHeadingIds: ["relations-federales-provinciales"], operationIds: ["causes_and_consequences", "establish_facts"],
+  periodIds: ["1840-1896"], knowledgeHeadingIds: ["relations-federales-provinciales"], operationIds: ["causes_and_consequences", "establish_facts", "differences_and_similarities"],
   historicalDate: "12 mai 1870 (sanction)", creator: "Parlement du Canada",
   holdingInstitution: "Recueil des textes constitutionnels · DocumentsPrimaires.ca",
   sourceUrl: "https://primarydocuments.ca/wp-content/uploads/2017/12/ManAct81870May12.pdf",
