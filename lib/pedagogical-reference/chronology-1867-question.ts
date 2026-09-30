@@ -22,6 +22,7 @@ export const CHRONOLOGY_1867_QUESTION = {
   sourceIds: sources.map(source => source.id), sourceCatalog: sources,
   rationale: "Situer des événements de quatre notions par rapport au repère de 1867, sans exiger la mémorisation de chaque date exacte. Le classement est corrigé par correspondance déterministe, sans IA.",
   associationInteraction: {
+    chronologicalAnchor: { year: "1867", label: "Entrée en vigueur de l’AANB" },
     items: [
       {id: "indian-act", label: "Adoption de la Loi sur les Indiens"},
       {id: "coalition", label: "Formation de la Grande Coalition"},

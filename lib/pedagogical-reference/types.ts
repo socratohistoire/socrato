@@ -261,6 +261,7 @@ export interface ApprovedQuestion {
     }[];
   };
   associationInteraction?: {
+    chronologicalAnchor?: { year: string; label: string };
     correction?: string;
     documentId?: string;
     map?: { imageUrl: string; imageAlt: string };
