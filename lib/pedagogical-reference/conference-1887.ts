@@ -25,6 +25,7 @@ export const CONFERENCE_1887_DOCUMENTS = [
   },
   {
     ...shared, id: "RFP-T-012", title: "Article du Globe sur la conférence", kind: "newspaper",
+    operationIds: ["establish_facts", "causes_and_consequences"],
     historicalDate: "25 octobre 1887", creator: "The Globe, correspondant à Québec (non signé)",
     holdingInstitution: "The Globe · transcription diffusée par PrimaryDocuments.ca",
     sourceUrl: "https://primarydocuments.ca/inter-provincial-conference-the-globe-25-october-1887/",
