@@ -1,4 +1,5 @@
 import type { HistoricalDocumentRecord } from "./historical-document.ts";
+import { RIEL_RESISTANCE_DOCUMENTS } from "./riel-resistance-documents.ts";
 import { CONFERENCE_1887_DOCUMENTS } from "./conference-1887.ts";
 
 export const FEDERAL_PROVINCIAL_RELATIONS_RED_RIVER_DECLARATION_DOCUMENT = {
@@ -252,6 +253,7 @@ export const MANITOBA_NEGOTIATION_CARTOON = {
 } as const satisfies HistoricalDocumentRecord;
 
 export const FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS = [
+  ...RIEL_RESISTANCE_DOCUMENTS,
   ...CONFERENCE_1887_DOCUMENTS,
   ...FEDERAL_PROVINCIAL_RELATIONS_METIS_PRIMARY_DOCUMENTS,
   FEDERAL_PROVINCIAL_RELATIONS_CONSTITUTION_COMPETENCIES_DOCUMENT,
