@@ -388,7 +388,8 @@ test("propose trois cartes pour reconnaître le Canada de 1867", async () => {
   const question = catalog.questions.find(({id}) => id === "question:acte-de-l-amerique-du-nord-britannique:map-choice-1867");
   assert.equal(question?.answerOptions?.length, 3);
   assert.equal(question?.answerOptions?.filter(option => option.correct).length, 1);
-  assert.equal(question?.answerOptions?.find(option => option.correct)?.label, "B");
+  assert.equal(question?.answerOptions?.find(option => option.correct)?.label, "C");
+  assert.match(question?.answerOptions?.find(option => option.correct)?.imageUrl ?? "", /1867/);
   assert.ok(question?.answerOptions?.every(option => option.imageUrl && !/[0-9]{4}/.test(option.text)));
   assert.equal(question?.operationId, "time_and_space");
 });
