@@ -164,6 +164,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
   const isMultipleChoice = question?.type === "multiple_choice";
   const [timelineCompleted, setTimelineCompleted] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [expandedChoice, setExpandedChoice] = useState<string | null>(null);
   const [choiceFeedback, setChoiceFeedback] = useState<string | null>(null);
   const [pendingNextState, setPendingNextState] = useState<PedagogicalSessionState | null>(null);
   const [finalFeedbackDelivered, setFinalFeedbackDelivered] = useState(() => Boolean(initialEngineState.summary));
@@ -738,9 +739,13 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
               {isMultipleChoice && question.answerOptions ? (
                 <div className={`multiple-choice-options${question.answerOptions.some(option => option.imageUrl) ? " multiple-choice-options--maps" : ""}`} role="radiogroup" aria-label="Choix de réponse">
                   {question.answerOptions.map((option) => (
-                    <button key={option.label} type="button" role="radio" aria-checked={selectedAnswer === option.label} disabled={activeQuestionState.status === "completed"} onClick={() => { setSelectedAnswer(option.label); setChoiceFeedback(null); }}>
-                      <strong>{option.label}</strong><span>{option.text}</span>{option.imageUrl ? <Image src={option.imageUrl} alt={option.imageAlt ?? option.text} width={4096} height={3366} sizes="(max-width: 800px) 90vw, 45vw" unoptimized /> : null}
+                    <div key={option.label} className={option.imageUrl ? "map-answer-card" : "text-answer-card"}>
+                    <button type="button" role="radio" aria-checked={selectedAnswer === option.label} disabled={activeQuestionState.status === "completed"} onClick={() => { setSelectedAnswer(option.label); setChoiceFeedback(null); }}>
+                      <strong>{option.label}</strong><span>{option.text}{option.imageUrl && selectedAnswer === option.label ? " — ✓ Sélectionnée" : ""}</span>{option.imageUrl ? <Image src={option.imageUrl} alt={option.imageAlt ?? option.text} width={4096} height={3366} sizes="(max-width: 800px) 90vw, 45vw" unoptimized /> : null}
                     </button>
+                    {option.imageUrl ? <button type="button" className="map-answer-expand" aria-label={`Agrandir la ${option.text.toLowerCase()}`} onClick={() => setExpandedChoice(option.label)}>Agrandir la carte</button> : null}
+                    {expandedChoice === option.label && option.imageUrl ? <MapAnswerDialog imageUrl={option.imageUrl} imageAlt={option.imageAlt ?? option.text} title={option.text} completed={activeQuestionState.status === "completed"} onClose={() => setExpandedChoice(null)} onChoose={() => { setSelectedAnswer(option.label); setChoiceFeedback(null); setExpandedChoice(null); }} /> : null}
+                    </div>
                   ))}
                 </div>
               ) : null}
@@ -996,6 +1001,21 @@ function InteractiveCompetencyCategorizationQuestion({ question, operationLabel,
     {interaction.tension ? <aside className={`competency-tension${completed ? " competency-tension--revealed" : ""}`}><span>À expliquer après le classement</span><h3>{interaction.tension.title}</h3><p><strong>{interaction.tension.prompt}</strong></p>{completed ? <p>{interaction.tension.explanation}</p> : <p>L’explication apparaîtra lorsque le tableau aura été vérifié.</p>}</aside> : null}
     <footer className="timeline-question__footer"><p role="status" aria-live="polite"><strong>Socrato</strong>{feedback}</p><button type="button" disabled={Object.keys(placements).length !== interaction.items.length || completed} onClick={verify}>{completed ? "Classement vérifié" : attempts ? "Vérifier ma deuxième tentative" : "Vérifier le tableau"}</button></footer>
   </section>;
+}
+
+function MapAnswerDialog({ imageUrl, imageAlt, title, completed, onClose, onChoose }: { imageUrl: string; imageAlt: string; title: string; completed: boolean; onClose: () => void; onChoose: () => void }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    dialog?.showModal();
+    return () => { dialog?.close(); previousFocus?.focus(); };
+  }, []);
+  return <dialog ref={dialogRef} className="map-answer-dialog" aria-label={`${title} agrandie`} onCancel={onClose} onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <header><h2>{title}</h2><button type="button" autoFocus onClick={onClose}>Fermer ×</button></header>
+    <div className="map-answer-dialog__image"><Image src={imageUrl} alt={imageAlt} width={4096} height={3366} sizes="95vw" unoptimized /></div>
+    <footer><button type="button" disabled={completed} onClick={onChoose}>Choisir cette carte</button></footer>
+  </dialog>;
 }
 
 function timelineImagePosition(entryId: string) {

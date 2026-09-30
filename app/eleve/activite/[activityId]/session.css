@@ -429,8 +429,21 @@
 .competency-classification-table{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
 .chronology-classification-scroll{overflow-x:auto;padding-bottom:8px}
 .multiple-choice-options--maps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.multiple-choice-options--maps>button{display:flex;flex-direction:column;align-items:stretch;padding:10px;min-width:0}
-.multiple-choice-options--maps>button>img{display:block;width:100%;height:auto;margin-top:8px;background:white}
+.multiple-choice-options--maps .map-answer-card>button[role="radio"]{display:flex;flex-direction:column;align-items:stretch;padding:10px;min-width:0}
+.multiple-choice-options--maps .map-answer-card>button>img{display:block;width:100%;height:auto;margin-top:8px;background:white}
+.map-answer-card{min-width:0}
+.multiple-choice-options--maps .map-answer-card>button[aria-checked="true"]{background:#17344b;color:#fff5df;border-color:#b99c63;box-shadow:0 0 0 3px #b99c63}
+.multiple-choice-options--maps .map-answer-card>button[aria-checked="true"] strong{background:#e3c78d;color:#102c45}
+.multiple-choice-options .map-answer-expand{display:block;min-height:40px;margin-top:6px;text-align:center;font-weight:700;background:#17344b;color:#fff5df}
+.map-answer-dialog{position:fixed;inset:0;margin:auto;width:min(96vw,1500px);max-width:96vw;height:94dvh;max-height:94dvh;padding:14px;border:2px solid #b99c63;border-radius:14px;background:#fffaf0;color:#102c45}
+.map-answer-dialog[open]{display:flex;flex-direction:column;gap:10px}
+.map-answer-dialog::backdrop{background:rgba(0,0,0,.78)}
+.map-answer-dialog header,.map-answer-dialog footer{display:flex;align-items:center;justify-content:space-between;flex:none}
+.map-answer-dialog header h2{font-size:20px}
+.map-answer-dialog button{display:block;width:auto;min-height:42px;padding:8px 18px;border:1px solid #b99c63;border-radius:8px;background:#17344b;color:#fff5df;font-weight:700;cursor:pointer}
+.map-answer-dialog footer{justify-content:flex-end}
+.map-answer-dialog__image{min-height:0;flex:1;overflow:auto;background:white}
+.map-answer-dialog__image img{display:block;width:100%;height:100%;object-fit:contain}
 .session-layout:has(.multiple-choice-options--maps){grid-template-columns:1fr}
 .session-layout:has(.multiple-choice-options--maps) .question-pane{grid-column:1/-1}
 @media(max-width:700px){.multiple-choice-options--maps{grid-template-columns:1fr}}
