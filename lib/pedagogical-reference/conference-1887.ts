@@ -38,6 +38,7 @@ export const CONFERENCE_1887_DOCUMENTS = [
   },
   {
     ...shared, id: "RFP-T-013", title: "Résolution de la conférence interprovinciale", kind: "law-or-official-text",
+    operationIds: ["establish_facts", "causal_connections"],
     historicalDate: "28 octobre 1887", creator: "Délégués de la conférence interprovinciale de Québec",
     holdingInstitution: "Compte rendu de la conférence interprovinciale · exemplaire numérisé diffusé par PrimaryDocuments.ca",
     sourceUrl: proceedings, assetUrl: `${proceedings}#page=36`,

@@ -218,7 +218,7 @@ export const GOVERNMENT_REVENUE_DOCUMENTS = [
   },
   {
     schemaVersion: 1, id: "RFP-T-009", title: "Dispositions financières de l’AANB de 1867", kind: "law-or-official-text", status: "ready-for-review",
-    periodIds: ["1840-1896"], knowledgeHeadingIds: ["relations-federales-provinciales"], operationIds: ["differences_and_similarities", "establish_facts"],
+    periodIds: ["1840-1896"], knowledgeHeadingIds: ["relations-federales-provinciales"], operationIds: ["differences_and_similarities", "establish_facts", "causal_connections"],
     historicalDate: "1867", creator: "Parlement du Royaume-Uni",
     holdingInstitution: "Ministère de la Justice du Canada",
     sourceUrl: "https://laws-lois.justice.gc.ca/fra/Const/TexteComplet.html",
