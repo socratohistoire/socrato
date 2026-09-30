@@ -152,6 +152,7 @@ export function createLocalActivityPreview(config: ActivityConfiguration, catalo
         ? catalogQuestion.instruction
         : "Explique brièvement pourquoi cette question te semble importante.";
   const previewDocuments = catalogQuestion ? catalog.documents.filter(({ id }) => catalogQuestion.historicalDocumentIds.includes(id)) : [];
+  if (catalogQuestion?.id === "question:acte-de-l-amerique-du-nord-britannique:union-federation-change") previewDocuments.sort((a, b) => catalogQuestion.historicalDocumentIds.indexOf(a.id) - catalogQuestion.historicalDocumentIds.indexOf(b.id));
   return {
     questionId: catalogQuestion?.id,
     format: catalogQuestion?.format ?? (config.workType === "development" ? "development-150" : "short-answer"),

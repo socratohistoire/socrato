@@ -387,8 +387,9 @@ test("raccorde les deux schémas constitutionnels à la question de changement",
   const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
   const question = catalog.questions.find(({id}) => id === "question:acte-de-l-amerique-du-nord-britannique:union-federation-change");
   assert.equal(question?.operationId, "changes_and_continuities");
-  assert.deepEqual(question?.historicalDocumentIds, ["AANB-D-001", "AANB-D-002"]);
-  for (const id of ["AANB-D-001", "AANB-D-002"]) {
+  assert.deepEqual(question?.historicalDocumentIds, ["AU-D-001", "AANB-D-002"]);
+  assert.equal(catalog.documents.find(document => document.id === "AU-D-001")?.content.kind, "political_structure_diagram");
+  for (const id of ["AANB-D-002"]) {
     const document = catalog.documents.find(document => document.id === id);
     assert.equal(document?.content.kind, "historical_image");
     assert.match(document?.rightsLabel ?? "", /pas une source primaire/);

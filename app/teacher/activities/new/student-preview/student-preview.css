@@ -5,6 +5,23 @@
 }
 
 .student-preview-surface .session-header { display:none; }
+.student-preview-surface--constitution .learning-session{height:100dvh;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.student-preview-surface--constitution .session-header{flex:none}
+.student-preview-surface.student-preview-surface--activity.student-preview-surface--constitution .session-layout{flex:1;height:0;min-height:0;overflow:hidden;grid-template-columns:minmax(0,1fr) minmax(0,1fr);padding:10px 24px;gap:8px 18px}
+.student-preview-surface--constitution .question-card{padding:12px 16px;flex:none}
+.student-preview-surface--constitution .question-card h3{font-size:16px;line-height:1.3}
+.student-preview-surface--constitution .conversation{padding:12px}
+.student-preview-surface--constitution .response-composer textarea{height:80px;min-height:60px;max-height:110px}
+.student-preview-surface--constitution .documents-heading{transform:none!important;font-size:16px}
+.student-preview-surface--constitution .document-system-card--stacked{height:100%!important;max-height:100%!important;min-height:0;overflow:hidden!important}
+.student-preview-surface--constitution .document-system-card--stacked .stacked-document-list{height:100%!important;grid-template-rows:minmax(0,1.25fr) minmax(0,1fr)!important;overflow:hidden!important;gap:8px}
+.student-preview-surface--constitution .stacked-document{min-height:0!important;padding:5px;overflow:hidden}
+.student-preview-surface--constitution .document-content-compact .document-content-group{display:flex;flex-direction:column;min-height:0}
+.student-preview-surface--constitution .document-content-compact .document-visual-viewport{min-height:0;flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.student-preview-surface--constitution .document-content-compact .student-political-structure{zoom:.56;max-width:760px;padding:4px;gap:3px}
+.student-preview-surface--constitution .document-content-compact .historical-document-figure{min-height:0;height:100%;width:100%;display:flex;flex-direction:column;margin:0}
+.student-preview-surface--constitution .document-content-compact .historical-document-image{min-height:0;height:0;flex:1;width:100%;object-fit:contain}
+.student-preview-surface--constitution .document-content-compact figcaption{display:none}
 .student-preview-surface--activity .session-header { display:block; position:relative; }
 .student-preview-surface.student-preview-surface--activity .session-layout { height:auto; min-height:0; overflow:visible; padding-bottom:18px; }
 html:has(.student-preview-surface--activity), body:has(.student-preview-surface--activity) { overflow:auto; }
