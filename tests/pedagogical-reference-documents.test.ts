@@ -60,7 +60,7 @@ test("prépare deux sources primaires comparables sur les résistances métisses
 });
 
 test("prépare les documents sur la création du Dominion et l’Intercolonial", () => {
-  assert.deepEqual(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS.map(({ id }) => id), ["AANB-T-001", "AANB-T-002", "AANB-T-003", "AANB-T-004", "AANB-T-005", "AANB-T-006", "AANB-T-007", "AANB-T-008", "AANB-M-005", "AANB-S-001", "AANB-I-001", "AANB-T-009", "AANB-T-010", "AANB-T-011"]);
+  assert.deepEqual(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS.map(({ id }) => id), ["AANB-T-001", "AANB-T-002", "AANB-T-003", "AANB-T-004", "AANB-T-005", "AANB-T-006", "AANB-T-007", "AANB-T-008", "AANB-M-005", "AANB-S-001", "AANB-I-001", "AANB-T-009", "AANB-T-010", "AANB-T-011", "AANB-D-001", "AANB-D-002"]);
   assert.ok(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS.every((document) => Object.keys(validateHistoricalDocument(document)).length === 0));
   assert.match(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS[0]?.transcription ?? "", /renforcerons ainsi le Parlement central/);
   assert.match(BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS[1]?.transcription ?? "", /diversité des populations, des religions et des intérêts locaux/);

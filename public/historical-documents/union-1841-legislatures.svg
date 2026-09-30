@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="720" viewBox="0 0 1100 720" role="img" aria-labelledby="title desc"><title id="title">Document 1 · La Province du Canada en 1841</title><desc id="desc">Un Parlement commun pour le Canada-Ouest et le Canada-Est, deux sections de la Province du Canada.</desc><style>text{font-family:Arial,sans-serif;fill:#163247;text-anchor:middle}.heading{font-size:30px;font-weight:bold}.label{font-size:23px;font-weight:bold}.body{font-size:20px}.note{font-size:17px}.box{fill:#fff;stroke:#45697c;stroke-width:2}.area{fill:#eef3f5;stroke:#9bb1bb;stroke-width:2}</style><rect width="1100" height="720" fill="#fffaf0"/><text x="550" y="52" class="heading">Document 1 · La Province du Canada en 1841</text>
+<rect x="65" y="90" width="970" height="535" rx="20" class="area"/><text x="550" y="130" class="label">PROVINCE DU CANADA</text>
+<rect x="220" y="162" width="660" height="195" rx="16" class="box"/><text x="550" y="201" class="label">Parlement de la Province du Canada</text>
+<text x="550" y="242" class="body">La Couronne, représentée par le gouverneur</text><text x="550" y="279" class="body">Conseil législatif</text><text x="550" y="316" class="body">Assemblée législative</text>
+<path d="M550 357V374M550 405V415M305 415H795M305 415V454M795 415V454" fill="none" stroke="#45697c" stroke-width="3"/>
+<text x="550" y="397" class="note">Des lois pour les deux sections</text>
+<rect x="125" y="455" width="360" height="110" rx="14" class="box"/><text x="305" y="501" class="label">Canada-Ouest</text><text x="305" y="535" class="body">Ancien Haut-Canada</text>
+<rect x="615" y="455" width="360" height="110" rx="14" class="box"/><text x="795" y="501" class="label">Canada-Est</text><text x="795" y="535" class="body">Ancien Bas-Canada</text>
+<text x="550" y="601" class="note">Ces sections n’ont pas chacune une législature distincte.</text>
+<text x="550" y="658" class="note">Schéma pédagogique simplifié · Socrato · D’après l’Acte d’Union (1840), art. I et III.</text>
+<text x="550" y="688" class="note">Entrée en vigueur en 1841. Le fonctionnement de l’exécutif n’est pas représenté.</text></svg>

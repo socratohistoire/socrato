@@ -285,7 +285,7 @@ test("génère un aperçu déterministe depuis les documents approuvés", async 
   const second = createLocalActivityPreview(unlimitedRevisionConfig, catalog);
   assert.deepEqual(first, second);
   assert.deepEqual(first.documents.map(({ id }) => id), ["PAT-T-002", "PAT-T-003", "PAT-T-007"]);
-  assert.equal(catalog.questions.length, 96);
+  assert.equal(catalog.questions.length, 97);
   assert.equal(catalog.questions.some(({ id }) => id === "question:acte-union:document-interpretation-005"), false);
   assert.equal(first.operationLabel, "Établir des liens de causalité");
   assert.equal(first.question, catalog.questions[0]?.prompt);
@@ -381,6 +381,18 @@ test("raccorde la chronologie transversale de 1867 au classement sans IA", async
   assert.deepEqual(interaction?.categories?.[1].correctItemIds, ["indian-act", "northwest"]);
   assert.equal(new Set(interaction?.categories?.flatMap(category => category.correctItemIds)).size, 4);
   for (const year of ["1840", "1864", "1876", "1885"]) assert.ok(interaction?.correction?.includes(year));
+});
+
+test("raccorde les deux schémas constitutionnels à la question de changement", async () => {
+  const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
+  const question = catalog.questions.find(({id}) => id === "question:acte-de-l-amerique-du-nord-britannique:union-federation-change");
+  assert.equal(question?.operationId, "changes_and_continuities");
+  assert.deepEqual(question?.historicalDocumentIds, ["AANB-D-001", "AANB-D-002"]);
+  for (const id of ["AANB-D-001", "AANB-D-002"]) {
+    const document = catalog.documents.find(document => document.id === id);
+    assert.equal(document?.content.kind, "historical_image");
+    assert.match(document?.rightsLabel ?? "", /pas une source primaire/);
+  }
 });
 
 test("propose trois cartes pour reconnaître le Canada de 1867", async () => {

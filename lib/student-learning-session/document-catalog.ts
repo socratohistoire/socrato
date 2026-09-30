@@ -63,7 +63,7 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
   ...BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS.map((document) => ({
     id: document.id,
     title: document.title,
-    typeLabel: document.id === "AANB-M-005" ? "Carte historique" : document.id === "AANB-S-001" ? "Tableau statistique" : document.id === "AANB-I-001" ? "Caricature politique" : "Discours parlementaire",
+    typeLabel: document.kind === "political-diagram" ? "Schéma pédagogique" : document.id === "AANB-M-005" ? "Carte historique" : document.id === "AANB-S-001" ? "Tableau statistique" : document.id === "AANB-I-001" ? "Caricature politique" : "Discours parlementaire",
     dateLabel: document.historicalDate,
     authorLabel: document.creator,
     institutionLabel: document.holdingInstitution,
@@ -71,7 +71,7 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
     sourceUrls: [document.sourceUrl, document.assetUrl],
     rightsLabel: document.rightsStatement,
     editorialNote: document.interpretationCautions[0],
-    content: document.id === "AANB-M-005" || document.id === "AANB-I-001"
+    content: document.kind === "political-diagram" || document.id === "AANB-M-005" || document.id === "AANB-I-001"
       ? { kind: "historical_image" as const, localSrc: document.assetUrl, alt: document.accessibleDescription, description: document.id === "AANB-I-001" ? "" : document.historicalContext }
       : document.id === "AANB-S-001"
         ? { kind: "comparison_table" as const, caption: "Marchandises transportées par le chemin de fer Intercolonial", headers: ["Période", "Marchandises transportées"] as [string, string], rows: [{ label: "1875-1876 · liaison non achevée", value: "342 196 tonnes" }, { label: "1876-1877 · première année après l’achèvement", value: "421 327 tonnes" }, { label: "1877-1878 · deuxième année après l’achèvement", value: "522 710 tonnes" }] }

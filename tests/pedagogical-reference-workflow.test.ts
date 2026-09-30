@@ -122,7 +122,7 @@ test("documente les quatre précisions de l’AANB de secondaire 4 et son évolu
     "changes_and_continuities", "relationships_between_facts", "causal_connections",
   ]));
   const questions = getQuestionsForKnowledgeHeading(record.knowledgeHeadingId);
-  assert.equal(questions.length, 15);
+  assert.equal(questions.length, 16);
   assert.equal(questions[0]?.operationId, "changes_and_continuities");
   assert.deepEqual(questions[0]?.historicalDocumentIds, ["AANB-M-001", "AANB-M-002"]);
   assert.match(questions[0]?.prompt ?? "", /deux changements territoriaux/);
@@ -339,7 +339,7 @@ test("prépare les dossiers pilotes, les questions approuvées et les questions 
     "revolution-tranquille",
   ]);
   assert.ok(PEDAGOGICAL_REFERENCE_PILOTS.every(({ questionDraft }) => questionDraft.status === "not-started" && !questionDraft.prompt));
-  assert.equal(PEDAGOGICAL_QUESTION_CATALOG.length, 96);
+  assert.equal(PEDAGOGICAL_QUESTION_CATALOG.length, 97);
   assert.equal(PEDAGOGICAL_QUESTION_CATALOG.filter(({ status }) => status === "approved").length, 35);
   assert.ok(PEDAGOGICAL_QUESTION_CATALOG.every((question) => Object.keys(validateApprovedQuestion(question)).length === 0));
   assert.equal(getQuestionsForKnowledgeHeading("acte-union").length, 35);
