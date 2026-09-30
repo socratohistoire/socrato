@@ -285,7 +285,7 @@ test("génère un aperçu déterministe depuis les documents approuvés", async 
   const second = createLocalActivityPreview(unlimitedRevisionConfig, catalog);
   assert.deepEqual(first, second);
   assert.deepEqual(first.documents.map(({ id }) => id), ["PAT-T-002", "PAT-T-003", "PAT-T-007"]);
-  assert.equal(catalog.questions.length, 95);
+  assert.equal(catalog.questions.length, 96);
   assert.equal(catalog.questions.some(({ id }) => id === "question:acte-union:document-interpretation-005"), false);
   assert.equal(first.operationLabel, "Établir des liens de causalité");
   assert.equal(first.question, catalog.questions[0]?.prompt);
@@ -381,6 +381,16 @@ test("raccorde la chronologie transversale de 1867 au classement sans IA", async
   assert.deepEqual(interaction?.categories?.[1].correctItemIds, ["indian-act", "northwest"]);
   assert.equal(new Set(interaction?.categories?.flatMap(category => category.correctItemIds)).size, 4);
   for (const year of ["1840", "1864", "1876", "1885"]) assert.ok(interaction?.correction?.includes(year));
+});
+
+test("propose trois cartes pour reconnaître le Canada de 1867", async () => {
+  const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
+  const question = catalog.questions.find(({id}) => id === "question:acte-de-l-amerique-du-nord-britannique:map-choice-1867");
+  assert.equal(question?.answerOptions?.length, 3);
+  assert.equal(question?.answerOptions?.filter(option => option.correct).length, 1);
+  assert.equal(question?.answerOptions?.find(option => option.correct)?.label, "B");
+  assert.ok(question?.answerOptions?.every(option => option.imageUrl && !/[0-9]{4}/.test(option.text)));
+  assert.equal(question?.operationId, "time_and_space");
 });
 
 test("raccorde le classement fédéral-provincial à deux colonnes interactives", async () => {

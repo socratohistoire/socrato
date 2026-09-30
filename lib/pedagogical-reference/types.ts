@@ -241,6 +241,8 @@ export interface ApprovedQuestion {
     label: "A" | "B" | "C" | "D";
     text: string;
     correct: boolean;
+    imageUrl?: string;
+    imageAlt?: string;
   }[];
   operationId: IntellectualOperationId;
   sourceIds: readonly string[];

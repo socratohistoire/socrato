@@ -68,7 +68,7 @@ export type LearningSessionQuestion = {
   initialMessages: LearningSessionMessage[];
   /** null réserve une conversation sans limite aux parcours de guidage explicites. */
   maxAttempts?: number | null;
-  answerOptions?: readonly { label: "A" | "B" | "C" | "D"; text: string; correct: boolean }[];
+  answerOptions?: readonly { label: "A" | "B" | "C" | "D"; text: string; correct: boolean; imageUrl?: string; imageAlt?: string }[];
   answerExplanation?: string;
   evaluationGuide?: {
     expectedAnswer: string;

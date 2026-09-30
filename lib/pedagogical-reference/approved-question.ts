@@ -58,7 +58,7 @@ export function validateApprovedQuestion(question: ApprovedQuestion): ApprovedQu
   }
   if (!INTELLECTUAL_OPERATION_IDS.includes(question.operationId)
     || (reviewable && (!question.prompt.trim() || (question.format !== "interactive-timeline" && !question.instruction.trim()) || !question.expectedAnswer.trim() || !question.rationale.trim()))
-    || (question.format === "multiple-choice" && (question.distractors.length < 3 || question.answerOptions?.length !== 4 || question.answerOptions.filter(({ correct }) => correct).length !== 1))) {
+    || (question.format === "multiple-choice" && (question.distractors.length < (question.answerOptions?.every(option => option.imageUrl) ? 2 : 3) || ![...(question.answerOptions?.every(option => option.imageUrl) ? [3] : []), 4].includes(question.answerOptions?.length ?? 0) || question.answerOptions?.filter(({ correct }) => correct).length !== 1))) {
     errors.content = "La question doit être complète et conforme à son format et à une opération canonique.";
   }
   const requiresHistoricalDocument = question.format !== "multiple-choice" && question.format !== "short-answer" && question.format !== "interactive-association";

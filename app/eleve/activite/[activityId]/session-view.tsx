@@ -736,10 +736,10 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
                 <h3 id="question-title">{question.prompt}</h3>
               </div>
               {isMultipleChoice && question.answerOptions ? (
-                <div className="multiple-choice-options" role="radiogroup" aria-label="Choix de réponse">
+                <div className={`multiple-choice-options${question.answerOptions.some(option => option.imageUrl) ? " multiple-choice-options--maps" : ""}`} role="radiogroup" aria-label="Choix de réponse">
                   {question.answerOptions.map((option) => (
                     <button key={option.label} type="button" role="radio" aria-checked={selectedAnswer === option.label} disabled={activeQuestionState.status === "completed"} onClick={() => { setSelectedAnswer(option.label); setChoiceFeedback(null); }}>
-                      <strong>{option.label}</strong><span>{option.text}</span>
+                      <strong>{option.label}</strong><span>{option.text}</span>{option.imageUrl ? <Image src={option.imageUrl} alt={option.imageAlt ?? option.text} width={4096} height={3366} sizes="(max-width: 800px) 90vw, 45vw" unoptimized /> : null}
                     </button>
                   ))}
                 </div>
