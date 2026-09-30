@@ -261,6 +261,7 @@ export interface ApprovedQuestion {
     }[];
   };
   associationInteraction?: {
+    correction?: string;
     documentId?: string;
     map?: { imageUrl: string; imageAlt: string };
     items: readonly { id: string; label: string; imageUrl?: string; imageAlt?: string }[];

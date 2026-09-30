@@ -285,7 +285,7 @@ test("génère un aperçu déterministe depuis les documents approuvés", async 
   const second = createLocalActivityPreview(unlimitedRevisionConfig, catalog);
   assert.deepEqual(first, second);
   assert.deepEqual(first.documents.map(({ id }) => id), ["PAT-T-002", "PAT-T-003", "PAT-T-007"]);
-  assert.equal(catalog.questions.length, 94);
+  assert.equal(catalog.questions.length, 95);
   assert.equal(catalog.questions.some(({ id }) => id === "question:acte-union:document-interpretation-005"), false);
   assert.equal(first.operationLabel, "Établir des liens de causalité");
   assert.equal(first.question, catalog.questions[0]?.prompt);
@@ -367,6 +367,20 @@ test("raccorde les deux questions interactives à l’aperçu élève", async ()
   assert.match(viewSource, /<iframe[^>]*src=\{singlePreviewHref\}/);
   assert.match(studentPreviewSource, /<StudentLearningSessionView/);
   assert.match(studentPreviewFrameCssSource, /\.student-page-preview iframe/);
+});
+
+test("raccorde la chronologie transversale de 1867 au classement sans IA", async () => {
+  const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
+  const question = catalog.questions.find(({ id }) => id === "question:transversal:chronology-1867");
+  assert.equal(question?.operationId, "time_and_space");
+  const interaction = question?.associationInteraction;
+  assert.equal(interaction?.items.length, 4);
+  assert.ok(interaction?.items.every(item => !/\d{4}/.test(item.label)));
+  assert.deepEqual(interaction?.categories?.map(category => category.label), ["Avant 1867", "Après 1867"]);
+  assert.deepEqual(interaction?.categories?.[0].correctItemIds, ["union", "coalition"]);
+  assert.deepEqual(interaction?.categories?.[1].correctItemIds, ["indian-act", "northwest"]);
+  assert.equal(new Set(interaction?.categories?.flatMap(category => category.correctItemIds)).size, 4);
+  for (const year of ["1840", "1864", "1876", "1885"]) assert.ok(interaction?.correction?.includes(year));
 });
 
 test("raccorde le classement fédéral-provincial à deux colonnes interactives", async () => {

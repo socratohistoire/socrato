@@ -67,7 +67,7 @@ test("documente les cinq précisions des relations fédérales-provinciales sans
   assert.deepEqual(validateHistoricalRecord(record), {});
   assert.deepEqual(validateHistoricalRecord({ ...record, status: "ready-for-review" }), {});
   const questions = getQuestionsForKnowledgeHeading(record.knowledgeHeadingId);
-  assert.equal(questions.length, 14);
+  assert.equal(questions.length, 15);
   const metisComparison = questions.find(({ id }) => id === "question:relations-federales-provinciales:document-interpretation-001");
   assert.deepEqual(metisComparison?.historicalDocumentIds, ["RFP-T-001", "RFP-T-002"]);
   assert.equal(metisComparison?.operationId, "differences_and_similarities");
@@ -122,7 +122,7 @@ test("documente les quatre précisions de l’AANB de secondaire 4 et son évolu
     "changes_and_continuities", "relationships_between_facts", "causal_connections",
   ]));
   const questions = getQuestionsForKnowledgeHeading(record.knowledgeHeadingId);
-  assert.equal(questions.length, 13);
+  assert.equal(questions.length, 14);
   assert.equal(questions[0]?.operationId, "changes_and_continuities");
   assert.deepEqual(questions[0]?.historicalDocumentIds, ["AANB-M-001", "AANB-M-002"]);
   assert.match(questions[0]?.prompt ?? "", /deux changements territoriaux/);
@@ -339,13 +339,13 @@ test("prépare les dossiers pilotes, les questions approuvées et les questions 
     "revolution-tranquille",
   ]);
   assert.ok(PEDAGOGICAL_REFERENCE_PILOTS.every(({ questionDraft }) => questionDraft.status === "not-started" && !questionDraft.prompt));
-  assert.equal(PEDAGOGICAL_QUESTION_CATALOG.length, 94);
+  assert.equal(PEDAGOGICAL_QUESTION_CATALOG.length, 95);
   assert.equal(PEDAGOGICAL_QUESTION_CATALOG.filter(({ status }) => status === "approved").length, 35);
   assert.ok(PEDAGOGICAL_QUESTION_CATALOG.every((question) => Object.keys(validateApprovedQuestion(question)).length === 0));
-  assert.equal(getQuestionsForKnowledgeHeading("acte-union").length, 34);
+  assert.equal(getQuestionsForKnowledgeHeading("acte-union").length, 35);
   assert.equal(getQuestionsForKnowledgeHeading("gouvernement-responsable").length, 15);
   const indianAffairsQuestions = getQuestionsForKnowledgeHeading("affaires-indiennes");
-  assert.equal(indianAffairsQuestions.length, 9);
+  assert.equal(indianAffairsQuestions.length, 10);
   assert.equal(indianAffairsQuestions[0]?.id, "question:affaires-indiennes:document-interpretation-001");
   assert.equal(indianAffairsQuestions[0]?.operationId, "causal_connections");
   assert.deepEqual(indianAffairsQuestions[0]?.historicalDocumentIds, ["AI-T-005", "AI-T-006"]);
@@ -384,7 +384,7 @@ test("prépare les dossiers pilotes, les questions approuvées et les questions 
   assert.deepEqual(indianAffairsQuestions[8]?.historicalDocumentIds, ["AI-I-007"]);
   assert.match(indianAffairsQuestions[8]?.expectedAnswer ?? "", /loi de 1851.*création.*nouvelles réserves/);
   const federalProvincialQuestions = getQuestionsForKnowledgeHeading("relations-federales-provinciales");
-  assert.equal(federalProvincialQuestions.length, 14);
+  assert.equal(federalProvincialQuestions.length, 15);
   assert.ok(federalProvincialQuestions.every(({ status }) => status === "ready-for-review"));
   assert.deepEqual(federalProvincialQuestions[0]?.historicalDocumentIds, ["RFP-T-001", "RFP-T-002"]);
   assert.match(federalProvincialQuestions[0]?.expectedAnswer ?? "", /cause commune/);

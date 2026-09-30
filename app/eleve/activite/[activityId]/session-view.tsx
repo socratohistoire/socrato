@@ -937,7 +937,7 @@ function InteractiveCompetencyCategorizationQuestion({ question, operationLabel,
   const categories = interaction.categories ?? [];
   const [placements, setPlacements] = useState<Record<string, string>>({});
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState("Déplace chaque compétence dans la bonne catégorie.");
+  const [feedback, setFeedback] = useState("Déplace chaque étiquette dans la bonne catégorie.");
   const [attempts, setAttempts] = useState(initialAttempts);
   const [completed, setCompleted] = useState(false);
   const [showHint, setShowHint] = useState(initialHintLevel > 0);
@@ -948,7 +948,7 @@ function InteractiveCompetencyCategorizationQuestion({ question, operationLabel,
     if (!itemId || completed) return;
     setPlacements((current) => ({ ...current, [itemId]: categoryId }));
     setSelectedItemId(null);
-    setFeedback("Compétence placée. Continue jusqu’à ce que toutes les étiquettes soient classées.");
+    setFeedback("Étiquette placée. Continue jusqu’à ce que toutes les étiquettes soient classées.");
   }
 
   function beginDrag(event: ReactDragEvent<HTMLElement>, itemId: string) {
@@ -963,35 +963,36 @@ function InteractiveCompetencyCategorizationQuestion({ question, operationLabel,
     onAttempt(nextAttempt);
     if (correctCount === interaction.items.length) {
       setCompleted(true);
-      setFeedback(interaction.tension ? "Bravo! Toutes les compétences sont classées correctement. Observe maintenant la zone de tension." : "Bravo! Toutes les compétences sont classées correctement.");
+      setFeedback(interaction.tension ? "Bravo! Toutes les étiquettes sont classées correctement. Observe maintenant la zone de tension." : "Bravo! Toutes les étiquettes sont classées correctement.");
       onComplete(true, nextAttempt);
       return;
     }
     if (nextAttempt >= 2) {
       setPlacements(Object.fromEntries(categories.flatMap((category) => category.correctItemIds.map((itemId) => [itemId, category.id]))));
       setCompleted(true);
-      setFeedback(`${correctCount} compétence${correctCount > 1 ? "s" : ""} sur ${interaction.items.length} ${correctCount > 1 ? "étaient correctes" : "était correcte"}. Socrato affiche maintenant le classement attendu.`);
+      setFeedback(`${correctCount} étiquette${correctCount > 1 ? "s" : ""} sur ${interaction.items.length} ${correctCount > 1 ? "étaient correctes" : "était correcte"}. Socrato affiche maintenant le classement attendu.`);
       onComplete(false, nextAttempt);
       return;
     }
-    setFeedback(`${correctCount} compétence${correctCount > 1 ? "s sont bien classées" : " est bien classée"} sur ${interaction.items.length}. Relis le titre et la description de chaque catégorie avant ta deuxième tentative.`);
+    setFeedback(`${correctCount} étiquette${correctCount > 1 ? "s sont bien classées" : " est bien classée"} sur ${interaction.items.length}. Relis le titre et la description de chaque catégorie avant ta deuxième tentative.`);
   }
 
   return <section className="association-question competency-categorization" aria-labelledby="competency-categorization-title">
-    <header className="timeline-question__header"><div><p>Question {question.number} · Classement interactif</p>{operationLabel ? <span className="operation-chip">{operationLabel}</span> : null}<h2 id="competency-categorization-title">{question.prompt}</h2><span>{Object.keys(placements).length} compétence{Object.keys(placements).length > 1 ? "s" : ""} sur {interaction.items.length}</span></div></header>
+    <header className="timeline-question__header"><div><p>Question {question.number} · Classement interactif</p>{operationLabel ? <span className="operation-chip">{operationLabel}</span> : null}<h2 id="competency-categorization-title">{question.prompt}</h2><span>{Object.keys(placements).length} étiquette{Object.keys(placements).length > 1 ? "s" : ""} sur {interaction.items.length}</span></div></header>
     {showHint ? <p className="timeline-question__hint" role="status">{question.localHint}</p> : null}
-    <section className="association-pool competency-pool" aria-labelledby="competency-pool-title"><h3 id="competency-pool-title">Titres des compétences à classer</h3><p>Sélectionne une étiquette ou fais-la glisser dans la bonne colonne.</p><div>{unplacedItems.map((item) => <button key={item.id} type="button" draggable={!completed} aria-pressed={selectedItemId === item.id} onDragStart={(event) => beginDrag(event, item.id)} onClick={() => setSelectedItemId(item.id)}>{item.label}</button>)}</div>{unplacedItems.length === 0 ? <strong className="competency-pool__empty">Toutes les compétences sont placées.</strong> : null}</section>
-    <div className="competency-classification-table" role="table" aria-label="Tableau de classement des compétences constitutionnelles">{categories.map((category) => {
+    <section className="association-pool competency-pool" aria-labelledby="competency-pool-title"><h3 id="competency-pool-title">Étiquettes à classer</h3><p>Sélectionne une étiquette ou fais-la glisser dans la bonne colonne.</p><div>{unplacedItems.map((item) => <button key={item.id} type="button" draggable={!completed} aria-pressed={selectedItemId === item.id} onDragStart={(event) => beginDrag(event, item.id)} onClick={() => setSelectedItemId(item.id)}>{item.label}</button>)}</div>{unplacedItems.length === 0 ? <strong className="competency-pool__empty">Toutes les étiquettes sont placées.</strong> : null}</section>
+    <div className="competency-classification-table" role="table" aria-label="Tableau de classement des étiquettes">{categories.map((category) => {
       const placedItems = interaction.items.filter(({ id }) => placements[id] === category.id);
       return <section className="competency-category" role="rowgroup" key={category.id} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); place(event.dataTransfer.getData("text/plain"), category.id); }}>
         <header role="columnheader"><span>{category.articleLabel}</span><h3>{category.label}</h3><p>{category.description}</p></header>
-        <div className="competency-category__dropzone" role="cell" aria-label={`Compétences classées sous ${category.label}`}>
+        <div className="competency-category__dropzone" role="cell" aria-label={`Étiquettes classées sous ${category.label}`}>
           {placedItems.map((item) => <button key={item.id} type="button" disabled={completed} onClick={() => setPlacements((current) => Object.fromEntries(Object.entries(current).filter(([itemId]) => itemId !== item.id)))}>{item.label}<small>{completed ? "" : "Retirer"}</small></button>)}
-          {placedItems.length === 0 ? <p>Aucune compétence placée.</p> : null}
-          <button className="competency-category__place" type="button" disabled={!selectedItemId || completed} onClick={() => place(selectedItemId, category.id)}>{selectedItemId ? `Déposer « ${itemById.get(selectedItemId)?.label ?? "cette compétence"} » ici` : "Choisis d’abord une compétence"}</button>
+          {placedItems.length === 0 ? <p>Aucune étiquette placée.</p> : null}
+          <button className="competency-category__place" type="button" disabled={!selectedItemId || completed} onClick={() => place(selectedItemId, category.id)}>{selectedItemId ? `Déposer « ${itemById.get(selectedItemId)?.label ?? "cette étiquette"} » ici` : "Choisis d’abord une étiquette"}</button>
         </div>
       </section>;
     })}</div>
+    {completed && interaction.correction ? <aside className="competency-tension competency-tension--revealed"><h3>Corrigé</h3><p>{interaction.correction}</p></aside> : null}
     {interaction.tension ? <aside className={`competency-tension${completed ? " competency-tension--revealed" : ""}`}><span>À expliquer après le classement</span><h3>{interaction.tension.title}</h3><p><strong>{interaction.tension.prompt}</strong></p>{completed ? <p>{interaction.tension.explanation}</p> : <p>L’explication apparaîtra lorsque le tableau aura été vérifié.</p>}</aside> : null}
     <footer className="timeline-question__footer"><p role="status" aria-live="polite"><strong>Socrato</strong>{feedback}</p><button type="button" disabled={Object.keys(placements).length !== interaction.items.length || completed} onClick={verify}>{completed ? "Classement vérifié" : attempts ? "Vérifier ma deuxième tentative" : "Vérifier le tableau"}</button></footer>
   </section>;

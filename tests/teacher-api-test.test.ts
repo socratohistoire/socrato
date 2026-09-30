@@ -8,7 +8,7 @@ import { createCatalogLearningSessionQuestions } from "../lib/student-learning-s
 test("expose les questions de l’Acte d’Union avec leur vrai contexte Sol", () => {
   const approved = getQuestionsForKnowledgeHeading("acte-union");
   const catalog = createCatalogLearningSessionQuestions(approved.map(({ id }) => id));
-  assert.equal(catalog.questions.length, 34);
+  assert.equal(catalog.questions.length, 35);
   for (const [index, question] of catalog.questions.entries()) {
     assert.equal(question.localHint, approved[index]?.instruction);
     assert.equal(question.evaluationGuide?.expectedAnswer, approved[index]?.expectedAnswer);
