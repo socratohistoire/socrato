@@ -752,10 +752,11 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
               {isMultipleChoice ? <div className="multiple-choice-actions">
                 <button type="button" className="multiple-choice-check" disabled={!selectedAnswer || activeQuestionState.status === "completed"} onClick={() => void verifyMultipleChoiceAnswer()}>Vérifier ma réponse</button>
               </div> : null}
+              {question.answerOptions?.some(option => option.imageCredit) ? <details className="map-source-details"><summary>Détails</summary>{[...new Set(question.answerOptions.map(option => option.imageCredit).filter(Boolean))].map(credit => <p key={credit}>{credit}</p>)}<a href="https://ouvert.canada.ca/fr/licence-du-gouvernement-ouvert-canada" target="_blank" rel="noreferrer">Consulter la licence</a></details> : null}
               {currentHint ? <p className="local-hint" role="status">{currentHint}</p> : null}
             </div>
 
-            {isMultipleChoice ? (questionDocuments.length === 0 ? renderMultipleChoiceResponse(true) : choiceFeedback ? renderMultipleChoiceResponse() : null) : (
+            {isMultipleChoice ? (question.answerOptions?.some(option => option.imageUrl) ? (choiceFeedback ? renderMultipleChoiceResponse() : null) : questionDocuments.length === 0 ? renderMultipleChoiceResponse(true) : choiceFeedback ? renderMultipleChoiceResponse() : null) : (
             <section className="conversation" aria-label="Conversation avec Socrato">
             <div ref={messagesRegionRef} className="message-list" aria-live="polite" aria-relevant="additions">
               {messages.map((message, index) => (

@@ -432,6 +432,10 @@
 .multiple-choice-options--maps .map-answer-card>button[role="radio"]{display:flex;flex-direction:column;align-items:stretch;padding:10px;min-width:0}
 .multiple-choice-options--maps .map-answer-card>button>img{display:block;width:100%;height:auto;margin-top:8px;background:white}
 .map-answer-card{min-width:0}
+.map-source-details{margin-top:12px;padding-top:10px;border-top:1px solid #b9ab92;color:#34495a;font-size:13px;line-height:1.5}
+.map-source-details summary{cursor:pointer;font-weight:700;width:max-content}
+.map-source-details p{margin:8px 0}
+.map-source-details a{color:#17344b;text-decoration:underline}
 .multiple-choice-options--maps .map-answer-card>button[aria-checked="true"]{background:#17344b;color:#fff5df;border-color:#b99c63;box-shadow:0 0 0 3px #b99c63}
 .multiple-choice-options--maps .map-answer-card>button[aria-checked="true"] strong{background:#e3c78d;color:#102c45}
 .multiple-choice-options .map-answer-expand{display:block;min-height:40px;margin-top:6px;text-align:center;font-weight:700;background:#17344b;color:#fff5df}

@@ -243,6 +243,7 @@ export interface ApprovedQuestion {
     correct: boolean;
     imageUrl?: string;
     imageAlt?: string;
+    imageCredit?: string;
   }[];
   operationId: IntellectualOperationId;
   sourceIds: readonly string[];
