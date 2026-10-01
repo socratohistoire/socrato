@@ -15,6 +15,9 @@ function documentText(document: LearningSessionDocument) {
 }
 
 function successCriteria(question: LearningSessionQuestion) {
+  if (question.id === "question:acte-de-l-amerique-du-nord-britannique:union-federation-change") {
+    return ["Accepte comme entièrement satisfaisante la réponse « Il y a maintenant deux paliers de gouvernement » ou une formulation équivalente, sans contradiction historique.", "Cette identification suffit comme changement et comme appui sur les schémas; ne pas exiger une description avant/après, les noms des provinces ou une justification documentaire supplémentaire."];
+  }
   const operation = question.intellectualOperations.find(({ id }) => id === question.primaryOperationId)?.label ?? question.primaryOperationId;
   const criteria = [
     "Répond directement à toutes les parties de la question.",
