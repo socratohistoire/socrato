@@ -54,22 +54,22 @@ html, body { min-height:100%; overflow:hidden; background:#071725; }
 
 @media (max-width:1119px) {
   html, body { overflow:auto; }
-  .student-preview-surface .learning-session,
-  .student-preview-surface .session-layout { height:auto; min-height:100dvh; }
-  .student-preview-surface .session-layout { grid-template-columns:1fr; grid-template-rows:none; overflow:visible; padding-bottom:24px; }
-  .student-preview-surface .question-heading,
-  .student-preview-surface .documents-heading,
-  .student-preview-surface .question-pane,
-  .student-preview-surface .documents-pane { grid-column:1; grid-row:auto; }
-  .student-preview-surface .question-pane,
-  .student-preview-surface .documents-pane,
-  .student-preview-surface .question-module,
-  .student-preview-surface .documents-module { height:auto; display:block; }
-  .student-preview-surface .conversation,
-  .student-preview-surface .document-system-card,
-  .student-preview-surface .document-preview { overflow:visible; }
-  .student-preview-surface .teacher-preview-session { padding-top:112px; }
-  .student-preview-surface .teacher-preview-session .session-layout { height:auto; min-height:calc(100dvh - 112px); }
+  .student-preview-surface:not(.student-preview-surface--constitution) .learning-session,
+  .student-preview-surface:not(.student-preview-surface--constitution) .session-layout { height:auto; min-height:100dvh; }
+  .student-preview-surface:not(.student-preview-surface--constitution) .session-layout { grid-template-columns:1fr; grid-template-rows:none; overflow:visible; padding-bottom:24px; }
+  .student-preview-surface:not(.student-preview-surface--constitution) .question-heading,
+  .student-preview-surface:not(.student-preview-surface--constitution) .documents-heading,
+  .student-preview-surface:not(.student-preview-surface--constitution) .question-pane,
+  .student-preview-surface:not(.student-preview-surface--constitution) .documents-pane { grid-column:1; grid-row:auto; }
+  .student-preview-surface:not(.student-preview-surface--constitution) .question-pane,
+  .student-preview-surface:not(.student-preview-surface--constitution) .documents-pane,
+  .student-preview-surface:not(.student-preview-surface--constitution) .question-module,
+  .student-preview-surface:not(.student-preview-surface--constitution) .documents-module { height:auto; display:block; }
+  .student-preview-surface:not(.student-preview-surface--constitution) .conversation,
+  .student-preview-surface:not(.student-preview-surface--constitution) .document-system-card,
+  .student-preview-surface:not(.student-preview-surface--constitution) .document-preview { overflow:visible; }
+  .student-preview-surface:not(.student-preview-surface--constitution) .teacher-preview-session { padding-top:112px; }
+  .student-preview-surface:not(.student-preview-surface--constitution) .teacher-preview-session .session-layout { height:auto; min-height:calc(100dvh - 112px); }
   .teacher-preview-navigation { min-height:112px; align-items:stretch; flex-direction:column; gap:6px; padding:10px 16px; }
   .teacher-preview-navigation > div { justify-content:space-between; }
   .teacher-preview-navigation button { padding:8px 10px; }
@@ -98,3 +98,12 @@ html, body { min-height:100%; overflow:hidden; background:#071725; }
   .student-preview-surface--embedded .question-pane,
   .student-preview-surface--embedded .documents-pane { grid-column:1; grid-row:auto; height:auto; }
 }
+
+/* Keep the two-diagram activity inside the available desktop/tablet viewport. */
+html:has(.student-preview-surface--constitution),
+body:has(.student-preview-surface--constitution){height:100%;overflow:hidden}
+.student-preview-surface.student-preview-surface--constitution .learning-session{height:100dvh;min-height:0;max-height:100dvh}
+.student-preview-surface--constitution .session-header{padding-top:10px;padding-bottom:8px}
+.student-preview-surface--constitution .question-pane,
+.student-preview-surface--constitution .documents-pane{min-height:0;overflow:hidden}
+.student-preview-surface--constitution .conversation{min-height:0;overflow:hidden}
