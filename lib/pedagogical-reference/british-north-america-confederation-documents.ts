@@ -1,3 +1,4 @@
+import { CONFEDERATION_FACTORS_DOCUMENTS } from "./confederation-factors.ts";
 import type { HistoricalDocumentRecord } from "./historical-document.ts";
 import { UNION_FEDERATION_DIAGRAMS } from "./union-federation-diagrams.ts";
 
@@ -397,4 +398,5 @@ export const BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS = [
   ...BRITISH_NORTH_AMERICA_AMERICAN_THREAT_DOCUMENTS,
   BRITISH_NORTH_AMERICA_INSULAR_COLONIES_NON_ADHESION_DOCUMENT,
   ...UNION_FEDERATION_DIAGRAMS,
+  ...CONFEDERATION_FACTORS_DOCUMENTS,
 ] as const;
