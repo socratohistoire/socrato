@@ -1135,6 +1135,20 @@ function DocumentsPane({ documents, initialDocumentId, stacked = false }: { docu
   const [consultedIds, setConsultedIds] = useState(() => new Set(initialDocumentId ? [initialDocumentId] : []));
   const [expanded, setExpanded] = useState(false);
   const [imageZoom, setImageZoom] = useState(1.5);
+  const [visibleViewport, setVisibleViewport] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  useEffect(() => {
+    if (!expanded) return;
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const update = () => setVisibleViewport({ left: viewport.offsetLeft, top: viewport.offsetTop, width: viewport.width, height: viewport.height });
+    update();
+    viewport.addEventListener("resize", update);
+    viewport.addEventListener("scroll", update);
+    return () => {
+      viewport.removeEventListener("resize", update);
+      viewport.removeEventListener("scroll", update);
+    };
+  }, [expanded]);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const thumbnailRefs = useRef(new Map<string, HTMLButtonElement>());
   const stackedListRef = useRef<HTMLDivElement>(null);
@@ -1228,7 +1242,8 @@ function DocumentsPane({ documents, initialDocumentId, stacked = false }: { docu
   function expandStackedDocument(documentId: string) {
     setSelectedId(documentId);
     setConsultedIds((current) => new Set(current).add(documentId));
-    setImageZoom(1.5);
+    const target = documents.find(document => document.id === documentId);
+    setImageZoom(target?.content.kind === "historical_image" && target.content.localSrc.endsWith(".svg") ? 1 : 1.5);
     setExpanded(true);
   }
 
@@ -1277,8 +1292,8 @@ function DocumentsPane({ documents, initialDocumentId, stacked = false }: { docu
             </>}
           </div>
           {expanded ? (
-            <div className="document-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeExpandedDocument(); }}>
-              <section className="document-modal" role="dialog" aria-modal="true" aria-labelledby="expanded-document-title">
+            <div className="document-modal-backdrop" style={visibleViewport ? { ...visibleViewport, right: "auto", bottom: "auto" } : undefined} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeExpandedDocument(); }}>
+              <section className="document-modal" style={visibleViewport ? { width: "100%", height: "100%", maxWidth: 1400, maxHeight: "100%" } : undefined} role="dialog" aria-modal="true" aria-labelledby="expanded-document-title">
                 <button ref={closeButtonRef} type="button" className="close-document" onClick={closeExpandedDocument} aria-label="Fermer la vue agrandie">×</button>
                 <DocumentContent document={selected} expanded imageZoom={imageZoom} onImageZoomChange={setImageZoom} />
               </section>
