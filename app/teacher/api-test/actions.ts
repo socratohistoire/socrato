@@ -52,7 +52,9 @@ export async function analyzeTeacherTestResponse(request: TestRequest) {
       priorTurn: request.priorTurn,
     };
     const analyzer = createConfiguredOpenAIPedagogicalAnalyzer();
-    const candidate = await analyzeWithFallback(response, definition, analyzer, new LocalDeterministicResponseAnalyzer());
+    const candidate = process.env.NODE_ENV === "production"
+      ? { analysis: await analyzer.analyze(response, definition), usedFallback: false }
+      : await analyzeWithFallback(response, definition, analyzer, new LocalDeterministicResponseAnalyzer());
     const analysis = validateStructuredAnalysis(discardUnknownPedagogicalIds(candidate.analysis, definition), definition);
     const feedback = createPedagogicalFeedback(analysis, definition, analysis.pedagogicalOutcome === "non_exploitable" ? request.attemptNumber : 0);
     return { ok: true as const, analysis, feedback };
