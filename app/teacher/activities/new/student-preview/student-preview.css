@@ -103,7 +103,14 @@ html, body { min-height:100%; overflow:hidden; background:#071725; }
 html:has(.student-preview-surface--constitution),
 body:has(.student-preview-surface--constitution){height:100%;overflow:hidden}
 .student-preview-surface.student-preview-surface--constitution .learning-session{height:100dvh;min-height:0;max-height:100dvh}
-.student-preview-surface--constitution .session-header{padding-top:10px;padding-bottom:8px}
+.student-preview-surface--constitution .session-header{padding-top:8px;padding-bottom:6px}
+.student-preview-surface--constitution .session-header-top{grid-template-columns:minmax(155px,1fr) minmax(0,2.4fr) auto;gap:12px}
+.student-preview-surface--constitution .session-title-block{grid-column:2;grid-row:1;transform:none}
+.student-preview-surface--constitution .session-header-actions{grid-column:3;grid-row:1}
+.student-preview-surface--constitution .session-title-block h1{font-size:17px;margin-top:0}
+.student-preview-surface--constitution .session-title-block > strong{font-size:12px;margin-top:3px}
+.student-preview-surface--constitution .session-title-block > span{font-size:10px;margin-top:3px}
+.student-preview-surface--constitution .session-nav-row{margin-top:5px}
 .student-preview-surface--constitution .question-pane,
 .student-preview-surface--constitution .documents-pane{min-height:0;overflow:hidden}
 .student-preview-surface--constitution .conversation{min-height:0;overflow:hidden}
