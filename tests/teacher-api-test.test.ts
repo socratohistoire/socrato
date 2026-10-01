@@ -55,6 +55,8 @@ test("analyse aussi l’économie coloniale et les affaires indiennes avec leur 
   for (const [notionId, notionTitle, recordId] of [
     ["economie-coloniale", "Économie coloniale", "historical-record:economie-coloniale"],
     ["affaires-indiennes", "Affaires indiennes", "historical-record:affaires-indiennes"],
+    ["acte-de-l-amerique-du-nord-britannique", "AANB", "historical-record:acte-de-l-amerique-du-nord-britannique"],
+    ["relations-federales-provinciales", "Relations fédérales-provinciales", "historical-record:relations-federales-provinciales"],
   ] as const) {
     const approved = getQuestionsForKnowledgeHeading(notionId);
     const catalog = createCatalogLearningSessionQuestions(approved.map(({ id }) => id));
