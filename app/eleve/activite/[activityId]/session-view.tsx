@@ -117,10 +117,12 @@ function ConversationMessageContent({ content }: { content: string }) {
 export function StudentLearningSessionView({ data, teacherPreview = false, classroomMode = false, persistProgress = true, teacherApiTest = false, teacherPreviewExitHref = "/teacher/activities/new" }: { data: StudentLearningSessionData; teacherPreview?: boolean; classroomMode?: boolean; persistProgress?: boolean; teacherApiTest?: boolean; teacherPreviewExitHref?: string }) {
   const engineDefinition = useMemo(() => createDemoPedagogicalDefinition(data), [data]);
   const initialEngineState = useMemo(() => restoreStudentProgress(createPedagogicalSession(engineDefinition), data.progress), [data.progress, engineDefinition]);
+  const teacherAnalysisErrorRef = useRef("");
   const analyzer = useMemo<ResponseAnalyzer>(() => data.questions.some(({ id }) => id === CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID)
     ? new CausesConsequencesLearningAnalyzer()
     : teacherApiTest ? {
     async analyze(response) {
+      teacherAnalysisErrorRef.current = "";
       const result = await analyzeTeacherTestResponse({
         notionId: data.notionId,
         questionId: response.questionId,
@@ -129,6 +131,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
         priorTurn: response.priorTurn,
       });
       if (!result.ok) {
+        teacherAnalysisErrorRef.current = result.error;
         console.error("[classroom-analysis]", result.error);
         throw new Error(result.error);
       }
@@ -364,7 +367,9 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
       let nextState = transition.state;
       if (transition.feedback?.technicalNotice
         && nextState.questionStates[engineState.currentQuestionIndex]?.attemptNumber === activeQuestionState.attemptNumber) {
-        const outageFeedback = transition.feedback.studentFacingText;
+        const outageFeedback = teacherApiTest && teacherAnalysisErrorRef.current
+          ? `${teacherAnalysisErrorRef.current} Ta réponse est conservée et cette tentative ne compte pas.`
+          : transition.feedback.studentFacingText;
         setMessages((current) => [
           ...current,
           { id: `socrato-analysis-unavailable-${current.length}`, author: "socrato", content: outageFeedback },

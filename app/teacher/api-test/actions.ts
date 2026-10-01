@@ -18,6 +18,8 @@ const TEST_NOTIONS = {
   "economie-coloniale": "Économie coloniale",
   "gouvernement-responsable": "Gouvernement responsable",
   "affaires-indiennes": "Affaires indiennes",
+  "acte-de-l-amerique-du-nord-britannique": "Acte de l’Amérique du Nord britannique",
+  "relations-federales-provinciales": "Relations fédérales-provinciales",
 } as const;
 
 export async function analyzeTeacherTestResponse(request: TestRequest) {
@@ -27,7 +29,10 @@ export async function analyzeTeacherTestResponse(request: TestRequest) {
     if (process.env.SOCRATO_PEDAGOGICAL_ANALYZER !== "openai") {
       return { ok: false as const, error: "Sol n’est pas activé dans la configuration actuelle." };
     }
-    if (!(request?.notionId in TEST_NOTIONS) || typeof request?.questionId !== "string" || typeof request?.content !== "string"
+    if (!Object.prototype.hasOwnProperty.call(TEST_NOTIONS, request?.notionId)) {
+      return { ok: false as const, error: "Cette notion n’est pas encore prise en charge par le mode test enseignant." };
+    }
+    if (typeof request?.questionId !== "string" || typeof request?.content !== "string"
       || request.content.trim().length === 0 || request.content.length > 10_000
       || !Number.isInteger(request.attemptNumber) || request.attemptNumber < 1 || request.attemptNumber > 3) {
       return { ok: false as const, error: "Choisissez une question et écrivez une réponse à tester." };

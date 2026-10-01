@@ -231,7 +231,9 @@ test("réserve le banc d’essai à l’enseignant et ne touche pas à la progre
   assert.match(studentView, /InteractiveTimelineQuestion/);
   assert.match(studentView, /InteractiveAssociationQuestion/);
   assert.match(action, /attemptNumber: request\.attemptNumber/);
-  assert.match(page, /query\.notion === "gouvernement-responsable"/);
+  assert.match(page, /Object\.prototype\.hasOwnProperty\.call\(TEST_NOTIONS, query\.notion\)/);
+  assert.match(page, /"acte-de-l-amerique-du-nord-britannique"/);
+  assert.match(page, /"relations-federales-provinciales"/);
   assert.match(page, /getQuestionsForKnowledgeHeading\(notionId\)/);
   assert.match(studentView, /notionId: data\.notionId/);
   assert.match(action, /getQuestionsForKnowledgeHeading\(notionId\)/);

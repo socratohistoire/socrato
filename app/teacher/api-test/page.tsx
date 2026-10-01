@@ -11,12 +11,14 @@ type TeacherApiTestQuery = { notion?: string };
 const TEST_NOTIONS = {
   "acte-union": { title: "Acte d’Union", startYear: 1840, endYear: 1896 },
   "gouvernement-responsable": { title: "Gouvernement responsable", startYear: 1840, endYear: 1896 },
+  "acte-de-l-amerique-du-nord-britannique": { title: "Acte de l’Amérique du Nord britannique", startYear: 1840, endYear: 1896 },
+  "relations-federales-provinciales": { title: "Relations fédérales-provinciales", startYear: 1840, endYear: 1896 },
 } as const;
 
 export default async function TeacherApiTestPage({ searchParams }: { searchParams: Promise<TeacherApiTestQuery> }) {
   await requireTeacherActor();
   const query = await searchParams;
-  const notionId = query.notion === "gouvernement-responsable" ? query.notion : "acte-union";
+  const notionId = query.notion && Object.prototype.hasOwnProperty.call(TEST_NOTIONS, query.notion) ? query.notion as keyof typeof TEST_NOTIONS : "acte-union";
   const notion = TEST_NOTIONS[notionId];
   const approved = getQuestionsForKnowledgeHeading(notionId);
   const catalog = createCatalogLearningSessionQuestions(approved.map(({ id }) => id));
