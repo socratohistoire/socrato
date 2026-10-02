@@ -24,7 +24,7 @@ export const SCHEMA_FIELDS = [
   },
   {
     "id": "central2",
-    "prompt": "Indiquez un groupe social lié au développement des manufactures.",
+    "prompt": "Nommez le groupe social qui travaille contre un salaire dans les manufactures.",
     "answer": "La classe ouvrière : les travailleurs salariés des manufactures."
   },
   {
@@ -42,6 +42,11 @@ export type SchemaFieldId = (typeof SCHEMA_FIELDS)[number]["id"];
 export type AnswerFeedback = { status: "recognized" | "partial" | "review"; label: string; message: string };
 // Conservative local assistance, not a semantic grade. Ambiguous or negative
 // statements must never pass solely because they contain a target keyword.
+const MACHINE_METHODS = [
+  /\b(utilise|utilisent|utiliser|emploie|emploient|employer) (des|les|de nouvelles) machines\b/,
+  /\b(produit|produisent|produire|fabrique|fabriquent|fabriquer) (avec|a l aide de) (des|les) machines\b/,
+  /\bmachines remplacent (le travail manuel|le travail artisanal|les outils manuels)\b/,
+];
 const LOCAL_ANSWER_RULES: Record<SchemaFieldId, { accepted: RegExp[]; related: RegExp; hint: string }> = {
   object: {
     accepted: [/\bindustrialisation\b/, /\brevolution industrielle\b/],
@@ -86,7 +91,9 @@ export function assessIndustrialisationAnswer(id: SchemaFieldId, answer: string)
   if (!text) return review("Aucune réponse à vérifier.");
   if (text.length > 260 || /\b(ne|n|pas|non|aucun|aucune|jamais|sans|sauf|contraire|plutot|mais|ou|peut etre|sais|refuse|refusent|refuser)\b/.test(text)) return review("Votre formulation demande une lecture humaine : comparez-la au corrigé ou faites-la valider par l’enseignant.");
   if (/\b(rural|rurale|campagnes?|agriculture|agricole|bourgeoisie|patrons?|esclaves?|deuxieme|seconde|electricite|ordinateurs?|robots?)\b/.test(text)) return review("Vérifiez le groupe, le milieu ou la période évoqués : cette formulation ne peut pas être validée automatiquement.");
-  if (rule.accepted.some(pattern => pattern.test(text))) return { status: "recognized", label: "Réponse reconnue", message: "Votre réponse contient une formulation attendue pour cette case. Cette reconnaissance locale ne garantit pas la justesse de toute la phrase." };
+  const naturalMachineMethod = (id === "central1" || id === "detail2") && MACHINE_METHODS.some(pattern => pattern.test(text));
+  const longWorkingDay = id === "detail3" && /\b(travaille|travaillent|travailler) (pendant |jusqu a |plus de |environ )?(1[0-6]|dix|onze|douze|treize|quatorze|quinze|seize) heures (par jour|chaque jour|quotidiennement)\b/.test(text);
+  if (rule.accepted.some(pattern => pattern.test(text)) || naturalMachineMethod || longWorkingDay) return { status: "recognized", label: "Réponse reconnue", message: "Votre réponse contient une formulation attendue pour cette case. Cette reconnaissance locale ne garantit pas la justesse de toute la phrase." };
   if (rule.related.test(text)) return { status: "partial", label: "À préciser", message: rule.hint };
   return review("Cette formulation n’est pas reconnue; elle n’est pas nécessairement fausse. Comparez-la à la piste de réponse ou consultez l’enseignant.");
 }

@@ -2,6 +2,21 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { assessIndustrialisationAnswer, type SchemaFieldId } from "../lib/industrialisation-partie-b.ts";
 
+test("recognizes ordinary student phrasing observed in the live Partie B audit", () => {
+  for (const id of ["central1", "detail2"] as const) {
+    for (const answer of ["On utilise des machines pour produire en usine.", "Les ouvriers utilisent des machines.", "On produit avec des machines.", "Les machines remplacent le travail manuel."]) {
+      assert.equal(assessIndustrialisationAnswer(id, answer).status, "recognized", answer);
+    }
+    assert.notEqual(assessIndustrialisationAnswer(id, "On n’utilise pas de machines.").status, "recognized");
+  }
+  for (const answer of ["Ils travaillent douze heures par jour.", "Les ouvriers travaillent 12 heures chaque jour.", "Ils travaillent jusqu’à quatorze heures par jour."]) {
+    assert.equal(assessIndustrialisationAnswer("detail3", answer).status, "recognized", answer);
+  }
+  for (const answer of ["Ils ne travaillent pas douze heures par jour.", "Ils travaillent douze heures par semaine.", "Ils travaillent deux heures par jour.", "Ils ont douze ans."]) {
+    assert.notEqual(assessIndustrialisationAnswer("detail3", answer).status, "recognized", answer);
+  }
+});
+
 test("local feedback recognizes variants in each of the seven boxes", () => {
   const examples: Record<SchemaFieldId, string[]> = {
     object: ["Première phase d’industrialisation", "La révolution industrielle", "INDUSTRIALISATION"],
