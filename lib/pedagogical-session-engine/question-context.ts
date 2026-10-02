@@ -15,6 +15,12 @@ function documentText(document: LearningSessionDocument) {
 }
 
 function successCriteria(question: LearningSessionQuestion) {
+  if (question.id === "question:acte-de-l-amerique-du-nord-britannique:document-interpretation-001") {
+    return ["Expliquer que le Dominion s’agrandit et identifier deux ajouts territoriaux exacts entre 1867 et 1873 suffit pour une réponse entièrement satisfaisante.", "Ne pas exiger les quatre provinces fondatrices, les dates exactes des ajouts ni tous les changements du corrigé. Les ajouts correctement nommés constituent l’appui sur les cartes."];
+  }
+  if (question.id === "question:acte-de-l-amerique-du-nord-britannique:document-interpretation-003") {
+    return ["Identifier la construction d’un chemin de fer reliant les colonies suffit pour une réponse entièrement satisfaisante.", "Cette condition commune constitue un appui sur les deux documents. Ne pas exiger de comparer Annand et Fisher ni de préciser le calendrier de construction ou le nom Intercolonial."];
+  }
   if (question.id === "question:acte-de-l-amerique-du-nord-britannique:union-federation-change") {
     return ["Accepte comme entièrement satisfaisante la réponse « Il y a maintenant deux paliers de gouvernement » ou une formulation équivalente, sans contradiction historique.", "Cette identification suffit comme changement et comme appui sur les schémas; ne pas exiger une description avant/après, les noms des provinces ou une justification documentaire supplémentaire."];
   }

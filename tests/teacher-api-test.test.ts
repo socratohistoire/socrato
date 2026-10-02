@@ -5,6 +5,17 @@ import { getQuestionsForKnowledgeHeading } from "../lib/pedagogical-reference/in
 import { createPedagogicalQuestionDefinition } from "../lib/pedagogical-session-engine/question-context.ts";
 import { createCatalogLearningSessionQuestions } from "../lib/student-learning-session/demo-provider.ts";
 
+test("limite les exigences AANB à la question posée pour le territoire et le chemin de fer", () => {
+  const notion = "acte-de-l-amerique-du-nord-britannique";
+  const ids = ["document-interpretation-001", "document-interpretation-003"].map((suffix) => `question:${notion}:${suffix}`);
+  const catalog = createCatalogLearningSessionQuestions(ids);
+  const criteria = catalog.questions.map((question) => createPedagogicalQuestionDefinition(question, notion, "AANB", catalog.documents).evaluationContext?.successCriteria.join(" ") ?? "");
+  assert.match(criteria[0], /deux ajouts territoriaux exacts/);
+  assert.match(criteria[0], /Ne pas exiger les quatre provinces fondatrices/);
+  assert.match(criteria[1], /chemin de fer reliant les colonies suffit/);
+  assert.match(criteria[1], /Ne pas exiger de comparer Annand et Fisher/);
+});
+
 test("expose les questions de l’Acte d’Union avec leur vrai contexte Sol", () => {
   const approved = getQuestionsForKnowledgeHeading("acte-union");
   const catalog = createCatalogLearningSessionQuestions(approved.map(({ id }) => id));

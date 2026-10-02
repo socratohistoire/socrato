@@ -896,7 +896,7 @@ function InteractiveAssociationQuestion({ question, operationLabel, initialAttem
   const interaction = question.associationInteraction as AssociationInteraction;
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState("Sélectionne un élément, puis choisis la description correspondante.");
+  const [feedback, setFeedback] = useState("Sélectionne un élément, puis l’emplacement auquel il correspond.");
   const [attempts, setAttempts] = useState(initialAttempts);
   const [completed, setCompleted] = useState(false);
   const [showHint, setShowHint] = useState(initialHintLevel > 0);
@@ -928,9 +928,10 @@ function InteractiveAssociationQuestion({ question, operationLabel, initialAttem
   function verify() {
     const correctCount = interaction.targets.filter((target) => assignments[target.id] === target.correctItemId).length;
     const nextAttempt = attempts + 1; setAttempts(nextAttempt); onAttempt(nextAttempt);
-    if (correctCount === interaction.targets.length) { setCompleted(true); setFeedback(`Bravo! Les ${interaction.targets.length} éléments sont associés à la bonne description.`); onComplete(true, nextAttempt); return; }
+    if (correctCount === interaction.targets.length) { setCompleted(true); setFeedback(`Bravo! Les ${interaction.targets.length} associations sont correctes.`); onComplete(true, nextAttempt); return; }
     if (nextAttempt >= 2) { setAssignments(Object.fromEntries(interaction.targets.map((target) => [target.id, target.correctItemId]))); setCompleted(true); setFeedback(`${correctAnswerCount(correctCount, interaction.targets.length, true)} Socrato affiche maintenant les associations attendues.`); onComplete(false, nextAttempt); return; }
-    setFeedback(`${correctAnswerCount(correctCount, interaction.targets.length)} Relis attentivement chaque description avant de vérifier de nouveau.`);
+    const reviewHint = hasMapLayout ? "Revois les dates associées aux provinces et aux territoires." : useCompactDateLayout ? "Compare les éléments et les années auxquels tu les as associés." : "Relis attentivement chaque description.";
+    setFeedback(`${correctAnswerCount(correctCount, interaction.targets.length)} ${reviewHint} Tu peux modifier tes associations avant de vérifier de nouveau.`);
   }
   return <section className={`association-question${useCompactDateLayout ? " association-question--compact-dates association-question--date-timeline" : ""}${hasMapLayout ? " association-question--map" : ""}`} aria-labelledby="association-question-title">
     <header className="timeline-question__header"><div><div className="association-question__meta"><p>Question {question.number}</p>{operationLabel ? <span className="operation-chip">{operationLabel}</span> : null}</div><h2 id="association-question-title">{question.prompt}</h2></div></header>
