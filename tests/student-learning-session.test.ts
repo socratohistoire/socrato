@@ -590,7 +590,7 @@ test("rend le document 4 dans la navigation, l’agrandissement et les détails"
   assert.match(viewSource, /<dt>Description factuelle<\/dt>/);
   assert.match(viewSource, /document\.content\.localSrc/);
   assert.match(viewSource, /\{consultedIds\.size\} sur \{documents\.length\}/);
-  assert.match(viewSource, /<DocumentContent document=\{selected\} onExpand=\{\(\) => \{ setImageZoom\(1\.5\); setExpanded\(true\); \}\} \/>/);
+  assert.match(viewSource, /<DocumentContent document=\{selected\} onExpand=\{\(\) => expandStackedDocument\(selected.id\)\} \/>/);
   assert.match(viewSource, /<DocumentContent document=\{selected\} expanded imageZoom=\{imageZoom\} onImageZoomChange=\{setImageZoom\} \/>/);
 });
 
@@ -616,7 +616,8 @@ test("affiche la description traduite de Qu’Appelle directement sous l’image
 test("entoure uniquement les extraits historiques de guillemets français", () => {
   assert.match(viewSource, /<blockquote>« \{document\.content\.excerpt\} »<\/blockquote>/);
   assert.match(viewSource, /document\.content\.kind === "historical_excerpt"[\s\S]*<cite className="document-identification">\{identification\}<\/cite>/);
-  assert.match(viewSource, /<DocumentContent document=\{selected\} onExpand=\{\(\) => \{ setImageZoom\(1\.5\); setExpanded\(true\); \}\} \/>/);
+  assert.match(viewSource, /<DocumentContent document=\{selected\} onExpand=\{\(\) => expandStackedDocument\(selected.id\)\} \/>/);
+  assert.match(viewSource, /onImageZoomChange\(document.content.kind === "historical_image" && document.content.localSrc.endsWith\(".svg"\) \? 1 : 1.5\)/);
   assert.match(viewSource, /<DocumentContent document=\{selected\} expanded imageZoom=\{imageZoom\} onImageZoomChange=\{setImageZoom\} \/>/);
   assert.match(viewSource, /document\.content\.kind === "population_table" \? \([\s\S]*?<table>[\s\S]*?<\/table>[\s\S]*?\) : document\.content\.kind === "historical_image" \?[\s\S]*?: <blockquote>« \{document\.content\.excerpt\} »<\/blockquote>/);
   const data = createDemoStudentLearningSession(); assert.ok(data);

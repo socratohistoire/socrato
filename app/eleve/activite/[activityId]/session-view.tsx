@@ -1272,7 +1272,7 @@ function DocumentsPane({ documents, initialDocumentId, stacked = false }: { docu
               <DocumentContent document={document} compact onExpand={() => expandStackedDocument(document.id)} />
             </article>)}</div> : <>
             <article className="document-preview">
-              <DocumentContent document={selected} onExpand={() => { setImageZoom(1.5); setExpanded(true); }} />
+              <DocumentContent document={selected} onExpand={() => expandStackedDocument(selected.id)} />
             </article>
             <div className="document-separator" aria-hidden="true" />
             <div className="document-navigation" aria-label="Navigation entre les documents">
@@ -1414,7 +1414,7 @@ function DocumentContent({ document, expanded = false, compact = false, onExpand
         ) : document.content.kind === "historical_image" ? (<>
           {expanded && onImageZoomChange ? <div className="document-image-zoom-controls" role="group" aria-label="Agrandissement de la carte">
             <button type="button" aria-label="Réduire la carte de 5 %" disabled={imageZoom <= 1} onClick={() => onImageZoomChange(Math.max(1, Number((imageZoom - .05).toFixed(2))))}>−</button>
-            <button type="button" className="document-image-zoom-reset" aria-label="Revenir à la vue agrandie initiale" onClick={() => onImageZoomChange(1.5)}>{Math.round(imageZoom * 100)} %</button>
+            <button type="button" className="document-image-zoom-reset" aria-label="Revenir à la vue agrandie initiale" onClick={() => onImageZoomChange(document.content.kind === "historical_image" && document.content.localSrc.endsWith(".svg") ? 1 : 1.5)}>{Math.round(imageZoom * 100)} %</button>
             <button type="button" aria-label="Agrandir la carte de 5 %" disabled={imageZoom >= 3} onClick={() => onImageZoomChange(Math.min(3, Number((imageZoom + .05).toFixed(2))))}>+</button>
           </div> : null}
           <div className={`document-visual-viewport${expanded ? " document-visual-viewport--expanded" : ""}`}>
