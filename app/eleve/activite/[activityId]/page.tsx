@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { getStudentAccessRuntime, STUDENT_SESSION_COOKIE } from "@/lib/student-access/local-runtime";
+import { getStudentAccessRuntime, STUDENT_SESSION_COOKIE, useLocalStudentDemo } from "@/lib/student-access/local-runtime";
 import { loadAuthorizedStudentLearningSession } from "@/lib/student-learning-session/access";
 import { LocalDemoStudentLearningSessionProvider } from "@/lib/student-learning-session/demo-provider";
 import { DatabaseStudentLearningSessionProvider } from "@/lib/student-learning-session/database-provider";
@@ -28,7 +28,7 @@ export default async function StudentLearningSessionPage({
     data = await loadAuthorizedStudentLearningSession(
       token,
       getStudentAccessRuntime().sessions,
-      process.env.DATABASE_URL ? new DatabaseStudentLearningSessionProvider() : new LocalDemoStudentLearningSessionProvider(),
+      process.env.DATABASE_URL && !useLocalStudentDemo() ? new DatabaseStudentLearningSessionProvider() : new LocalDemoStudentLearningSessionProvider(),
       activityId,
       notion,
       mode,

@@ -12,7 +12,7 @@ test("subventions : explique une demande avec deux sources primaires existantes"
   for (const id of q.historicalDocumentIds) {
     const matches = ACTE_UNION_DOCUMENTS.filter(d => d.id === id);
     assert.equal(matches.length, 1);
-    assert.equal(matches[0].content.kind, "historical_excerpt");
+    assert.equal(matches[0].content.kind, id === "RFP-T-009" ? "comparison_table" : "historical_excerpt");
     assert.ok(matches[0].intellectualOperationIds.includes(q.operationId));
   }
   assert.match(q.expectedAnswer, /dépenses supplémentaires/);

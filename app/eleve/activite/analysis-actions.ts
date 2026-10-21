@@ -155,6 +155,7 @@ export async function analyzeAuthorizedStudentResponse(request: AnalysisRequest)
     };
     const analyzer = configuredAnalyzer();
     let candidate: unknown;
+    let usedFallback = false;
     if (process.env.SOCRATO_PEDAGOGICAL_ANALYZER === "openai") {
       let lastError: unknown;
       for (let attempt = 1; attempt <= STUDENT_ANALYSIS_ATTEMPTS; attempt += 1) {
@@ -169,12 +170,15 @@ export async function analyzeAuthorizedStudentResponse(request: AnalysisRequest)
           if (attempt < STUDENT_ANALYSIS_ATTEMPTS) await waitBeforeRetry(attempt);
         }
       }
-      if (lastError) candidate = analyzeDeterministically(response, definition);
+      if (lastError) {
+        candidate = analyzeDeterministically(response, definition);
+        usedFallback = true;
+      }
     } else {
       candidate = await analyzer.analyze(response, definition);
     }
     const analysis = validateStructuredAnalysis(discardUnknownPedagogicalIds(candidate, definition), definition);
-    return { ok: true as const, analysis };
+    return { ok: true as const, analysis, usedFallback };
   } catch {
     return { ok: false as const, error: "Socrato a réessayé automatiquement, mais l’analyse reste indisponible. Ta réponse est conservée : tu peux réessayer ou continuer sans évaluation." };
   }

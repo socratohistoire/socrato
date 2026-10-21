@@ -1,6 +1,5 @@
 import type { LearningSessionDocument } from "./types.ts";
-import { MANITOBA_CARTOON_TRANSLATION } from "../pedagogical-reference/federal-provincial-relations-primary-documents.ts";
-import { FEDERAL_REVENUE_TABLE } from "../pedagogical-reference/federal-provincial-relations-primary-documents.ts";
+import { FEDERAL_REVENUE_TABLE, MANITOBA_CARTOON_TRANSLATION, PROVINCIAL_REVENUE_TABLE } from "../pedagogical-reference/federal-provincial-relations-primary-documents.ts";
 import { ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_CONSOLIDATED_REVENUE_FUND_DOCUMENT, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT, ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT, ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT, ACTE_UNION_MAP_ADAPTATION_DRAFT, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT, PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT, RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT, RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT } from "../pedagogical-reference/historical-document-needs.ts";
 import { ACTE_UNION_DURHAM_DOCUMENT, ACTE_UNION_DURHAM_PRESENTATIONS } from "../pedagogical-reference/historical-document-presentations.ts";
 import { ACTE_UNION_DEBT_COMPARISON_CHART, ACTE_UNION_POPULATION_COMPARISON_CHART, COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART } from "../pedagogical-reference/historical-comparison-charts.ts";
@@ -14,6 +13,14 @@ import { FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS } from "../pedagogical-r
 import { INDUSTRIALIZATION_ICONOGRAPHIC_DOCUMENTS } from "../pedagogical-reference/industrialization-iconography.ts";
 import { BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS } from "../pedagogical-reference/british-north-america-act-maps.ts";
 import { BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS } from "../pedagogical-reference/british-north-america-confederation-documents.ts";
+import { POLITIQUE_NATIONALE_TARIFF_COMPARISON_DOCUMENTS } from "../pedagogical-reference/politique-nationale-tariff-comparison.ts";
+import { POLITIQUE_NATIONALE_CRISIS_DATA_TABLES, POLITIQUE_NATIONALE_CRISIS_MANIFESTATION_DOCUMENTS } from "../pedagogical-reference/politique-nationale-crisis-manifestations.ts";
+import { POLITIQUE_NATIONALE_CAUSAL_LINKS_NEW_DOCUMENTS } from "../pedagogical-reference/politique-nationale-causal-links.ts";
+import { POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT } from "../pedagogical-reference/politique-nationale-government-settlement-poster.ts";
+import { POLITIQUE_NATIONALE_OBJECTIVES_ICONOGRAPHIC_DOCUMENTS } from "../pedagogical-reference/politique-nationale-objectives-iconography.ts";
+import { POLITIQUE_NATIONALE_MACDONALD_MOTIVES_DOCUMENT } from "../pedagogical-reference/politique-nationale-macdonald-motives.ts";
+import { POLITIQUE_NATIONALE_CPR_MARKET_DOCUMENTS } from "../pedagogical-reference/politique-nationale-cpr-market.ts";
+import { POLITIQUE_NATIONALE_CPR_TERRITORIAL_FUNCTION_DOCUMENT } from "../pedagogical-reference/politique-nationale-cpr-functions-comparison.ts";
 
 const PUBLIC_DOMAIN_RIGHTS = "Texte original de 1840 dans le domaine public.";
 const RESPONSIBLE_GOVERNMENT_PARLIAMENT_FIRE_IMAGE = RESPONSIBLE_GOVERNMENT_ICONOGRAPHIC_DOCUMENTS.find(({ id }) => id === "GR-I-002")!;
@@ -60,6 +67,169 @@ export const ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENTS: LearningSessionDocument
 }));
 
 export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
+  {
+    id: POLITIQUE_NATIONALE_MACDONALD_MOTIVES_DOCUMENT.id,
+    title: POLITIQUE_NATIONALE_MACDONALD_MOTIVES_DOCUMENT.title,
+    typeLabel: "Motion parlementaire",
+    dateLabel: POLITIQUE_NATIONALE_MACDONALD_MOTIVES_DOCUMENT.historicalDate,
+    authorLabel: POLITIQUE_NATIONALE_MACDONALD_MOTIVES_DOCUMENT.creator,
+    institutionLabel: POLITIQUE_NATIONALE_MACDONALD_MOTIVES_DOCUMENT.holdingInstitution,
+    sourceLabel: POLITIQUE_NATIONALE_MACDONALD_MOTIVES_DOCUMENT.sourceLocator,
+    sourceUrls: [POLITIQUE_NATIONALE_MACDONALD_MOTIVES_DOCUMENT.sourceUrl],
+    rightsLabel: POLITIQUE_NATIONALE_MACDONALD_MOTIVES_DOCUMENT.rightsStatement,
+    editorialNote: POLITIQUE_NATIONALE_MACDONALD_MOTIVES_DOCUMENT.interpretationCautions[0],
+    content: { kind: "historical_excerpt", excerpt: POLITIQUE_NATIONALE_MACDONALD_MOTIVES_DOCUMENT.transcription },
+    historicalKnowledgeIds: ["politique-nationale", "crise-economique-1873", "protectionnisme", "commerce-interprovincial"],
+    intellectualOperationIds: [...POLITIQUE_NATIONALE_MACDONALD_MOTIVES_DOCUMENT.operationIds],
+  },
+  {
+    id: POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.id,
+    title: POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.title,
+    typeLabel: "Affiche publicitaire gouvernementale",
+    dateLabel: POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.historicalDate,
+    authorLabel: POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.creator,
+    institutionLabel: POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.holdingInstitution,
+    sourceLabel: POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.sourceLocator,
+    sourceUrls: [
+      POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.sourceUrl,
+      "https://www.alloprof.qc.ca/en/students/vl/history/migration-flow-in-the-early-20th-century-h1626",
+    ],
+    rightsLabel: POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.rightsStatement,
+    editorialNote: POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.interpretationCautions[0],
+    content: {
+      kind: "historical_image",
+      localSrc: POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.assetUrl,
+      alt: POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.accessibleDescription,
+      description: POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.accessibleDescription,
+      visibleCaption: "« Des fermes gratuites pour un million de personnes » : fermes gratuites de 160 acres au Manitoba, dans le Nord-Ouest canadien et en Colombie-Britannique.",
+      visibleCaptionNote: "Traduction des principaux titres de l’affiche.",
+    },
+    historicalKnowledgeIds: ["politique-nationale", "colonisation-ouest", "terres-federales", "immigration"],
+    intellectualOperationIds: [...POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.operationIds],
+  },
+  ...POLITIQUE_NATIONALE_OBJECTIVES_ICONOGRAPHIC_DOCUMENTS.map((document) => ({
+    id: document.id,
+    title: document.title,
+    typeLabel: document.id === "PN-I-002"
+      ? "Caricature politique"
+      : document.id === "PN-I-003"
+        ? "Photographie historique"
+        : "Brochure publicitaire illustrée",
+    dateLabel: document.historicalDate,
+    authorLabel: document.creator,
+    institutionLabel: document.holdingInstitution,
+    sourceLabel: document.sourceLocator,
+    sourceUrls: [document.sourceUrl, document.assetUrl],
+    rightsLabel: document.rightsStatement,
+    editorialNote: document.interpretationCautions[0],
+    content: {
+      kind: "historical_image" as const,
+      localSrc: document.assetUrl,
+      alt: document.accessibleDescription,
+      description: document.accessibleDescription,
+      visibleCaption: document.id === "PN-I-002"
+        ? "Traduction des inscriptions : « Manufacturiers américains », « Politique nationale », « Mécanicien canadien », « Agriculteur canadien » et « Profits »."
+        : document.id === "PN-I-003"
+          ? "Donald A. Smith enfonce le dernier crampon du Canadien Pacifique à Craigellachie, en Colombie-Britannique."
+          : "Traduction des titres : « 200 millions d’acres à coloniser au Manitoba » et « Une propriété gratuite de 160 acres ». La locomotive porte l’inscription « D’un océan à l’autre ».",
+      visibleCaptionNote: document.id === "PN-I-002"
+        ? "L’Industrial League diffuse cette caricature vers 1879."
+        : document.id === "PN-I-003"
+          ? "Photographie prise le 7 novembre 1885."
+          : "Brochure en néerlandais diffusée par le Canadien Pacifique en Europe en 1886.",
+    },
+    historicalKnowledgeIds: document.id === "PN-I-002"
+      ? ["politique-nationale", "politique-tarifaire", "protectionnisme", "marche-interieur"]
+      : document.id === "PN-I-003"
+        ? ["politique-nationale", "canadien-pacifique", "colonisation-ouest", "unification-territoriale", "marche-interieur"]
+        : ["politique-nationale", "canadien-pacifique", "colonisation-ouest", "immigration", "terres-federales", "marche-interieur"],
+    intellectualOperationIds: [...document.operationIds],
+  })),
+  ...POLITIQUE_NATIONALE_CAUSAL_LINKS_NEW_DOCUMENTS.map((document) => ({
+    id: document.id,
+    title: document.title,
+    typeLabel: document.id === "PN-T-003" ? "Extrait d’un texte officiel" : "Brochure promotionnelle",
+    dateLabel: document.historicalDate,
+    authorLabel: document.creator,
+    institutionLabel: document.holdingInstitution,
+    sourceLabel: document.sourceLocator,
+    sourceUrls: [document.sourceUrl, document.assetUrl],
+    rightsLabel: document.rightsStatement,
+    editorialNote: document.interpretationCautions[0],
+    content: { kind: "historical_excerpt" as const, excerpt: document.transcription, adapted: true },
+    historicalKnowledgeIds: ["politique-nationale", "canadien-pacifique", "colonisation-ouest", "marche-interieur"],
+    intellectualOperationIds: [...document.operationIds],
+  })),
+  ...POLITIQUE_NATIONALE_CPR_MARKET_DOCUMENTS.map((document) => ({
+    id: document.id,
+    title: document.title,
+    typeLabel: document.id === "PN-T-006" ? "Discours parlementaire" : "Lettre politique",
+    dateLabel: document.historicalDate,
+    authorLabel: document.creator,
+    institutionLabel: document.holdingInstitution,
+    sourceLabel: document.sourceLocator,
+    sourceUrls: [document.sourceUrl, document.assetUrl],
+    rightsLabel: document.rightsStatement,
+    editorialNote: document.interpretationCautions[0],
+    content: { kind: "historical_excerpt" as const, excerpt: document.transcription },
+    historicalKnowledgeIds: ["politique-nationale", "canadien-pacifique", "colonisation-ouest", "marche-interieur"],
+    intellectualOperationIds: [...document.operationIds],
+  })),
+  {
+    id: POLITIQUE_NATIONALE_CPR_TERRITORIAL_FUNCTION_DOCUMENT.id,
+    title: POLITIQUE_NATIONALE_CPR_TERRITORIAL_FUNCTION_DOCUMENT.title,
+    typeLabel: "Lettre politique",
+    dateLabel: POLITIQUE_NATIONALE_CPR_TERRITORIAL_FUNCTION_DOCUMENT.historicalDate,
+    authorLabel: POLITIQUE_NATIONALE_CPR_TERRITORIAL_FUNCTION_DOCUMENT.creator,
+    institutionLabel: POLITIQUE_NATIONALE_CPR_TERRITORIAL_FUNCTION_DOCUMENT.holdingInstitution,
+    sourceLabel: POLITIQUE_NATIONALE_CPR_TERRITORIAL_FUNCTION_DOCUMENT.sourceLocator,
+    sourceUrls: [POLITIQUE_NATIONALE_CPR_TERRITORIAL_FUNCTION_DOCUMENT.sourceUrl],
+    rightsLabel: POLITIQUE_NATIONALE_CPR_TERRITORIAL_FUNCTION_DOCUMENT.rightsStatement,
+    editorialNote: POLITIQUE_NATIONALE_CPR_TERRITORIAL_FUNCTION_DOCUMENT.interpretationCautions[0],
+    content: { kind: "historical_excerpt", excerpt: POLITIQUE_NATIONALE_CPR_TERRITORIAL_FUNCTION_DOCUMENT.transcription },
+    historicalKnowledgeIds: ["politique-nationale", "canadien-pacifique", "unification-territoriale"],
+    intellectualOperationIds: [...POLITIQUE_NATIONALE_CPR_TERRITORIAL_FUNCTION_DOCUMENT.operationIds],
+  },
+  ...POLITIQUE_NATIONALE_CRISIS_MANIFESTATION_DOCUMENTS.map((document) => {
+    const table = POLITIQUE_NATIONALE_CRISIS_DATA_TABLES[document.id];
+    return {
+      id: document.id,
+      title: document.title,
+      typeLabel: "Tableau de données économiques",
+      dateLabel: document.historicalDate,
+      authorLabel: document.creator,
+      institutionLabel: document.holdingInstitution,
+      sourceLabel: document.sourceLocator,
+      sourceUrls: [document.sourceUrl, document.assetUrl],
+      rightsLabel: document.rightsStatement,
+      editorialNote: document.interpretationCautions[0],
+      content: {
+        kind: "comparison_table" as const,
+        caption: document.title,
+        headers: [table.headers[0], table.headers[1]] as [string, string],
+        rows: table.rows.map(([label, value]) => ({ label, value })),
+      },
+      historicalKnowledgeIds: document.id === "PN-S-003"
+        ? ["grande-depression", "crise-economique", "prix"]
+        : ["politique-nationale", "crise-economique-1873", "prix", "faillites"],
+      intellectualOperationIds: [...document.operationIds],
+    };
+  }),
+  ...POLITIQUE_NATIONALE_TARIFF_COMPARISON_DOCUMENTS.map((document) => ({
+    id: document.id,
+    title: document.title,
+    typeLabel: "Extrait d’un discours politique",
+    dateLabel: document.historicalDate,
+    authorLabel: document.creator,
+    institutionLabel: document.holdingInstitution,
+    sourceLabel: document.sourceLocator,
+    sourceUrls: [document.sourceUrl, document.assetUrl],
+    rightsLabel: document.rightsStatement,
+    editorialNote: document.interpretationCautions[0],
+    content: { kind: "historical_excerpt" as const, excerpt: document.transcription },
+    historicalKnowledgeIds: ["politique-nationale", "politique-tarifaire", "manufacturiers", "agriculteurs-prairies"],
+    intellectualOperationIds: [...document.operationIds],
+  })),
   ...BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS.map((document) => ({
     id: document.id,
     title: document.title,
@@ -97,7 +267,7 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
   ...FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS.map((document) => ({
     id: document.id,
     title: document.title,
-    typeLabel: document.id === "RFP-I-003" ? "Photographie du procès" : document.id === "RFP-T-010" ? "Déclaration judiciaire" : document.id === "RFP-T-011" ? "Discours politique" : document.id === "RFP-T-012" ? "Article de journal" : document.id === "RFP-T-013" ? "Résolution de conférence" : document.id === "RFP-I-002" ? "Caricature politique" : document.id === "RFP-S-001" ? "Tableau de recettes" : document.kind === "image" ? "Illustration commémorative" : (document.id === "RFP-T-004" || document.id === "RFP-T-007") ? "Discours politique" : document.id === "RFP-T-001" ? "Déclaration politique" : document.id === "RFP-T-002" ? "Déclaration judiciaire" : "Texte constitutionnel",
+    typeLabel: document.id === "RFP-I-002" || document.id === "RFP-I-004" ? "Caricature politique" : document.id === "RFP-I-001" ? "Gravure historique" : document.id === "RFP-I-003" ? "Photographie du procès de Louis Riel" : (document.id === "RFP-T-022" || document.id === "RFP-T-023") ? "Mémoire officiel" : document.id === "RFP-T-010" ? "Déclaration judiciaire" : document.id === "RFP-T-021" ? "Pétition métisse" : document.id === "RFP-S-001" ? "Tableau de recettes" : document.id === "RFP-T-029" ? "Un point de vue" : document.id === "RFP-T-018" ? "Point de vue manitobain" : document.id === "RFP-T-019" ? "Point de vue fédéral" : document.id === "RFP-T-020" ? "Point de vue manitobain" : document.id === "RFP-T-004" ? "Point de vue d’époque" : (document.id === "RFP-T-007" || document.id === "RFP-T-011" || document.id === "RFP-T-024" || document.id === "RFP-T-026" || document.id === "RFP-T-027") ? "Discours politique" : document.id === "RFP-T-012" ? "Article de journal" : (document.id === "RFP-T-013" || document.id === "RFP-T-025") ? "Résolutions officielles" : document.id === "RFP-T-028" ? "Correspondance politique" : (document.id === "RFP-T-008" || document.id === "RFP-T-017") ? "Entente intergouvernementale" : document.id === "RFP-T-001" ? "Déclaration politique" : document.id === "RFP-T-002" ? "Déclaration judiciaire" : "Texte constitutionnel",
     dateLabel: document.historicalDate,
     authorLabel: document.creator,
     institutionLabel: document.holdingInstitution,
@@ -105,8 +275,8 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
     sourceUrls: [document.sourceUrl, document.assetUrl],
     rightsLabel: document.rightsStatement,
     editorialNote: document.interpretationCautions[0],
-    content: document.id === "RFP-I-003" ? { kind: "historical_image" as const, localSrc: document.assetUrl, alt: document.accessibleDescription, description: document.accessibleDescription, visibleCaption: document.accessibleDescription } : document.id === "RFP-I-002" ? { kind: "historical_image" as const, localSrc: document.assetUrl, alt: document.accessibleDescription, description: MANITOBA_CARTOON_TRANSLATION, visibleCaption: MANITOBA_CARTOON_TRANSLATION } : document.id === "RFP-S-001" ? { kind: "comparison_table" as const, ...FEDERAL_REVENUE_TABLE } : document.kind === "image" ? { kind: "historical_image" as const, localSrc: document.assetUrl, alt: document.accessibleDescription, description: "Portrait publié dans À la mémoire de Louis Riel : la Marseillaise canadienne, Imprimerie Carmel, Montréal, 1885, p. 4." } : { kind: "historical_excerpt" as const, excerpt: document.transcription },
-    historicalKnowledgeIds: document.id === "RFP-T-014" ? ["relations-federales-provinciales", "champs-de-competence", "autonomie-provinciale"] : (document.id === "RFP-I-003" || document.id === "RFP-T-010") ? ["relations-federales-provinciales", "soulevements-metis", "batoche"] : ["RFP-T-011", "RFP-T-012", "RFP-T-013"].includes(document.id) ? ["relations-federales-provinciales", "conference-interprovinciale"] : (document.id === "RFP-S-001" || document.id === "RFP-T-009") ? ["relations-federales-provinciales", "repartition-des-revenus"] : document.id === "RFP-T-007" ? ["relations-federales-provinciales", "question-des-ecoles-du-nouveau-brunswick"] : (document.id === "RFP-T-006" || document.id === "RFP-T-008" || document.id === "RFP-I-002") ? ["relations-federales-provinciales", "question-des-ecoles-du-manitoba"] : document.id === "RFP-T-005" ? ["relations-federales-provinciales", "soulevements-metis", "riviere-rouge"] : ["relations-federales-provinciales", "soulevements-metis", "riviere-rouge", "batoche"],
+    content: document.id === "RFP-I-002" ? { kind: "historical_image" as const, localSrc: document.assetUrl, alt: document.accessibleDescription, description: MANITOBA_CARTOON_TRANSLATION, visibleCaption: MANITOBA_CARTOON_TRANSLATION } : document.id === "RFP-S-001" ? { kind: "comparison_table" as const, ...FEDERAL_REVENUE_TABLE } : document.id === "RFP-T-009" ? { kind: "comparison_table" as const, ...PROVINCIAL_REVENUE_TABLE } : document.kind === "image" ? { kind: "historical_image" as const, localSrc: document.assetUrl, alt: document.accessibleDescription, description: document.accessibleDescription, visibleCaption: document.accessibleDescription } : { kind: "historical_excerpt" as const, excerpt: document.transcription, adapted: ["RFP-T-006", "RFP-T-007", "RFP-T-011", "RFP-T-012", "RFP-T-013", "RFP-T-020", "RFP-T-022", "RFP-T-023", "RFP-T-025", "RFP-T-026", "RFP-T-028", "RFP-T-029"].includes(document.id) },
+    historicalKnowledgeIds: document.id === "RFP-I-002" ? ["relations-federales-provinciales", "question-des-ecoles-du-manitoba"] : (document.id === "RFP-I-004" || document.id === "RFP-T-022" || document.id === "RFP-T-023" || document.id === "RFP-T-029") ? ["relations-federales-provinciales", "soulevements-metis", "louis-riel", "tensions-nationales"] : (document.id === "RFP-I-003" || document.id === "RFP-T-010") ? ["relations-federales-provinciales", "soulevements-metis", "batoche"] : (document.id === "RFP-S-001" || document.id === "RFP-T-009") ? ["relations-federales-provinciales", "repartition-des-revenus"] : (document.id === "RFP-T-007" || document.id === "RFP-T-028") ? ["relations-federales-provinciales", "question-des-ecoles-du-nouveau-brunswick", "autonomie-provinciale", "desaveu"] : (document.id === "RFP-T-006" || document.id === "RFP-T-008" || document.id === "RFP-T-017" || document.id === "RFP-T-018" || document.id === "RFP-T-019" || document.id === "RFP-T-020") ? ["relations-federales-provinciales", "question-des-ecoles-du-manitoba"] : document.id === "RFP-T-005" ? ["relations-federales-provinciales", "soulevements-metis", "riviere-rouge"] : document.id === "RFP-T-027" ? ["relations-federales-provinciales", "soulevements-metis", "louis-riel", "honore-mercier", "conference-interprovinciale"] : (["RFP-T-011", "RFP-T-012", "RFP-T-013", "RFP-T-024", "RFP-T-025", "RFP-T-026"].includes(document.id)) ? ["relations-federales-provinciales", "autonomie-provinciale", "conference-interprovinciale", "desaveu"] : document.id === "RFP-T-014" ? ["relations-federales-provinciales", "autonomie-provinciale", "desaveu"] : ["relations-federales-provinciales", "soulevements-metis", "riviere-rouge", "batoche"],
     intellectualOperationIds: [...document.operationIds],
   })),
   ...INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.map((document) => ({

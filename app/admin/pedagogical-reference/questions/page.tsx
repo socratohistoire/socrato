@@ -1,5 +1,13 @@
 import Link from "next/link";
 import { BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS } from "@/lib/pedagogical-reference/british-north-america-confederation-documents";
+import { INDIAN_AFFAIRS_ICONOGRAPHIC_DOCUMENTS } from "@/lib/pedagogical-reference/indian-affairs-iconography";
+import { INDIAN_AFFAIRS_PRIMARY_DOCUMENTS } from "@/lib/pedagogical-reference/indian-affairs-primary-documents";
+import { FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS } from "@/lib/pedagogical-reference/federal-provincial-relations-primary-documents";
+import { POLITIQUE_NATIONALE_TARIFF_COMPARISON_DOCUMENTS } from "@/lib/pedagogical-reference/politique-nationale-tariff-comparison";
+import { POLITIQUE_NATIONALE_CRISIS_MANIFESTATION_DOCUMENTS } from "@/lib/pedagogical-reference/politique-nationale-crisis-manifestations";
+import { POLITIQUE_NATIONALE_CAUSAL_LINKS_NEW_DOCUMENTS } from "@/lib/pedagogical-reference/politique-nationale-causal-links";
+import { POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT } from "@/lib/pedagogical-reference/politique-nationale-government-settlement-poster";
+import { POLITIQUE_NATIONALE_MACDONALD_MOTIVES_DOCUMENT } from "@/lib/pedagogical-reference/politique-nationale-macdonald-motives";
 import {
   getIntellectualOperation,
   getSecondaryFourKnowledgeHeading,
@@ -12,7 +20,17 @@ import "./question-bank-layout.css";
 type QuestionBankQuery = { notion?: string; scope?: string };
 
 function documentNotionId(documentId: string, questionNotionId: string) {
-  return BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS.find(({ id }) => id === documentId)?.knowledgeHeadingIds[0] ?? questionNotionId;
+  return [
+    ...BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS,
+    ...INDIAN_AFFAIRS_PRIMARY_DOCUMENTS,
+    ...INDIAN_AFFAIRS_ICONOGRAPHIC_DOCUMENTS,
+    ...FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS,
+    ...POLITIQUE_NATIONALE_TARIFF_COMPARISON_DOCUMENTS,
+    ...POLITIQUE_NATIONALE_CRISIS_MANIFESTATION_DOCUMENTS,
+    ...POLITIQUE_NATIONALE_CAUSAL_LINKS_NEW_DOCUMENTS,
+    POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT,
+    POLITIQUE_NATIONALE_MACDONALD_MOTIVES_DOCUMENT,
+  ].find(({ id }) => id === documentId)?.knowledgeHeadingIds[0] ?? questionNotionId;
 }
 
 const QUESTION_CATEGORIES = [
@@ -71,7 +89,7 @@ export default async function PedagogicalQuestionBankPage({ searchParams }: { se
               <dl><div><dt>Notion</dt><dd>{getSecondaryFourKnowledgeHeading(question.knowledgeHeadingId)?.officialLabel ?? question.knowledgeHeadingId}</dd></div><div><dt>Opération</dt><dd>{getIntellectualOperation(question.operationId).officialLabel}</dd></div>{question.historicalDocumentIds.length > 0 ? <div className="question-documents-link"><dt>Documents</dt><dd>{question.historicalDocumentIds.map((documentId, index) => <Link key={documentId} href={`/admin/pedagogical-reference/documents/${documentNotionId(documentId, question.knowledgeHeadingId)}#${documentId}`} aria-label={`Voir le document historique ${index + 1}`}>Document {index + 1} →</Link>)}</dd></div> : null}</dl>
               <h3>{question.prompt}</h3>
               {question.answerOptions ? <ol className="question-answer-options">{question.answerOptions.map((option) => <li key={option.label}><strong>{option.label}</strong><span>{option.text}</span></li>)}</ol> : null}
-              {question.format === "interactive-timeline" ? <Link href={`/eleve/activite/demo-activity-timeline?notion=${question.knowledgeHeadingId}&mode=teacher-assigned`}>Essayer la question interactive →</Link> : null}
+              {question.format === "interactive-timeline" ? <Link href={question.scope === "transversal" ? "/preview/chronologie-transversale" : `/eleve/activite/demo-activity-timeline?notion=${question.knowledgeHeadingId}&mode=teacher-assigned`}>Essayer la question interactive →</Link> : null}
               {question.format === "interactive-association" ? <Link href={`/teacher/activities/new/student-preview?notion=${encodeURIComponent(question.knowledgeHeadingId)}&notions=${encodeURIComponent(question.knowledgeHeadingId)}&questionIds=${encodeURIComponent(question.id)}&title=${encodeURIComponent("Association d’éléments")}`}>Essayer la question interactive →</Link> : null}
               {question.causalChainInteraction ? <Link href="/preview/gouvernement-responsable-chaine-causale">Essayer la question interactive →</Link> : null}
               <footer><span>{question.status === "approved" ? `Approuvée · version ${question.review.approvedVersion}` : "Brouillon · à essayer et à approuver"}</span><strong>{question.scope === "transversal" ? "Transversale" : "Notionnelle"}</strong></footer>

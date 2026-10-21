@@ -355,6 +355,17 @@ test("transmet la réponse au moteur sans afficher d’avertissement technique l
   assert.doesNotMatch(viewSource, /author: "socrato"[\s\S]{0,180}technicalNotice/);
 });
 
+test("affiche un corrigé de référence transparent lorsque l’analyse API est indisponible", () => {
+  assert.match(viewSource, /Mode corrigé de référence/);
+  assert.match(viewSource, /après ta tentative, je t’afficherai le corrigé de référence/);
+  assert.match(viewSource, /Réponse essentielle attendue/);
+  assert.match(viewSource, /Les précisions supplémentaires ne sont pas obligatoires/);
+  assert.match(viewSource, /Je n’ai pas évalué personnellement ta formulation/);
+  assert.match(viewSource, /skipQuestionAfterAnalysisUnavailable\(engineDefinition, engineState\)/);
+  assert.match(viewSource, /forceReferenceCorrection/);
+  assert.match(viewSource, /analysisFallbackRef\.current = result\.usedFallback/);
+});
+
 test("transmet le texte et la consigne au moteur du bilan", () => {
   const definitionSource = readFileSync("lib/pedagogical-session-engine/demo-definition.ts", "utf8");
   assert.match(definitionSource, /questionPrompt: question\.prompt/);
@@ -455,7 +466,7 @@ test("transpose la question approuvée avec ses trois documents ordonnés unique
   const data = createDemoStudentLearningSession(); assert.ok(data);
   const question = getCurrentLearningQuestion(data); assert.ok(question);
   assert.equal(question.type, "question_with_documents");
-  assert.equal(question.prompt, "À l’aide des documents, explique pourquoi la réponse britannique contribue au déclenchement des Rébellions de 1837-1838.");
+  assert.equal(question.prompt, "À la suite des 92 Résolutions des Patriotes, explique comment la réponse britannique exprimée dans les résolutions Russell contribue à la radicalisation politique qui mène aux Rébellions de 1837-1838.");
   assert.equal(question.instruction, "Appuie ta réponse sur une revendication des 92 Résolutions, sur la réponse formulée dans les résolutions Russell et sur le passage du refus des réformes à la résistance présenté dans La Minerve.");
   const documents = getQuestionDocuments(data);
   assert.equal(documents.length, 3);
@@ -578,7 +589,7 @@ test("utilise le premier texte approuvé comme document initial", () => {
   const data = createDemoStudentLearningSession(); assert.ok(data);
   const question = getCurrentLearningQuestion(data); assert.ok(question);
   const document = getQuestionDocuments(data)[0];
-  assert.equal(question.prompt, "À l’aide des documents, explique pourquoi la réponse britannique contribue au déclenchement des Rébellions de 1837-1838.");
+  assert.equal(question.prompt, "À la suite des 92 Résolutions des Patriotes, explique comment la réponse britannique exprimée dans les résolutions Russell contribue à la radicalisation politique qui mène aux Rébellions de 1837-1838.");
   assert.equal(document.displayOrder, 1);
   assert.equal(document.id, "PAT-T-002");
   assert.equal(question.featuredDocumentId, document.id);
@@ -613,13 +624,13 @@ test("affiche la description traduite de Qu’Appelle directement sous l’image
   assert.match(cssSource, /\.historical-document-caption--expanded \{[^}]*display:grid[^}]*border-left:3px solid var\(--gold\)/);
 });
 
-test("entoure uniquement les extraits historiques de guillemets français", () => {
-  assert.match(viewSource, /<blockquote>« \{document\.content\.excerpt\} »<\/blockquote>/);
+test("réserve les guillemets français aux citations non adaptées", () => {
+  assert.match(viewSource, /document\.content\.adapted \? document\.content\.excerpt : <>« \{document\.content\.excerpt\} »<\/>/);
   assert.match(viewSource, /document\.content\.kind === "historical_excerpt"[\s\S]*<cite className="document-identification">\{identification\}<\/cite>/);
   assert.match(viewSource, /<DocumentContent document=\{selected\} onExpand=\{\(\) => expandStackedDocument\(selected.id\)\} \/>/);
-  assert.match(viewSource, /onImageZoomChange\(document.content.kind === "historical_image" && document.content.localSrc.endsWith\(".svg"\) \? 1 : 1.5\)/);
+  assert.match(viewSource, /aria-label="Afficher l’image complète" onClick=\{\(\) => onImageZoomChange\(1\)\}/);
   assert.match(viewSource, /<DocumentContent document=\{selected\} expanded imageZoom=\{imageZoom\} onImageZoomChange=\{setImageZoom\} \/>/);
-  assert.match(viewSource, /document\.content\.kind === "population_table" \? \([\s\S]*?<table>[\s\S]*?<\/table>[\s\S]*?\) : document\.content\.kind === "historical_image" \?[\s\S]*?: <blockquote>« \{document\.content\.excerpt\} »<\/blockquote>/);
+  assert.match(viewSource, /document\.content\.kind === "population_table" \? \([\s\S]*?<table>[\s\S]*?<\/table>[\s\S]*?\) : document\.content\.kind === "historical_image" \?[\s\S]*?: <blockquote>\{document\.content\.adapted/);
   const data = createDemoStudentLearningSession(); assert.ok(data);
   const excerpts = getQuestionDocuments(data).filter(({ content }) => content.kind === "historical_excerpt");
   assert.deepEqual(excerpts.map(({ id }) => id), ["PAT-T-002", "PAT-T-003", "PAT-T-007"]);
@@ -700,7 +711,7 @@ test("présente les vignettes en deux colonnes sur mobile", () => {
 
 test("neutralise les titres visibles et les noms accessibles des documents", () => {
   assert.doesNotMatch(viewSource, /Population des deux Canadas au moment de l’Acte d’union|Le comte de Gosford critique la représentation égale|La Fontaine dénonce les conditions de l’Union/);
-  assert.match(viewSource, /<h3[^>]*>[\s\S]*<strong>Document \{document\.displayOrder\}<\/strong>[\s\S]*<small>\{getNeutralDocumentType\(document\)\}<\/small>[\s\S]*<\/h3>/);
+  assert.match(viewSource, /<h3[^>]*>[\s\S]*<strong>Document \{document\.displayOrder\}<\/strong>[\s\S]*<small>\{getVisibleDocumentHeading\(document\)\}<\/small>[\s\S]*<\/h3>/);
   assert.match(viewSource, /aria-label=\{`Ouvrir le document \$\{document\.displayOrder\}, \$\{getNeutralDocumentType\(document\)/);
 });
 
@@ -738,8 +749,8 @@ test("rend le schéma politique visuel plutôt qu’un tableau statistique", () 
   assert.doesNotMatch(viewSource, /nomme le Conseil exécutif|nomme le Conseil législatif/);
 });
 
-test("réunit le numéro et le type neutre dans l’en-tête de chaque document", () => {
-  assert.match(viewSource, /<strong>Document \{document\.displayOrder\}<\/strong>\s*<span aria-hidden="true"> · <\/span>\s*<small>\{getNeutralDocumentType\(document\)\}<\/small>/);
+test("réunit le numéro et l’intitulé visible dans l’en-tête de chaque document", () => {
+  assert.match(viewSource, /<strong>Document \{document\.displayOrder\}<\/strong>\s*<span aria-hidden="true"> · <\/span>\s*<small>\{getVisibleDocumentHeading\(document\)\}<\/small>/);
   assert.match(cssSource, /\.document-content h3 \{[^}]*display:flex[^}]*flex-wrap:wrap/);
   assert.match(cssSource, /\.document-content h3 strong \{[^}]*font-size:clamp\(1\.25rem,1\.35vw,1\.375rem\)[^}]*font-weight:700/);
   assert.match(cssSource, /\.document-content h3 > span \{[^}]*color:var\(--gold\)[^}]*font-size:clamp\(1\.2rem,1\.3vw,1\.35rem\)/);
@@ -873,11 +884,11 @@ test("compacte visuellement Agrandir et Détails sans réduire leur cible access
 });
 
 test("limite les citations des vignettes sans toucher aux extraits complets", () => {
-  assert.match(viewSource, /<blockquote className="document-thumbnail-quote" aria-hidden="true">« \{document\.content\.excerpt\} »<\/blockquote>/);
+  assert.match(viewSource, /<blockquote className="document-thumbnail-quote" aria-hidden="true">\{document\.content\.adapted/);
   assert.match(cssSource, /\.document-thumbnail-table,\.document-thumbnail-quote \{[^}]*overflow:hidden/);
   assert.match(cssSource, /\.document-thumbnail-quote \{[^}]*font-size:9px[^}]*-webkit-line-clamp:3/);
   assert.match(cssSource, /\.document-thumbnail-quote::after \{[^}]*linear-gradient/);
-  assert.match(viewSource, /: <blockquote>« \{document\.content\.excerpt\} »<\/blockquote>/);
+  assert.match(viewSource, /: <blockquote>\{document\.content\.adapted/);
 });
 
 test("distingue la sélection légère du focus clavier des vignettes", () => {

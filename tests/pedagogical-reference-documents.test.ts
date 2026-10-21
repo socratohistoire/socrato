@@ -89,13 +89,14 @@ test("prépare le texte constitutionnel qui alimente le classement des compéten
   assert.match(document.transcription, /désaveu/);
 });
 
-test("prépare dix textes et un tableau statistique pour les affaires indiennes", () => {
-  assert.deepEqual(INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.map(({ id }) => id), ["AI-T-001", "AI-T-002", "AI-T-003", "AI-T-004", "AI-T-005", "AI-T-006", "AI-T-007", "AI-T-008", "AI-S-001", "AI-T-009", "AI-T-010"]);
+test("prépare onze textes et un tableau statistique pour les affaires indiennes", () => {
+  assert.deepEqual(INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.map(({ id }) => id), ["AI-T-001", "AI-T-002", "AI-T-003", "AI-T-004", "AI-T-005", "AI-T-006", "AI-T-007", "AI-T-008", "AI-S-001", "AI-T-011", "AI-T-009", "AI-T-010"]);
   assert.ok(INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.every((document) => document.status === "ready-for-review"));
   assert.ok(INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.every((document) => Object.keys(validateHistoricalDocument(document)).length === 0));
   assert.ok(INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.every(({ knowledgeHeadingIds }) => knowledgeHeadingIds.includes("affaires-indiennes")));
   assert.match(INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.find(({ id }) => id === "AI-T-004")?.transcription ?? "", /réserves, des terres, des sommes et des biens/);
-  assert.match(INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.find(({ id }) => id === "AI-T-007")?.transcription ?? "", /femme indienne qui épouse/);
+  assert.match(INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.find(({ id }) => id === "AI-T-007")?.transcription ?? "", /tutelle.*droit de vote/);
+  assert.match(INDIAN_AFFAIRS_PRIMARY_DOCUMENTS.find(({ id }) => id === "AI-T-011")?.transcription ?? "", /fréquentation obligatoire/);
   assert.equal(INDIAN_AFFAIRS_SCHOOL_ENROLMENT_TABLE_DOCUMENT.kind, "statistics");
   assert.match(INDIAN_AFFAIRS_SCHOOL_ENROLMENT_TABLE_DOCUMENT.transcription, /1890 : 6 671/);
   assert.match(INDIAN_AFFAIRS_SCHOOL_ENROLMENT_TABLE_DOCUMENT.transcription, /1897 : 9 628/);

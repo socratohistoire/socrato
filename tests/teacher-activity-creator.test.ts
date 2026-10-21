@@ -219,7 +219,7 @@ test("rend les questions de 150 mots accessibles en développement et en révisi
   const timelineQuestion = allDevelopment.find(({ question }) => question.startsWith("À l’aide de la ligne du temps"));
   assert.deepEqual(timelineQuestion?.documents.map(({ id }) => id), ["AU-D-002"]);
   const debtQuestion = allDevelopment.find(({ questionId }) => questionId === "question:acte-union:development-004");
-  assert.deepEqual(debtQuestion?.documents.map(({ id }) => id), ["AU-G-001", "AU-G-002", "AU-D-001"]);
+  assert.deepEqual(debtQuestion?.documents.map(({ id }) => id), ["AU-G-001", "AU-D-001", "AU-G-002"]);
   const comparisonQuestion = allDevelopment.find(({ question }) => question.startsWith("Compare les recommandations"));
   assert.deepEqual(comparisonQuestion?.documents.map(({ id }) => id), ["historical-presentation:acte-union:durham-union-legislative", "historical-presentation:acte-union:durham-responsabilite", "AU-T-001", "AU-T-013"]);
 });
@@ -285,7 +285,7 @@ test("génère un aperçu déterministe depuis les documents approuvés", async 
   const second = createLocalActivityPreview(unlimitedRevisionConfig, catalog);
   assert.deepEqual(first, second);
   assert.deepEqual(first.documents.map(({ id }) => id), ["PAT-T-002", "PAT-T-003", "PAT-T-007"]);
-  assert.equal(catalog.questions.length, 98);
+  assert.equal(catalog.questions.length, 116);
   assert.equal(catalog.questions.some(({ id }) => id === "question:acte-union:document-interpretation-005"), false);
   assert.equal(first.operationLabel, "Établir des liens de causalité");
   assert.equal(first.question, catalog.questions[0]?.prompt);
@@ -352,6 +352,15 @@ test("raccorde Russell et La Fontaine à leur question de comparaison", async ()
   assert.deepEqual(preview.documents.map(({ authorLabel }) => authorLabel), ["Lord John Russell, ministre de l’Intérieur du Royaume-Uni", "Louis-Hippolyte La Fontaine"]);
 });
 
+test("raccorde l’opposition de La Fontaine à son document historique", async () => {
+  const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
+  const eligibleQuestions = getEligibleActivityQuestions(unlimitedRevisionConfig, catalog);
+  const index = eligibleQuestions.findIndex(({ id }) => id === "question:acte-union:short-answer-004");
+  assert.ok(index >= 0);
+  const preview = createLocalActivityPreview(unlimitedRevisionConfig, catalog, index);
+  assert.deepEqual(preview.documents.map(({ id }) => id), ["historical-document:acte-union:lafontaine-terrebonne-1840"]);
+});
+
 test("raccorde les deux questions interactives à l’aperçu élève", async () => {
   const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
   const eligible = Array.from({ length: catalog.questions.length }, (_, variant) => createLocalActivityPreview(unlimitedRevisionConfig, catalog, variant));
@@ -407,14 +416,15 @@ test("propose trois cartes pour reconnaître le Canada de 1867", async () => {
   assert.equal(question?.operationId, "time_and_space");
 });
 
-test("raccorde le classement fédéral-provincial à deux colonnes interactives", async () => {
+test("raccorde le classement fédéral-provincial à trois catégories interactives", async () => {
   const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
   const question = catalog.questions.find(({ id }) => id === "question:relations-federales-provinciales:interactive-association-001");
   assert.equal(question?.operationId, "establish_facts");
-  assert.equal(question?.associationInteraction?.items.length, 13);
-  assert.equal(question?.associationInteraction?.categories?.length, 2);
+  assert.equal(question?.associationInteraction?.items.length, 7);
+  assert.equal(question?.associationInteraction?.categories?.length, 3);
   assert.ok(question?.associationInteraction?.categories?.find(({ id }) => id === "provincial")?.correctItemIds.includes("education"));
-  assert.match(question?.associationInteraction?.tension?.explanation ?? "", /autonomie provinciale/);
+  assert.ok(question?.associationInteraction?.categories?.find(({ id }) => id === "shared")?.correctItemIds.includes("agriculture-immigration"));
+  assert.equal(question?.associationInteraction?.tension, undefined);
 });
 
 test("permet de fermer le test complet sans alourdir l’aperçu intégré", () => {

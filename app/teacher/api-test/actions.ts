@@ -57,7 +57,7 @@ export async function analyzeTeacherTestResponse(request: TestRequest) {
       : await analyzeWithFallback(response, definition, analyzer, new LocalDeterministicResponseAnalyzer());
     const analysis = validateStructuredAnalysis(discardUnknownPedagogicalIds(candidate.analysis, definition), definition);
     const feedback = createPedagogicalFeedback(analysis, definition, analysis.pedagogicalOutcome === "non_exploitable" ? request.attemptNumber : 0);
-    return { ok: true as const, analysis, feedback };
+    return { ok: true as const, analysis, feedback, usedFallback: candidate.usedFallback };
   } catch (error) {
     console.error("[pedagogical-analysis]", error instanceof Error ? `${error.name}: ${error.message}` : "Erreur inconnue", error instanceof Error ? error.cause : undefined);
     return { ok: false as const, error: "Sol n’a pas pu analyser cette réponse. Vérifiez la configuration et les crédits, puis réessayez." };

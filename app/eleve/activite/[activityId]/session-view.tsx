@@ -23,6 +23,7 @@ import { HistoricalComparisonChart } from "@/app/components/historical-compariso
 // Le serveur interrompt son analyse avant cette limite; l’élève récupère ainsi
 // toujours sa réponse et peut réessayer sans perdre une tentative.
 const RESPONSE_ANALYSIS_TIMEOUT_MS = 45_000;
+const REFERENCE_CORRECTION_OPENING = "Mode corrigé de référence\nJe ne peux pas analyser personnellement tes réponses pour le moment. Réponds tout de même à chaque question : après ta tentative, je t’afficherai le corrigé de référence pour que tu puisses comparer ton travail.";
 
 async function withResponseAnalysisTimeout<T>(operation: Promise<T>) {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -114,10 +115,16 @@ function ConversationMessageContent({ content }: { content: string }) {
   })}</div>;
 }
 
-export function StudentLearningSessionView({ data, teacherPreview = false, classroomMode = false, persistProgress = true, teacherApiTest = false, teacherPreviewExitHref = "/teacher/activities/new" }: { data: StudentLearningSessionData; teacherPreview?: boolean; classroomMode?: boolean; persistProgress?: boolean; teacherApiTest?: boolean; teacherPreviewExitHref?: string }) {
+function referenceCorrectionMessage(question: LearningSessionQuestion) {
+  const expectedAnswer = question.evaluationGuide?.expectedAnswer ?? question.answerExplanation ?? "Relis les documents et relève les éléments qui répondent directement à la consigne.";
+  return `Réponse essentielle attendue\n${expectedAnswer}\n\nÀ comparer avec ta réponse\nVérifie si tu as présenté l’idée principale et réalisé l’opération intellectuelle demandée. Les précisions supplémentaires ne sont pas obligatoires.\n\nImportant\nJe n’ai pas évalué personnellement ta formulation, car le service d’analyse est indisponible. Cette réponse essentielle te sert à faire ta propre comparaison.`;
+}
+
+export function StudentLearningSessionView({ data, teacherPreview = false, classroomMode = false, persistProgress = true, teacherApiTest = false, forceReferenceCorrection = false, teacherPreviewExitHref = "/teacher/activities/new" }: { data: StudentLearningSessionData; teacherPreview?: boolean; classroomMode?: boolean; persistProgress?: boolean; teacherApiTest?: boolean; forceReferenceCorrection?: boolean; teacherPreviewExitHref?: string }) {
   const engineDefinition = useMemo(() => createDemoPedagogicalDefinition(data), [data]);
   const initialEngineState = useMemo(() => restoreStudentProgress(createPedagogicalSession(engineDefinition), data.progress), [data.progress, engineDefinition]);
   const teacherAnalysisErrorRef = useRef("");
+  const analysisFallbackRef = useRef(false);
   const analyzer = useMemo<ResponseAnalyzer>(() => data.questions.some(({ id }) => id === CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID)
     ? new CausesConsequencesLearningAnalyzer()
     : teacherApiTest ? {
@@ -135,6 +142,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
         console.error("[classroom-analysis]", result.error);
         throw new Error(result.error);
       }
+      analysisFallbackRef.current = result.usedFallback;
       return result.analysis;
     },
   } : data.source === "server" ? {
@@ -148,6 +156,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
         priorTurn: response.priorTurn,
       });
       if (!result.ok) throw new Error(result.error);
+      analysisFallbackRef.current = result.usedFallback;
       return result.analysis;
     },
   } : process.env.NODE_ENV === "production" ? {
@@ -159,6 +168,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
   const [progressReady, setProgressReady] = useState(!persistProgress || data.source === "server");
   const [persistenceMessage, setPersistenceMessage] = useState("");
   const [analysisUnavailable, setAnalysisUnavailable] = useState(false);
+  const [referenceCorrectionMode, setReferenceCorrectionMode] = useState(forceReferenceCorrection);
   const activeData = { ...data, currentQuestionIndex: engineState.currentQuestionIndex };
   const question = getCurrentLearningQuestion(activeData);
   const isInteractiveTimeline = question?.type === "interactive_timeline";
@@ -185,7 +195,9 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
   const initialDocumentId = getInitialQuestionDocument(activeData)?.id ?? null;
   const [messages, setMessages] = useState<LearningSessionMessage[]>(() => {
     const index = initialEngineState.currentQuestionIndex;
-    const initial = data.consolidationStrategyLabel
+    const initial = forceReferenceCorrection
+      ? [{ id: `socrato-reference-correction-${index}`, author: "socrato" as const, content: REFERENCE_CORRECTION_OPENING }]
+      : data.consolidationStrategyLabel
       ? [{ id: "socrato-consolidation-strategy", author: "socrato" as const, content: consolidationCoachOpening(consolidationCoachLabel(data.questions[index], data.consolidationStrategyLabel), data.questions[index]?.prompt ?? "") }]
       : data.questions[index]?.initialMessages ?? [];
     const runtime = initialEngineState.questionStates[index];
@@ -315,9 +327,59 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
 
   if (!question) return null;
 
+  async function completeWithReferenceCorrection(content: string, studentMessageAlreadyAdded = false) {
+    const submissionId = pendingSubmissionRef.current?.id ?? crypto.randomUUID();
+    submissionLockRef.current = true;
+    setSubmitting(true);
+    setReferenceCorrectionMode(true);
+    setAnalysisUnavailable(false);
+    setPersistenceMessage("");
+    if (!studentMessageAlreadyAdded) {
+      setMessages((current) => [...current, { id: `student-${submissionId}`, author: "student", content }]);
+      setResponse("");
+    }
+    try {
+      const transition = skipQuestionAfterAnalysisUnavailable(engineDefinition, engineState);
+      let nextState = transition.state;
+      if (transition.sessionCompleted) nextState = await finalizePedagogicalSession(nextState);
+      let progressAlreadySaved = false;
+      if (persistProgress && data.source === "server") {
+        const saved = await saveStudentProgressToDatabase(createStudentProgressContract(nextState), {
+          submissionId,
+          expectedQuestionId: activeQuestionState.questionId,
+          expectedCurrentQuestionIndex: engineState.currentQuestionIndex,
+        });
+        if (!saved.ok) throw new Error(saved.error);
+        progressAlreadySaved = true;
+      }
+      if (transition.sessionCompleted && persistProgress && nextState.summary) await persistCompletedSession(nextState, progressAlreadySaved);
+      if (nextState.currentQuestionIndex !== engineState.currentQuestionIndex) {
+        setPendingNextState(nextState);
+        setEngineState({ ...nextState, status: "active", currentQuestionIndex: engineState.currentQuestionIndex });
+        setTimelineCompleted(true);
+      } else {
+        setEngineState(nextState);
+      }
+      setMessages((current) => [...current, { id: `socrato-reference-answer-${current.length}`, author: "socrato", content: referenceCorrectionMessage(question) }]);
+      if (transition.sessionCompleted) setFinalFeedbackDelivered(true);
+      pendingSubmissionRef.current = null;
+    } catch (error) {
+      setResponse(content);
+      setPersistenceMessage(error instanceof Error ? error.message : "Le corrigé n’a pas pu être affiché. Réessaie.");
+    } finally {
+      analysisFallbackRef.current = false;
+      submissionLockRef.current = false;
+      setSubmitting(false);
+    }
+  }
+
   async function sendLocalResponse() {
     const content = response.trim();
     if (!content || submitting || submissionLockRef.current || voiceBlocksSending || engineState.status === "completed" || (activeAttemptLimit !== null && activeQuestionState.attemptNumber >= activeAttemptLimit)) return;
+    if (referenceCorrectionMode) {
+      await completeWithReferenceCorrection(content);
+      return;
+    }
     if (consolidationCoachStep !== null && consolidationCoachStep < 3 && data.consolidationStrategyLabel && data.consolidationContext) {
       const activeCoachLabel = consolidationCoachLabel(question, data.consolidationStrategyLabel);
       const studentMessage = { id: `student-coach-${messages.length}`, author: "student" as const, content };
@@ -364,6 +426,10 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
     try {
       let consolidationPersistenceError = "";
       const transition = await withResponseAnalysisTimeout(submitStudentResponse(engineDefinition, engineState, content, analyzer));
+      if (analysisFallbackRef.current) {
+        await completeWithReferenceCorrection(content, true);
+        return;
+      }
       let nextState = transition.state;
       if (transition.feedback?.technicalNotice
         && nextState.questionStates[engineState.currentQuestionIndex]?.attemptNumber === activeQuestionState.attemptNumber) {
@@ -628,7 +694,9 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
     const nextQuestion = data.questions[nextIndex];
     if (!nextQuestion || nextIndex === engineState.currentQuestionIndex) return;
     setEngineState((current) => ({ ...current, status: "active", currentQuestionIndex: nextIndex }));
-    setMessages(data.consolidationStrategyLabel && data.consolidationContext
+    setMessages(referenceCorrectionMode
+      ? [{ id: `socrato-reference-correction-${nextIndex}`, author: "socrato", content: REFERENCE_CORRECTION_OPENING }]
+      : data.consolidationStrategyLabel && data.consolidationContext
       ? [{ id: `socrato-consolidation-strategy-${nextIndex}`, author: "socrato", content: consolidationCoachOpening(consolidationCoachLabel(nextQuestion, data.consolidationStrategyLabel), nextQuestion.prompt) }]
       : nextQuestion.initialMessages);
     setConsolidationCoachStep(data.consolidationStrategyLabel && data.consolidationContext ? 0 : null);
@@ -645,7 +713,9 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
     if (!pendingNextState) return;
     const nextQuestion = data.questions[pendingNextState.currentQuestionIndex];
     setEngineState(pendingNextState);
-    if (nextQuestion) setMessages(data.consolidationStrategyLabel && data.consolidationContext
+    if (nextQuestion) setMessages(referenceCorrectionMode
+      ? [{ id: `socrato-reference-correction-${pendingNextState.currentQuestionIndex}`, author: "socrato", content: REFERENCE_CORRECTION_OPENING }]
+      : data.consolidationStrategyLabel && data.consolidationContext
       ? [{ id: `socrato-consolidation-strategy-${pendingNextState.currentQuestionIndex}`, author: "socrato", content: consolidationCoachOpening(consolidationCoachLabel(nextQuestion, data.consolidationStrategyLabel), nextQuestion.prompt) }]
       : nextQuestion.initialMessages);
     setConsolidationCoachStep(data.consolidationStrategyLabel && data.consolidationContext ? 0 : null);
@@ -928,16 +998,16 @@ function InteractiveAssociationQuestion({ question, operationLabel, initialAttem
   function verify() {
     const correctCount = interaction.targets.filter((target) => assignments[target.id] === target.correctItemId).length;
     const nextAttempt = attempts + 1; setAttempts(nextAttempt); onAttempt(nextAttempt);
-    if (correctCount === interaction.targets.length) { setCompleted(true); setFeedback(`Bravo! Les ${interaction.targets.length} associations sont correctes.`); onComplete(true, nextAttempt); return; }
+    if (correctCount === interaction.targets.length) { setCompleted(true); setFeedback(hasMapLayout ? `Bravo! Les ${interaction.targets.length} éléments sont placés dans la bonne zone de la carte.` : `Bravo! Les ${interaction.targets.length} éléments sont associés à la bonne description.`); onComplete(true, nextAttempt); return; }
     if (nextAttempt >= 2) { setAssignments(Object.fromEntries(interaction.targets.map((target) => [target.id, target.correctItemId]))); setCompleted(true); setFeedback(`${correctAnswerCount(correctCount, interaction.targets.length, true)} Socrato affiche maintenant les associations attendues.`); onComplete(false, nextAttempt); return; }
-    const reviewHint = hasMapLayout ? "Revois les dates associées aux provinces et aux territoires." : useCompactDateLayout ? "Compare les éléments et les années auxquels tu les as associés." : "Relis attentivement chaque description.";
+    const reviewHint = hasMapLayout ? "Observe attentivement les régions de la carte." : useCompactDateLayout ? "Compare les éléments et les années auxquels tu les as associés." : "Relis attentivement chaque description.";
     setFeedback(`${correctAnswerCount(correctCount, interaction.targets.length)} ${reviewHint} Tu peux modifier tes associations avant de vérifier de nouveau.`);
   }
   return <section className={`association-question${useCompactDateLayout ? " association-question--compact-dates association-question--date-timeline" : ""}${hasMapLayout ? " association-question--map" : ""}`} aria-labelledby="association-question-title">
     <header className="timeline-question__header"><div><div className="association-question__meta"><p>Question {question.number}</p>{operationLabel ? <span className="operation-chip">{operationLabel}</span> : null}</div><h2 id="association-question-title">{question.prompt}</h2></div></header>
     {showHint ? <p className="timeline-question__hint" role="status">{question.localHint}</p> : null}
     <section className={`association-pool${hasImageItems ? " association-pool--images" : ""}`} aria-labelledby="association-pool-title"><h3 id="association-pool-title">Éléments à associer</h3><div>{interaction.items.filter(({ id }) => !assignedItemIds.has(id)).map((item) => item.imageUrl ? <div className="association-image-choice" key={item.id} draggable={!completed} onDragStart={(event) => beginDrag(event, item.id)}><button className="association-image-select" type="button" aria-pressed={selectedItemId === item.id} onClick={() => setSelectedItemId(item.id)}><Image src={item.imageUrl} alt={item.imageAlt ?? item.label} width={460} height={350} sizes="(max-width: 620px) 44vw, 22vw" draggable={false} unoptimized /><span>{item.label}</span></button><button className="association-image-expand" type="button" aria-label={`Agrandir ${item.label}`} onClick={() => setExpandedItemId(item.id)}><span aria-hidden="true">⤢</span> Agrandir</button></div> : <button key={item.id} type="button" draggable={!completed} aria-pressed={selectedItemId === item.id} onDragStart={(event) => beginDrag(event, item.id)} onClick={() => setSelectedItemId(item.id)}><span>{item.label}</span></button>)}</div></section>
-    {hasMapLayout && interaction.map ? <div className="association-map-board"><Image className="association-map-image" src={interaction.map.imageUrl} alt={interaction.map.imageAlt} width={1130} height={920} unoptimized />{interaction.targets.map((target) => { const item = itemById.get(assignments[target.id]); const zone = target.zone; if (!zone) return null; return <article className={`association-map-zone association-map-zone--${target.id}`} key={target.id} style={{ left: `${zone.x}%`, top: `${zone.y}%`, width: `${zone.width}%`, height: `${zone.height}%` }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); assign(target.id, event.dataTransfer.getData("text/plain")); }}><span>{target.label}</span>{item ? <button className="association-map-date" type="button" disabled={completed} onClick={() => setAssignments((current) => Object.fromEntries(Object.entries(current).filter(([key]) => key !== target.id)))}>{item.label}<small>{completed ? "" : "Retirer"}</small></button> : <button className="association-map-drop" type="button" disabled={!selectedItemId || completed} onClick={() => assign(target.id)}>{selectedItemId ? "Déposer ici" : "Date"}</button>}</article>; })}</div> : null}
+    {hasMapLayout && interaction.map ? <div className="association-map-board"><Image className="association-map-image" src={interaction.map.imageUrl} alt={interaction.map.imageAlt} width={1130} height={920} unoptimized />{interaction.targets.map((target) => { const item = itemById.get(assignments[target.id]); const zone = target.zone; if (!zone) return null; return <article className={`association-map-zone association-map-zone--${target.id}`} key={target.id} style={{ left: `${zone.x}%`, top: `${zone.y}%`, width: `${zone.width}%`, height: `${zone.height}%` }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); assign(target.id, event.dataTransfer.getData("text/plain")); }}><span>{target.label}</span>{item ? <button className="association-map-date" type="button" disabled={completed} onClick={() => setAssignments((current) => Object.fromEntries(Object.entries(current).filter(([key]) => key !== target.id)))}>{item.label}<small>{completed ? "" : "Retirer"}</small></button> : <button className="association-map-drop" type="button" disabled={!selectedItemId || completed} onClick={() => assign(target.id)}>{selectedItemId ? "Déposer ici" : interaction.map?.dropLabel ?? "Date"}</button>}</article>; })}</div> : null}
     <div className={`association-targets${hasImageTargets ? " association-targets--maps" : ""}${hideTargetLabels ? " association-targets--without-labels" : ""}${hasDescriptiveTargetLabels ? " association-targets--descriptive-labels" : ""}${useCompactDateLayout ? ` association-targets--date-timeline association-targets--count-${interaction.targets.length}` : ""}`} role={useCompactDateLayout ? "list" : undefined} aria-label={useCompactDateLayout ? "Ligne du temps de l’expansion territoriale du Canada" : undefined}>{interaction.targets.map((target, index) => { const item = itemById.get(assignments[target.id]); return <article role={useCompactDateLayout ? "listitem" : undefined} key={target.id} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); assign(target.id, event.dataTransfer.getData("text/plain")); }}><span>{target.label ?? index + 1}</span>{target.description !== target.label ? <p>{target.description}</p> : null}{target.imageUrl ? <Image className="association-target-image" src={target.imageUrl} alt={target.imageAlt ?? target.description} width={920} height={700} sizes="(max-width: 760px) 92vw, 44vw" unoptimized /> : null}{item ? <><button className={`association-assigned-item${item.imageUrl ? " association-assigned-item--image" : ""}`} type="button" disabled={completed} onClick={() => setAssignments((current) => Object.fromEntries(Object.entries(current).filter(([key]) => key !== target.id)))}>{item.imageUrl ? <Image src={item.imageUrl} alt={item.imageAlt ?? item.label} width={460} height={350} sizes="(max-width: 620px) 70vw, 22vw" draggable={false} unoptimized /> : null}<span>{item.label}</span><small>{completed ? "" : "Retirer"}</small></button>{item.imageUrl ? <button className="association-placed-expand" type="button" aria-label={`Agrandir ${item.label}`} onClick={() => setExpandedItemId(item.id)}><span aria-hidden="true">⤢</span> Agrandir</button> : null}</> : <button type="button" disabled={!selectedItemId || completed} onClick={() => assign(target.id)}>{selectedItemId ? "Déposer ici" : "Choisis un élément"}</button>}</article>; })}</div>
     <footer className="timeline-question__footer"><p role="status" aria-live="polite"><strong>Socrato</strong>{feedback}</p><button type="button" disabled={Object.keys(assignments).length !== interaction.targets.length || completed} onClick={verify}>{completed ? "Réponse vérifiée" : attempts ? "Vérifier ma deuxième tentative" : "Vérifier mes réponses"}</button></footer>
     {expandedItem?.imageUrl ? <div className="association-image-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setExpandedItemId(null); }}><section className="association-image-modal" role="dialog" aria-modal="true" aria-label={`${expandedItem.label} agrandie`}><button className="association-image-modal__close" type="button" onClick={() => setExpandedItemId(null)}>Fermer <span aria-hidden="true">×</span></button><div className="association-image-modal__image" role="img" aria-label={expandedItem.imageAlt ?? expandedItem.label} style={{ backgroundImage: `url("${expandedItem.imageUrl}")` }} /><strong>{expandedItem.label}</strong></section></div> : null}
@@ -996,7 +1066,7 @@ function InteractiveCompetencyCategorizationQuestion({ question, operationLabel,
     <div className={interaction.chronologicalAnchor ? "chronology-classification-scroll" : undefined}><div className={`competency-classification-table${interaction.chronologicalAnchor ? " competency-classification-table--chronology" : ""}`} role="table" aria-label="Tableau de classement des étiquettes">{categories.map((category) => {
       const placedItems = interaction.items.filter(({ id }) => placements[id] === category.id);
       return <section className="competency-category" role="rowgroup" key={category.id} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); place(event.dataTransfer.getData("text/plain"), category.id); }}>
-        <header role="columnheader">{!interaction.chronologicalAnchor ? <span>{category.articleLabel}</span> : null}<h3>{category.label}</h3><p>{category.description}</p></header>
+        <header role="columnheader">{!interaction.chronologicalAnchor && category.articleLabel ? <span>{category.articleLabel}</span> : null}<h3>{category.label}</h3><p>{category.description}</p></header>
         <div className="competency-category__dropzone" role="cell" aria-label={`Étiquettes classées sous ${category.label}`}>
           {placedItems.map((item) => <button key={item.id} type="button" disabled={completed} onClick={() => setPlacements((current) => Object.fromEntries(Object.entries(current).filter(([itemId]) => itemId !== item.id)))}>{item.label}<small>{completed ? "" : "Retirer"}</small></button>)}
           {placedItems.length === 0 ? <p>Aucune étiquette placée.</p> : null}
@@ -1033,6 +1103,9 @@ function timelineImagePosition(entryId: string) {
     "timeline-entry-6": "center 24%",
     "responsible-timeline-entry-3": "center 18%",
     "responsible-timeline-entry-4": "center 20%",
+    "transversal-federal-timeline-bagot": "center 19%",
+    "transversal-federal-timeline-indian-act": "center 14%",
+    "transversal-federal-timeline-riel": "center 24%",
   };
 
   return focalPoints[entryId] ?? "center center";
@@ -1041,7 +1114,7 @@ function timelineImagePosition(entryId: string) {
 function TimelineEntryVisual({ entry, width, height }: { entry: TimelineInteraction["entries"][number]; width: number; height: number }) {
   const sources = entry.imageUrls?.length ? entry.imageUrls : [entry.imageUrl];
   if (sources.length === 1) return <Image src={sources[0]} alt={entry.imageAlt} width={width} height={height} draggable={false} unoptimized style={{ objectPosition: timelineImagePosition(entry.id) }} />;
-  return <div className="timeline-entry-image-pair" role="img" aria-label={entry.imageAlt}>{sources.map((source) => <Image key={source} src={source} alt="" width={Math.round(width / sources.length)} height={height} draggable={false} unoptimized />)}</div>;
+  return <div className="timeline-entry-image-pair" role="img" aria-label={entry.imageAlt} style={{ gridTemplateColumns: `repeat(${sources.length}, minmax(0, 1fr))` }}>{sources.map((source) => <Image key={source} src={source} alt="" width={Math.round(width / sources.length)} height={height} draggable={false} unoptimized />)}</div>;
 }
 
 function InteractiveTimelineQuestion({ question, operationLabel, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete, classroomMode = false }: ObjectiveQuestionProps & { classroomMode?: boolean }) {
@@ -1120,7 +1193,7 @@ function InteractiveTimelineQuestion({ question, operationLabel, initialAttempts
   }
 
   return <section className="timeline-question" aria-labelledby="timeline-question-title">
-    <header className="timeline-question__header"><div><p>Question {question.number} · Document chronologique interactif</p>{operationLabel ? <span className="operation-chip">{operationLabel}</span> : null}<h2 id="timeline-question-title">{question.prompt}</h2><span>{question.instruction}</span></div></header>
+    <header className="timeline-question__header"><div><div className="association-question__meta"><p>Question {question.number}</p>{operationLabel ? <span className="operation-chip">{operationLabel}</span> : null}</div><h2 id="timeline-question-title">{question.prompt}</h2><span>{question.instruction}</span></div></header>
     {showHint ? <p className="timeline-question__hint" role="status">{question.localHint}</p> : null}
     <div className="timeline-question__dates" aria-label="Dates de la ligne du temps">{interaction.dates.map((date) => {
       const entry = entryById.get(assignments[date]);
@@ -1140,7 +1213,7 @@ function DocumentsPane({ documents, initialDocumentId, stacked = false }: { docu
   const [selectedId, setSelectedId] = useState(initialDocumentId);
   const [consultedIds, setConsultedIds] = useState(() => new Set(initialDocumentId ? [initialDocumentId] : []));
   const [expanded, setExpanded] = useState(false);
-  const [imageZoom, setImageZoom] = useState(1.5);
+  const [imageZoom, setImageZoom] = useState(1);
   const [visibleViewport, setVisibleViewport] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
   useEffect(() => {
     if (!expanded) return;
@@ -1248,8 +1321,7 @@ function DocumentsPane({ documents, initialDocumentId, stacked = false }: { docu
   function expandStackedDocument(documentId: string) {
     setSelectedId(documentId);
     setConsultedIds((current) => new Set(current).add(documentId));
-    const target = documents.find(document => document.id === documentId);
-    setImageZoom(target?.content.kind === "historical_image" && target.content.localSrc.endsWith(".svg") ? 1 : 1.5);
+    setImageZoom(1);
     setExpanded(true);
   }
 
@@ -1316,6 +1388,12 @@ function getNeutralDocumentType(document: OrderedDocument) {
   return document.content.kind === "population_table" || document.content.kind === "comparison_table" ? "Tableau statistique" : document.content.kind === "historical_comparison_chart" ? "Graphique statistique" : document.typeLabel;
 }
 
+function getVisibleDocumentHeading(document: OrderedDocument) {
+  return document.id === "PN-I-002" || document.id === "PN-I-003" || document.id === "PN-I-004"
+    ? document.title
+    : getNeutralDocumentType(document);
+}
+
 function DocumentThumbnailPreview({ document }: { document: OrderedDocument }) {
   if (document.content.kind === "historical_image") {
     return <Image className="document-thumbnail-image" src={document.content.localSrc} alt={`Aperçu du document ${document.displayOrder} : ${document.content.alt}`} width={180} height={92} unoptimized />;
@@ -1341,7 +1419,7 @@ function DocumentThumbnailPreview({ document }: { document: OrderedDocument }) {
       ? <div className="document-thumbnail-diagram" aria-hidden="true"><span>Couronne → Gouverneur</span><i>↓</i><span>Ministère ⇄ Assemblée</span><i>↑</i><span>Électeurs</span></div>
       : <div className="document-thumbnail-diagram" aria-hidden="true"><span>Couronne</span><i>↓</i><span>Gouverneur</span><i>↓</i><span>Conseils · Assemblée</span></div>;
   }
-  return <blockquote className="document-thumbnail-quote" aria-hidden="true">« {document.content.excerpt} »</blockquote>;
+  return <blockquote className="document-thumbnail-quote" aria-hidden="true">{document.content.adapted ? document.content.excerpt : <>« {document.content.excerpt} »</>}</blockquote>;
 }
 
 function DocumentContent({ document, expanded = false, compact = false, onExpand, imageZoom = 1, onImageZoomChange }: { document: OrderedDocument; expanded?: boolean; compact?: boolean; onExpand?: () => void; imageZoom?: number; onImageZoomChange?: (zoom: number) => void }) {
@@ -1357,7 +1435,7 @@ function DocumentContent({ document, expanded = false, compact = false, onExpand
         <h3 id={expanded ? "expanded-document-title" : undefined}>
           <strong>Document {document.displayOrder}</strong>
           <span aria-hidden="true"> · </span>
-          <small>{getNeutralDocumentType(document)}</small>
+          <small>{getVisibleDocumentHeading(document)}</small>
         </h3>
         {document.content.kind === "population_table" ? (
           <div className="population-table-wrap">
@@ -1414,18 +1492,18 @@ function DocumentContent({ document, expanded = false, compact = false, onExpand
         ) : document.content.kind === "historical_image" ? (<>
           {expanded && onImageZoomChange ? <div className="document-image-zoom-controls" role="group" aria-label="Agrandissement de la carte">
             <button type="button" aria-label="Réduire la carte de 5 %" disabled={imageZoom <= 1} onClick={() => onImageZoomChange(Math.max(1, Number((imageZoom - .05).toFixed(2))))}>−</button>
-            <button type="button" className="document-image-zoom-reset" aria-label="Revenir à la vue agrandie initiale" onClick={() => onImageZoomChange(document.content.kind === "historical_image" && document.content.localSrc.endsWith(".svg") ? 1 : 1.5)}>{Math.round(imageZoom * 100)} %</button>
+            <button type="button" className="document-image-zoom-reset" aria-label="Afficher l’image complète" onClick={() => onImageZoomChange(1)}>{Math.round(imageZoom * 100)} %</button>
             <button type="button" aria-label="Agrandir la carte de 5 %" disabled={imageZoom >= 3} onClick={() => onImageZoomChange(Math.min(3, Number((imageZoom + .05).toFixed(2))))}>+</button>
           </div> : null}
           <div className={`document-visual-viewport${expanded ? " document-visual-viewport--expanded" : ""}`}>
             <figure className={`historical-document-figure${imageZoom > 1 ? " is-zoomed" : ""}`} style={imageZoom > 1 ? { width: `${imageZoom * 100}%` } : undefined}>
               <Image className="historical-document-image" src={document.content.localSrc} alt={document.content.alt} width={1600} height={1100} unoptimized />
               <figcaption className={document.content.visibleCaption ? "historical-document-caption historical-document-caption--expanded" : "historical-document-caption"}>
-                {document.content.visibleCaption ? <><strong>Description traduite</strong><span>{document.content.visibleCaption}</span>{document.content.visibleCaptionNote ? <small>{document.content.visibleCaptionNote}</small> : null}</> : document.title}
+                {document.content.visibleCaption ? <>{document.id !== "RFP-I-003" ? <strong>{document.id === "RFP-I-001" ? "Description factuelle" : "Description traduite"}</strong> : null}<span>{document.content.visibleCaption}</span>{document.content.visibleCaptionNote ? <small>{document.content.visibleCaptionNote}</small> : null}</> : document.title}
               </figcaption>
             </figure>
           </div>
-        </>) : <blockquote>« {document.content.excerpt} »</blockquote>}
+        </>) : <blockquote>{document.content.adapted ? document.content.excerpt : <>« {document.content.excerpt} »</>}</blockquote>}
         {document.content.kind === "historical_excerpt"
           ? <cite className="document-identification">{identification}</cite>
           : <p className="document-identification">{identification}</p>}

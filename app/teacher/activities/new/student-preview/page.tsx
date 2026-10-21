@@ -5,8 +5,8 @@ import { createLocalActivityPreview, getEligibleActivityQuestions, LocalActivity
 import "../../../../eleve/activite/[activityId]/session.css";
 import "./student-preview.css";
 
-export default async function StudentActivityPreviewPage({ searchParams }: { searchParams: Promise<{ notion?: string; notions?: string; title?: string; variant?: string; workType?: string; operation?: string; questionIds?: string; questionNumber?: string; published?: string; embedded?: string; activityId?: string; publishedActivityId?: string; classroom?: string }> }) {
-  const { notion = "acte-union", notions, title, variant, workType, operation, questionIds, questionNumber, published, embedded, activityId, publishedActivityId, classroom } = await searchParams;
+export default async function StudentActivityPreviewPage({ searchParams }: { searchParams: Promise<{ notion?: string; notions?: string; title?: string; variant?: string; workType?: string; operation?: string; questionIds?: string; questionNumber?: string; published?: string; embedded?: string; activityId?: string; publishedActivityId?: string; classroom?: string; apiUnavailable?: string }> }) {
+  const { notion = "acte-union", notions, title, variant, workType, operation, questionIds, questionNumber, published, embedded, activityId, publishedActivityId, classroom, apiUnavailable } = await searchParams;
   const data = createDemoStudentLearningSession("demo-activity-acte-union", notion, "teacher-assigned");
   if (!data) notFound();
   const catalog = await new LocalActivityCreatorProvider().getCatalog();
@@ -49,6 +49,7 @@ export default async function StudentActivityPreviewPage({ searchParams }: { sea
     initialMessages: [{ id: `teacher-preview-welcome-${index}`, author: "socrato" as const, content: preview.guidance[0] }],
     answerOptions: preview.answerOptions,
     answerExplanation: preview.answerExplanation,
+    evaluationGuide: preview.answerExplanation ? { expectedAnswer: preview.answerExplanation, commonErrors: [] } : undefined,
     timelineInteraction: preview.timelineInteraction,
     associationInteraction: preview.associationInteraction,
     causalChainInteraction: preview.causalChainInteraction,
@@ -58,5 +59,5 @@ export default async function StudentActivityPreviewPage({ searchParams }: { sea
   if (!preview) notFound();
   const resolvedActivityId = published === "1" && (activityId || publishedActivityId) ? (activityId || publishedActivityId)! : data.activityId;
   const showStudentHeader = classroom === "1" && questions.some(question => ["question:acte-de-l-amerique-du-nord-britannique:union-federation-change", "question:transversal:chronology-1867", "question:acte-de-l-amerique-du-nord-britannique:map-choice-1867"].includes(question.id));
-  return <div className={`student-preview-surface${questions.some(question => question.id === "question:acte-de-l-amerique-du-nord-britannique:union-federation-change") ? " student-preview-surface--constitution" : ""}${showStudentHeader ? " student-preview-surface--activity" : ""}${classroom === "1" ? " student-preview-surface--classroom" : ""}${embedded === "1" ? " student-preview-surface--embedded" : ""}`}><StudentLearningSessionView classroomMode={classroom === "1"} teacherApiTest teacherPreview={classroom !== "1" && embedded !== "1" && published !== "1"} persistProgress={published === "1"} data={{ ...data, id: resolvedActivityId, activityId: resolvedActivityId, activityTitle: config.title, notionId: notion, notionTitle: preview.notionTitle, questions, documentCatalog, dashboardHref: `/eleve/tableau-de-bord?activity=${encodeURIComponent(resolvedActivityId)}#activite` }} /></div>;
+  return <div className={`student-preview-surface${questions.some(question => question.id === "question:acte-de-l-amerique-du-nord-britannique:union-federation-change") ? " student-preview-surface--constitution" : ""}${showStudentHeader ? " student-preview-surface--activity" : ""}${classroom === "1" ? " student-preview-surface--classroom" : ""}${embedded === "1" ? " student-preview-surface--embedded" : ""}`}><StudentLearningSessionView classroomMode={classroom === "1"} teacherApiTest forceReferenceCorrection={apiUnavailable === "1"} teacherPreview={classroom !== "1" && embedded !== "1" && published !== "1"} persistProgress={published === "1"} data={{ ...data, id: resolvedActivityId, activityId: resolvedActivityId, activityTitle: config.title, notionId: notion, notionTitle: preview.notionTitle, questions, documentCatalog, dashboardHref: `/eleve/tableau-de-bord?activity=${encodeURIComponent(resolvedActivityId)}#activite` }} /></div>;
 }

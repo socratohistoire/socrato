@@ -90,6 +90,10 @@ export type StudentAccessRuntime = {
   clientContext(rawContext: string): string;
 };
 
+export function useLocalStudentDemo() {
+  return process.env.SOCRATO_LOCAL_DEMO === "1";
+}
+
 function createLocalRuntime(): StudentAccessRuntime {
   const lookup = new HmacAccessCodeLookup(LOCAL_ONLY_LOOKUP_KEY);
   return {
@@ -111,13 +115,14 @@ const runtimeGlobal = globalThis as typeof globalThis & {
 };
 
 export function getStudentAccessRuntime(): StudentAccessRuntime {
-  if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL) {
+  const localDemo = useLocalStudentDemo();
+  if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL && !localDemo) {
     throw new Error(
       "Student access requires the database repository in production.",
     );
   }
 
-  const mode = process.env.DATABASE_URL ? "database" : "local";
+  const mode = localDemo || !process.env.DATABASE_URL ? "local" : "database";
   if (!runtimeGlobal.__socratoStudentAccessRuntime || runtimeGlobal.__socratoStudentAccessRuntimeMode !== mode) {
     runtimeGlobal.__socratoStudentAccessRuntime = mode === "database" ? createDatabaseStudentAccessRuntime() : createLocalRuntime();
     runtimeGlobal.__socratoStudentAccessRuntimeMode = mode;

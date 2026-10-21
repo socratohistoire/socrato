@@ -19,7 +19,7 @@ export type LearningSessionDocumentContent =
       entries: Array<{ date: string; phase: string; title: string; description: string; imageUrl: string; imageAlt: string; credit: string }>;
     }
   | { kind: "political_structure_diagram"; period?: "acte-union" | "gouvernement-responsable" }
-  | { kind: "historical_excerpt"; excerpt: string }
+  | { kind: "historical_excerpt"; excerpt: string; adapted?: boolean }
   | { kind: "historical_image"; localSrc: string; alt: string; description: string; visibleCaption?: string; visibleCaptionNote?: string };
 
 export type LearningSessionDocument = {
@@ -92,7 +92,7 @@ export type LearningSessionQuestion = {
     chronologicalAnchor?: { year: string; label: string };
     correction?: string;
     documentId?: string;
-    map?: { imageUrl: string; imageAlt: string };
+    map?: { imageUrl: string; imageAlt: string; dropLabel?: string };
     items: readonly { id: string; label: string; imageUrl?: string; imageAlt?: string }[];
     targets: readonly { id: string; label?: string; description: string; imageUrl?: string; imageAlt?: string; correctItemId: string; zone?: { x: number; y: number; width: number; height: number } }[];
     categories?: readonly { id: string; label: string; articleLabel: string; description: string; correctItemIds: readonly string[] }[];

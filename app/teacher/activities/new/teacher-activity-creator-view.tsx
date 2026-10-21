@@ -321,6 +321,9 @@ export function TeacherActivityCreatorView({ catalog, editingActivity = null, co
         <Link href="/teacher"><Icon name="school"/>Espace enseignant</Link>
         <Link href="/teacher/activities/intellectual-operations"><Icon name="target"/>Comprendre les opérations</Link>
         <Link href="/teacher/activities/industrialisation-partie-b"><Icon name="format"/>Partie B — Industrialisation</Link>
+        <Link href="/teacher/activities/politique-nationale-partie-b"><Icon name="format"/>Partie B — Politique nationale</Link>
+        <Link href="/teacher/activities/migrations-partie-b"><Icon name="format"/>Partie B — Migrations</Link>
+        <Link href="/teacher/activities/eglise-catholique-partie-b"><Icon name="format"/>Partie B — Église catholique</Link>
         <Link className="creator-create-link" href={classroomMode ? "/teacher/activities/new?mode=classroom" : "/teacher/activities/new"} aria-current="page"><span className="creator-create-icon"><Icon name="edit"/></span><span>{classroomMode ? "Mode classe" : "Créer une activité"}</span><span className="creator-create-arrow" aria-hidden="true">→</span></Link>
       </nav>
     </aside>

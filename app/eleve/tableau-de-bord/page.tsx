@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import {
   getStudentAccessRuntime,
   STUDENT_SESSION_COOKIE,
+  useLocalStudentDemo,
 } from "@/lib/student-access/local-runtime";
 import { loadAuthorizedStudentDashboard } from "@/lib/student-dashboard/access";
 import { LocalDemoStudentDashboardProvider } from "@/lib/student-dashboard/demo-provider";
@@ -25,7 +26,7 @@ export default async function StudentDashboardPage({
     data = await loadAuthorizedStudentDashboard(
       token,
       getStudentAccessRuntime().sessions,
-      process.env.DATABASE_URL ? new DatabaseStudentDashboardProvider() : new LocalDemoStudentDashboardProvider(),
+      process.env.DATABASE_URL && !useLocalStudentDemo() ? new DatabaseStudentDashboardProvider() : new LocalDemoStudentDashboardProvider(),
       activity,
     );
   } catch {

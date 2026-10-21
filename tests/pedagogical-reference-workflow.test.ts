@@ -8,6 +8,7 @@ import {
   BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS,
   FEDERAL_PROVINCIAL_RELATIONS_HISTORICAL_RECORD,
   INDIAN_AFFAIRS_HISTORICAL_RECORD,
+  NATIONAL_POLICY_HISTORICAL_RECORD,
   RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD,
   ACTE_UNION_CAUSAL_PILOT_QUESTION,
   ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION,
@@ -33,6 +34,61 @@ import {
   createHistoricalRecordReviewDraft,
   getHistoricalRecordReviewItems,
 } from "../lib/pedagogical-reference/index.ts";
+
+test("documente les quatre précisions de la Politique nationale sans approuver le dossier", () => {
+  const record = NATIONAL_POLICY_HISTORICAL_RECORD;
+  assert.equal(record.id, "historical-record:politique-nationale");
+  assert.equal(record.knowledgeHeadingId, "politique-nationale");
+  assert.equal(record.status, "draft");
+  assert.equal(record.version, null);
+  assert.equal(record.approvedAt, null);
+  assert.deepEqual(record.knowledgePrecisions.map(({ officialLabel }) => officialLabel), [
+    "Crise économique de 1873",
+    "Politique tarifaire",
+    "Chemin de fer transcontinental du Canadien Pacifique",
+    "Colonisation des terres de l’Ouest",
+  ]);
+  assert.deepEqual(record.knowledgePrecisions.map(({ officialOrder }) => officialOrder), [1, 2, 3, 4]);
+  assert.ok(record.knowledgePrecisions.every(({ coverageStatus, linkedStatementIds }) => coverageStatus === "complete" && linkedStatementIds.length >= 5));
+  assert.deepEqual(record.manual.sections.map(({ id }) => id), [
+    "pn-mono-definition",
+    "pn-mono-crisis",
+    "pn-mono-tariff",
+    "pn-mono-market",
+    "pn-mono-railway",
+    "pn-mono-settlement",
+    "pn-mono-consequences",
+    "pn-mono-balance",
+  ]);
+  const paragraphs = record.manual.sections.flatMap(({ paragraphs }) => paragraphs);
+  const tables = record.manual.sections.flatMap(({ tables = [] }) => tables);
+  assert.ok(paragraphs.length >= 45);
+  assert.equal(tables.length, 3);
+  assert.ok(tables.every(({ columns, rows }) => rows.every(({ cells }) => cells.length === columns.length)));
+  const statements = [
+    ...record.knowledgePrecisions, ...paragraphs, ...tables.flatMap(({ rows }) => rows), ...record.narrative,
+    ...record.chronologicalMarkers, ...record.actors, ...record.territories, ...record.relationships,
+    ...record.vocabulary, ...record.misconceptions, ...record.expectedLearning,
+  ];
+  const statementIds = new Set(statements.map(({ id }) => id));
+  assert.equal(statementIds.size, statements.length);
+  const sourceIds = new Set(record.sourceCatalog.map(({ id }) => id));
+  assert.ok(statements.every(({ sourceIds: links }) => links.length > 0 && links.every((id) => sourceIds.has(id))));
+  assert.ok(record.knowledgePrecisions.every(({ linkedStatementIds }) => linkedStatementIds.every((id) => statementIds.has(id))));
+  assert.ok(record.sourceCatalog.every(({ verificationStatus, url, locator }) => verificationStatus === "verified" && Boolean(url) && locator.length > 20));
+  assert.ok(record.sourceCatalog.some(({ kind, locator }) => kind === "official-program" && locator.includes("quatre précisions")));
+  assert.deepEqual(record.chronologicalMarkers.map(({ sortYear }) => sortYear), [1871, 1872, 1873, 1878, 1878, 1879, 1880, 1881, 1885, 1886, 1891, 1896]);
+  assert.ok(record.misconceptions.some(({ misconception }) => /territoire vide/.test(misconception)));
+  assert.ok(record.misconceptions.some(({ misconception }) => /Clifford Sifton/.test(misconception)));
+  assert.deepEqual(new Set(record.expectedLearning.flatMap(({ operationIds }) => operationIds)), new Set([
+    "time_and_space", "establish_facts", "differences_and_similarities", "causes_and_consequences",
+    "changes_and_continuities", "relationships_between_facts", "causal_connections",
+  ]));
+  assert.deepEqual(validateHistoricalRecord(record), {});
+  assert.deepEqual(validateHistoricalRecord({ ...record, status: "ready-for-review" }), {});
+  const route = readFileSync(new URL("../app/admin/pedagogical-reference/notions/[notionId]/page.tsx", import.meta.url), "utf8");
+  assert.match(route, /notionId === "politique-nationale".*record=\{NATIONAL_POLICY_HISTORICAL_RECORD\}/);
+});
 
 test("documente les cinq précisions des relations fédérales-provinciales sans approuver le dossier", () => {
   const record = FEDERAL_PROVINCIAL_RELATIONS_HISTORICAL_RECORD;
@@ -67,7 +123,7 @@ test("documente les cinq précisions des relations fédérales-provinciales sans
   assert.deepEqual(validateHistoricalRecord(record), {});
   assert.deepEqual(validateHistoricalRecord({ ...record, status: "ready-for-review" }), {});
   const questions = getQuestionsForKnowledgeHeading(record.knowledgeHeadingId);
-  assert.equal(questions.length, 15);
+  assert.equal(questions.length, 23);
   const metisComparison = questions.find(({ id }) => id === "question:relations-federales-provinciales:document-interpretation-001");
   assert.deepEqual(metisComparison?.historicalDocumentIds, ["RFP-T-001", "RFP-T-002"]);
   assert.equal(metisComparison?.operationId, "differences_and_similarities");
@@ -75,9 +131,10 @@ test("documente les cinq précisions des relations fédérales-provinciales sans
   const competencyAssociation = questions.find(({ id }) => id === "question:relations-federales-provinciales:interactive-association-001");
   assert.equal(competencyAssociation?.operationId, "establish_facts");
   assert.deepEqual(competencyAssociation?.historicalDocumentIds, ["RFP-T-003"]);
-  assert.equal(competencyAssociation?.associationInteraction?.items.length, 13);
-  assert.deepEqual(competencyAssociation?.associationInteraction?.categories?.map(({ articleLabel }) => articleLabel), ["Article 91", "Article 92 — et article 93 pour l’éducation"]);
-  assert.match(competencyAssociation?.associationInteraction?.tension?.explanation ?? "", /désaveu/);
+  assert.equal(competencyAssociation?.associationInteraction?.items.length, 7);
+  assert.deepEqual(competencyAssociation?.associationInteraction?.categories?.map(({ label }) => label), ["Ordre fédéral", "Fédéral et provincial", "Ordre provincial"]);
+  assert.deepEqual(competencyAssociation?.associationInteraction?.categories?.map(({ articleLabel }) => articleLabel), ["", "", ""]);
+  assert.equal(competencyAssociation?.associationInteraction?.tension, undefined);
 });
 
 test("documente les quatre précisions de l’AANB de secondaire 4 et son évolution territoriale", () => {
@@ -122,7 +179,7 @@ test("documente les quatre précisions de l’AANB de secondaire 4 et son évolu
     "changes_and_continuities", "relationships_between_facts", "causal_connections",
   ]));
   const questions = getQuestionsForKnowledgeHeading(record.knowledgeHeadingId);
-  assert.equal(questions.length, 17);
+  assert.equal(questions.length, 18);
   assert.equal(questions[0]?.operationId, "changes_and_continuities");
   assert.deepEqual(questions[0]?.historicalDocumentIds, ["AANB-M-001", "AANB-M-002"]);
   assert.match(questions[0]?.prompt ?? "", /deux changements territoriaux/);
@@ -339,13 +396,13 @@ test("prépare les dossiers pilotes, les questions approuvées et les questions 
     "revolution-tranquille",
   ]);
   assert.ok(PEDAGOGICAL_REFERENCE_PILOTS.every(({ questionDraft }) => questionDraft.status === "not-started" && !questionDraft.prompt));
-  assert.equal(PEDAGOGICAL_QUESTION_CATALOG.length, 98);
+  assert.equal(PEDAGOGICAL_QUESTION_CATALOG.length, 116);
   assert.equal(PEDAGOGICAL_QUESTION_CATALOG.filter(({ status }) => status === "approved").length, 35);
   assert.ok(PEDAGOGICAL_QUESTION_CATALOG.every((question) => Object.keys(validateApprovedQuestion(question)).length === 0));
   assert.equal(getQuestionsForKnowledgeHeading("acte-union").length, 35);
   assert.equal(getQuestionsForKnowledgeHeading("gouvernement-responsable").length, 15);
   const indianAffairsQuestions = getQuestionsForKnowledgeHeading("affaires-indiennes");
-  assert.equal(indianAffairsQuestions.length, 10);
+  assert.equal(indianAffairsQuestions.length, 11);
   assert.equal(indianAffairsQuestions[0]?.id, "question:affaires-indiennes:document-interpretation-001");
   assert.equal(indianAffairsQuestions[0]?.operationId, "causal_connections");
   assert.deepEqual(indianAffairsQuestions[0]?.historicalDocumentIds, ["AI-T-005", "AI-T-006"]);
@@ -353,7 +410,7 @@ test("prépare les dossiers pilotes, les questions approuvées et les questions 
   assert.equal(indianAffairsQuestions[1]?.id, "question:affaires-indiennes:document-interpretation-002");
   assert.equal(indianAffairsQuestions[1]?.operationId, "changes_and_continuities");
   assert.deepEqual(indianAffairsQuestions[1]?.historicalDocumentIds, ["AI-I-001", "AI-I-002"]);
-  assert.match(indianAffairsQuestions[1]?.expectedAnswer ?? "", /objectif d’assimilation culturelle/);
+  assert.match(indianAffairsQuestions[1]?.expectedAnswer ?? "", /assimilation culturelle/);
   assert.equal(indianAffairsQuestions[2]?.id, "question:affaires-indiennes:document-interpretation-003");
   assert.equal(indianAffairsQuestions[2]?.operationId, "causes_and_consequences");
   assert.deepEqual(indianAffairsQuestions[2]?.historicalDocumentIds, ["AI-I-003"]);
@@ -363,18 +420,18 @@ test("prépare les dossiers pilotes, les questions approuvées et les questions 
   assert.deepEqual(indianAffairsQuestions[3]?.historicalDocumentIds, ["AI-I-004", "AI-I-005"]);
   assert.match(indianAffairsQuestions[3]?.expectedAnswer ?? "", /christianisation/);
   assert.equal(indianAffairsQuestions[4]?.id, "question:affaires-indiennes:document-interpretation-005");
-  assert.equal(indianAffairsQuestions[4]?.operationId, "establish_facts");
+  assert.equal(indianAffairsQuestions[4]?.operationId, "causes_and_consequences");
   assert.deepEqual(indianAffairsQuestions[4]?.historicalDocumentIds, ["AI-T-004", "AI-T-007"]);
-  assert.match(indianAffairsQuestions[4]?.expectedAnswer ?? "", /statut juridique/);
+  assert.match(indianAffairsQuestions[4]?.expectedAnswer ?? "", /autonomie collective.*droits politiques individuels/);
   assert.equal(indianAffairsQuestions[5]?.id, "question:affaires-indiennes:document-interpretation-006");
   assert.equal(indianAffairsQuestions[5]?.operationId, "relationships_between_facts");
   assert.deepEqual(indianAffairsQuestions[5]?.historicalDocumentIds, ["AI-T-008", "AI-I-006"]);
   assert.match(indianAffairsQuestions[5]?.expectedAnswer ?? "", /arpenter et mettre à part/);
   assert.equal(indianAffairsQuestions[6]?.id, "question:affaires-indiennes:document-interpretation-007");
-  assert.equal(indianAffairsQuestions[6]?.operationId, "changes_and_continuities");
-  assert.deepEqual(indianAffairsQuestions[6]?.historicalDocumentIds, ["AI-S-001"]);
-  assert.match(indianAffairsQuestions[6]?.prompt ?? "", /entre 1890 et 1897.*deux données/);
-  assert.match(indianAffairsQuestions[6]?.expectedAnswer ?? "", /6 671.*9 628.*44 %/);
+  assert.equal(indianAffairsQuestions[6]?.operationId, "causes_and_consequences");
+  assert.deepEqual(indianAffairsQuestions[6]?.historicalDocumentIds, ["AI-T-011", "AI-S-001"]);
+  assert.match(indianAffairsQuestions[6]?.prompt ?? "", /conséquence.*intervention du gouvernement fédéral.*1890 et 1897/);
+  assert.match(indianAffairsQuestions[6]?.expectedAnswer ?? "", /fréquentation scolaire.*6 671.*9 628/);
   assert.equal(indianAffairsQuestions[7]?.id, "question:affaires-indiennes:document-interpretation-008");
   assert.equal(indianAffairsQuestions[7]?.operationId, "differences_and_similarities");
   assert.deepEqual(indianAffairsQuestions[7]?.historicalDocumentIds, ["AI-T-009", "AI-T-010"]);
@@ -384,13 +441,13 @@ test("prépare les dossiers pilotes, les questions approuvées et les questions 
   assert.deepEqual(indianAffairsQuestions[8]?.historicalDocumentIds, ["AI-I-007"]);
   assert.match(indianAffairsQuestions[8]?.expectedAnswer ?? "", /loi de 1851.*création.*nouvelles réserves/);
   const federalProvincialQuestions = getQuestionsForKnowledgeHeading("relations-federales-provinciales");
-  assert.equal(federalProvincialQuestions.length, 15);
+  assert.equal(federalProvincialQuestions.length, 23);
   assert.ok(federalProvincialQuestions.every(({ status }) => status === "ready-for-review"));
   assert.deepEqual(federalProvincialQuestions[0]?.historicalDocumentIds, ["RFP-T-001", "RFP-T-002"]);
   assert.match(federalProvincialQuestions[0]?.expectedAnswer ?? "", /cause commune/);
   assert.doesNotMatch(federalProvincialQuestions[0]?.expectedAnswer ?? "", /Batoche/);
   assert.equal(federalProvincialQuestions[1]?.format, "interactive-association");
-  assert.equal(federalProvincialQuestions[1]?.associationInteraction?.categories?.length, 2);
+  assert.equal(federalProvincialQuestions[1]?.associationInteraction?.categories?.length, 3);
   const colonialEconomyQuestions = getQuestionsForKnowledgeHeading("economie-coloniale");
   assert.equal(colonialEconomyQuestions.length, 9);
   assert.ok(colonialEconomyQuestions.every(({ status }) => status === "ready-for-review"));
@@ -479,6 +536,16 @@ test("prépare les dossiers pilotes, les questions approuvées et les questions 
   assert.deepEqual(validateApprovedQuestion(ACTE_UNION_RESPONSIBLE_GOVERNMENT_SHORT_ANSWER_QUESTION), {});
   assert.deepEqual(validateApprovedQuestion(ACTE_UNION_SHARED_DEBT_SHORT_ANSWER_QUESTION), {});
   assert.deepEqual(validateApprovedQuestion(ACTE_UNION_LAFONTAINE_OPPOSITION_SHORT_ANSWER_QUESTION), {});
+});
+
+test("raccorde la question 3 de l’Acte d’Union au document de La Fontaine", () => {
+  assert.deepEqual(ACTE_UNION_LAFONTAINE_OPPOSITION_SHORT_ANSWER_QUESTION.historicalDocumentIds, ["historical-document:acte-union:lafontaine-terrebonne-1840"]);
+  assert.match(ACTE_UNION_LAFONTAINE_OPPOSITION_SHORT_ANSWER_QUESTION.instruction, /À l’aide du document/);
+});
+
+test("nomme les Rébellions des Patriotes dans la question 1 de l’Acte d’Union", () => {
+  assert.equal(ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION.timelineInteraction.entries[0]?.title, "Rébellions des Patriotes");
+  assert.match(ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION.expectedAnswer, /1837-1838 — Rébellions des Patriotes/);
 });
 
 test("documente le dossier pilote de l’Acte d’Union sans l’approuver", () => {

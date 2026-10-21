@@ -1,6 +1,10 @@
 import Image from "next/image";
-import { MANITOBA_CARTOON_TRANSLATION } from "@/lib/pedagogical-reference/federal-provincial-relations-primary-documents";
-import { FEDERAL_REVENUE_TABLE } from "@/lib/pedagogical-reference/federal-provincial-relations-primary-documents";
+import { POLITIQUE_NATIONALE_TARIFF_COMPARISON_DOCUMENTS } from "@/lib/pedagogical-reference/politique-nationale-tariff-comparison";
+import { POLITIQUE_NATIONALE_CRISIS_MANIFESTATION_DOCUMENTS } from "@/lib/pedagogical-reference/politique-nationale-crisis-manifestations";
+import { POLITIQUE_NATIONALE_CAUSAL_LINKS_NEW_DOCUMENTS } from "@/lib/pedagogical-reference/politique-nationale-causal-links";
+import { POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT } from "@/lib/pedagogical-reference/politique-nationale-government-settlement-poster";
+import { POLITIQUE_NATIONALE_MACDONALD_MOTIVES_DOCUMENT } from "@/lib/pedagogical-reference/politique-nationale-macdonald-motives";
+import { FEDERAL_REVENUE_TABLE, MANITOBA_CARTOON_TRANSLATION } from "@/lib/pedagogical-reference/federal-provincial-relations-primary-documents";
 import Link from "next/link";
 import { HistoricalComparisonChart } from "@/app/components/historical-comparison-chart";
 import {
@@ -122,7 +126,7 @@ function ReviewableTextDocument({ document }: { document: HistoricalDocumentReco
 export function HistoricalDocumentsNotionPage({ notionId }: { notionId: string }) {
   const officialHeading = SECONDARY_FOUR_PERIODS.flatMap(({ knowledgeHeadings }) => knowledgeHeadings).find(({ id }) => id === notionId);
   const notionLabel = notionId === "rebellions-1837-1838" ? "Rébellions de 1837-1838" : officialHeading?.officialLabel ?? notionId;
-  const hasDocuments = ["acte-union", "acte-de-l-amerique-du-nord-britannique", "gouvernement-responsable", "rebellions-1837-1838", "economie-coloniale", "affaires-indiennes", "relations-federales-provinciales", "premiere-phase-d-industrialisation"].includes(notionId);
+  const hasDocuments = ["acte-union", "acte-de-l-amerique-du-nord-britannique", "gouvernement-responsable", "rebellions-1837-1838", "economie-coloniale", "affaires-indiennes", "relations-federales-provinciales", "premiere-phase-d-industrialisation", "politique-nationale"].includes(notionId);
   return <main className="reference-admin document-bank">
     <header className="reference-admin__header">
       <div><p>Administration · Référentiel pédagogique</p><h1>{notionLabel}</h1><span>{officialHeading ? `${SECONDARY_FOUR_PERIODS.find(({ id }) => id === officialHeading.periodId)?.officialPeriodLabel} · Dossier de la notion` : "Notion historique"}</span></div>
@@ -134,6 +138,7 @@ export function HistoricalDocumentsNotionPage({ notionId }: { notionId: string }
     {notionId === "acte-de-l-amerique-du-nord-britannique" && [...BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS, ...BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS].map((document) => <ReviewableTextDocument document={document} key={document.id} />)}
 
     {notionId === "economie-coloniale" && <><ComparisonChartDocument chart={COLONIAL_ECONOMY_RECIPROCITY_EXPORTS_CHART} />{COLONIAL_ECONOMY_PRIMARY_DOCUMENTS.map((document) => <ReviewableTextDocument document={document} key={document.id} />)}</>}
+    {notionId === "politique-nationale" && [...POLITIQUE_NATIONALE_TARIFF_COMPARISON_DOCUMENTS, ...POLITIQUE_NATIONALE_CRISIS_MANIFESTATION_DOCUMENTS, ...POLITIQUE_NATIONALE_CAUSAL_LINKS_NEW_DOCUMENTS, POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT, POLITIQUE_NATIONALE_MACDONALD_MOTIVES_DOCUMENT].map((document) => <ReviewableTextDocument document={document} key={document.id} />)}
     {notionId === "premiere-phase-d-industrialisation" && <section className="document-bank__iconography" aria-labelledby="industrialization-iconography-title">
       <div className="document-bank__section-title"><p>Notion · Première phase d’industrialisation</p><h2 id="industrialization-iconography-title">Documents iconographiques</h2><span>Quatre sources visuelles sur les canaux, les obstacles à la navigation, le chemin de fer et le pont Victoria.</span></div>
       <div className="iconographic-document-grid">{INDUSTRIALIZATION_ICONOGRAPHIC_DOCUMENTS.map((document) => <article id={document.id} className="iconographic-document-card" key={document.id}>

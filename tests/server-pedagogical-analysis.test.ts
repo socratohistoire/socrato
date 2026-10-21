@@ -41,6 +41,7 @@ test("utilise le serveur pour une activité persistée et garde le moteur local 
 
 test("utilise une analyse locale prudente après l’échec des tentatives OpenAI", async () => {
   const source = await readFile(actionPath, "utf8");
-  assert.match(source, /if \(lastError\) candidate = analyzeDeterministically\(response, definition\)/);
+  assert.match(source, /if \(lastError\) \{[\s\S]*candidate = analyzeDeterministically\(response, definition\)[\s\S]*usedFallback = true/);
+  assert.match(source, /return \{ ok: true as const, analysis, usedFallback \}/);
   assert.doesNotMatch(source, /if \(lastError\) throw lastError/);
 });

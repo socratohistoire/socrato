@@ -267,7 +267,7 @@ export interface ApprovedQuestion {
     chronologicalAnchor?: { year: string; label: string };
     correction?: string;
     documentId?: string;
-    map?: { imageUrl: string; imageAlt: string };
+    map?: { imageUrl: string; imageAlt: string; dropLabel?: string };
     items: readonly { id: string; label: string; imageUrl?: string; imageAlt?: string }[];
     targets: readonly { id: string; label?: string; description: string; imageUrl?: string; imageAlt?: string; correctItemId: string; zone?: { x: number; y: number; width: number; height: number } }[];
     categories?: readonly { id: string; label: string; articleLabel: string; description: string; correctItemIds: readonly string[] }[];

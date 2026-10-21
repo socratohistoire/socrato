@@ -1,0 +1,88 @@
+import type { HistoricalDocumentRecord } from "./historical-document.ts";
+import type { ApprovedQuestion, ReferenceSource } from "./types.ts";
+
+export const POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT = {
+  schemaVersion: 1,
+  id: "PN-I-001",
+  title: "Free Farms for the Million : des terres gratuites dans l’Ouest",
+  kind: "image",
+  status: "ready-for-review",
+  periodIds: ["1840-1896"],
+  knowledgeHeadingIds: ["politique-nationale"],
+  operationIds: ["establish_facts", "relationships_between_facts"],
+  historicalDate: "vers 1890",
+  creator: "Gouvernement du Canada, ministère de l’Intérieur",
+  holdingInstitution: "Bibliothèque et Archives Canada",
+  sourceUrl: "https://recherche-collection-search.bac-lac.gc.ca/eng/home/record?idnumber=2943516&app=fonandcol&resource=folderlist&ecopy=c095320k",
+  sourceLocator: "Affiche « Free Farms for the Million », no d’article 2943516, négatif C-095320, accession 1996-063 DAP",
+  assetUrl: "/historical-documents/politique-nationale-free-farms-million-ca-1890.jpg",
+  rightsStatement: "Bibliothèque et Archives Canada, accession 1996-063 DAP; droit d’auteur expiré. Copie numérique diffusée par Alloprof à partir du document de BAC.",
+  transcription: "Free Farms for the Million. Free farms of 160 acres: Manitoba, Canadian North-West and British Columbia. Vast coal fields at convenient distances; climate the healthiest in the world. The Canadian Pacific Railway: the only line running through the great wheat fields.",
+  accessibleDescription: "Affiche gouvernementale illustrée portant le titre « Free Farms for the Million ». Elle annonce en gros caractères des fermes gratuites de 160 acres au Manitoba, dans le Nord-Ouest canadien et en Colombie-Britannique. Une carte du monde, des champs cultivés, des fermes et un train du Canadien Pacifique présentent l’Ouest comme une destination agricole prospère et accessible.",
+  historicalContext: "Vers 1890, le gouvernement canadien fait la promotion de l’établissement agricole dans l’Ouest. La Loi des terres fédérales permet l’obtention d’une concession de 160 acres sous certaines conditions de résidence, de construction et de mise en culture.",
+  observationGuide: [
+    "Repérer la superficie de terre annoncée et les territoires nommés.",
+    "Identifier le public que l’affiche cherche à attirer.",
+    "Relier l’offre de terres à la colonisation de l’Ouest.",
+  ],
+  interpretationCautions: [
+    "Il s’agit d’une publicité gouvernementale : les paysages prospères et les slogans cherchent à convaincre et ne présentent pas les difficultés de l’établissement.",
+    "Les terres ne sont pas remises sans condition, malgré le mot « gratuites ».",
+    "L’affiche présente comme disponibles des territoires déjà habités et utilisés par des Premières Nations et des Métis.",
+  ],
+  pedagogicalUses: [
+    "Identifier la colonisation des terres de l’Ouest comme mesure de la Politique nationale.",
+    "Expliquer comment l’offre de concessions sert à attirer des immigrants et à favoriser leur établissement agricole.",
+  ],
+  version: "0.1.0",
+  approvedAt: null,
+} as const satisfies HistoricalDocumentRecord;
+
+const POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_SOURCE: ReferenceSource = {
+  id: `document-source:${POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.id}`,
+  kind: "government",
+  title: "Free Farms for the Million",
+  creator: "Gouvernement du Canada, ministère de l’Intérieur",
+  publisher: "Bibliothèque et Archives Canada",
+  publicationYear: 1890,
+  url: POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.sourceUrl,
+  locator: POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.sourceLocator,
+  rightsNote: POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.rightsStatement,
+  verificationStatus: "verified",
+};
+
+export const POLITIQUE_NATIONALE_FREE_FARMS_MEASURE_QUESTION = {
+  schemaVersion: 1,
+  id: "question:politique-nationale:document-interpretation-004",
+  scope: "notional",
+  knowledgeHeadingId: "politique-nationale",
+  relatedKnowledgeHeadingIds: ["politique-nationale"],
+  referenceCardId: "reference-card:politique-nationale",
+  historicalRecordId: "historical-record:politique-nationale",
+  status: "ready-for-review",
+  format: "document-interpretation",
+  prompt: "Explique une des mesures de la Politique nationale mise de l’avant par ce document historique.",
+  instruction: "Identifie la mesure, puis appuie ton explication sur un élément précis de l’affiche.",
+  expectedAnswer: "Le document met de l’avant la colonisation des terres de l’Ouest. Le gouvernement offre des concessions de 160 acres au Manitoba, dans les Territoires du Nord-Ouest et en Colombie-Britannique afin d’attirer des immigrants et de favoriser leur établissement comme agriculteurs. L’offre est présentée comme gratuite dans la publicité, mais l’obtention définitive de la terre exige le respect de conditions de résidence et de mise en valeur.",
+  historicalDocumentIds: [POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT.id],
+  commonErrors: [
+    "Nommer seulement l’immigration sans expliquer l’établissement sur des terres de l’Ouest.",
+    "Identifier la politique tarifaire uniquement parce que le Canadien Pacifique apparaît sur l’affiche.",
+    "Affirmer que les terres sont remises immédiatement sans aucune condition.",
+    "Présenter les territoires annoncés comme des espaces inhabités.",
+  ],
+  distractors: [],
+  operationId: "establish_facts",
+  sourceIds: [POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_SOURCE.id],
+  sourceCatalog: [POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_SOURCE],
+  rationale: "Le titre, la superficie de 160 acres et les régions nommées permettent à l’élève d’identifier puis d’expliquer la colonisation des terres de l’Ouest à partir d’indices visibles dans une publicité gouvernementale contemporaine.",
+  review: {
+    documented: true,
+    historicallyVerified: true,
+    pedagogicallyVerified: false,
+    biasAndLanguageReviewed: true,
+    approvedBy: null,
+    approvedVersion: null,
+    approvedAt: null,
+  },
+} as const satisfies ApprovedQuestion;

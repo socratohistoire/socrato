@@ -1,12 +1,14 @@
 import { getDashboardUrl } from "../student-dashboard/selection.ts";
 import type { DashboardMode } from "../student-dashboard/types.ts";
 import type { StudentLearningSessionProvider } from "./provider.ts";
+import { useLocalStudentDemo } from "../student-access/local-runtime.ts";
 import type { LearningSessionQuestion, StudentLearningSessionData } from "./types.ts";
 import { ACTE_UNION_CAUSAL_PILOT_DOCUMENTS, ACTE_UNION_DOCUMENTS } from "./document-catalog.ts";
 import { ACTE_UNION_CAUSAL_PILOT_QUESTION, ACTE_UNION_POLITICAL_INSTITUTIONS_ASSOCIATION_QUESTION, ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION, FEDERAL_PROVINCIAL_RELATIONS_COMPETENCIES_ASSOCIATION_QUESTION, PEDAGOGICAL_QUESTION_CATALOG, RESPONSIBLE_GOVERNMENT_CAUSAL_CHAIN_QUESTION, RESPONSIBLE_GOVERNMENT_TIMELINE_SHORT_ANSWER_QUESTION } from "../pedagogical-reference/question-catalog.ts";
 import { INTELLECTUAL_OPERATIONS } from "../pedagogical-reference/intellectual-operations.ts";
 import type { ApprovedQuestion } from "../pedagogical-reference/types.ts";
 import { CAUSES_CONSEQUENCES_LEARNING_QUESTION, CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID, INTELLECTUAL_OPERATION_LEARNING_DOCUMENTS } from "../teacher-activity-creator/intellectual-operation-learning.ts";
+import { TRANSVERSAL_FEDERAL_CHRONOLOGY_QUESTION } from "../pedagogical-reference/transversal-federal-chronology-question.ts";
 
 const DEMO_ACTIVITIES = new Set([
   "demo-activity-acte-union",
@@ -16,6 +18,16 @@ const DEMO_ACTIVITIES = new Set([
   "demo-activity-association",
   "demo-activity-federal-provincial-competencies",
   "demo-activity-causal-chain",
+  "demo-activity-politique-nationale",
+  "demo-activity-politique-nationale-crise",
+  "demo-activity-politique-nationale-causalite",
+  "demo-activity-politique-nationale-terres-gratuites",
+  "demo-activity-politique-nationale-macdonald-motifs",
+  "demo-activity-politique-nationale-marche-interieur",
+  "demo-activity-politique-nationale-fonctions-cpr",
+  "demo-activity-politique-nationale-projet-economique-territorial",
+  "demo-activity-politique-nationale-objectifs-1879",
+  "demo-activity-politique-nationale-espaces",
 ]);
 
 const PUBLISHED_TEST_QUESTION_IDS = [
@@ -34,7 +46,10 @@ export function createCatalogLearningSessionQuestions(questionIds: readonly stri
     return question ? [question] : [];
   });
   const questions: LearningSessionQuestion[] = approvedQuestions.map((question, index) => {
-    const documents = catalog.filter((document) => question.historicalDocumentIds.includes(document.id));
+    const documents = question.historicalDocumentIds.flatMap((documentId) => {
+      const document = catalog.find(({ id }) => id === documentId);
+      return document ? [document] : [];
+    });
     const operation = INTELLECTUAL_OPERATIONS.find(({ id: operationId }) => operationId === question.operationId);
     const historicalKnowledgeIds = [...new Set([
       ...question.relatedKnowledgeHeadingIds,
@@ -80,25 +95,45 @@ export function createDemoStudentLearningSession(
   requestedMode: DashboardMode = "teacher-assigned",
 ): StudentLearningSessionData | null {
   if (!DEMO_ACTIVITIES.has(activityId)) return null;
-  const notionId = requestedNotionId === "industrialisation" || requestedNotionId === "gouvernement-responsable" || requestedNotionId === "relations-federales-provinciales" ? requestedNotionId : "acte-union";
-  const notionTitle = notionId === "industrialisation" ? "Industrialisation" : notionId === "gouvernement-responsable" ? "Gouvernement responsable" : notionId === "relations-federales-provinciales" ? "Relations fédérales-provinciales" : "Acte d’union";
+  const notionId = requestedNotionId === "industrialisation" || requestedNotionId === "gouvernement-responsable" || requestedNotionId === "relations-federales-provinciales" || requestedNotionId === "acte-de-l-amerique-du-nord-britannique" || requestedNotionId === "politique-nationale" ? requestedNotionId : "acte-union";
+  const notionTitle = notionId === "industrialisation" ? "Industrialisation" : notionId === "gouvernement-responsable" ? "Gouvernement responsable" : notionId === "relations-federales-provinciales" ? "Relations fédérales-provinciales" : notionId === "acte-de-l-amerique-du-nord-britannique" ? "Affaires indiennes · AANB · Relations fédérales-provinciales" : notionId === "politique-nationale" ? "Politique nationale" : "Acte d’union";
   const activityTitle = activityId === "demo-activity-acte-union"
     ? "Révision avant l’évaluation 1"
     : activityId === "demo-activity-causal-chain"
       ? "Chaîne politique du gouvernement responsable"
     : activityId === "demo-activity-timeline"
-      ? notionId === "gouvernement-responsable" ? "Chronologie du gouvernement responsable" : "Révision avant l’évaluation"
+      ? notionId === "gouvernement-responsable" ? "Chronologie du gouvernement responsable" : notionId === "acte-de-l-amerique-du-nord-britannique" ? "Chronologie transversale" : "Révision avant l’évaluation"
     : activityId === "demo-activity-industrialisation"
       ? "Révision – Industrialisation"
     : activityId === "demo-activity-federal-provincial-competencies"
       ? "Classement des compétences fédérales et provinciales"
+    : activityId === "demo-activity-politique-nationale"
+      ? "Comparer les effets du tarif protecteur"
+    : activityId === "demo-activity-politique-nationale-crise"
+      ? "Deux manifestations de la crise de 1873"
+    : activityId === "demo-activity-politique-nationale-causalite"
+      ? "Tarifs, chemin de fer et colonisation"
+    : activityId === "demo-activity-politique-nationale-terres-gratuites"
+      ? "Les terres gratuites dans l’Ouest"
+    : activityId === "demo-activity-politique-nationale-macdonald-motifs"
+      ? "Pourquoi Macdonald propose la Politique nationale"
+    : activityId === "demo-activity-politique-nationale-marche-interieur"
+      ? "Le Canadien Pacifique et le marché intérieur"
+    : activityId === "demo-activity-politique-nationale-fonctions-cpr"
+      ? "Les fonctions du Canadien Pacifique"
+    : activityId === "demo-activity-politique-nationale-projet-economique-territorial"
+      ? "Un même projet économique et territorial"
+    : activityId === "demo-activity-politique-nationale-objectifs-1879"
+      ? "Les objectifs de la Politique nationale"
+    : activityId === "demo-activity-politique-nationale-espaces"
+      ? "Les espaces de la Politique nationale"
       : "Révision de l’Acte d’Union";
   const hasActeUnionDocuments = notionId === "acte-union";
   const isTimelinePrototype = activityId === "demo-activity-timeline";
   const isCompetencyAssociationPrototype = activityId === "demo-activity-federal-provincial-competencies";
   const isAssociationPrototype = activityId === "demo-activity-association" || isCompetencyAssociationPrototype;
   const isCausalChainPrototype = activityId === "demo-activity-causal-chain";
-  const timelineQuestion = notionId === "gouvernement-responsable" ? RESPONSIBLE_GOVERNMENT_TIMELINE_SHORT_ANSWER_QUESTION : ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION;
+  const timelineQuestion = notionId === "gouvernement-responsable" ? RESPONSIBLE_GOVERNMENT_TIMELINE_SHORT_ANSWER_QUESTION : notionId === "acte-de-l-amerique-du-nord-britannique" ? TRANSVERSAL_FEDERAL_CHRONOLOGY_QUESTION : ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION;
   const associationQuestion = isCompetencyAssociationPrototype ? FEDERAL_PROVINCIAL_RELATIONS_COMPETENCIES_ASSOCIATION_QUESTION : ACTE_UNION_POLITICAL_INSTITUTIONS_ASSOCIATION_QUESTION;
   const associationOperation = INTELLECTUAL_OPERATIONS.find(({ id }) => id === associationQuestion.operationId);
 
@@ -114,6 +149,196 @@ export function createDemoStudentLearningSession(
       historicalPeriod: { startYear: 1840, endYear: 1896 },
       currentQuestionIndex: 0,
       dashboardHref: getDashboardUrl("acte-union", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-politique-nationale") {
+    const published = createCatalogLearningSessionQuestions(["question:politique-nationale:document-interpretation-001"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "politique-nationale",
+      notionTitle: "Politique nationale",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("politique-nationale", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-politique-nationale-crise") {
+    const published = createCatalogLearningSessionQuestions(["question:politique-nationale:document-interpretation-002"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "politique-nationale",
+      notionTitle: "Politique nationale",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("politique-nationale", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-politique-nationale-causalite") {
+    const published = createCatalogLearningSessionQuestions(["question:politique-nationale:document-interpretation-003"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "politique-nationale",
+      notionTitle: "Politique nationale",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("politique-nationale", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-politique-nationale-terres-gratuites") {
+    const published = createCatalogLearningSessionQuestions(["question:politique-nationale:document-interpretation-004"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "politique-nationale",
+      notionTitle: "Politique nationale",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("politique-nationale", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-politique-nationale-macdonald-motifs") {
+    const published = createCatalogLearningSessionQuestions(["question:politique-nationale:document-interpretation-005"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "politique-nationale",
+      notionTitle: "Politique nationale",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("politique-nationale", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-politique-nationale-marche-interieur") {
+    const published = createCatalogLearningSessionQuestions(["question:politique-nationale:document-interpretation-006"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "politique-nationale",
+      notionTitle: "Politique nationale",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("politique-nationale", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-politique-nationale-fonctions-cpr") {
+    const published = createCatalogLearningSessionQuestions(["question:politique-nationale:document-interpretation-007"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "politique-nationale",
+      notionTitle: "Politique nationale",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("politique-nationale", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-politique-nationale-projet-economique-territorial") {
+    const published = createCatalogLearningSessionQuestions(["question:politique-nationale:document-interpretation-008"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "politique-nationale",
+      notionTitle: "Politique nationale",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("politique-nationale", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-politique-nationale-objectifs-1879") {
+    const published = createCatalogLearningSessionQuestions(["question:politique-nationale:document-interpretation-009"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "politique-nationale",
+      notionTitle: "Politique nationale",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("politique-nationale", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-politique-nationale-espaces") {
+    const published = createCatalogLearningSessionQuestions(["question:politique-nationale:interactive-association-001"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "politique-nationale",
+      notionTitle: "Politique nationale",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("politique-nationale", "teacher-assigned", activityId),
       source: "local_demo",
       localDemoNotice: "",
       documentCatalog: published.documents,
@@ -175,10 +400,10 @@ export function createDemoStudentLearningSession(
           { id: "time_and_space", label: "Situer dans le temps et dans l’espace" },
           { id: "relationships_between_facts", label: "Mettre en relation des faits" },
         ],
-        historicalKnowledgeIds: notionId === "gouvernement-responsable" ? ["gouvernement-responsable", "alliance-reformistes", "instabilite-ministerielle"] : ["rebellions-1837-1838", "rapport-durham", "acte-union-1840", "gouvernement-responsable"],
+        historicalKnowledgeIds: [...timelineQuestion.relatedKnowledgeHeadingIds],
         documentRelations: [],
         requiredDocumentIds: [],
-        localHint: notionId === "gouvernement-responsable" ? "Repère le mouvement général : union politique en 1841, lutte pour la confiance de l’Assemblée, reconnaissance du principe en 1848, mise à l’épreuve en 1849, puis solution à l’instabilité en 1864." : "Distingue bien deux étapes voisines : l’Acte d’Union est adopté en 1840, puis il entre en vigueur et crée la Province du Canada en 1841.",
+        localHint: "initialGuidance" in timelineQuestion ? timelineQuestion.initialGuidance : timelineQuestion.instruction,
         initialMessages: [{ id: "timeline-welcome", author: "socrato", content: "Bonjour, observe chaque image et sa description. Sélectionne ensuite une carte et place-la sous la bonne date." }],
         timelineInteraction: timelineQuestion.timelineInteraction,
       } : {
@@ -217,7 +442,7 @@ export class LocalDemoStudentLearningSessionProvider
     requestedNotionId?: string,
     requestedMode?: string,
   ): Promise<StudentLearningSessionData | null> {
-    if (process.env.NODE_ENV === "production") {
+    if (process.env.NODE_ENV === "production" && !useLocalStudentDemo()) {
       throw new Error("The local demonstration learning-session provider is disabled in production.");
     }
     const mode: DashboardMode = requestedMode === "notion-review" ? "notion-review" : "teacher-assigned";
