@@ -1,7 +1,7 @@
 import { getDashboardUrl } from "../student-dashboard/selection.ts";
 import type { DashboardMode } from "../student-dashboard/types.ts";
 import type { StudentLearningSessionProvider } from "./provider.ts";
-import { useLocalStudentDemo } from "../student-access/local-runtime.ts";
+import { isLocalStudentDemoEnabled } from "../student-access/local-runtime.ts";
 import type { LearningSessionQuestion, StudentLearningSessionData } from "./types.ts";
 import { ACTE_UNION_CAUSAL_PILOT_DOCUMENTS, ACTE_UNION_DOCUMENTS } from "./document-catalog.ts";
 import { ACTE_UNION_CAUSAL_PILOT_QUESTION, ACTE_UNION_POLITICAL_INSTITUTIONS_ASSOCIATION_QUESTION, ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION, FEDERAL_PROVINCIAL_RELATIONS_COMPETENCIES_ASSOCIATION_QUESTION, PEDAGOGICAL_QUESTION_CATALOG, RESPONSIBLE_GOVERNMENT_CAUSAL_CHAIN_QUESTION, RESPONSIBLE_GOVERNMENT_TIMELINE_SHORT_ANSWER_QUESTION } from "../pedagogical-reference/question-catalog.ts";
@@ -442,7 +442,7 @@ export class LocalDemoStudentLearningSessionProvider
     requestedNotionId?: string,
     requestedMode?: string,
   ): Promise<StudentLearningSessionData | null> {
-    if (process.env.NODE_ENV === "production" && !useLocalStudentDemo()) {
+    if (process.env.NODE_ENV === "production" && !isLocalStudentDemoEnabled()) {
       throw new Error("The local demonstration learning-session provider is disabled in production.");
     }
     const mode: DashboardMode = requestedMode === "notion-review" ? "notion-review" : "teacher-assigned";

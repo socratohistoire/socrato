@@ -21,5 +21,5 @@ test("Revenue comparison asks for one difference and one similarity", () => {
   assert.equal(PROVINCIAL_REVENUE_TABLE.rows.length, 5);
   assert.equal(PROVINCIAL_REVENUE_TABLE.rows[0].value, "Dans la province, pour financer des responsabilités provinciales.");
   assert.equal(ACTE_UNION_DOCUMENTS.find(({ id }) => id === "RFP-T-009")?.content.kind, "comparison_table");
-  assert.match(GOVERNMENT_REVENUE_DOCUMENTS[1].transcription, /tous modes.*taxation directe.*terres.*forêts.*subventions/s);
+  assert.match(GOVERNMENT_REVENUE_DOCUMENTS[1].transcription, /tous modes[\s\S]*taxation directe[\s\S]*terres[\s\S]*forêts[\s\S]*subventions/);
 });

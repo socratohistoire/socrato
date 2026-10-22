@@ -3,7 +3,7 @@ import type { ProgressStatus, StudentActivity, StudentDashboardData } from "./ty
 import { ACTE_UNION_HISTORICAL_KNOWLEDGE, ACTE_UNION_NOTION_ID } from "./historical-knowledge-catalog.ts";
 import { getActivityDashboardUrl, getLearningSessionUrl, resolveSelectedActivityId } from "./selection.ts";
 import { INTELLECTUAL_OPERATIONS } from "../pedagogical-reference/intellectual-operations.ts";
-import { useLocalStudentDemo } from "../student-access/local-runtime.ts";
+import { isLocalStudentDemoEnabled } from "../student-access/local-runtime.ts";
 
 export const DEMO_INTELLECTUAL_OPERATIONS = INTELLECTUAL_OPERATIONS.map(({ id, officialLabel }) => ({ id, label: officialLabel }));
 
@@ -142,7 +142,7 @@ export function createDemoStudentDashboard(requestedActivityId?: string): Studen
 
 export class LocalDemoStudentDashboardProvider implements StudentDashboardProvider {
   async getForAnonymousStudent(_anonymousStudentId: string, requestedActivityId?: string) {
-    if (process.env.NODE_ENV === "production" && !useLocalStudentDemo()) {
+    if (process.env.NODE_ENV === "production" && !isLocalStudentDemoEnabled()) {
       throw new Error("The local demonstration dashboard provider is disabled in production.");
     }
     return createDemoStudentDashboard(requestedActivityId);

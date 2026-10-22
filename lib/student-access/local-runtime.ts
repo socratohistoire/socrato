@@ -90,7 +90,7 @@ export type StudentAccessRuntime = {
   clientContext(rawContext: string): string;
 };
 
-export function useLocalStudentDemo() {
+export function isLocalStudentDemoEnabled() {
   return process.env.SOCRATO_LOCAL_DEMO === "1";
 }
 
@@ -115,7 +115,7 @@ const runtimeGlobal = globalThis as typeof globalThis & {
 };
 
 export function getStudentAccessRuntime(): StudentAccessRuntime {
-  const localDemo = useLocalStudentDemo();
+  const localDemo = isLocalStudentDemoEnabled();
   if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL && !localDemo) {
     throw new Error(
       "Student access requires the database repository in production.",

@@ -8,7 +8,7 @@ import { createDemoStudentLearningSession } from "../lib/student-learning-sessio
 test("prépare une association spatiale avec trois mesures de la Politique nationale", () => {
   const interaction = POLITIQUE_NATIONALE_SPATIAL_ASSOCIATION_QUESTION.associationInteraction;
   assert.equal(POLITIQUE_NATIONALE_SPATIAL_ASSOCIATION_QUESTION.operationId, "time_and_space");
-  assert.match(POLITIQUE_NATIONALE_SPATIAL_ASSOCIATION_QUESTION.prompt, /En 1882.*Place chaque mesure au bon endroit/s);
+  assert.match(POLITIQUE_NATIONALE_SPATIAL_ASSOCIATION_QUESTION.prompt, /En 1882[\s\S]*Place chaque mesure au bon endroit/);
   assert.equal(interaction.map.imageUrl, "/historical-documents/politique-nationale-carte-1882-interactive.png");
   assert.equal(interaction.items.length, 3);
   assert.equal(interaction.targets.length, 3);
