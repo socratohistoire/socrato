@@ -39,6 +39,13 @@ test("utilise le serveur pour une activité persistée et garde le moteur local 
   assert.match(source, /new LocalDeterministicResponseAnalyzer\(\)/);
 });
 
+test("relie les aperçus enseignants à l’analyse IA du serveur en production", async () => {
+  const source = await readFile(viewPath, "utf8");
+  assert.match(source, /teacherApiTest \|\| teacherPreview/);
+  assert.match(source, /analyzeTeacherTestResponse/);
+  assert.match(source, /teacherApiTest, teacherPreview/);
+});
+
 test("utilise une analyse locale prudente après l’échec des tentatives OpenAI", async () => {
   const source = await readFile(actionPath, "utf8");
   assert.match(source, /if \(lastError\) \{[\s\S]*candidate = analyzeDeterministically\(response, definition\)[\s\S]*usedFallback = true/);

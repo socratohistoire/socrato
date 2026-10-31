@@ -129,7 +129,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
   const analysisFallbackRef = useRef(false);
   const analyzer = useMemo<ResponseAnalyzer>(() => data.questions.some(({ id }) => id === CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID)
     ? new CausesConsequencesLearningAnalyzer()
-    : teacherApiTest ? {
+    : teacherApiTest || teacherPreview ? {
     async analyze(response) {
       teacherAnalysisErrorRef.current = "";
       const result = await analyzeTeacherTestResponse({
@@ -165,7 +165,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
     async analyze() {
       throw new Error("L’analyse locale de démonstration n’est pas disponible en production.");
     },
-  } : new LocalDeterministicResponseAnalyzer(), [data.consolidationContext?.parentActivityId, data.source, teacherApiTest]);
+  } : new LocalDeterministicResponseAnalyzer(), [data.consolidationContext?.parentActivityId, data.source, teacherApiTest, teacherPreview]);
   const [engineState, setEngineState] = useState(initialEngineState);
   const [progressReady, setProgressReady] = useState(!persistProgress || data.source === "server");
   const [persistenceMessage, setPersistenceMessage] = useState("");

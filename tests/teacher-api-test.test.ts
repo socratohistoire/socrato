@@ -232,6 +232,10 @@ test("réserve le banc d’essai à l’enseignant et ne touche pas à la progre
   assert.match(page, /requireTeacherActor/);
   assert.match(action, /requireTeacherActor/);
   assert.match(action, /createConfiguredOpenAIPedagogicalAnalyzer/);
+  assert.match(action, /"migrations": "Migrations"/);
+  assert.match(action, /"politique-nationale": "Politique nationale"/);
+  assert.match(action, /"presence-de-l-eglise-catholique": "Présence de l’Église catholique"/);
+  assert.match(action, /"manifestations-socioculturelles": "Manifestations socioculturelles"/);
   assert.doesNotMatch(action, /student-progress|saveProgress|transitionStudentProgress/);
   assert.match(dashboard, /href="\/teacher\/api-test"/);
   assert.match(dashboard, /Réviser les questions/);

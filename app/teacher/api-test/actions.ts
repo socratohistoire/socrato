@@ -20,6 +20,10 @@ const TEST_NOTIONS = {
   "affaires-indiennes": "Affaires indiennes",
   "acte-de-l-amerique-du-nord-britannique": "Acte de l’Amérique du Nord britannique",
   "relations-federales-provinciales": "Relations fédérales-provinciales",
+  "politique-nationale": "Politique nationale",
+  "migrations": "Migrations",
+  "presence-de-l-eglise-catholique": "Présence de l’Église catholique",
+  "manifestations-socioculturelles": "Manifestations socioculturelles",
 } as const;
 
 export async function analyzeTeacherTestResponse(request: TestRequest) {
