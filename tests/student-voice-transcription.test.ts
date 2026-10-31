@@ -175,35 +175,19 @@ test("le prototype échoue fermé en production", async () => {
   assert.equal(local.requestCount(), 0);
 });
 
-test("la Page 3 insère la simulation sans soumission automatique et conserve le clavier", () => {
+test("la page de question conserve le clavier sans exposer la dictée", () => {
   const view = readFileSync("app/eleve/activite/[activityId]/session-view.tsx", "utf8");
-  assert.match(view, /setResponse\(\(current\) => appendVoiceTranscript\(current, text\)\)/);
-  assert.match(view, /Dictée prête/);
   assert.match(view, /onKeyDown=\{handleResponseKeyDown\}/);
-  assert.match(view, /requestAnimationFrame\(\(\) => responseInputRef\.current\?\.focus\(\)\)/);
-  const voiceCallback = view.match(/onSimulatedTranscript:[\s\S]*?requestAnimationFrame\(\(\) => responseInputRef\.current\?\.focus\(\)\);\n      \}/)?.[0] ?? "";
-  assert.doesNotMatch(voiceCallback, /sendLocalResponse|submitStudentResponse/);
+  assert.doesNotMatch(view, /appendVoiceTranscript|LocalVoiceCaptureController|Dictée prête/);
 });
 
-test("rend immédiatement un état recording explicite, chronométré et accessible", () => {
+test("ne rend aucun contrôle de microphone dans les questions", () => {
   const view = readFileSync("app/eleve/activite/[activityId]/session-view.tsx", "utf8");
   const css = readFileSync("app/eleve/activite/[activityId]/session.css", "utf8");
-  assert.match(view, /voiceState\.status === "recording" \? \([\s\S]*voice-stop-button/);
-  assert.match(view, /<span>Arrêter<\/span>/);
-  assert.match(view, /className="voice-stop-icon"[\s\S]*<rect/);
-  assert.match(view, /Enregistrement en cours/);
-  assert.match(view, /formatRecordingDuration\(voiceState\.elapsedSeconds\)/);
-  assert.match(view, /voiceState\.status === "stopping" \|\| voiceState\.status === "transcribing"/);
-  assert.match(view, /className="voice-processing-state"/);
-  assert.match(view, /aria-pressed="true"/);
-  assert.match(view, /const sendUnavailable = !response\.trim\(\) \|\| responseUnavailable \|\| voiceBlocksSending/);
+  assert.match(view, /const sendUnavailable = !response\.trim\(\) \|\| responseUnavailable/);
   assert.match(view, /aria-label="Envoyer ma réponse" title="Envoyer ma réponse"/);
-  assert.match(view, /id="voice-status"[\s\S]*aria-live="polite"/);
-  assert.match(view, /permission_denied" \|\| voiceState\.status === "error" \? "Réessayer"/);
-  assert.match(css, /\.voice-stop-button \{[^}]*background:#b32636/);
-  assert.match(css, /\.voice-recording-dot \{[^}]*animation:voice-recording-pulse/);
-  assert.match(css, /@media \(prefers-reduced-motion:reduce\)/);
-  assert.doesNotMatch(view.match(/voiceState\.status === "recording" \? \([\s\S]*?\) : \(/)?.[0] ?? "", /Dicter ma réponse/);
+  assert.doesNotMatch(view, /voice-button|microphone-icon|voice-status|Dicter ma réponse|Enregistrement en cours/);
+  assert.doesNotMatch(css, /\.voice-button|\.microphone-icon|\.voice-status|\.voice-stop-button/);
 });
 
 test("ajoute la transcription sans écraser un champ vide ou existant", () => {

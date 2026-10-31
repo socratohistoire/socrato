@@ -1,0 +1,88 @@
+import type { HistoricalDocumentRecord } from "./historical-document.ts";
+import type { ApprovedQuestion, ReferenceSource } from "./types.ts";
+
+export const MIGRATIONS_URBAN_POPULATION_EVOLUTION_DOCUMENT = {
+  schemaVersion: 1,
+  id: "MIG-S-001",
+  title: "Part de la population urbaine au Québec, 1871-1891",
+  kind: "statistics",
+  status: "ready-for-review",
+  periodIds: ["1840-1896"],
+  knowledgeHeadingIds: ["migrations"],
+  operationIds: ["causes_and_consequences", "establish_facts"],
+  historicalDate: "1871-1891",
+  creator: "Gouvernement du Canada, Bureau du recensement",
+  holdingInstitution: "Statistique Canada",
+  sourceUrl: "https://www66.statcan.gc.ca/eng/1892/189201180102_p.%20102.pdf",
+  sourceLocator: "Recensement du Canada de 1890-91, volume I, chapitre II, « Proportions of urban and rural population, 1871-1891 », Ottawa, 1892, p. 102, ligne Québec",
+  assetUrl: "https://www66.statcan.gc.ca/eng/1892/189201180102_p.%20102.pdf",
+  rightsStatement: "Publication gouvernementale canadienne de 1892 appartenant au domaine public; les données de la ligne Québec sont reproduites et mises en tableau par Socrato.",
+  transcription: "1871 : population urbaine, 19,5 %; population rurale, 80,5 %. 1881 : population urbaine, 22,8 %; population rurale, 77,2 %. 1891 : population urbaine, 29,2 %; population rurale, 70,8 %.",
+  accessibleDescription: "Tableau statistique montrant que la part de la population urbaine du Québec augmente de 19,5 % en 1871 à 29,2 % en 1891, tandis que la part rurale diminue.",
+  historicalContext: "Les recensements de 1871, 1881 et 1891 montrent une urbanisation progressive du Québec pendant la seconde moitié du XIXe siècle. L’exode rural contribue à cette évolution lorsque des habitants quittent les campagnes pour s’établir dans les villes, notamment dans les centres industriels.",
+  observationGuide: [
+    "Comparer la part de la population urbaine en 1871 et en 1891.",
+    "Repérer l’évolution inverse de la part de la population rurale.",
+    "Relier cette évolution à un mouvement de population à l’intérieur du Québec.",
+  ],
+  interpretationCautions: [
+    "Le tableau présente une évolution statistique, mais ne permet pas à lui seul d’en mesurer toutes les causes.",
+    "Dans ce recensement, la population urbaine habite des cités, des villes ou des villages constitués en municipalités.",
+  ],
+  pedagogicalUses: [
+    "Identifier l’exode rural comme un mouvement qui contribue à l’urbanisation.",
+    "Distinguer un mouvement intérieur de l’émigration vers les États-Unis et de l’immigration transatlantique.",
+  ],
+  version: "0.1.0",
+  approvedAt: null,
+} as const satisfies HistoricalDocumentRecord;
+
+const MIGRATIONS_URBAN_POPULATION_EVOLUTION_SOURCE: ReferenceSource = {
+  id: `document-source:${MIGRATIONS_URBAN_POPULATION_EVOLUTION_DOCUMENT.id}`,
+  kind: "government",
+  title: MIGRATIONS_URBAN_POPULATION_EVOLUTION_DOCUMENT.title,
+  creator: MIGRATIONS_URBAN_POPULATION_EVOLUTION_DOCUMENT.creator,
+  publisher: MIGRATIONS_URBAN_POPULATION_EVOLUTION_DOCUMENT.holdingInstitution,
+  publicationYear: 1892,
+  url: MIGRATIONS_URBAN_POPULATION_EVOLUTION_DOCUMENT.sourceUrl,
+  locator: MIGRATIONS_URBAN_POPULATION_EVOLUTION_DOCUMENT.sourceLocator,
+  rightsNote: MIGRATIONS_URBAN_POPULATION_EVOLUTION_DOCUMENT.rightsStatement,
+  verificationStatus: "verified",
+};
+
+export const MIGRATIONS_POPULATION_EVOLUTION_QUESTION = {
+  schemaVersion: 1,
+  id: "question:migrations:short-answer-001",
+  scope: "notional",
+  knowledgeHeadingId: "migrations",
+  relatedKnowledgeHeadingIds: ["migrations"],
+  referenceCardId: "reference-card:migrations",
+  historicalRecordId: "historical-record:migrations",
+  status: "ready-for-review",
+  format: "short-answer",
+  prompt: "Quel mouvement de population contribue à expliquer l’évolution présentée dans le document 1?",
+  instruction: "À l’aide du document 1 et de tes connaissances, nomme le mouvement de population et précise le sens du déplacement.",
+  initialGuidance: "J’attends ta réponse…",
+  expectedAnswer: "L’exode rural contribue à expliquer cette évolution. Des habitants quittent les campagnes pour s’établir dans les villes, ce qui contribue à l’augmentation de la part de la population urbaine et à la diminution de la part de la population rurale au Québec.",
+  historicalDocumentIds: [MIGRATIONS_URBAN_POPULATION_EVOLUTION_DOCUMENT.id],
+  commonErrors: [
+    "Nommer l’immigration transatlantique sans relier le déplacement des campagnes vers les villes à l’évolution observée.",
+    "Nommer seulement l’urbanisation sans identifier le mouvement de population qui y contribue.",
+    "Décrire une émigration vers les États-Unis plutôt qu’un déplacement à l’intérieur du Québec.",
+    "Inverser le sens du déplacement et présenter un départ des villes vers les campagnes.",
+  ],
+  distractors: [],
+  operationId: "causes_and_consequences",
+  sourceIds: [MIGRATIONS_URBAN_POPULATION_EVOLUTION_SOURCE.id],
+  sourceCatalog: [MIGRATIONS_URBAN_POPULATION_EVOLUTION_SOURCE],
+  rationale: "La hausse de la part urbaine et la baisse de la part rurale permettent de mobiliser l’exode rural comme facteur explicatif. La formulation « contribue à expliquer » évite de présenter ce mouvement comme l’unique cause de l’urbanisation.",
+  review: {
+    documented: true,
+    historicallyVerified: true,
+    pedagogicallyVerified: false,
+    biasAndLanguageReviewed: true,
+    approvedBy: null,
+    approvedVersion: null,
+    approvedAt: null,
+  },
+} as const satisfies ApprovedQuestion;

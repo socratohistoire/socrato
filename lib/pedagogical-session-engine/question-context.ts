@@ -1,4 +1,4 @@
-import { ACTE_UNION_HISTORICAL_RECORD, COLONIAL_ECONOMY_HISTORICAL_RECORD, INDIAN_AFFAIRS_HISTORICAL_RECORD, NATIONAL_POLICY_HISTORICAL_RECORD, RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD } from "../pedagogical-reference/index.ts";
+import { ACTE_UNION_HISTORICAL_RECORD, CATHOLIC_CHURCH_PRESENCE_HISTORICAL_RECORD, COLONIAL_ECONOMY_HISTORICAL_RECORD, INDIAN_AFFAIRS_HISTORICAL_RECORD, MIGRATIONS_HISTORICAL_RECORD, NATIONAL_POLICY_HISTORICAL_RECORD, RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD, SOCIOCULTURAL_MANIFESTATIONS_HISTORICAL_RECORD, WOMEN_ROLE_HISTORICAL_RECORD } from "../pedagogical-reference/index.ts";
 import type { LearningSessionDocument, LearningSessionQuestion } from "../student-learning-session/types.ts";
 import { BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD } from "../pedagogical-reference/records/acte-amerique-nord-britannique.ts";
 import { FEDERAL_PROVINCIAL_RELATIONS_HISTORICAL_RECORD } from "../pedagogical-reference/records/relations-federales-provinciales.ts";
@@ -50,6 +50,14 @@ function referenceMonograph(notionId: string) {
         ? FEDERAL_PROVINCIAL_RELATIONS_HISTORICAL_RECORD
       : notionId === "politique-nationale"
         ? NATIONAL_POLICY_HISTORICAL_RECORD
+      : notionId === "migrations"
+        ? MIGRATIONS_HISTORICAL_RECORD
+      : notionId === "presence-de-l-eglise-catholique"
+        ? CATHOLIC_CHURCH_PRESENCE_HISTORICAL_RECORD
+      : notionId === "role-des-femmes"
+        ? WOMEN_ROLE_HISTORICAL_RECORD
+      : notionId === "manifestations-socioculturelles"
+        ? SOCIOCULTURAL_MANIFESTATIONS_HISTORICAL_RECORD
       : undefined;
   if (!record) throw new Error("Aucune monographie pédagogique n’est configurée pour cette notion.");
   return {

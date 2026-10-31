@@ -8,6 +8,7 @@ import { StudentLearningSessionView } from "./session-view";
 import type { ConsolidationStrategyKey } from "@/lib/student-dashboard/selection";
 import type { StudentLearningSessionData } from "@/lib/student-learning-session/types";
 import "./session.css";
+import "./association-documents-compact.css";
 
 export default async function StudentLearningSessionPage({
   params,

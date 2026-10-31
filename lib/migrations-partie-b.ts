@@ -244,15 +244,15 @@ export const MIGRATIONS_DOCUMENTS = [
   },
   {
     number: 10,
-    date: "BAIE DE QUINTE",
+    date: "BOSTON (NOUVELLE-ANGLETERRE) ET HALIFAX, VERS 1776",
     title: "",
-    excerpt: "« Presque personne n’habitait autour de la baie de Quinte. Aucun colon n’avait encore osé s’installer dans les vastes forêts qui bordaient ses rives. Fidèle à mon roi et soutenu par mes compagnons, j’ai conduit un groupe de Loyalistes [de New York jusqu’à Cataraqui, dans la province de Québec de l’époque]. Nous y avons trouvé un endroit sûr où rester fidèles au roi, ainsi qu’un nouveau foyer. »",
-    note: "Extrait traduit, recomposé et adapté pour des élèves de 4e secondaire. Les crochets précisent le trajet et rappellent que Cataraqui faisait alors partie de la province de Québec, sans modifier le témoignage rétrospectif de Michael Grass.",
-    source: "Source primaire : Michael Grass, « For the Kingston Gazette », Kingston Gazette, 10 décembre 1811. Traduction pédagogique de Socrato.",
+    excerpt: "« Je t’ai écrit plusieurs fois pendant le siège de Boston, sans recevoir de réponse. Je suis privée de mon père, de ma mère, de mon frère et de mes sœurs, et je ne sais pas où ils se trouvent. On me dit que tu es maintenant à Halifax [après le départ de notre famille loyaliste de Boston, en Nouvelle-Angleterre]. Si cette lettre te parvient, donne-moi des nouvelles de toute notre famille. »",
+    note: "Extrait traduit et recomposé en quatre phrases à partir de la lettre anglaise. Les crochets explicitent le déplacement de la famille loyaliste de Boston vers Halifax, présenté dans la mise en contexte archivistique.",
+    source: "Source primaire : Lucy Knox, lettre à sa sœur loyaliste Hannah Urquhart, vers 1776. Gilder Lehrman Institute of American History, collection GLC02437.05380. Traduction pédagogique de Socrato.",
     supports: null,
     links: [
-      { url: "https://www.biographi.ca/fr/bio/grass_michael_5F.html", label: "Dictionnaire biographique du Canada — Michael Grass" },
-      { url: "https://www.uelac.org/Kingston-Branch/wp-content/uploads/2019/04/Turner_article_The_Founding_of_Kingston.pdf", label: "The Loyalist Gazette — transcription du passage" },
+      { url: "https://hamilton.gilderlehrman.org/supporting-document/lucy-knox-her-loyalist-sister-hannah-urquhart-ca-1776", label: "Gilder Lehrman Institute — lettre, transcription et contexte" },
+      { url: "https://www.historysource.org/history-source-sets/loyalists", label: "Massachusetts Historical Society — dossier pédagogique sur les Loyalistes" },
     ],
   },
 ] as const;
@@ -301,5 +301,5 @@ export const MIGRATIONS_DOCUMENT_FEEDBACK: Record<number, string> = {
   7: "À discriminer : le pont Victoria témoigne de l’industrialisation et du développement des infrastructures de transport. La photographie ne décrit toutefois aucun des mouvements migratoires ou des moyens d’intervention demandés dans le schéma.",
   8: "À discriminer : cette lettre décrit l’endettement, le manque de biens essentiels et le chômage vécus par une famille en 1933. Elle appartient à une autre période historique et ne répond à aucune case du schéma sur les migrations de 1840 à 1896.",
   9: "À discriminer : ce rapport de 1946 décrit le surpeuplement de certains logements et l’utilisation de pièces autres que des chambres pour dormir. Il appartient à une autre période et ne renseigne pas sur les mouvements migratoires demandés dans le schéma.",
-  10: "À discriminer : Michael Grass se rappelle avoir conduit des Loyalistes de New York à Cataraqui, dans la province de Québec de l’époque, afin d’y trouver un refuge et un foyer. Ce mouvement appartient à une autre période et ne répond à aucune des cases du schéma sur les migrations de 1840 à 1896.",
+  10: "À discriminer : la lettre de Lucy Knox évoque la séparation d’une famille loyaliste partie de Boston, en Nouvelle-Angleterre, pour se réfugier à Halifax pendant la guerre d’Indépendance américaine. Cette émigration vers 1776 appartient à une autre période et ne répond à aucune des cases du schéma sur les migrations de 1840 à 1896.",
 };

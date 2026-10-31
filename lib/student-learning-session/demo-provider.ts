@@ -9,6 +9,7 @@ import { INTELLECTUAL_OPERATIONS } from "../pedagogical-reference/intellectual-o
 import type { ApprovedQuestion } from "../pedagogical-reference/types.ts";
 import { CAUSES_CONSEQUENCES_LEARNING_QUESTION, CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID, INTELLECTUAL_OPERATION_LEARNING_DOCUMENTS } from "../teacher-activity-creator/intellectual-operation-learning.ts";
 import { TRANSVERSAL_FEDERAL_CHRONOLOGY_QUESTION } from "../pedagogical-reference/transversal-federal-chronology-question.ts";
+import { SOCRATO_INITIAL_RESPONSE_PROMPT } from "./initial-message.ts";
 
 const DEMO_ACTIVITIES = new Set([
   "demo-activity-acte-union",
@@ -28,6 +29,24 @@ const DEMO_ACTIVITIES = new Set([
   "demo-activity-politique-nationale-projet-economique-territorial",
   "demo-activity-politique-nationale-objectifs-1879",
   "demo-activity-politique-nationale-espaces",
+  "demo-activity-migrations-intervention-colonisation",
+  "demo-activity-migrations-mouvements-causes",
+  "demo-activity-migrations-evolution-population",
+  "demo-activity-migrations-departure-factors",
+  "demo-activity-migrations-emigration-colonization-causality",
+  "demo-activity-migrations-famine-grosse-ile",
+  "demo-activity-migrations-exode-emigration-comparison",
+  "demo-activity-migrations-saguenay-innu-consequence",
+  "demo-activity-migrations-industrialization-transport",
+  "demo-activity-migrations-chronological-association",
+  "demo-activity-eglise-ultramontains-anticlericaux",
+  "demo-activity-eglise-identite-canadienne-francaise",
+  "demo-activity-eglise-concepts-association",
+  "demo-activity-eglise-systeme-scolaire-composition-religieuse",
+  "demo-activity-eglise-presence-changement-continuite",
+  "demo-activity-manifestations-enseignement-superieur",
+  "demo-activity-manifestations-oeuvres-patriotiques",
+  "demo-activity-manifestations-femmes-vie-litteraire",
 ]);
 
 const PUBLISHED_TEST_QUESTION_IDS = [
@@ -73,9 +92,7 @@ export function createCatalogLearningSessionQuestions(questionIds: readonly stri
       documentRelations: documents.map(({ id: documentId }, documentIndex) => ({ documentId, displayOrder: documentIndex + 1 })),
       requiredDocumentIds: documents.map(({ id: documentId }) => documentId),
       localHint: question.instruction,
-      initialMessages: [{ id: `published-test-welcome-${index}`, author: "socrato", content: question.initialGuidance ?? (question.id === CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID
-        ? "Aujourd’hui, je vais t’aider à comprendre comment déterminer une cause et une conséquence. Commençons simplement : quel est l’événement historique central présenté dans les trois documents?"
-        : documents.length === 0 ? "J’attends ta réponse…" : documents.length === 1 ? "Bonjour, consulte la source puis réponds à la question." : "Bonjour, consulte les sources puis réponds à la question.") }],
+      initialMessages: [{ id: `published-test-welcome-${index}`, author: "socrato", content: SOCRATO_INITIAL_RESPONSE_PROMPT }],
       maxAttempts: question.id === CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID ? null : undefined,
       answerOptions: question.answerOptions,
       answerExplanation: question.expectedAnswer,
@@ -95,8 +112,8 @@ export function createDemoStudentLearningSession(
   requestedMode: DashboardMode = "teacher-assigned",
 ): StudentLearningSessionData | null {
   if (!DEMO_ACTIVITIES.has(activityId)) return null;
-  const notionId = requestedNotionId === "industrialisation" || requestedNotionId === "gouvernement-responsable" || requestedNotionId === "relations-federales-provinciales" || requestedNotionId === "acte-de-l-amerique-du-nord-britannique" || requestedNotionId === "politique-nationale" ? requestedNotionId : "acte-union";
-  const notionTitle = notionId === "industrialisation" ? "Industrialisation" : notionId === "gouvernement-responsable" ? "Gouvernement responsable" : notionId === "relations-federales-provinciales" ? "Relations fédérales-provinciales" : notionId === "acte-de-l-amerique-du-nord-britannique" ? "Affaires indiennes · AANB · Relations fédérales-provinciales" : notionId === "politique-nationale" ? "Politique nationale" : "Acte d’union";
+  const notionId = requestedNotionId === "industrialisation" || requestedNotionId === "gouvernement-responsable" || requestedNotionId === "relations-federales-provinciales" || requestedNotionId === "acte-de-l-amerique-du-nord-britannique" || requestedNotionId === "politique-nationale" || requestedNotionId === "migrations" ? requestedNotionId : "acte-union";
+  const notionTitle = notionId === "industrialisation" ? "Industrialisation" : notionId === "gouvernement-responsable" ? "Gouvernement responsable" : notionId === "relations-federales-provinciales" ? "Relations fédérales-provinciales" : notionId === "acte-de-l-amerique-du-nord-britannique" ? "Affaires indiennes · AANB · Relations fédérales-provinciales" : notionId === "politique-nationale" ? "Politique nationale" : notionId === "migrations" ? "Migrations" : "Acte d’union";
   const activityTitle = activityId === "demo-activity-acte-union"
     ? "Révision avant l’évaluation 1"
     : activityId === "demo-activity-causal-chain"
@@ -127,6 +144,42 @@ export function createDemoStudentLearningSession(
       ? "Les objectifs de la Politique nationale"
     : activityId === "demo-activity-politique-nationale-espaces"
       ? "Les espaces de la Politique nationale"
+    : activityId === "demo-activity-migrations-intervention-colonisation"
+      ? "Une intervention sur les déplacements de population"
+    : activityId === "demo-activity-migrations-mouvements-causes"
+      ? "Les mouvements migratoires et leurs causes"
+    : activityId === "demo-activity-migrations-evolution-population"
+      ? "Migrations et évolution de la population urbaine"
+    : activityId === "demo-activity-migrations-departure-factors"
+      ? "Les facteurs de l’émigration vers les États-Unis"
+    : activityId === "demo-activity-migrations-emigration-colonization-causality"
+      ? "Émigration et colonisation au Québec"
+    : activityId === "demo-activity-migrations-famine-grosse-ile"
+      ? "La Grande Famine et Grosse-Île"
+    : activityId === "demo-activity-migrations-exode-emigration-comparison"
+      ? "Exode rural et émigration"
+    : activityId === "demo-activity-migrations-saguenay-innu-consequence"
+      ? "Colonisation et territoire innu"
+    : activityId === "demo-activity-migrations-industrialization-transport"
+      ? "Industrialisation, transports et migrations"
+    : activityId === "demo-activity-migrations-chronological-association"
+      ? "Repères chronologiques des migrations"
+    : activityId === "demo-activity-eglise-ultramontains-anticlericaux"
+      ? "Ultramontains et anticléricaux"
+    : activityId === "demo-activity-eglise-identite-canadienne-francaise"
+      ? "L’Église et l’identité canadienne-française"
+    : activityId === "demo-activity-eglise-concepts-association"
+      ? "Quatre concepts liés à la présence de l’Église"
+    : activityId === "demo-activity-eglise-systeme-scolaire-composition-religieuse"
+      ? "Système scolaire et composition religieuse"
+    : activityId === "demo-activity-eglise-presence-changement-continuite"
+      ? "Changement et continuité de la présence de l’Église"
+    : activityId === "demo-activity-manifestations-enseignement-superieur"
+      ? "L’enseignement supérieur francophone et anglophone"
+    : activityId === "demo-activity-manifestations-oeuvres-patriotiques"
+      ? "Contexte politique et œuvres patriotiques"
+    : activityId === "demo-activity-manifestations-femmes-vie-litteraire"
+      ? "Les femmes dans la vie littéraire"
       : "Révision de l’Acte d’Union";
   const hasActeUnionDocuments = notionId === "acte-union";
   const isTimelinePrototype = activityId === "demo-activity-timeline";
@@ -346,6 +399,348 @@ export function createDemoStudentLearningSession(
     };
   }
 
+  if (activityId === "demo-activity-migrations-intervention-colonisation") {
+    const published = createCatalogLearningSessionQuestions(["question:migrations:document-interpretation-001"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "migrations",
+      notionTitle: "Migrations",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("migrations", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-migrations-mouvements-causes") {
+    const published = createCatalogLearningSessionQuestions(["question:migrations:interactive-association-001"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "migrations",
+      notionTitle: "Migrations",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("migrations", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-migrations-evolution-population") {
+    const published = createCatalogLearningSessionQuestions(["question:migrations:short-answer-001"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "migrations",
+      notionTitle: "Migrations",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("migrations", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-migrations-departure-factors") {
+    const published = createCatalogLearningSessionQuestions(["question:migrations:short-answer-002"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "migrations",
+      notionTitle: "Migrations",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("migrations", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-migrations-emigration-colonization-causality") {
+    const published = createCatalogLearningSessionQuestions(["question:migrations:short-answer-003"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "migrations",
+      notionTitle: "Migrations",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("migrations", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-migrations-famine-grosse-ile") {
+    const published = createCatalogLearningSessionQuestions(["question:migrations:short-answer-004"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "migrations",
+      notionTitle: "Migrations",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("migrations", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-migrations-exode-emigration-comparison") {
+    const published = createCatalogLearningSessionQuestions(["question:migrations:short-answer-005"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "migrations",
+      notionTitle: "Migrations",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("migrations", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-migrations-saguenay-innu-consequence") {
+    const published = createCatalogLearningSessionQuestions(["question:migrations:short-answer-006"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "migrations",
+      notionTitle: "Migrations",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("migrations", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-migrations-industrialization-transport") {
+    const published = createCatalogLearningSessionQuestions(["question:migrations:short-answer-007"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "migrations",
+      notionTitle: "Migrations",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("migrations", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-migrations-chronological-association") {
+    const published = createCatalogLearningSessionQuestions(["question:migrations:interactive-association-002"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "migrations",
+      notionTitle: "Migrations",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("migrations", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-eglise-ultramontains-anticlericaux") {
+    const published = createCatalogLearningSessionQuestions(["question:presence-de-l-eglise-catholique:short-answer-001"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "presence-de-l-eglise-catholique",
+      notionTitle: "La présence de l’Église catholique",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("presence-de-l-eglise-catholique", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-eglise-identite-canadienne-francaise") {
+    const published = createCatalogLearningSessionQuestions(["question:presence-de-l-eglise-catholique:short-answer-002"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "presence-de-l-eglise-catholique",
+      notionTitle: "La présence de l’Église catholique",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("presence-de-l-eglise-catholique", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-eglise-concepts-association") {
+    const published = createCatalogLearningSessionQuestions(["question:presence-de-l-eglise-catholique:interactive-association-003"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "presence-de-l-eglise-catholique",
+      notionTitle: "La présence de l’Église catholique",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("presence-de-l-eglise-catholique", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-eglise-systeme-scolaire-composition-religieuse") {
+    const published = createCatalogLearningSessionQuestions(["question:presence-de-l-eglise-catholique:short-answer-004"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "presence-de-l-eglise-catholique",
+      notionTitle: "La présence de l’Église catholique",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("presence-de-l-eglise-catholique", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-eglise-presence-changement-continuite") {
+    const published = createCatalogLearningSessionQuestions(["question:presence-de-l-eglise-catholique:short-answer-005"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "presence-de-l-eglise-catholique",
+      notionTitle: "La présence de l’Église catholique",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("presence-de-l-eglise-catholique", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-manifestations-enseignement-superieur") {
+    const published = createCatalogLearningSessionQuestions(["question:manifestations-socioculturelles:short-answer-002"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "manifestations-socioculturelles",
+      notionTitle: "Manifestations socioculturelles",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("manifestations-socioculturelles", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-manifestations-oeuvres-patriotiques") {
+    const published = createCatalogLearningSessionQuestions(["question:manifestations-socioculturelles:short-answer-001"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "manifestations-socioculturelles",
+      notionTitle: "Manifestations socioculturelles",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("manifestations-socioculturelles", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
+  if (activityId === "demo-activity-manifestations-femmes-vie-litteraire") {
+    const published = createCatalogLearningSessionQuestions(["question:manifestations-socioculturelles:short-answer-003"]);
+    return {
+      id: `local-session-${activityId}`,
+      activityId,
+      activityTitle,
+      origin: "teacher_assigned",
+      notionId: "manifestations-socioculturelles",
+      notionTitle: "Manifestations socioculturelles",
+      historicalPeriod: { startYear: 1840, endYear: 1896 },
+      currentQuestionIndex: 0,
+      dashboardHref: getDashboardUrl("manifestations-socioculturelles", "teacher-assigned", activityId),
+      source: "local_demo",
+      localDemoNotice: "",
+      documentCatalog: published.documents,
+      questions: published.questions,
+    };
+  }
+
   return {
     id: `local-session-${activityId}`,
     activityId,
@@ -372,7 +767,7 @@ export function createDemoStudentLearningSession(
         historicalKnowledgeIds: ["gouvernement-responsable", "instabilite-ministerielle", "grande-coalition"],
         documentRelations: [], requiredDocumentIds: [],
         localHint: "Suis les événements de 1848 à 1864 : accomplissement, loi, réaction, problème politique, cause du problème, puis solution.",
-        initialMessages: [{ id: "causal-chain-welcome", author: "socrato", content: "Bonjour, complète chaque maillon de gauche à droite pour reconstruire la chaîne de causalité." }],
+        initialMessages: [{ id: "causal-chain-welcome", author: "socrato", content: SOCRATO_INITIAL_RESPONSE_PROMPT }],
         causalChainInteraction: RESPONSIBLE_GOVERNMENT_CAUSAL_CHAIN_QUESTION.causalChainInteraction,
       } : isAssociationPrototype ? {
         id: associationQuestion.id,
@@ -387,7 +782,7 @@ export function createDemoStudentLearningSession(
         documentRelations: [],
         requiredDocumentIds: [],
         localHint: isCompetencyAssociationPrototype ? "L’article 91 énumère les compétences fédérales. L’article 92 énumère les compétences provinciales; l’éducation est précisée à l’article 93." : "Distingue d’abord les institutions élues des institutions nommées, puis repère celles qui conseillent ou représentent la Couronne.",
-        initialMessages: [{ id: "association-welcome", author: "socrato", content: isCompetencyAssociationPrototype ? "Bonjour, classe chaque compétence dans le tableau fédéral-provincial." : "Bonjour, sélectionne une institution, puis associe-la à son rôle principal." }],
+        initialMessages: [{ id: "association-welcome", author: "socrato", content: SOCRATO_INITIAL_RESPONSE_PROMPT }],
         associationInteraction: associationQuestion.associationInteraction,
       } : isTimelinePrototype ? {
         id: timelineQuestion.id,
@@ -404,7 +799,7 @@ export function createDemoStudentLearningSession(
         documentRelations: [],
         requiredDocumentIds: [],
         localHint: "initialGuidance" in timelineQuestion ? timelineQuestion.initialGuidance : timelineQuestion.instruction,
-        initialMessages: [{ id: "timeline-welcome", author: "socrato", content: "Bonjour, observe chaque image et sa description. Sélectionne ensuite une carte et place-la sous la bonne date." }],
+        initialMessages: [{ id: "timeline-welcome", author: "socrato", content: SOCRATO_INITIAL_RESPONSE_PROMPT }],
         timelineInteraction: timelineQuestion.timelineInteraction,
       } : {
         id: hasActeUnionDocuments ? ACTE_UNION_CAUSAL_PILOT_QUESTION.id : "local-neutral-question-1",
@@ -425,7 +820,7 @@ export function createDemoStudentLearningSession(
           {
             id: "local-welcome",
             author: "socrato",
-            content: "Bonjour, consulte les sources puis réponds lorsque tu te sens prêt. Je suis là pour t’accompagner si tu as besoin d’un indice.",
+            content: SOCRATO_INITIAL_RESPONSE_PROMPT,
           },
         ],
       },

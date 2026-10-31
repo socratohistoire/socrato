@@ -17,7 +17,7 @@ import { createDemoPedagogicalDefinition, createPedagogicalFeedback, createPedag
 import { getHistoricalPeriodLabel } from "@/lib/student-dashboard/historical-period";
 import { getCurrentLearningQuestion, getInitialQuestionDocument, getLearningSessionHeading, getQuestionDocuments } from "@/lib/student-learning-session/presentation";
 import type { LearningSessionDocument, LearningSessionMessage, LearningSessionQuestion, StudentLearningSessionData } from "@/lib/student-learning-session/types";
-import { appendVoiceTranscript, createBrowserVoiceAdapter, formatRecordingDuration, isLocalVoicePrototypeEnabled, LocalVoiceCaptureController, VOICE_MAX_SECONDS, type VoiceCaptureState } from "@/lib/student-voice-transcription";
+import { SOCRATO_INITIAL_RESPONSE_PROMPT } from "@/lib/student-learning-session/initial-message";
 import { HistoricalComparisonChart } from "@/app/components/historical-comparison-chart";
 
 // Le serveur interrompt son analyse avant cette limite; l’élève récupère ainsi
@@ -121,6 +121,8 @@ function referenceCorrectionMessage(question: LearningSessionQuestion) {
 }
 
 export function StudentLearningSessionView({ data, teacherPreview = false, classroomMode = false, persistProgress = true, teacherApiTest = false, forceReferenceCorrection = false, teacherPreviewExitHref = "/teacher/activities/new" }: { data: StudentLearningSessionData; teacherPreview?: boolean; classroomMode?: boolean; persistProgress?: boolean; teacherApiTest?: boolean; forceReferenceCorrection?: boolean; teacherPreviewExitHref?: string }) {
+  const [interactiveEnhancementsReady, setInteractiveEnhancementsReady] = useState(false);
+  useEffect(() => setInteractiveEnhancementsReady(true), []);
   const engineDefinition = useMemo(() => createDemoPedagogicalDefinition(data), [data]);
   const initialEngineState = useMemo(() => restoreStudentProgress(createPedagogicalSession(engineDefinition), data.progress), [data.progress, engineDefinition]);
   const teacherAnalysisErrorRef = useRef("");
@@ -226,15 +228,6 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
   const newestMessageRef = useRef<HTMLElement>(null);
   const choiceFeedbackRef = useRef<HTMLElement>(null);
   const renderedMessageCountRef = useRef(messages.length);
-  const voiceControllerRef = useRef<LocalVoiceCaptureController | null>(null);
-  const [voiceState, setVoiceState] = useState<VoiceCaptureState>({
-    status: isLocalVoicePrototypeEnabled() ? "idle" : "unsupported",
-    elapsedSeconds: 0,
-    remainingSeconds: VOICE_MAX_SECONDS,
-    warningReached: false,
-    message: isLocalVoicePrototypeEnabled() ? "Dictée prête." : "La dictée est désactivée dans cet environnement.",
-  });
-
   useEffect(() => {
     if (!choiceFeedback) return;
     const frame = window.requestAnimationFrame(() => {
@@ -310,21 +303,6 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
     textarea.style.overflowY = textarea.scrollHeight > maximumHeight ? "auto" : "hidden";
   }, [response]);
 
-  useEffect(() => {
-    const controller = new LocalVoiceCaptureController(createBrowserVoiceAdapter(), {
-      onState: setVoiceState,
-      onSimulatedTranscript: (text) => {
-        setResponse((current) => appendVoiceTranscript(current, text));
-        requestAnimationFrame(() => responseInputRef.current?.focus());
-      },
-    });
-    voiceControllerRef.current = controller;
-    return () => {
-      controller.dispose();
-      voiceControllerRef.current = null;
-    };
-  }, []);
-
   if (!question) return null;
 
   async function completeWithReferenceCorrection(content: string, studentMessageAlreadyAdded = false) {
@@ -375,7 +353,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
 
   async function sendLocalResponse() {
     const content = response.trim();
-    if (!content || submitting || submissionLockRef.current || voiceBlocksSending || engineState.status === "completed" || (activeAttemptLimit !== null && activeQuestionState.attemptNumber >= activeAttemptLimit)) return;
+    if (!content || submitting || submissionLockRef.current || engineState.status === "completed" || (activeAttemptLimit !== null && activeQuestionState.attemptNumber >= activeAttemptLimit)) return;
     if (referenceCorrectionMode) {
       await completeWithReferenceCorrection(content);
       return;
@@ -589,24 +567,11 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
     }
   }
 
-  function handleVoicePrimaryAction() {
-    const controller = voiceControllerRef.current;
-    if (!controller) return;
-    if (voiceState.status === "recording") controller.stop();
-    else void controller.start();
-  }
-
-  const voiceBusy = ["requesting_permission", "stopping", "transcribing"].includes(voiceState.status);
-  const voiceUnavailable = voiceState.status === "unsupported" || engineState.status === "completed";
-  const voicePrimaryLabel = voiceState.status === "requesting_permission" ? "Autorisation du microphone…"
-    : voiceState.status === "stopping" ? "Arrêt de la dictée…"
-    : voiceState.status === "transcribing" ? "Traitement de la dictée…"
-    : voiceState.status === "permission_denied" || voiceState.status === "error" ? "Réessayer"
-    : "Dicter ma réponse";
-  const voiceBlocksSending = voiceState.status === "recording" || voiceBusy;
   const responseUnavailable = submitting || engineState.status === "completed" || (activeAttemptLimit !== null && activeQuestionState.attemptNumber >= activeAttemptLimit);
-  const sendUnavailable = !response.trim() || responseUnavailable || voiceBlocksSending;
+  const sendUnavailable = !response.trim() || responseUnavailable;
   const questionDocuments = getQuestionDocuments(activeData);
+  const usesEmbeddedCauseDocumentBank = interactiveEnhancementsReady && isInteractiveAssociation && Boolean(question.associationInteraction?.causeDocuments?.length);
+  const usesEmbeddedAssociationDocumentBank = interactiveEnhancementsReady && isInteractiveAssociation && Boolean(question.associationInteraction?.items.some(({ documentId }) => documentId));
   const useStackedDocuments = questionDocuments.length > 0 && !isInteractiveTimeline && !isInteractiveAssociation;
   const isShortAnswerWithoutDocuments = question.format === "short-answer" && questionDocuments.length === 0;
 
@@ -751,7 +716,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
   function renderMultipleChoiceResponse(showWelcome = false) {
     return (
       <section ref={choiceFeedbackRef} className={`multiple-choice-response${showWelcome ? " multiple-choice-socrato-panel" : ""}`} aria-label="Validation du choix de réponse">
-        {showWelcome ? <div className="multiple-choice-socrato-welcome"><article><strong>Socrato</strong><p>J’attends ta réponse…</p></article></div> : null}
+        {showWelcome ? <div className="multiple-choice-socrato-welcome"><article><strong>Socrato</strong><p>{SOCRATO_INITIAL_RESPONSE_PROMPT}</p></article></div> : null}
         {choiceFeedback ? <div className={choiceFeedback.startsWith("Bonne") ? "choice-feedback-correct" : "choice-feedback-retry"} role="status"><strong>Socrato</strong><p>{choiceFeedback}</p>{activeQuestionState.status === "completed" && engineState.currentQuestionIndex < data.questions.length - 1 ? <button type="button" className="socrato-next-question" onClick={() => moveToQuestion(1)}>Passer à la question suivante →</button> : null}</div> : null}
         {completionReady && engineState.summary ? <SessionCompletionLink href={completionHref} strengths={engineState.summary.strengths} consolidationTargets={engineState.summary.consolidationTargets} teacherPreview={teacherPreview} /> : null}
       </section>
@@ -791,7 +756,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
       </header>
       {persistenceMessage && !analysisUnavailable ? <div className="session-data-error" role="alert"><p>{persistenceMessage}</p></div> : null}
 
-      <div className={`session-layout${isInteractiveTimeline || isInteractiveAssociation || isInteractiveCausalChain ? " session-layout--timeline" : ""}${questionDocuments.length > 0 ? " session-layout--with-documents" : ""}${isMultipleChoice && questionDocuments.length > 0 ? " session-layout--choice-with-documents" : ""}${questionDocuments.length === 0 && isMultipleChoice ? " session-layout--choice-no-documents" : ""}${isShortAnswerWithoutDocuments ? " session-layout--short-answer-no-documents" : ""}`}>
+      <div className={`session-layout${isInteractiveTimeline || isInteractiveAssociation || isInteractiveCausalChain ? " session-layout--timeline" : ""}${questionDocuments.length > 0 && !usesEmbeddedCauseDocumentBank && !usesEmbeddedAssociationDocumentBank ? " session-layout--with-documents" : ""}${isMultipleChoice && questionDocuments.length > 0 ? " session-layout--choice-with-documents" : ""}${questionDocuments.length === 0 && isMultipleChoice ? " session-layout--choice-no-documents" : ""}${isShortAnswerWithoutDocuments ? " session-layout--short-answer-no-documents" : ""}`}>
         {isInteractiveCausalChain && question.causalChainInteraction ? (
           <InteractiveCausalChainQuestion key={question.id} question={question} operationLabel={primaryOperation?.label} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
         ) : isInteractiveTimeline && question.timelineInteraction ? (
@@ -799,7 +764,7 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
         ) : isInteractiveAssociation && question.associationInteraction?.categories?.length ? (
           <InteractiveCompetencyCategorizationQuestion key={question.id} question={question} operationLabel={primaryOperation?.label} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
         ) : isInteractiveAssociation && question.associationInteraction ? (
-          <InteractiveAssociationQuestion key={question.id} question={question} operationLabel={primaryOperation?.label} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
+          <InteractiveAssociationQuestion key={question.id} question={question} documents={questionDocuments} operationLabel={primaryOperation?.label} initialAttempts={activeQuestionState.attemptNumber} initialHintLevel={activeQuestionState.hintLevel} onAttempt={recordObjectiveAttempt} onHint={recordObjectiveHint} onComplete={(satisfactory, attemptNumber) => { setTimelineCompleted(true); void completeObjectiveQuestion(satisfactory, attemptNumber); }} />
         ) : <>
         <section className="question-pane" aria-labelledby="question-section-title">
           <div className="question-module">
@@ -852,46 +817,18 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
               <div className="response-composer-shell">
                 <textarea ref={responseInputRef} id="student-response" aria-label="Réponse de l’élève" value={response} onChange={(event) => setResponse(event.target.value)} onKeyDown={handleResponseKeyDown} rows={3} placeholder="Écris ta réponse ici…" disabled={responseUnavailable} />
                 <div className="composer-toolbar">
-                <div className="voice-controls">
-                  {voiceState.status === "recording" ? (
-                    <>
-                      <span className="voice-recording-state" role="status">
-                        <span className="voice-recording-dot" aria-hidden="true" />
-                        <span>Enregistrement en cours</span>
-                        <time dateTime={`PT${voiceState.elapsedSeconds}S`}>{formatRecordingDuration(voiceState.elapsedSeconds)}</time>
-                      </span>
-                      <button type="button" className="voice-stop-button" onClick={handleVoicePrimaryAction} aria-pressed="true" aria-describedby="voice-status">
-                        <svg className="voice-stop-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="6" width="12" height="12" rx="1" /></svg>
-                        <span>Arrêter</span>
-                      </button>
-                    </>
-                  ) : voiceState.status === "stopping" || voiceState.status === "transcribing" ? (
-                    <span className="voice-processing-state" role="status">{voicePrimaryLabel}</span>
-                  ) : (
-                    <button type="button" className="composer-icon-button voice-button" onClick={handleVoicePrimaryAction} disabled={voiceBusy || voiceUnavailable} aria-label={voicePrimaryLabel} title={voicePrimaryLabel} aria-describedby="voice-status">
-                      <svg className="microphone-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <rect x="8" y="2.5" width="8" height="13" rx="4" />
-                        <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3.5M8.5 21.5h7" />
-                      </svg>
-                    </button>
-                  )}
-                  {voiceState.status === "recording" || voiceState.status === "requesting_permission" ? (
-                    <button type="button" className="voice-cancel" onClick={() => voiceControllerRef.current?.cancel()}>Annuler</button>
-                  ) : null}
-                </div>
                 <button type="submit" className="composer-icon-button submit-button" disabled={sendUnavailable} aria-label="Envoyer ma réponse" title="Envoyer ma réponse">
                   <svg className="submit-arrow-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 19V5M6.5 10.5 12 5l5.5 5.5" /></svg>
                 </button>
                 </div>
               </div>
-              <p id="voice-status" className={`voice-status ${voiceState.status === "permission_denied" || voiceState.status === "error" || voiceState.status === "unsupported" ? "voice-status-visible" : ""}`} aria-live="polite" aria-atomic="true">{voiceState.message}</p>
             </form>
             </section>
             )}
           </div>
         </section>
 
-        {questionDocuments.length === 0 ? null : <>
+        {questionDocuments.length === 0 || usesEmbeddedCauseDocumentBank ? null : <>
         {isMultipleChoice && questionDocuments.length === 0 ? null : <div className="documents-heading">
           {isMultipleChoice && questionDocuments.length === 0 ? null : <div className="documents-heading-copy"><h2 id="documents-title" className="column-title">Documents historiques</h2><span /></div>}
         </div>}
@@ -962,24 +899,48 @@ function InteractiveCausalChainQuestion({ question, operationLabel, initialAttem
   </section>;
 }
 
-function InteractiveAssociationQuestion({ question, operationLabel, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete }: ObjectiveQuestionProps) {
+function InteractiveAssociationQuestion({ question, documents, operationLabel, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete }: ObjectiveQuestionProps & { documents: LearningSessionDocument[] }) {
   const interaction = question.associationInteraction as AssociationInteraction;
+  const hasDocumentItems = interaction.items.some(({ documentId }) => Boolean(documentId));
+  const [causeLayerReady, setCauseLayerReady] = useState(false);
   const [assignments, setAssignments] = useState<Record<string, string>>({});
+  const [causeAssignments, setCauseAssignments] = useState<Record<string, string>>({});
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState("Sélectionne un élément, puis l’emplacement auquel il correspond.");
+  const [selectedCauseDocumentId, setSelectedCauseDocumentId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState(hasDocumentItems ? "Sélectionne un document, puis le concept qu’il illustre." : "Sélectionne un élément, puis l’emplacement auquel il correspond.");
   const [attempts, setAttempts] = useState(initialAttempts);
   const [completed, setCompleted] = useState(false);
   const [showHint, setShowHint] = useState(initialHintLevel > 0);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
+  const [expandedCauseDocumentId, setExpandedCauseDocumentId] = useState<string | null>(null);
+  const [causeDocumentImageZoom, setCauseDocumentImageZoom] = useState(1);
+  const causeDocumentCloseButtonRef = useRef<HTMLButtonElement>(null);
   const itemById = new Map(interaction.items.map((item) => [item.id, item]));
   const assignedItemIds = new Set(Object.values(assignments));
+  const causeDocuments = interaction.causeDocuments ?? [];
+  const causeTargets = interaction.causeTargets ?? [];
+  const hasCauseLayer = causeLayerReady && causeDocuments.length > 0 && causeTargets.length > 0;
+  const causeDocumentById = new Map(causeDocuments.map((document) => [document.documentId, document]));
+  const learningDocumentById = new Map(documents.map((document) => [document.id, document]));
+  const expandedCauseReference = causeDocuments.find(({ documentId }) => documentId === expandedCauseDocumentId);
+  const expandedCauseDocumentBase = expandedCauseDocumentId ? learningDocumentById.get(expandedCauseDocumentId) : undefined;
+  const expandedCauseDocument = expandedCauseReference && expandedCauseDocumentBase ? { ...expandedCauseDocumentBase, displayOrder: expandedCauseReference.number } : null;
   const hasImageTargets = interaction.targets.some(({ imageUrl }) => imageUrl);
   const hasImageItems = interaction.items.some(({ imageUrl }) => imageUrl);
   const hasMapLayout = Boolean(interaction.map);
-  const useCompactDateLayout = !hasMapLayout && !hasImageTargets && interaction.targets.every(({ label, description }) => Boolean(label) && label === description);
+  const useCompactDateLayout = !hasDocumentItems && !hasMapLayout && !hasImageTargets && interaction.targets.every(({ label, description }) => Boolean(label) && label === description);
   const hideTargetLabels = interaction.targets.every(({ label }) => !label);
   const hasDescriptiveTargetLabels = !useCompactDateLayout && interaction.targets.some(({ label }) => Boolean(label && !/^\d+$/.test(label)));
   const expandedItem = expandedItemId ? itemById.get(expandedItemId) : undefined;
+  const expandedItemDocumentBase = expandedItem?.documentId ? learningDocumentById.get(expandedItem.documentId) : undefined;
+  const expandedItemDocument = expandedItemDocumentBase && expandedItem
+    ? { ...expandedItemDocumentBase, displayOrder: interaction.items.findIndex(({ id }) => id === expandedItem.id) + 1 }
+    : null;
+
+  useEffect(() => {
+    setCauseLayerReady(true);
+    if (interaction.causeDocuments?.length) setFeedback(`Commence par placer les ${interaction.items.length} mouvements sur les trajets en pointillés.`);
+  }, [interaction.causeDocuments]);
 
   useEffect(() => {
     if (!expandedItemId) return;
@@ -988,29 +949,68 @@ function InteractiveAssociationQuestion({ question, operationLabel, initialAttem
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [expandedItemId]);
 
+  useEffect(() => {
+    if (!expandedCauseDocumentId) return;
+    causeDocumentCloseButtonRef.current?.focus();
+    function closeOnEscape(event: KeyboardEvent) { if (event.key === "Escape") setExpandedCauseDocumentId(null); }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [expandedCauseDocumentId]);
+
   function assign(targetId: string, itemId = selectedItemId) {
     if (!itemId || completed) return;
     setAssignments((current) => ({ ...Object.fromEntries(Object.entries(current).filter(([, value]) => value !== itemId)), [targetId]: itemId }));
     setSelectedItemId(null);
-    setFeedback(`Association placée. Continue jusqu’à ce que les ${interaction.targets.length} associations soient complétées.`);
+    setFeedback(hasCauseLayer ? "Mouvement placé. Continue avec les autres trajets, puis associe les documents-causes." : hasDocumentItems ? `Document placé. Continue jusqu’à ce que les ${interaction.targets.length} concepts soient complétés.` : `Association placée. Continue jusqu’à ce que les ${interaction.targets.length} associations soient complétées.`);
   }
-  function beginDrag(event: ReactDragEvent<HTMLElement>, itemId: string) { event.dataTransfer.setData("text/plain", itemId); setSelectedItemId(itemId); }
+  function assignCause(targetId: string, documentId = selectedCauseDocumentId) {
+    if (!documentId || completed) return;
+    setCauseAssignments((current) => ({ ...Object.fromEntries(Object.entries(current).filter(([, value]) => value !== documentId)), [targetId]: documentId }));
+    setSelectedCauseDocumentId(null);
+    setFeedback("Document-cause placé. Vérifie que son indice explique bien le mouvement associé.");
+  }
+  function beginDrag(event: ReactDragEvent<HTMLElement>, itemId: string) { event.dataTransfer.setData("text/plain", `movement:${itemId}`); setSelectedItemId(itemId); }
+  function beginCauseDrag(event: ReactDragEvent<HTMLElement>, documentId: string) { event.dataTransfer.setData("text/plain", `cause:${documentId}`); setSelectedCauseDocumentId(documentId); }
+  function droppedMovement(payload: string) { return payload.startsWith("movement:") ? payload.slice("movement:".length) : payload; }
   function verify() {
-    const correctCount = interaction.targets.filter((target) => assignments[target.id] === target.correctItemId).length;
+    const correctMovementCount = interaction.targets.filter((target) => assignments[target.id] === target.correctItemId).length;
+    const correctCauseCount = causeTargets.filter((target) => causeAssignments[target.id] === target.correctDocumentId).length;
+    const correctCount = correctMovementCount + correctCauseCount;
+    const expectedCount = interaction.targets.length + causeTargets.length;
     const nextAttempt = attempts + 1; setAttempts(nextAttempt); onAttempt(nextAttempt);
-    if (correctCount === interaction.targets.length) { setCompleted(true); setFeedback(hasMapLayout ? `Bravo! Les ${interaction.targets.length} éléments sont placés dans la bonne zone de la carte.` : `Bravo! Les ${interaction.targets.length} éléments sont associés à la bonne description.`); onComplete(true, nextAttempt); return; }
-    if (nextAttempt >= 2) { setAssignments(Object.fromEntries(interaction.targets.map((target) => [target.id, target.correctItemId]))); setCompleted(true); setFeedback(`${correctAnswerCount(correctCount, interaction.targets.length, true)} Socrato affiche maintenant les associations attendues.`); onComplete(false, nextAttempt); return; }
-    const reviewHint = hasMapLayout ? "Observe attentivement les régions de la carte." : useCompactDateLayout ? "Compare les éléments et les années auxquels tu les as associés." : "Relis attentivement chaque description.";
-    setFeedback(`${correctAnswerCount(correctCount, interaction.targets.length)} ${reviewHint} Tu peux modifier tes associations avant de vérifier de nouveau.`);
+    if (correctCount === expectedCount) { setCompleted(true); setFeedback(hasCauseLayer ? `Bravo! Les ${interaction.items.length} mouvements et leurs ${causeDocuments.length} causes sont placés correctement.` : hasMapLayout ? `Bravo! Les ${interaction.targets.length} éléments sont placés dans la bonne zone de la carte.` : hasDocumentItems ? `Bravo! Les ${interaction.targets.length} documents sont associés au bon concept.` : `Bravo! Les ${interaction.targets.length} éléments sont associés à la bonne description.`); onComplete(true, nextAttempt); return; }
+    if (nextAttempt >= 2) { setAssignments(Object.fromEntries(interaction.targets.map((target) => [target.id, target.correctItemId]))); setCauseAssignments(Object.fromEntries(causeTargets.map((target) => [target.id, target.correctDocumentId]))); setCompleted(true); setFeedback(`${correctAnswerCount(correctCount, expectedCount, true)} Socrato affiche maintenant les associations attendues.`); onComplete(false, nextAttempt); return; }
+    const reviewHint = hasMapLayout ? "Observe attentivement les régions de la carte." : useCompactDateLayout ? "Compare les éléments et les années auxquels tu les as associés." : hasDocumentItems ? "Relis les indices dans chaque document et compare-les aux quatre concepts." : "Relis attentivement chaque description.";
+    setFeedback(`${correctAnswerCount(correctCount, expectedCount)} ${reviewHint} Tu peux modifier tes associations avant de vérifier de nouveau.`);
   }
-  return <section className={`association-question${useCompactDateLayout ? " association-question--compact-dates association-question--date-timeline" : ""}${hasMapLayout ? " association-question--map" : ""}`} aria-labelledby="association-question-title">
-    <header className="timeline-question__header"><div><div className="association-question__meta"><p>Question {question.number}</p>{operationLabel ? <span className="operation-chip">{operationLabel}</span> : null}</div><h2 id="association-question-title">{question.prompt}</h2></div></header>
+
+  function renderAssociationItem(item: AssociationInteraction["items"][number]) {
+    const document = item.documentId ? learningDocumentById.get(item.documentId) : undefined;
+    if (document) {
+      const documentNumber = interaction.items.findIndex(({ id }) => id === item.id) + 1;
+      return <article className="association-document-choice" key={item.id} draggable={!completed} onDragStart={(event) => beginDrag(event, item.id)}>
+        <button className="association-document-select" type="button" aria-pressed={selectedItemId === item.id} onClick={() => { setSelectedItemId(item.id); setCauseDocumentImageZoom(1); setExpandedItemId(item.id); }}>
+          <span className="association-document-choice__meta"><strong>Document {documentNumber}</strong><small>{document.dateLabel}</small></span>
+          {document.content.kind === "historical_excerpt" ? <span className="association-document-choice__excerpt">« {document.content.excerpt} »</span> : document.content.kind === "historical_image" ? <Image className="association-document-choice__image" src={document.content.localSrc} alt={document.content.alt} width={600} height={380} sizes="(max-width: 760px) 88vw, 42vw" draggable={false} unoptimized /> : null}
+          <span className="association-document-choice__author">{document.authorLabel}</span>
+        </button>
+        <button className="association-document-expand" type="button" aria-label={`Agrandir le document ${documentNumber}`} onClick={() => { setSelectedItemId(item.id); setCauseDocumentImageZoom(1); setExpandedItemId(item.id); }}><span aria-hidden="true">⤢</span> Agrandir</button>
+      </article>;
+    }
+    if (item.imageUrl) return <div className="association-image-choice" key={item.id} draggable={!completed} onDragStart={(event) => beginDrag(event, item.id)}><button className="association-image-select" type="button" aria-pressed={selectedItemId === item.id} onClick={() => setSelectedItemId(item.id)}><Image src={item.imageUrl} alt={item.imageAlt ?? item.label} width={460} height={350} sizes="(max-width: 620px) 44vw, 22vw" draggable={false} unoptimized /><span>{item.label}</span></button><button className="association-image-expand" type="button" aria-label={`Agrandir ${item.label}`} onClick={() => setExpandedItemId(item.id)}><span aria-hidden="true">⤢</span> Agrandir</button></div>;
+    return <button key={item.id} type="button" draggable={!completed} aria-pressed={selectedItemId === item.id} onDragStart={(event) => beginDrag(event, item.id)} onClick={() => setSelectedItemId(item.id)}><span>{item.label}</span></button>;
+  }
+
+  return <section className={`association-question${useCompactDateLayout ? " association-question--compact-dates association-question--date-timeline" : ""}${hasMapLayout ? " association-question--map" : ""}${hasDocumentItems ? " association-question--documents" : ""}`} aria-labelledby="association-question-title">
+    <header className="timeline-question__header"><div><div className="association-question__meta"><p>Question {question.number}</p>{operationLabel ? <span className="operation-chip">{operationLabel}</span> : null}</div><h2 id="association-question-title">{question.prompt}</h2>{hasDocumentItems ? <p className="association-question__intro">{question.instruction}</p> : null}</div></header>
     {showHint ? <p className="timeline-question__hint" role="status">{question.localHint}</p> : null}
-    <section className={`association-pool${hasImageItems ? " association-pool--images" : ""}`} aria-labelledby="association-pool-title"><h3 id="association-pool-title">Éléments à associer</h3><div>{interaction.items.filter(({ id }) => !assignedItemIds.has(id)).map((item) => item.imageUrl ? <div className="association-image-choice" key={item.id} draggable={!completed} onDragStart={(event) => beginDrag(event, item.id)}><button className="association-image-select" type="button" aria-pressed={selectedItemId === item.id} onClick={() => setSelectedItemId(item.id)}><Image src={item.imageUrl} alt={item.imageAlt ?? item.label} width={460} height={350} sizes="(max-width: 620px) 44vw, 22vw" draggable={false} unoptimized /><span>{item.label}</span></button><button className="association-image-expand" type="button" aria-label={`Agrandir ${item.label}`} onClick={() => setExpandedItemId(item.id)}><span aria-hidden="true">⤢</span> Agrandir</button></div> : <button key={item.id} type="button" draggable={!completed} aria-pressed={selectedItemId === item.id} onDragStart={(event) => beginDrag(event, item.id)} onClick={() => setSelectedItemId(item.id)}><span>{item.label}</span></button>)}</div></section>
-    {hasMapLayout && interaction.map ? <div className="association-map-board"><Image className="association-map-image" src={interaction.map.imageUrl} alt={interaction.map.imageAlt} width={1130} height={920} unoptimized />{interaction.targets.map((target) => { const item = itemById.get(assignments[target.id]); const zone = target.zone; if (!zone) return null; return <article className={`association-map-zone association-map-zone--${target.id}`} key={target.id} style={{ left: `${zone.x}%`, top: `${zone.y}%`, width: `${zone.width}%`, height: `${zone.height}%` }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); assign(target.id, event.dataTransfer.getData("text/plain")); }}><span>{target.label}</span>{item ? <button className="association-map-date" type="button" disabled={completed} onClick={() => setAssignments((current) => Object.fromEntries(Object.entries(current).filter(([key]) => key !== target.id)))}>{item.label}<small>{completed ? "" : "Retirer"}</small></button> : <button className="association-map-drop" type="button" disabled={!selectedItemId || completed} onClick={() => assign(target.id)}>{selectedItemId ? "Déposer ici" : interaction.map?.dropLabel ?? "Date"}</button>}</article>; })}</div> : null}
-    <div className={`association-targets${hasImageTargets ? " association-targets--maps" : ""}${hideTargetLabels ? " association-targets--without-labels" : ""}${hasDescriptiveTargetLabels ? " association-targets--descriptive-labels" : ""}${useCompactDateLayout ? ` association-targets--date-timeline association-targets--count-${interaction.targets.length}` : ""}`} role={useCompactDateLayout ? "list" : undefined} aria-label={useCompactDateLayout ? "Ligne du temps de l’expansion territoriale du Canada" : undefined}>{interaction.targets.map((target, index) => { const item = itemById.get(assignments[target.id]); return <article role={useCompactDateLayout ? "listitem" : undefined} key={target.id} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); assign(target.id, event.dataTransfer.getData("text/plain")); }}><span>{target.label ?? index + 1}</span>{target.description !== target.label ? <p>{target.description}</p> : null}{target.imageUrl ? <Image className="association-target-image" src={target.imageUrl} alt={target.imageAlt ?? target.description} width={920} height={700} sizes="(max-width: 760px) 92vw, 44vw" unoptimized /> : null}{item ? <><button className={`association-assigned-item${item.imageUrl ? " association-assigned-item--image" : ""}`} type="button" disabled={completed} onClick={() => setAssignments((current) => Object.fromEntries(Object.entries(current).filter(([key]) => key !== target.id)))}>{item.imageUrl ? <Image src={item.imageUrl} alt={item.imageAlt ?? item.label} width={460} height={350} sizes="(max-width: 620px) 70vw, 22vw" draggable={false} unoptimized /> : null}<span>{item.label}</span><small>{completed ? "" : "Retirer"}</small></button>{item.imageUrl ? <button className="association-placed-expand" type="button" aria-label={`Agrandir ${item.label}`} onClick={() => setExpandedItemId(item.id)}><span aria-hidden="true">⤢</span> Agrandir</button> : null}</> : <button type="button" disabled={!selectedItemId || completed} onClick={() => assign(target.id)}>{selectedItemId ? "Déposer ici" : "Choisis un élément"}</button>}</article>; })}</div>
-    <footer className="timeline-question__footer"><p role="status" aria-live="polite"><strong>Socrato</strong>{feedback}</p><button type="button" disabled={Object.keys(assignments).length !== interaction.targets.length || completed} onClick={verify}>{completed ? "Réponse vérifiée" : attempts ? "Vérifier ma deuxième tentative" : "Vérifier mes réponses"}</button></footer>
-    {expandedItem?.imageUrl ? <div className="association-image-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setExpandedItemId(null); }}><section className="association-image-modal" role="dialog" aria-modal="true" aria-label={`${expandedItem.label} agrandie`}><button className="association-image-modal__close" type="button" onClick={() => setExpandedItemId(null)}>Fermer <span aria-hidden="true">×</span></button><div className="association-image-modal__image" role="img" aria-label={expandedItem.imageAlt ?? expandedItem.label} style={{ backgroundImage: `url("${expandedItem.imageUrl}")` }} /><strong>{expandedItem.label}</strong></section></div> : null}
+    <section className={`association-pool${hasImageItems ? " association-pool--images" : ""}${hasDocumentItems ? " association-pool--documents" : ""}${hasCauseLayer ? " migration-movement-pool" : ""}`} aria-labelledby="association-pool-title">{hasCauseLayer ? <header className="migration-step-heading"><span>A</span><h3 id="association-pool-title">Place les mouvements migratoires</h3></header> : <h3 id="association-pool-title">{hasDocumentItems ? "Documents à associer" : "Éléments à associer"}</h3>}<div>{interaction.items.filter(({ id }) => !assignedItemIds.has(id)).map(renderAssociationItem)}</div></section>
+    {hasMapLayout && interaction.map ? <div className={`association-map-board${hasCauseLayer ? " migration-map-board" : ""}`}><Image className="association-map-image" src={interaction.map.imageUrl} alt={interaction.map.imageAlt} width={1600} height={1220} unoptimized />{interaction.targets.map((target) => { const item = itemById.get(assignments[target.id]); const zone = target.zone; if (!zone) return null; return <article className={`association-map-zone association-map-zone--${target.id}`} key={target.id} style={{ left: `${zone.x}%`, top: `${zone.y}%`, width: `${zone.width}%`, height: `${zone.height}%` }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); assign(target.id, droppedMovement(event.dataTransfer.getData("text/plain"))); }}><span>{target.label}</span>{item ? <button className="association-map-date" type="button" disabled={completed} onClick={() => setAssignments((current) => Object.fromEntries(Object.entries(current).filter(([key]) => key !== target.id)))}>{item.label}<small>{completed ? "" : "Retirer"}</small></button> : <button className="association-map-drop" type="button" disabled={!selectedItemId || completed} aria-label={hasCauseLayer ? `Emplacement : ${target.description}` : undefined} onClick={() => assign(target.id)}>{selectedItemId ? "Déposer ici" : hasCauseLayer ? "" : interaction.map?.dropLabel ?? "Date"}</button>}</article>; })}{causeTargets.map((target) => { const documentReference = causeDocumentById.get(causeAssignments[target.id]); const zone = target.zone; return <article className="migration-cause-target" key={target.id} style={{ left: `${zone.x}%`, top: `${zone.y}%`, width: `${zone.width}%`, height: `${zone.height}%` }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const payload = event.dataTransfer.getData("text/plain"); if (payload.startsWith("cause:")) assignCause(target.id, payload.slice("cause:".length)); }}><span>{target.label}</span><button type="button" disabled={completed || (!documentReference && !selectedCauseDocumentId)} aria-label={documentReference ? `Document ${documentReference.number} placé comme cause; retirer` : "Déposer le numéro du document-cause"} onClick={() => documentReference ? setCauseAssignments((current) => Object.fromEntries(Object.entries(current).filter(([key]) => key !== target.id))) : assignCause(target.id)}>{documentReference?.number ?? "?"}</button></article>; })}</div> : null}
+    {hasCauseLayer ? <section className="migration-document-bank" aria-labelledby="migration-document-bank-title"><header><div className="migration-step-heading"><span>B</span><h3 id="migration-document-bank-title">Associe les documents-causes</h3></div><p>Lis chaque document, puis déplace seulement son numéro dans un cercle « Cause ».</p></header><div>{causeDocuments.map((reference) => { const document = learningDocumentById.get(reference.documentId); if (!document) return null; const assigned = Object.values(causeAssignments).includes(reference.documentId); const expandDocument = () => { setCauseDocumentImageZoom(1); setExpandedCauseDocumentId(reference.documentId); }; return <article className={`migration-document-card${assigned ? " migration-document-card--assigned" : ""}`} key={reference.documentId} onClick={(event) => { if ((event.target as HTMLElement).closest("button, details, a")) return; expandDocument(); }}><button className="migration-document-number" type="button" draggable={!completed} aria-pressed={selectedCauseDocumentId === reference.documentId} aria-label={`Sélectionner le document ${reference.number} comme cause`} onDragStart={(event) => beginCauseDrag(event, reference.documentId)} onClick={() => setSelectedCauseDocumentId(reference.documentId)}>{reference.number}</button><div className="migration-document-card__content"><div><span>Document {reference.number}</span><small>{document.dateLabel}</small></div>{document.content.kind === "historical_excerpt" ? <blockquote>{document.content.excerpt}</blockquote> : document.content.kind === "historical_image" ? <figure><Image src={document.content.localSrc} alt={document.content.alt} width={320} height={190} sizes="(max-width: 760px) 42vw, 250px" draggable={false} unoptimized /><figcaption>{document.content.visibleCaption ?? document.content.description}</figcaption></figure> : null}<div className="migration-document-card__actions"><button className="expand-document migration-document-expand" type="button" aria-haspopup="dialog" onClick={expandDocument}><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" /></svg>Agrandir</button><details><summary>Source et droits</summary><p>{document.sourceLabel}</p><p>{document.rightsLabel}</p></details></div></div></article>; })}</div></section> : null}
+    <div className={`association-targets${hasImageTargets ? " association-targets--maps" : ""}${hideTargetLabels ? " association-targets--without-labels" : ""}${hasDescriptiveTargetLabels ? " association-targets--descriptive-labels" : ""}${useCompactDateLayout ? ` association-targets--date-timeline association-targets--count-${interaction.targets.length}` : ""}`} role={useCompactDateLayout ? "list" : undefined} aria-label={useCompactDateLayout ? "Ligne du temps de l’expansion territoriale du Canada" : undefined}>{interaction.targets.map((target, index) => { const item = itemById.get(assignments[target.id]); return <article role={useCompactDateLayout ? "listitem" : undefined} key={target.id} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); assign(target.id, droppedMovement(event.dataTransfer.getData("text/plain"))); }}><span>{target.label ?? index + 1}</span>{target.description !== target.label ? <p>{target.description}</p> : null}{target.imageUrl ? <Image className="association-target-image" src={target.imageUrl} alt={target.imageAlt ?? target.description} width={920} height={700} sizes="(max-width: 760px) 92vw, 44vw" unoptimized /> : null}{item ? <><button className={`association-assigned-item${item.imageUrl ? " association-assigned-item--image" : ""}`} type="button" disabled={completed} onClick={() => setAssignments((current) => Object.fromEntries(Object.entries(current).filter(([key]) => key !== target.id)))}>{item.imageUrl ? <Image src={item.imageUrl} alt={item.imageAlt ?? item.label} width={460} height={350} sizes="(max-width: 620px) 70vw, 22vw" draggable={false} unoptimized /> : null}<span>{item.label}</span><small>{completed ? "" : "Retirer"}</small></button>{item.imageUrl ? <button className="association-placed-expand" type="button" aria-label={`Agrandir ${item.label}`} onClick={() => setExpandedItemId(item.id)}><span aria-hidden="true">⤢</span> Agrandir</button> : null}</> : <button type="button" disabled={!selectedItemId || completed} onClick={() => assign(target.id)}>{selectedItemId ? "Déposer ici" : "Choisis un élément"}</button>}</article>; })}</div>
+    <footer className="timeline-question__footer"><p role="status" aria-live="polite"><strong>Socrato</strong>{feedback}</p><button type="button" disabled={Object.keys(assignments).length !== interaction.targets.length || (hasCauseLayer && Object.keys(causeAssignments).length !== causeTargets.length) || completed} onClick={verify}>{completed ? "Réponse vérifiée" : attempts ? "Vérifier ma deuxième tentative" : "Vérifier mes réponses"}</button></footer>
+    {expandedCauseDocument ? <div className="document-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setExpandedCauseDocumentId(null); }}><section className="document-modal" role="dialog" aria-modal="true" aria-labelledby="expanded-document-title"><button ref={causeDocumentCloseButtonRef} type="button" className="close-document" onClick={() => setExpandedCauseDocumentId(null)} aria-label="Fermer la vue agrandie">×</button><DocumentContent document={expandedCauseDocument} expanded hideHeadingLabel imageZoom={causeDocumentImageZoom} onImageZoomChange={setCauseDocumentImageZoom} /></section></div> : null}
+    {expandedItemDocument ? <div className="document-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setExpandedItemId(null); }}><section className="document-modal" role="dialog" aria-modal="true" aria-labelledby="expanded-association-document-title"><button type="button" className="close-document" onClick={() => setExpandedItemId(null)} aria-label="Fermer la vue agrandie">×</button><div id="expanded-association-document-title" className="sr-only">{expandedItemDocument.title}</div><DocumentContent document={expandedItemDocument} expanded hideHeadingLabel imageZoom={causeDocumentImageZoom} onImageZoomChange={setCauseDocumentImageZoom} /></section></div> : expandedItem?.imageUrl ? <div className="association-image-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setExpandedItemId(null); }}><section className="association-image-modal" role="dialog" aria-modal="true" aria-label={`${expandedItem.label} agrandie`}><button className="association-image-modal__close" type="button" onClick={() => setExpandedItemId(null)}>Fermer <span aria-hidden="true">×</span></button><div className="association-image-modal__image" role="img" aria-label={expandedItem.imageAlt ?? expandedItem.label} style={{ backgroundImage: `url("${expandedItem.imageUrl}")` }} /><strong>{expandedItem.label}</strong></section></div> : null}
   </section>;
 }
 
@@ -1422,7 +1422,7 @@ function DocumentThumbnailPreview({ document }: { document: OrderedDocument }) {
   return <blockquote className="document-thumbnail-quote" aria-hidden="true">{document.content.adapted ? document.content.excerpt : <>« {document.content.excerpt} »</>}</blockquote>;
 }
 
-function DocumentContent({ document, expanded = false, compact = false, onExpand, imageZoom = 1, onImageZoomChange }: { document: OrderedDocument; expanded?: boolean; compact?: boolean; onExpand?: () => void; imageZoom?: number; onImageZoomChange?: (zoom: number) => void }) {
+function DocumentContent({ document, expanded = false, compact = false, hideHeadingLabel = false, onExpand, imageZoom = 1, onImageZoomChange }: { document: OrderedDocument; expanded?: boolean; compact?: boolean; hideHeadingLabel?: boolean; onExpand?: () => void; imageZoom?: number; onImageZoomChange?: (zoom: number) => void }) {
   const identification = document.content.kind === "population_table" || document.content.kind === "comparison_table" || document.content.kind === "historical_comparison_chart"
     ? [document.sourceLabel, document.dateLabel].filter(Boolean).join(" · ")
     : [document.authorLabel ?? document.institutionLabel ?? document.sourceLabel, document.dateLabel].filter(Boolean).join(" · ");
@@ -1433,9 +1433,11 @@ function DocumentContent({ document, expanded = false, compact = false, onExpand
     <div className={`document-content${expanded ? " document-content-expanded" : ""}${compact ? " document-content-compact" : ""}${compactDensity}`}>
       <div className={`document-content-group document-content-group-${document.content.kind === "historical_image" ? "visual" : "textual"}`}>
         <h3 id={expanded ? "expanded-document-title" : undefined}>
-          <strong>Document {document.displayOrder}</strong>
-          <span aria-hidden="true"> · </span>
-          <small>{getVisibleDocumentHeading(document)}</small>
+          {hideHeadingLabel ? <strong>Document {document.displayOrder}</strong> : <>
+            <strong>Document {document.displayOrder}</strong>
+            <span aria-hidden="true"> · </span>
+            <small>{getVisibleDocumentHeading(document)}</small>
+          </>}
         </h3>
         {document.content.kind === "population_table" ? (
           <div className="population-table-wrap">

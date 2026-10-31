@@ -35,5 +35,5 @@ test("l’aperçu élève présente les trois documents dans l’ordre", () => {
   assert.ok(session);
   assert.equal(session.questions[0]?.id, POLITIQUE_NATIONALE_OBJECTIVES_ICONOGRAPHIC_QUESTION.id);
   assert.deepEqual(session.questions[0]?.documentRelations.map(({ documentId }) => documentId), ["PN-I-002", "PN-I-003", "PN-I-004"]);
-  assert.equal(session.questions[0]?.initialMessages[0]?.content, "J’attends ta réponse…");
+  assert.equal(session.questions[0]?.initialMessages[0]?.content, "J’attends ta réponse.");
 });

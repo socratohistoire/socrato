@@ -171,15 +171,14 @@ test("utilise officiellement le cas sans document", () => {
   assert.match(viewSource, /Cette question ne nécessite aucun document historique/);
 });
 
-test("présente les contrôles de réponse et la simulation locale de dictée", () => {
+test("présente les contrôles de réponse sans microphone", () => {
   assert.match(viewSource, /placeholder="Écris ta réponse ici…"/);
   assert.doesNotMatch(viewSource, /<label[^>]*>Écris ta réponse ici…<\/label>/);
   assert.match(viewSource, /aria-label="Réponse de l’élève"/);
   assert.match(viewSource, /Envoyer ma réponse/);
-  assert.match(viewSource, /className="composer-icon-button voice-button" onClick=\{handleVoicePrimaryAction\} disabled=\{voiceBusy \|\| voiceUnavailable\}/);
-  assert.match(viewSource, /<svg className="microphone-icon"/);
+  assert.doesNotMatch(viewSource, /voice-button|handleVoicePrimaryAction|microphone-icon/);
   assert.doesNotMatch(viewSource, /♩/);
-  assert.match(viewSource, /title=\{voicePrimaryLabel\}/);
+  assert.doesNotMatch(viewSource, /voicePrimaryLabel/);
 });
 
 test("applique la lisibilité pédagogique à tous les messages", () => {
@@ -522,7 +521,7 @@ test("adapte l’association interactive aux concepts, aux lettres et au nombre 
 });
 
 test("garde les documents à droite de la conversation sur un petit ordinateur", () => {
-  assert.match(viewSource, /questionDocuments\.length > 0 \? " session-layout--with-documents"/);
+  assert.match(viewSource, /questionDocuments\.length > 0 && !usesEmbeddedCauseDocumentBank && !usesEmbeddedAssociationDocumentBank \? " session-layout--with-documents"/);
   assert.match(cssSource, /@media \(min-width:900px\)\{\.learning-session \.session-layout--with-documents:not\(\.session-layout--timeline\)/);
   assert.match(cssSource, /\.session-layout--with-documents:not\(\.session-layout--timeline\) \.documents-pane\{grid-column:2;grid-row:2\}/);
 });
@@ -775,9 +774,9 @@ test("affiche les choix A à D et remplace la réponse libre pour une question �
   assert.match(viewSource, /className="multiple-choice-check"/);
   assert.match(cssSource, /\.multiple-choice-options button \{/);
   assert.match(viewSource, /isMultipleChoice && questionDocuments\.length === 0 \? null : <div className="documents-heading-copy">/);
-  assert.match(viewSource, /<strong>Socrato<\/strong><p>J’attends ta réponse…<\/p>/);
+  assert.match(viewSource, /<strong>Socrato<\/strong><p>\{SOCRATO_INITIAL_RESPONSE_PROMPT\}<\/p>/);
   assert.match(viewSource, /questionDocuments\.length === 0 \? renderMultipleChoiceResponse\(true\)/);
-  assert.match(viewSource, /\{questionDocuments\.length === 0 \? null : <>/);
+  assert.match(viewSource, /\{questionDocuments\.length === 0 \|\| usesEmbeddedCauseDocumentBank \? null : <>/);
   assert.match(cssSource, /\.multiple-choice-socrato-panel \{/);
   assert.match(viewSource, /session-layout--choice-no-documents/);
   assert.match(cssSource, /\.learning-session \.session-layout--choice-no-documents\{[^}]*max-width:1600px[^}]*grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)/);
@@ -899,23 +898,15 @@ test("distingue la sélection légère du focus clavier des vignettes", () => {
   assert.match(cssSource, /\.learning-session button:focus-visible[^}]*outline:3px solid/);
 });
 
-test("intègre la dictée et l’envoi iconographique dans un compositeur compact", () => {
-  assert.match(viewSource, /const sendUnavailable = !response\.trim\(\) \|\| responseUnavailable \|\| voiceBlocksSending/);
-  assert.match(viewSource, /if \(!content \|\| submitting \|\| submissionLockRef\.current \|\| voiceBlocksSending/);
+test("intègre l’envoi iconographique sans contrôle de dictée", () => {
+  assert.match(viewSource, /const sendUnavailable = !response\.trim\(\) \|\| responseUnavailable/);
+  assert.match(viewSource, /if \(!content \|\| submitting \|\| submissionLockRef\.current \|\| engineState\.status/);
   assert.match(viewSource, /className="composer-icon-button submit-button" disabled=\{sendUnavailable\} aria-label="Envoyer ma réponse" title="Envoyer ma réponse"/);
-  assert.match(viewSource, /className="composer-icon-button voice-button" onClick=\{handleVoicePrimaryAction\}/);
-  assert.match(viewSource, /aria-label=\{voicePrimaryLabel\} title=\{voicePrimaryLabel\}/);
   assert.doesNotMatch(viewSource, />Envoyer ma réponse</);
-  assert.doesNotMatch(viewSource, />Dicter ma réponse</);
-  assert.match(viewSource, /<span>Arrêter<\/span>/);
-  assert.match(viewSource, /Enregistrement en cours/);
-  assert.match(viewSource, /formatRecordingDuration\(voiceState\.elapsedSeconds\)/);
-  assert.match(viewSource, /className="voice-processing-state" role="status">\{voicePrimaryLabel\}/);
-  assert.match(viewSource, />Annuler<\/button>/);
+  assert.doesNotMatch(viewSource, /voice-button|voicePrimaryLabel|microphone-icon|Dicter ma réponse|Enregistrement en cours/);
   assert.match(cssSource, /\.composer-icon-button \{[^}]*width:44px[^}]*height:44px/);
-  assert.match(cssSource, /\.voice-stop-button \{[^}]*min-height:44px[^}]*background:#b32636/);
   assert.match(cssSource, /\.submit-button:disabled \{[^}]*cursor:not-allowed/);
-  assert.match(cssSource, /\.microphone-icon \{ width:20px; height:20px; flex:0 0 auto; fill:none; stroke:currentColor; stroke-linecap:round; stroke-linejoin:round; stroke-width:1\.8; \}/);
+  assert.doesNotMatch(cssSource, /\.voice-button|\.voice-stop-button|\.microphone-icon/);
 });
 
 test("relie les cartes d’activité du tableau de bord à la séance", () => {

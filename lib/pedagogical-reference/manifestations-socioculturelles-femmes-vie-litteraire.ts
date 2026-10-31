@@ -1,0 +1,143 @@
+import type { HistoricalDocumentRecord } from "./historical-document.ts";
+import type { ApprovedQuestion, ReferenceSource } from "./types.ts";
+
+export const MANIFESTATIONS_LAURE_CONAN_LITERARY_ENTRY_DOCUMENT = {
+  schemaVersion: 1,
+  id: "MSC-T-005",
+  title: "Une femme réclame sa place dans la littérature — 1883-1884",
+  kind: "other",
+  status: "ready-for-review",
+  periodIds: ["1840-1896"],
+  knowledgeHeadingIds: ["manifestations-socioculturelles"],
+  operationIds: ["changes_and_continuities"],
+  historicalDate: "1883-1884",
+  creator: "Henri-Raymond Casgrain, à propos de Laure Conan",
+  holdingInstitution: "Internet Archive · Bibliothèque mobile de littérature québécoise",
+  sourceUrl: "https://bibliotheque-mobile.quebec/fiche/conan-angeline-de-montbrun",
+  sourceLocator: "Henri-Raymond Casgrain, « Étude sur Angéline de Montbrun », texte daté de Québec, octobre 1883, publié dans Laure Conan, Angéline de Montbrun, Québec, Léger Brousseau, 1884, p. 169-170",
+  assetUrl: "https://archive.org/details/cihm_75952/page/n179/mode/2up",
+  rightsStatement: "Étude publiée en 1884 et appartenant au domaine public. La ponctuation a été légèrement normalisée et une erreur manifeste de reconnaissance optique a été corrigée (« droit de cité »); les crochets signalent une coupure.",
+  transcription: "Il y a deux ans, la Revue canadienne de Montréal entreprenait, sous le titre d’Angéline de Montbrun, la publication d’un roman canadien qu’on disait une œuvre fort remarquable. La curiosité publique fut vivement piquée par l’annonce que ce roman était dû à une femme, dont le nom véritable commençait à se faire jour à travers le pseudonyme de Laure Conan, derrière lequel s’abritait l’auteur. C’était une nouveauté dans notre littérature toute nouvelle : jusque-là les hommes seuls y avaient eu droit de cité. Pour la première fois une femme venait y réclamer sa place […].",
+  accessibleDescription: "Extrait de quatre phrases dans lequel Henri-Raymond Casgrain présente en 1883 la publication du roman de Laure Conan comme une nouveauté dans une vie littéraire jusque-là dominée par les hommes.",
+  historicalContext: "Laure Conan publie Angéline de Montbrun par livraisons dans La Revue canadienne à partir de 1881, puis en volume en 1884. Le jugement de Casgrain montre qu’une femme reconnue comme romancière demeure alors une nouveauté dans le milieu littéraire canadien-français.",
+  observationGuide: [
+    "Repérer pourquoi la publication attire la curiosité du public.",
+    "Identifier le nom utilisé par l’autrice pour publier son œuvre.",
+    "Relever l’expression qui montre que la participation d’une femme est encore considérée comme exceptionnelle.",
+  ],
+  interpretationCautions: [
+    "Casgrain exprime le jugement d’un critique de son époque; l’expression « pour la première fois » ne permet pas d’affirmer qu’aucune femme n’avait jamais écrit ou publié auparavant.",
+    "Le pseudonyme de Laure Conan témoigne de sa manière d’entrer dans le milieu littéraire, mais le document n’en explique pas toutes les raisons.",
+  ],
+  pedagogicalUses: [
+    "Observer le caractère encore exceptionnel de la reconnaissance publique d’une romancière au début des années 1880.",
+    "Comparer la participation d’une autrice dans une revue existante avec la direction d’une revue par une femme dans les années 1890.",
+  ],
+  version: "0.1.0",
+  approvedAt: null,
+} as const satisfies HistoricalDocumentRecord;
+
+export const MANIFESTATIONS_COIN_DU_FEU_WOMEN_PERIODICAL_DOCUMENT = {
+  schemaVersion: 1,
+  id: "MSC-T-006",
+  title: "Une revue dirigée par une femme pour les femmes — 1893",
+  kind: "newspaper",
+  status: "ready-for-review",
+  periodIds: ["1840-1896"],
+  knowledgeHeadingIds: ["manifestations-socioculturelles"],
+  operationIds: ["changes_and_continuities"],
+  historicalDate: "janvier 1893",
+  creator: "La direction du Coin du feu, sous Joséphine Marchand",
+  holdingInstitution: "Bibliothèque et Archives nationales du Québec",
+  sourceUrl: "https://numerique.banq.qc.ca/patrimoine/details/52327/2657698",
+  sourceLocator: "« À nos amis », Le Coin du feu, vol. 1, no 1, janvier 1893, p. 7, revue fondée et dirigée par Joséphine Marchand",
+  assetUrl: "https://numerique.banq.qc.ca/patrimoine/details/52327/2657698",
+  rightsStatement: "Article éditorial publié en 1893 et appartenant au domaine public. Les points de suspension entre crochets signalent les passages retranchés; aucune idée n’a été ajoutée au texte.",
+  transcription: "Cette tâche […] consistera surtout à amuser la jeunesse, à l’instruire et à lui donner le goût de la bonne littérature. Nous sommes fiers d’être les premiers à offrir aux Canadiennes un journal qui leur soit expressément et exclusivement dédié. […] Madame aura aussi, et ce ne sera que justice, son journal à elle, qui ne s’occupera que d’elle. […] Nos colonnes d’ailleurs sont ouvertes à toutes sortes de chefs-d’œuvre et nous accueillerons toujours avec la plus grande reconnaissance les écrits marqués au coin du talent et de l’esprit.",
+  accessibleDescription: "Extrait de quatre phrases de l’éditorial du premier numéro du Coin du feu, une revue fondée et dirigée par Joséphine Marchand, qui annonce un journal destiné aux Canadiennes et ouvert à de nouvelles contributions littéraires.",
+  historicalContext: "En janvier 1893, Joséphine Marchand lance Le Coin du feu, une revue canadienne-française dirigée par une femme et destinée principalement aux femmes. Elle y assume un rôle de direction, de sélection des textes et de production littéraire.",
+  observationGuide: [
+    "Repérer le public auquel la revue est destinée.",
+    "Identifier les objectifs littéraires et éducatifs annoncés.",
+    "Observer comment la direction invite d’autres personnes à soumettre des textes.",
+  ],
+  interpretationCautions: [
+    "L’éditorial est publié sans signature; il est attribué à la direction de la revue, sous Joséphine Marchand, plutôt qu’à Marchand seule.",
+    "La création d’une revue dirigée par une femme marque un élargissement de la participation, mais ne signifie pas que toutes les femmes ont alors un accès égal à la vie littéraire.",
+  ],
+  pedagogicalUses: [
+    "Montrer qu’une femme peut désormais organiser un espace de publication et y accueillir des œuvres.",
+    "Comparer ce rôle de direction à la position encore exceptionnelle d’une romancière au début des années 1880.",
+  ],
+  version: "0.1.0",
+  approvedAt: null,
+} as const satisfies HistoricalDocumentRecord;
+
+export const MANIFESTATIONS_WOMEN_LITERARY_LIFE_DOCUMENTS = [
+  MANIFESTATIONS_LAURE_CONAN_LITERARY_ENTRY_DOCUMENT,
+  MANIFESTATIONS_COIN_DU_FEU_WOMEN_PERIODICAL_DOCUMENT,
+] as const;
+
+const MANIFESTATIONS_WOMEN_LITERARY_LIFE_SOURCES: ReferenceSource[] = [
+  {
+    id: `document-source:${MANIFESTATIONS_LAURE_CONAN_LITERARY_ENTRY_DOCUMENT.id}`,
+    kind: "reference-work",
+    title: MANIFESTATIONS_LAURE_CONAN_LITERARY_ENTRY_DOCUMENT.title,
+    creator: MANIFESTATIONS_LAURE_CONAN_LITERARY_ENTRY_DOCUMENT.creator,
+    publisher: MANIFESTATIONS_LAURE_CONAN_LITERARY_ENTRY_DOCUMENT.holdingInstitution,
+    publicationYear: 1884,
+    url: MANIFESTATIONS_LAURE_CONAN_LITERARY_ENTRY_DOCUMENT.sourceUrl,
+    locator: MANIFESTATIONS_LAURE_CONAN_LITERARY_ENTRY_DOCUMENT.sourceLocator,
+    rightsNote: MANIFESTATIONS_LAURE_CONAN_LITERARY_ENTRY_DOCUMENT.rightsStatement,
+    verificationStatus: "verified",
+  },
+  {
+    id: `document-source:${MANIFESTATIONS_COIN_DU_FEU_WOMEN_PERIODICAL_DOCUMENT.id}`,
+    kind: "museum-or-archive",
+    title: MANIFESTATIONS_COIN_DU_FEU_WOMEN_PERIODICAL_DOCUMENT.title,
+    creator: MANIFESTATIONS_COIN_DU_FEU_WOMEN_PERIODICAL_DOCUMENT.creator,
+    publisher: MANIFESTATIONS_COIN_DU_FEU_WOMEN_PERIODICAL_DOCUMENT.holdingInstitution,
+    publicationYear: 1893,
+    url: MANIFESTATIONS_COIN_DU_FEU_WOMEN_PERIODICAL_DOCUMENT.sourceUrl,
+    locator: MANIFESTATIONS_COIN_DU_FEU_WOMEN_PERIODICAL_DOCUMENT.sourceLocator,
+    rightsNote: MANIFESTATIONS_COIN_DU_FEU_WOMEN_PERIODICAL_DOCUMENT.rightsStatement,
+    verificationStatus: "verified",
+  },
+];
+
+export const MANIFESTATIONS_WOMEN_LITERARY_LIFE_CHANGE_QUESTION = {
+  schemaVersion: 1,
+  id: "question:manifestations-socioculturelles:short-answer-003",
+  scope: "notional",
+  knowledgeHeadingId: "manifestations-socioculturelles",
+  relatedKnowledgeHeadingIds: ["manifestations-socioculturelles"],
+  referenceCardId: "reference-card:manifestations-socioculturelles",
+  historicalRecordId: "historical-record:manifestations-socioculturelles",
+  status: "ready-for-review",
+  format: "short-answer",
+  prompt: "Décrivez un changement dans la participation des femmes à la vie littéraire québécoise entre 1880 et 1896.",
+  instruction: "Comparez les deux documents. Décrivez ce que révèle la publication de Laure Conan au début des années 1880, puis le nouveau rôle assumé par Joséphine Marchand dans les années 1890.",
+  initialGuidance: "J’attends ta réponse.",
+  expectedAnswer: "Au début des années 1880, la participation publique d’une femme comme romancière est encore présentée comme exceptionnelle : Laure Conan publie dans une revue existante sous un pseudonyme et un critique affirme qu’une femme vient réclamer sa place dans une littérature jusque-là dominée par les hommes. En 1893, la participation s’élargit : Joséphine Marchand ne se limite pas à publier un texte, elle fonde et dirige Le Coin du feu, choisit des contenus, s’adresse directement aux femmes et ouvre les pages de la revue à d’autres écrits. Le changement est donc le passage illustré par ces documents d’une présence féminine perçue comme rare parmi les auteurs à un rôle plus actif dans l’organisation et la direction d’un espace littéraire. Accepter toute formulation juste de ce changement qui s’appuie sur les deux documents, sans exiger que l’élève affirme que toutes les femmes bénéficient désormais du même accès.",
+  historicalDocumentIds: MANIFESTATIONS_WOMEN_LITERARY_LIFE_DOCUMENTS.map(({ id }) => id),
+  commonErrors: [
+    "Décrire les deux documents séparément sans formuler de changement entre les deux moments.",
+    "Affirmer qu’aucune femme n’écrivait ou ne publiait avant Laure Conan.",
+    "Réduire le rôle de Joséphine Marchand à celui de lectrice sans mentionner qu’elle fonde et dirige une revue.",
+    "Conclure que toutes les femmes ont obtenu un accès égal à la vie littéraire en 1893.",
+  ],
+  distractors: [],
+  operationId: "changes_and_continuities",
+  sourceIds: MANIFESTATIONS_WOMEN_LITERARY_LIFE_SOURCES.map(({ id }) => id),
+  sourceCatalog: MANIFESTATIONS_WOMEN_LITERARY_LIFE_SOURCES,
+  rationale: "Deux documents contemporains produits à une dizaine d’années d’intervalle permettent de décrire un changement observable : d’une romancière encore présentée comme une exception à une femme qui crée, dirige et ouvre un espace de publication littéraire.",
+  review: {
+    documented: true,
+    historicallyVerified: true,
+    pedagogicallyVerified: false,
+    biasAndLanguageReviewed: true,
+    approvedBy: null,
+    approvedVersion: null,
+    approvedAt: null,
+  },
+} as const satisfies ApprovedQuestion;

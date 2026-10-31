@@ -285,23 +285,23 @@ test("génère un aperçu déterministe depuis les documents approuvés", async 
   const second = createLocalActivityPreview(unlimitedRevisionConfig, catalog);
   assert.deepEqual(first, second);
   assert.deepEqual(first.documents.map(({ id }) => id), ["PAT-T-002", "PAT-T-003", "PAT-T-007"]);
-  assert.equal(catalog.questions.length, 116);
+  assert.equal(catalog.questions.length, 134);
   assert.equal(catalog.questions.some(({ id }) => id === "question:acte-union:document-interpretation-005"), false);
   assert.equal(first.operationLabel, "Établir des liens de causalité");
   assert.equal(first.question, catalog.questions[0]?.prompt);
   assert.match(first.question, /réponse britannique.*Rébellions/);
-  assert.match(first.guidance[0] ?? "", /^Bonjour,/);
+  assert.equal(first.guidance[0], "J’attends ta réponse.");
   assert.equal(first.questionId, catalog.questions[0]?.id);
 });
 
-test("Socrato adapte son accueil des réponses courtes à la présence de documents", async () => {
+test("Socrato attend la réponse pour toutes les réponses courtes", async () => {
   const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
   const shortAnswerIndexes = getEligibleActivityQuestions(unlimitedRevisionConfig, catalog)
     .map((question, index) => ({ question, index }))
     .filter(({ question }) => question.format === "short-answer");
   assert.ok(shortAnswerIndexes.length > 0);
   for (const { question, index } of shortAnswerIndexes) {
-    assert.equal(createLocalActivityPreview(unlimitedRevisionConfig, catalog, index).guidance[0], question.initialGuidance ?? (question.historicalDocumentIds.length === 0 ? "J’attends ta réponse…" : question.historicalDocumentIds.length === 1 ? "Bonjour, consulte la source puis réponds à la question." : "Bonjour, consulte les sources puis réponds à la question."));
+    assert.equal(createLocalActivityPreview(unlimitedRevisionConfig, catalog, index).guidance[0], "J’attends ta réponse.");
   }
 });
 
@@ -313,20 +313,19 @@ test("Socrato attend simplement la réponse dès qu’une question ne contient a
     .filter(({ question }) => question.historicalDocumentIds.length === 0);
   assert.ok(questionsWithoutDocuments.length > 0);
   for (const { index } of questionsWithoutDocuments) {
-    assert.equal(createLocalActivityPreview(unlimitedRevisionConfig, catalog, index).guidance[0], "J’attends ta réponse…");
+    assert.equal(createLocalActivityPreview(unlimitedRevisionConfig, catalog, index).guidance[0], "J’attends ta réponse.");
   }
 });
 
-test("Socrato invite à consulter les sources pour toutes les interprétations de documents", async () => {
+test("Socrato attend la réponse pour toutes les interprétations de documents", async () => {
   const catalog = await new LocalActivityCreatorProvider("test").getCatalog();
   const documentQuestionIndexes = getEligibleActivityQuestions(unlimitedRevisionConfig, catalog)
     .map((question, index) => ({ question, index }))
     .filter(({ question }) => question.format === "document-interpretation");
   assert.ok(documentQuestionIndexes.length > 0);
-  for (const { question, index } of documentQuestionIndexes) {
+  for (const { index } of documentQuestionIndexes) {
     const guidance = createLocalActivityPreview(unlimitedRevisionConfig, catalog, index).guidance[0];
-    if (question.id === "question:acte-union:understand-causes-consequences") assert.match(guidance, /comprendre comment déterminer une cause et une conséquence/);
-    else assert.equal(guidance, question.initialGuidance ?? (question.historicalDocumentIds.length === 1 ? "Bonjour, consulte la source puis réponds à la question." : "Bonjour, consulte les sources puis réponds à la question."));
+    assert.equal(guidance, "J’attends ta réponse.");
   }
 });
 

@@ -93,8 +93,10 @@ export type LearningSessionQuestion = {
     correction?: string;
     documentId?: string;
     map?: { imageUrl: string; imageAlt: string; dropLabel?: string };
-    items: readonly { id: string; label: string; imageUrl?: string; imageAlt?: string }[];
+    items: readonly { id: string; label: string; imageUrl?: string; imageAlt?: string; documentId?: string }[];
     targets: readonly { id: string; label?: string; description: string; imageUrl?: string; imageAlt?: string; correctItemId: string; zone?: { x: number; y: number; width: number; height: number } }[];
+    causeDocuments?: readonly { documentId: string; number: number }[];
+    causeTargets?: readonly { id: string; label: string; correctDocumentId: string; zone: { x: number; y: number; width: number; height: number } }[];
     categories?: readonly { id: string; label: string; articleLabel: string; description: string; correctItemIds: readonly string[] }[];
     tension?: { title: string; prompt: string; explanation: string };
   };

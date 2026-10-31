@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Organisation du Conseil de l’instruction publique en 1869</title>
+  <desc id="desc">Le Conseil de l’instruction publique se divise en un comité catholique associé aux écoles catholiques et un comité protestant associé aux écoles protestantes.</desc>
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fffdf6"/>
+      <stop offset="1" stop-color="#f4ecdc"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0 0L12 6L0 12Z" fill="#9b7437"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#172d42" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="760" fill="url(#paper)"/>
+  <rect x="26" y="26" width="1148" height="708" rx="24" fill="none" stroke="#b8945a" stroke-width="3"/>
+  <text x="600" y="78" text-anchor="middle" fill="#17344b" font-family="Georgia, serif" font-size="35" font-weight="700">Organisation du Conseil de l’instruction publique</text>
+  <text x="600" y="116" text-anchor="middle" fill="#765b37" font-family="Arial, sans-serif" font-size="21">Loi scolaire de 1869</text>
+
+  <g filter="url(#shadow)">
+    <rect x="355" y="158" width="490" height="108" rx="17" fill="#17344b"/>
+    <text x="600" y="204" text-anchor="middle" fill="#fffdf6" font-family="Arial, sans-serif" font-size="25" font-weight="700">CONSEIL DE L’INSTRUCTION PUBLIQUE</text>
+    <text x="600" y="238" text-anchor="middle" fill="#ecd69c" font-family="Arial, sans-serif" font-size="18">Instance centrale</text>
+  </g>
+
+  <path d="M510 266 C510 310 330 310 330 355" fill="none" stroke="#9b7437" stroke-width="7" marker-end="url(#arrow)"/>
+  <path d="M690 266 C690 310 870 310 870 355" fill="none" stroke="#9b7437" stroke-width="7" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="120" y="372" width="420" height="120" rx="17" fill="#f6e6d9" stroke="#7c3f39" stroke-width="4"/>
+    <text x="330" y="420" text-anchor="middle" fill="#5f2d29" font-family="Arial, sans-serif" font-size="28" font-weight="700">COMITÉ CATHOLIQUE</text>
+    <text x="330" y="456" text-anchor="middle" fill="#5f2d29" font-family="Arial, sans-serif" font-size="19">Questions concernant l’éducation</text>
+    <text x="330" y="480" text-anchor="middle" fill="#5f2d29" font-family="Arial, sans-serif" font-size="19">des catholiques</text>
+
+    <rect x="660" y="372" width="420" height="120" rx="17" fill="#e4eef5" stroke="#365f7e" stroke-width="4"/>
+    <text x="870" y="420" text-anchor="middle" fill="#244c69" font-family="Arial, sans-serif" font-size="28" font-weight="700">COMITÉ PROTESTANT</text>
+    <text x="870" y="456" text-anchor="middle" fill="#244c69" font-family="Arial, sans-serif" font-size="19">Questions concernant l’éducation</text>
+    <text x="870" y="480" text-anchor="middle" fill="#244c69" font-family="Arial, sans-serif" font-size="19">des protestants</text>
+  </g>
+
+  <path d="M330 492V548" fill="none" stroke="#7c3f39" stroke-width="6" marker-end="url(#arrow)"/>
+  <path d="M870 492V548" fill="none" stroke="#365f7e" stroke-width="6" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="170" y="566" width="320" height="82" rx="15" fill="#fffaf3" stroke="#7c3f39" stroke-width="3"/>
+    <text x="330" y="616" text-anchor="middle" fill="#5f2d29" font-family="Georgia, serif" font-size="27" font-weight="700">Écoles catholiques</text>
+    <rect x="710" y="566" width="320" height="82" rx="15" fill="#f7fbff" stroke="#365f7e" stroke-width="3"/>
+    <text x="870" y="616" text-anchor="middle" fill="#244c69" font-family="Georgia, serif" font-size="27" font-weight="700">Écoles protestantes</text>
+  </g>
+
+  <text x="600" y="698" text-anchor="middle" fill="#655c50" font-family="Arial, sans-serif" font-size="16">Schéma de synthèse construit à partir de l’article 2 de la loi de 1869</text>
+</svg>

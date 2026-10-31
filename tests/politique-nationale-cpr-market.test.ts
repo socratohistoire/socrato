@@ -36,5 +36,5 @@ test("l’aperçu élève présente d’abord le discours utile, puis la lettre 
   assert.ok(session);
   assert.equal(session.questions[0]?.id, POLITIQUE_NATIONALE_CPR_MARKET_QUESTION.id);
   assert.deepEqual(session.questions[0]?.documentRelations.map(({ documentId }) => documentId), ["PN-T-006", "PN-T-007"]);
-  assert.equal(session.questions[0]?.initialMessages[0]?.content, "J’attends ta réponse…");
+  assert.equal(session.questions[0]?.initialMessages[0]?.content, "J’attends ta réponse.");
 });

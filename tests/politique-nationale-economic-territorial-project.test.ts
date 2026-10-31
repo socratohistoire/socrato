@@ -34,5 +34,5 @@ test("l’aperçu élève présente les quatre documents dans l’ordre de la ch
   assert.ok(session);
   assert.equal(session.questions[0]?.id, POLITIQUE_NATIONALE_ECONOMIC_TERRITORIAL_PROJECT_QUESTION.id);
   assert.deepEqual(session.questions[0]?.documentRelations.map(({ documentId }) => documentId), ["PN-S-002", "PN-T-001", "PN-T-003", "PN-T-004"]);
-  assert.equal(session.questions[0]?.initialMessages[0]?.content, "J’attends ta réponse…");
+  assert.equal(session.questions[0]?.initialMessages[0]?.content, "J’attends ta réponse.");
 });

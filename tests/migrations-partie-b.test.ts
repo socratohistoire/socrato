@@ -45,8 +45,8 @@ test("le dossier contient dix documents sourcés, six utiles et quatre à discri
   const document10 = MIGRATIONS_DOCUMENTS.find(({ number }) => number === 10);
   assert.ok(document10 && "excerpt" in document10 && !("image" in document10));
   assert.equal(document10.title, "");
-  assert.match(document10.excerpt, /Fidèle à mon roi.*province de Québec/i);
-  assert.match(document10.source, /Michael Grass.*Kingston Gazette.*10 décembre 1811/i);
+  assert.match(document10.excerpt, /Boston.*Halifax.*Nouvelle-Angleterre/i);
+  assert.match(document10.source, /Lucy Knox.*Hannah Urquhart.*1776/i);
   assert.doesNotMatch(JSON.stringify(document10), /RÉCIT|migrations-loyalistes-1783-recitus/i);
 });
 

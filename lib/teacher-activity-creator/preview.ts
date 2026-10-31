@@ -1,5 +1,5 @@
 import type { ActivityConfiguration, ActivityCreatorCatalog, ActivityPreview } from "./types.ts";
-import { CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID } from "./intellectual-operation-learning.ts";
+import { SOCRATO_INITIAL_RESPONSE_PROMPT } from "../student-learning-session/initial-message.ts";
 
 type BalancedRevisionFormat = "multiple-choice" | "short-answer" | "document-interpretation";
 
@@ -166,13 +166,7 @@ export function createLocalActivityPreview(config: ActivityConfiguration, catalo
     historicalKnowledgeIds: catalogQuestion?.relatedKnowledgeHeadingIds ?? [notion.id],
     question,
     instruction,
-    guidance: [catalogQuestion?.initialGuidance ?? (catalogQuestion?.id === CAUSES_CONSEQUENCES_LEARNING_QUESTION_ID
-      ? "Aujourd’hui, je vais t’aider à comprendre comment déterminer une cause et une conséquence. Commençons simplement : quel est l’événement historique central présenté dans les trois documents?"
-      : previewDocuments.length === 0
-      ? "J’attends ta réponse…"
-      : previewDocuments.length === 1
-      ? "Bonjour, consulte la source puis réponds à la question."
-      : "Bonjour, consulte les sources puis réponds à la question.")],
+    guidance: [SOCRATO_INITIAL_RESPONSE_PROMPT],
     documents: previewDocuments,
     timelineInteraction: catalogQuestion?.timelineInteraction,
     associationInteraction: catalogQuestion?.associationInteraction,

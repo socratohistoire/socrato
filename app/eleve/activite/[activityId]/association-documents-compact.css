@@ -1,0 +1,105 @@
+.association-question--documents {
+  gap: 8px;
+}
+
+.association-question--documents .association-question__intro {
+  max-width: 92ch;
+  margin-top: 6px;
+  color: #4a5565;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.association-question--documents .association-pool--documents {
+  padding: 9px;
+}
+
+.association-question--documents .association-pool--documents > div {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 7px;
+}
+
+.association-question--documents .association-pool--documents h3 {
+  font-size: 14px;
+}
+
+.association-question--documents .association-document-choice,
+.association-question--documents .association-pool--documents .association-document-select {
+  min-height: 168px;
+}
+
+.association-question--documents .association-pool--documents .association-document-select {
+  gap: 5px;
+  padding: 9px 10px;
+}
+
+.association-question--documents .association-document-choice__meta {
+  padding: 0 76px 5px 0;
+  font-size: 10px;
+}
+
+.association-question--documents .association-document-choice__meta small,
+.association-question--documents .association-document-choice__author {
+  font-size: 9px;
+}
+
+.association-question--documents .association-document-choice__excerpt {
+  padding: 6px 8px;
+  font-size: 10.5px;
+  line-height: 1.34;
+  -webkit-line-clamp: 7;
+}
+
+.association-question--documents .association-document-choice__image {
+  height: 102px;
+  object-fit: contain;
+}
+
+.association-question--documents .association-pool--documents .association-document-expand {
+  top: 6px;
+  right: 6px;
+  min-height: 27px;
+  padding: 3px 6px;
+  font-size: 9px;
+}
+
+.association-question--documents .association-targets {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.association-question--documents .association-targets article {
+  grid-template-columns: 1fr;
+  gap: 6px;
+  min-height: 72px;
+  padding: 8px 9px;
+}
+
+.association-question--documents .association-targets article > span {
+  font-size: 13px;
+  text-align: center;
+}
+
+.association-question--documents .association-targets article > button {
+  min-height: 34px;
+  padding-block: 5px;
+  font-size: 11px;
+}
+
+@media (max-width: 860px) {
+  .association-question--documents .association-pool--documents > div,
+  .association-question--documents .association-targets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .association-question--documents .association-pool--documents > div,
+  .association-question--documents .association-targets {
+    grid-template-columns: 1fr;
+  }
+}

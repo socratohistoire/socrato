@@ -1,0 +1,218 @@
+import type { HistoricalDocumentRecord } from "./historical-document.ts";
+import { MIGRATIONS_QUEBEC_SETTLEMENT_INTERVENTION_DOCUMENT } from "./migrations-colonization-intervention.ts";
+import { POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT } from "./politique-nationale-government-settlement-poster.ts";
+import type { ApprovedQuestion, ReferenceSource } from "./types.ts";
+
+export const MIGRATIONS_EMIGRATION_CAUSES_REPORT_DOCUMENT = {
+  schemaVersion: 1,
+  id: "MIG-T-003",
+  title: "Des difficultés agricoles qui poussent des familles à partir",
+  kind: "law-or-official-text",
+  status: "ready-for-review",
+  periodIds: ["1840-1896"],
+  knowledgeHeadingIds: ["migrations"],
+  operationIds: ["causes_and_consequences", "causal_connections"],
+  historicalDate: "1849",
+  creator: "Pierre-Joseph-Olivier Chauveau et six membres de l’Assemblée législative",
+  holdingInstitution: "Canadiana",
+  sourceUrl: "https://online.canadiana.ca/view/oocihm.9_00025/7?r=0&s=1",
+  sourceLocator: "Rapport du comité spécial […] sur l’émigration […] du Bas-Canada vers les États-Unis, Montréal, 1849, p. 13-14",
+  assetUrl: "https://online.canadiana.ca/view/oocihm.9_00025/7?r=0&s=1",
+  rightsStatement: "Rapport parlementaire de 1849 appartenant au domaine public; extrait recomposé en trois phrases et ponctuation modernisée par Socrato.",
+  transcription: "Plusieurs familles endettées ont été forcées de vendre leurs terres et leurs meubles, puis d’émigrer. Les mauvaises récoltes et l’état arriéré de l’agriculture ont aggravé leur misère. La distance des marchés, le manque de voies de communication et l’absence de navigation à vapeur ont aussi empêché les cultivateurs de tirer profit de leur travail.",
+  accessibleDescription: "Extrait d’un rapport parlementaire de 1849 qui relie l’émigration de familles du Bas-Canada à l’endettement, aux mauvaises récoltes, aux difficultés agricoles et à l’accès limité aux marchés.",
+  historicalContext: "Un comité de l’Assemblée législative étudie l’émigration du Bas-Canada vers les États-Unis. Il décrit plusieurs facteurs de départ qui touchent les familles rurales.",
+  observationGuide: [
+    "Repérer les difficultés économiques vécues par les familles.",
+    "Identifier l’action que ces difficultés les forcent à accomplir.",
+    "Relier ces facteurs de départ à l’émigration vers les États-Unis.",
+  ],
+  interpretationCautions: [
+    "Le rapport réunit plusieurs causes et ne signifie pas que toutes les familles émigrent pour les mêmes raisons.",
+    "L’extrait présente surtout des facteurs de départ; il ne décrit pas les emplois industriels qui attirent aussi des migrants en Nouvelle-Angleterre.",
+  ],
+  pedagogicalUses: [
+    "Associer des difficultés agricoles et économiques à l’émigration canadienne-française vers les États-Unis.",
+    "Distinguer un facteur de départ d’une destination migratoire.",
+  ],
+  version: "0.1.0",
+  approvedAt: null,
+} as const satisfies HistoricalDocumentRecord;
+
+export const MIGRATIONS_IRISH_FAMINE_DOCUMENT = {
+  schemaVersion: 1,
+  id: "MIG-I-001",
+  title: "La famine en Irlande : funérailles à Skibbereen",
+  kind: "image",
+  status: "ready-for-review",
+  periodIds: ["1840-1896"],
+  knowledgeHeadingIds: ["migrations"],
+  operationIds: ["time_and_space", "causal_connections"],
+  historicalDate: "30 janvier 1847",
+  creator: "Frederick James Smyth, d’après un croquis de H. Smith",
+  holdingInstitution: "The Illustrated London News · reproduction Wikimedia Commons",
+  sourceUrl: "https://commons.wikimedia.org/wiki/File:The_Famine_in_Ireland,_Funeral_at_Skibbereen_-_ILN_1847.jpg",
+  sourceLocator: "The Illustrated London News, 30 janvier 1847, « The Famine in Ireland — Funeral at Skibbereen »",
+  assetUrl: "/historical-documents/migrations-famine-skibbereen-1847.jpg",
+  rightsStatement: "Illustration publiée en 1847 et appartenant au domaine public; reproduction numérique diffusée sur Wikimedia Commons.",
+  transcription: "The Famine in Ireland — Funeral at Skibbereen.",
+  accessibleDescription: "Gravure de presse de 1847 montrant des habitants de Skibbereen transportant un cercueil pendant la Grande Famine en Irlande.",
+  historicalContext: "La Grande Famine frappe l’Irlande à partir de 1845. La faim, les maladies et la pauvreté poussent une partie importante de la population à quitter l’île, notamment vers l’Amérique du Nord.",
+  observationGuide: [
+    "Identifier le lieu et la date indiqués dans la légende.",
+    "Observer les conséquences humaines de la famine représentées dans la gravure.",
+    "Relier cette crise à un départ transatlantique vers l’Amérique du Nord.",
+  ],
+  interpretationCautions: [
+    "La scène témoigne des conséquences de la famine, mais ne représente pas le voyage transatlantique lui-même.",
+    "Les immigrants transatlantiques ne viennent pas tous d’Irlande; la source illustre une cause importante parmi plusieurs.",
+  ],
+  pedagogicalUses: [
+    "Relier la Grande Famine à l’émigration irlandaise et à l’immigration transatlantique au Canada.",
+    "Utiliser une source iconographique pour inférer un facteur de départ.",
+  ],
+  version: "0.1.0",
+  approvedAt: null,
+} as const satisfies HistoricalDocumentRecord;
+
+export const MIGRATIONS_RURAL_EXODUS_DOCUMENT = {
+  schemaVersion: 1,
+  id: "MIG-T-004",
+  title: "Quitter les champs pour la ville",
+  kind: "newspaper",
+  status: "ready-for-review",
+  periodIds: ["1840-1896"],
+  knowledgeHeadingIds: ["migrations"],
+  operationIds: ["causes_and_consequences", "causal_connections"],
+  historicalDate: "23 mai 1872",
+  creator: "Le Sud-Est (texte reproduit dans La Gazette des campagnes)",
+  holdingInstitution: "Canadiana",
+  sourceUrl: "https://www.canadiana.ca/view/oocihm.8_06185_334",
+  sourceLocator: "La Gazette des campagnes, 10e année, no 32, Sainte-Anne-de-la-Pocatière, 23 mai 1872, p. 6",
+  assetUrl: "https://www.canadiana.ca/view/oocihm.8_06185_334",
+  rightsStatement: "Article de journal publié en 1872 et appartenant au domaine public; orthographe et ponctuation légèrement modernisées par Socrato.",
+  transcription: "Les cultivateurs qui se logent mal et qui se nourrissent mal, dans le but d’arrondir la petite somme qu’ils mettent de côté à la fin de l’année, font une pitoyable économie. En violant ainsi les lois de l’hygiène, ils vont au-devant de la fièvre et des maladies de toutes sortes. Pour ces malheureuses victimes, la vie rurale est une longue suite de privations, et elles n’aspirent qu’à quitter les champs pour la ville. Quand nos cultivateurs sauront se constituer une habitation convenable qui les attachera à leur famille et à leur village, on n’aura plus à se préoccuper de la dépopulation des campagnes.",
+  accessibleDescription: "Extrait d’un journal agricole de 1872 qui décrit les privations de la vie rurale et le désir de quitter les campagnes pour la ville.",
+  historicalContext: "Dans la seconde moitié du XIXe siècle, l’industrialisation et l’urbanisation attirent vers les villes une partie de la population des campagnes québécoises. Publié à Sainte-Anne-de-la-Pocatière, ce texte s’inquiète de la dépopulation rurale.",
+  observationGuide: [
+    "Repérer les conditions de vie rurales décrites par le texte.",
+    "Identifier le déplacement souhaité par les personnes évoquées.",
+    "Relier la dépopulation des campagnes à l’exode rural vers une ville comme Montréal.",
+  ],
+  interpretationCautions: [
+    "Le texte nomme la ville sans préciser Montréal; la carte représente Montréal comme principale destination urbaine québécoise de la période.",
+    "L’auteur critique les conditions de vie rurales et propose de mieux loger les cultivateurs; il ne décrit pas directement les emplois industriels offerts en ville.",
+  ],
+  pedagogicalUses: [
+    "Identifier des conditions de vie rurales comme facteur de départ.",
+    "Associer la dépopulation des campagnes à l’exode rural vers Montréal.",
+  ],
+  version: "0.1.0",
+  approvedAt: null,
+} as const satisfies HistoricalDocumentRecord;
+
+export const MIGRATIONS_SPATIAL_CAUSALITY_DOCUMENTS = [
+  MIGRATIONS_EMIGRATION_CAUSES_REPORT_DOCUMENT,
+  POLITIQUE_NATIONALE_FREE_FARMS_GOVERNMENT_POSTER_DOCUMENT,
+  MIGRATIONS_IRISH_FAMINE_DOCUMENT,
+  MIGRATIONS_QUEBEC_SETTLEMENT_INTERVENTION_DOCUMENT,
+  MIGRATIONS_RURAL_EXODUS_DOCUMENT,
+] as const;
+
+export const MIGRATIONS_NATURAL_EARTH_MAP_SOURCE: ReferenceSource = {
+  id: "natural-earth-50m-migrations-atlantic",
+  kind: "other",
+  title: "Natural Earth — Admin 0 Countries, 1:50m",
+  creator: "Natural Earth",
+  publisher: "Natural Earth",
+  url: "https://www.naturalearthdata.com/downloads/50m-cultural-vectors/",
+  locator: "Fond de carte des pays à l’échelle 1:50 000 000, recadré sur le Canada, les États-Unis, l’Atlantique et l’Europe; trajets et trois agrandissements du Québec et du nord de la Nouvelle-Angleterre ajoutés par Socrato.",
+  rightsNote: "Toutes les données cartographiques vectorielles et matricielles de Natural Earth sont dans le domaine public.",
+  verificationStatus: "verified",
+};
+
+const documentSources: ReferenceSource[] = MIGRATIONS_SPATIAL_CAUSALITY_DOCUMENTS.map((document) => ({
+  id: `document-source:${document.id}`,
+  kind: document.id === "MIG-T-003" || document.id === "PN-I-001" ? "government" : document.kind === "image" ? "museum-or-archive" : document.kind === "newspaper" ? "other" : "reference-work",
+  title: document.title,
+  creator: document.creator,
+  publisher: document.holdingInstitution,
+  publicationYear: document.id === "MIG-T-003" ? 1849 : document.id === "MIG-I-001" ? 1847 : document.id === "MIG-T-001" ? 1880 : document.id === "MIG-T-004" ? 1872 : 1890,
+  url: document.sourceUrl,
+  locator: document.sourceLocator,
+  rightsNote: document.rightsStatement,
+  verificationStatus: "verified",
+}));
+
+export const MIGRATIONS_SPATIAL_CAUSALITY_QUESTION = {
+  schemaVersion: 1,
+  id: "question:migrations:interactive-association-001",
+  scope: "notional",
+  knowledgeHeadingId: "migrations",
+  relatedKnowledgeHeadingIds: ["migrations"],
+  referenceCardId: "reference-card:migrations",
+  historicalRecordId: "historical-record:migrations",
+  status: "ready-for-review",
+  format: "interactive-association",
+  prompt: "Situe les principaux mouvements migratoires qui touchent le Québec et le Canada entre 1840 et 1896, puis associe chaque mouvement au document qui en présente une cause.",
+  instruction: "Place d’abord chaque mouvement sur le bon trajet. Consulte ensuite la banque de documents et dépose seulement le numéro du document-cause dans le cercle placé au-dessus du trajet.",
+  initialGuidance: "Commence par les cinq mouvements. Les numéros des documents seront ensuite placés dans les cercles « Cause ».",
+  expectedAnswer: "Immigration transatlantique vers le Canada — document 3, qui montre les conséquences de la Grande Famine en Irlande. Émigration canadienne-française vers les États-Unis — document 1, qui décrit l’endettement, les mauvaises récoltes et les difficultés agricoles. Colonisation de nouvelles régions du Québec — document 4, qui relie le financement du chemin Kenogami à l’avancée de la colonisation vers le Lac-Saint-Jean. Établissement d’immigrants dans l’Ouest canadien — document 2, une affiche gouvernementale qui offre des fermes de 160 acres et met en valeur le Canadien Pacifique. Exode rural — document 5, qui décrit les privations rurales, le désir de quitter les champs pour la ville et la dépopulation des campagnes.",
+  historicalDocumentIds: MIGRATIONS_SPATIAL_CAUSALITY_DOCUMENTS.map(({ id }) => id),
+  commonErrors: [
+    "Inverser le sens de l’immigration transatlantique et placer le départ au Canada.",
+    "Confondre l’émigration vers les États-Unis avec la migration interne vers les régions de colonisation du Québec.",
+    "Associer la famine en Irlande à la colonisation de l’Ouest canadien plutôt qu’au déplacement transatlantique.",
+    "Associer l’affiche de fermes gratuites au manque de terres au Québec sans tenir compte des régions de l’Ouest qu’elle nomme.",
+    "Confondre l’exode rural vers Montréal avec l’émigration vers les États-Unis.",
+  ],
+  distractors: [],
+  operationId: "causes_and_consequences",
+  sourceIds: [...documentSources.map(({ id }) => id), MIGRATIONS_NATURAL_EARTH_MAP_SOURCE.id],
+  sourceCatalog: [...documentSources, MIGRATIONS_NATURAL_EARTH_MAP_SOURCE],
+  rationale: "L’élève doit d’abord interpréter cinq trajectoires à plusieurs échelles, puis établir un lien causal entre chaque déplacement et une source historique. Les mouvements et les causes sont manipulés séparément afin d’éviter qu’un document volumineux masque la carte.",
+  associationInteraction: {
+    map: {
+      imageUrl: "/historical-documents/migrations-atlantique-canada-europe-natural-earth.svg?v=compact-height",
+      imageAlt: "Carte de l’Atlantique Nord montrant le Canada au complet, les États-Unis, l’Europe et cinq trajets migratoires en pointillés, avec trois agrandissements consacrés à l’émigration vers la Nouvelle-Angleterre, aux régions de colonisation du Québec et à l’exode rural vers Montréal.",
+      dropLabel: "Mouvement",
+    },
+    items: [
+      { id: "migration-transatlantique", label: "Immigration transatlantique vers le Canada" },
+      { id: "migration-etats-unis", label: "Émigration canadienne-française vers les États-Unis" },
+      { id: "migration-colonisation-quebec", label: "Colonisation de nouvelles régions du Québec" },
+      { id: "migration-ouest", label: "Établissement d’immigrants dans l’Ouest canadien" },
+      { id: "migration-exode-rural", label: "Exode rural" },
+    ],
+    targets: [
+      { id: "migration-route-ouest", label: "Mouvement", description: "Trajet vers l’Ouest canadien", correctItemId: "migration-ouest", zone: { x: 19, y: 16.41, width: 22, height: 5.75 } },
+      { id: "migration-route-transatlantique", label: "Mouvement", description: "Traversée de l’Atlantique vers le Canada", correctItemId: "migration-transatlantique", zone: { x: 56, y: 16.41, width: 22, height: 5.75 } },
+      { id: "migration-route-etats-unis", label: "Mouvement", description: "Trajet du sud du Québec vers la Nouvelle-Angleterre", correctItemId: "migration-etats-unis", zone: { x: 6, y: 42.59, width: 31, height: 5.75 } },
+      { id: "migration-route-colonisation", label: "Mouvement", description: "Trajets vers les régions de colonisation du Québec", correctItemId: "migration-colonisation-quebec", zone: { x: 56, y: 42.59, width: 29, height: 5.75 } },
+      { id: "migration-route-exode-rural", label: "Mouvement", description: "Trajets des campagnes du sud du Québec vers Montréal", correctItemId: "migration-exode-rural", zone: { x: 36.5, y: 70.88, width: 29, height: 5.75 } },
+    ],
+    causeDocuments: [
+      { documentId: "MIG-T-003", number: 1 },
+      { documentId: "PN-I-001", number: 2 },
+      { documentId: "MIG-I-001", number: 3 },
+      { documentId: "MIG-T-001", number: 4 },
+      { documentId: "MIG-T-004", number: 5 },
+    ],
+    causeTargets: [
+      { id: "migration-cause-ouest", label: "Cause", correctDocumentId: "PN-I-001", zone: { x: 27, y: 7.35, width: 6, height: 7.35 } },
+      { id: "migration-cause-transatlantique", label: "Cause", correctDocumentId: "MIG-I-001", zone: { x: 65, y: 7.35, width: 6, height: 7.35 } },
+      { id: "migration-cause-etats-unis", label: "Cause", correctDocumentId: "MIG-T-003", zone: { x: 39, y: 40.99, width: 6, height: 7.35 } },
+      { id: "migration-cause-colonisation", label: "Cause", correctDocumentId: "MIG-T-001", zone: { x: 88, y: 40.99, width: 6, height: 7.35 } },
+      { id: "migration-cause-exode-rural", label: "Cause", correctDocumentId: "MIG-T-004", zone: { x: 67.5, y: 69.28, width: 6, height: 7.35 } },
+    ],
+  },
+  review: {
+    documented: true,
+    historicallyVerified: true,
+    pedagogicallyVerified: false,
+    biasAndLanguageReviewed: true,
+    approvedBy: null,
+    approvedVersion: null,
+    approvedAt: null,
+  },
+} as const satisfies ApprovedQuestion;

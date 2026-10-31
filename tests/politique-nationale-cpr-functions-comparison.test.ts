@@ -38,5 +38,5 @@ test("l’aperçu élève présente les deux fonctions dans le bon ordre", () =>
   assert.ok(session);
   assert.equal(session.questions[0]?.id, POLITIQUE_NATIONALE_CPR_FUNCTIONS_COMPARISON_QUESTION.id);
   assert.deepEqual(session.questions[0]?.documentRelations.map(({ documentId }) => documentId), ["PN-T-006", "PN-T-008"]);
-  assert.equal(session.questions[0]?.initialMessages[0]?.content, "J’attends ta réponse…");
+  assert.equal(session.questions[0]?.initialMessages[0]?.content, "J’attends ta réponse.");
 });

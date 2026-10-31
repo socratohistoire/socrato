@@ -6,10 +6,14 @@ import {
   ACTE_UNION_HISTORICAL_RECORD,
   BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD,
   BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS,
+  CATHOLIC_CHURCH_PRESENCE_HISTORICAL_RECORD,
   FEDERAL_PROVINCIAL_RELATIONS_HISTORICAL_RECORD,
   INDIAN_AFFAIRS_HISTORICAL_RECORD,
+  MIGRATIONS_HISTORICAL_RECORD,
   NATIONAL_POLICY_HISTORICAL_RECORD,
   RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD,
+  SOCIOCULTURAL_MANIFESTATIONS_HISTORICAL_RECORD,
+  WOMEN_ROLE_HISTORICAL_RECORD,
   ACTE_UNION_CAUSAL_PILOT_QUESTION,
   ACTE_UNION_TIMELINE_PROTOTYPE_QUESTION,
   ACTE_UNION_TIMELINE_CAUSAL_DEVELOPMENT_QUESTION,
@@ -33,7 +37,213 @@ import {
   countHistoricalRecordReview,
   createHistoricalRecordReviewDraft,
   getHistoricalRecordReviewItems,
+  type HistoricalRecord,
 } from "../lib/pedagogical-reference/index.ts";
+
+function assertCompleteMonographRecord(record: HistoricalRecord, expectedSectionIds: readonly string[], minimumParagraphs: number) {
+  const paragraphs = record.manual.sections.flatMap(({ paragraphs }) => paragraphs);
+  const tables = record.manual.sections.flatMap(({ tables = [] }) => tables);
+  assert.deepEqual(record.manual.sections.map(({ id }) => id), expectedSectionIds);
+  assert.ok(paragraphs.length >= minimumParagraphs);
+  assert.equal(tables.length, 2);
+  assert.ok(tables.every(({ columns, rows }) => rows.every(({ cells }) => cells.length === columns.length)));
+  const statements = [
+    ...record.knowledgePrecisions, ...paragraphs, ...tables.flatMap(({ rows }) => rows), ...record.narrative,
+    ...record.chronologicalMarkers, ...record.actors, ...record.territories, ...record.relationships,
+    ...record.vocabulary, ...record.misconceptions, ...record.expectedLearning,
+  ];
+  const statementIds = new Set(statements.map(({ id }) => id));
+  assert.equal(statementIds.size, statements.length);
+  const sourceIds = new Set(record.sourceCatalog.map(({ id }) => id));
+  assert.ok(statements.every(({ sourceIds: links }) => links.length > 0 && links.every((id) => sourceIds.has(id))));
+  assert.ok(record.knowledgePrecisions.every(({ coverageStatus, linkedStatementIds }) => coverageStatus === "complete" && linkedStatementIds.length >= 5 && linkedStatementIds.every((id) => statementIds.has(id))));
+  assert.ok(record.sourceCatalog.every(({ verificationStatus, url, locator }) => verificationStatus === "verified" && Boolean(url) && locator.length > 20));
+  assert.deepEqual(new Set(record.expectedLearning.flatMap(({ operationIds }) => operationIds)), new Set([
+    "time_and_space", "establish_facts", "differences_and_similarities", "causes_and_consequences",
+    "changes_and_continuities", "relationships_between_facts", "causal_connections",
+  ]));
+  assert.deepEqual(validateHistoricalRecord(record), {});
+  assert.deepEqual(validateHistoricalRecord({ ...record, status: "ready-for-review" }), {});
+}
+
+test("documente les quatre précisions du rôle des femmes sans approuver le dossier", () => {
+  const record = WOMEN_ROLE_HISTORICAL_RECORD;
+  assert.equal(record.id, "historical-record:role-des-femmes");
+  assert.equal(record.knowledgeHeadingId, "role-des-femmes");
+  assert.equal(record.status, "draft");
+  assert.equal(record.version, null);
+  assert.equal(record.approvedAt, null);
+  assert.deepEqual(record.knowledgePrecisions.map(({ officialLabel }) => officialLabel), [
+    "Statuts juridique et politique",
+    "Secteurs d’activité",
+    "Communautés religieuses féminines",
+    "Organisations féminines anglophones",
+  ]);
+  assert.deepEqual(record.knowledgePrecisions.map(({ officialOrder }) => officialOrder), [1, 2, 3, 4]);
+  assertCompleteMonographRecord(record, [
+    "rf-mono-definition",
+    "rf-mono-status",
+    "rf-mono-family",
+    "rf-mono-work",
+    "rf-mono-religious",
+    "rf-mono-organizations",
+    "rf-mono-contrasts",
+    "rf-mono-balance",
+  ], 36);
+  assert.deepEqual(record.chronologicalMarkers.map(({ sortYear }) => sortYear), [1843, 1849, 1866, 1871, 1884, 1888, 1893, 1896]);
+  const monographText = record.manual.sections.flatMap(({ paragraphs }) => paragraphs).map(({ text }) => text).join("\n");
+  assert.match(monographText, /L’absence d’une profession inscrite au recensement ne signifie donc pas l’absence de travail/);
+  assert.match(monographText, /Responsabilité institutionnelle ne signifie donc pas égalité dans l’Église/);
+  const route = readFileSync(new URL("../app/admin/pedagogical-reference/notions/[notionId]/page.tsx", import.meta.url), "utf8");
+  assert.match(route, /notionId === "role-des-femmes".*record=\{WOMEN_ROLE_HISTORICAL_RECORD\}/);
+});
+
+test("documente les trois précisions des manifestations socioculturelles sans approuver le dossier", () => {
+  const record = SOCIOCULTURAL_MANIFESTATIONS_HISTORICAL_RECORD;
+  assert.equal(record.id, "historical-record:manifestations-socioculturelles");
+  assert.equal(record.knowledgeHeadingId, "manifestations-socioculturelles");
+  assert.equal(record.status, "draft");
+  assert.equal(record.version, null);
+  assert.equal(record.approvedAt, null);
+  assert.deepEqual(record.knowledgePrecisions.map(({ officialLabel }) => officialLabel), [
+    "Œuvres patriotiques",
+    "Émergence de la littérature féminine",
+    "Enseignement supérieur",
+  ]);
+  assert.deepEqual(record.knowledgePrecisions.map(({ officialOrder }) => officialOrder), [1, 2, 3]);
+  assertCompleteMonographRecord(record, [
+    "ms-mono-definition",
+    "ms-mono-context",
+    "ms-mono-patriotic",
+    "ms-mono-networks",
+    "ms-mono-women",
+    "ms-mono-higher",
+    "ms-mono-connections",
+    "ms-mono-balance",
+  ], 36);
+  assert.deepEqual(record.chronologicalMarkers.map(({ sortYear }) => sortYear), [1842, 1845, 1852, 1858, 1861, 1871, 1878, 1884, 1888, 1893]);
+  const monographText = record.manual.sections.flatMap(({ paragraphs }) => paragraphs).map(({ text }) => text).join("\n");
+  assert.match(monographText, /Une production culturelle dépend donc d’un réseau/);
+  assert.match(monographText, /ne signifie pas que l’université devient accessible à tous/);
+  const route = readFileSync(new URL("../app/admin/pedagogical-reference/notions/[notionId]/page.tsx", import.meta.url), "utf8");
+  assert.match(route, /notionId === "manifestations-socioculturelles".*record=\{SOCIOCULTURAL_MANIFESTATIONS_HISTORICAL_RECORD\}/);
+});
+
+test("documente les quatre précisions de la présence de l’Église catholique sans approuver le dossier", () => {
+  const record = CATHOLIC_CHURCH_PRESENCE_HISTORICAL_RECORD;
+  assert.equal(record.id, "historical-record:presence-de-l-eglise-catholique");
+  assert.equal(record.knowledgeHeadingId, "presence-de-l-eglise-catholique");
+  assert.equal(record.status, "draft");
+  assert.equal(record.version, null);
+  assert.equal(record.approvedAt, null);
+  assert.deepEqual(record.knowledgePrecisions.map(({ officialLabel }) => officialLabel), [
+    "Ultramontanisme",
+    "Anticléricalisme",
+    "Nationalisme de survivance",
+    "Dualisme confessionnel des institutions sociales",
+  ]);
+  assert.deepEqual(record.knowledgePrecisions.map(({ officialOrder }) => officialOrder), [1, 2, 3, 4]);
+  assert.ok(record.knowledgePrecisions.every(({ coverageStatus, linkedStatementIds }) => coverageStatus === "complete" && linkedStatementIds.length >= 7));
+  assert.deepEqual(record.manual.sections.map(({ id }) => id), [
+    "ec-mono-definition",
+    "ec-mono-expansion",
+    "ec-mono-ultramontanisme",
+    "ec-mono-anticlericalisme",
+    "ec-mono-nationalisme",
+    "ec-mono-dualisme",
+    "ec-mono-oeuvres",
+    "ec-mono-bilan",
+  ]);
+  const paragraphs = record.manual.sections.flatMap(({ paragraphs }) => paragraphs);
+  const tables = record.manual.sections.flatMap(({ tables = [] }) => tables);
+  assert.ok(paragraphs.length >= 36);
+  assert.equal(tables.length, 2);
+  assert.ok(tables.every(({ columns, rows }) => rows.every(({ cells }) => cells.length === columns.length)));
+  const statements = [
+    ...record.knowledgePrecisions, ...paragraphs, ...tables.flatMap(({ rows }) => rows), ...record.narrative,
+    ...record.chronologicalMarkers, ...record.actors, ...record.territories, ...record.relationships,
+    ...record.vocabulary, ...record.misconceptions, ...record.expectedLearning,
+  ];
+  const statementIds = new Set(statements.map(({ id }) => id));
+  assert.equal(statementIds.size, statements.length);
+  const sourceIds = new Set(record.sourceCatalog.map(({ id }) => id));
+  assert.ok(statements.every(({ sourceIds: links }) => links.length > 0 && links.every((id) => sourceIds.has(id))));
+  assert.ok(record.knowledgePrecisions.every(({ linkedStatementIds }) => linkedStatementIds.every((id) => statementIds.has(id))));
+  assert.ok(record.sourceCatalog.every(({ verificationStatus, url, locator }) => verificationStatus === "verified" && Boolean(url) && locator.length > 20));
+  assert.ok(record.sourceCatalog.some(({ kind, locator }) => kind === "official-program" && locator.includes("quatre précisions")));
+  assert.deepEqual(record.chronologicalMarkers.map(({ sortYear }) => sortYear), [1840, 1841, 1844, 1848, 1866, 1867, 1868, 1869, 1874, 1875, 1888, 1896]);
+  const monographText = paragraphs.map(({ text }) => text).join("\n");
+  assert.match(monographText, /ne signifie pas automatiquement le rejet de toute religion/);
+  assert.match(monographText, /Le dualisme ne signifie pas que l’État disparaît/);
+  assert.match(monographText, /femmes laïques et des religieuses fondent, administrent/);
+  assert.ok(record.misconceptions.some(({ misconception }) => /remplace complètement l’État/.test(misconception)));
+  assert.deepEqual(new Set(record.expectedLearning.flatMap(({ operationIds }) => operationIds)), new Set([
+    "time_and_space", "establish_facts", "differences_and_similarities", "causes_and_consequences",
+    "changes_and_continuities", "relationships_between_facts", "causal_connections",
+  ]));
+  assert.deepEqual(validateHistoricalRecord(record), {});
+  assert.deepEqual(validateHistoricalRecord({ ...record, status: "ready-for-review" }), {});
+  const route = readFileSync(new URL("../app/admin/pedagogical-reference/notions/[notionId]/page.tsx", import.meta.url), "utf8");
+  assert.match(route, /notionId === "presence-de-l-eglise-catholique".*record=\{CATHOLIC_CHURCH_PRESENCE_HISTORICAL_RECORD\}/);
+});
+
+test("documente les quatre précisions des Migrations sans approuver le dossier", () => {
+  const record = MIGRATIONS_HISTORICAL_RECORD;
+  assert.equal(record.id, "historical-record:migrations");
+  assert.equal(record.knowledgeHeadingId, "migrations");
+  assert.equal(record.status, "draft");
+  assert.equal(record.version, null);
+  assert.equal(record.approvedAt, null);
+  assert.deepEqual(record.knowledgePrecisions.map(({ officialLabel }) => officialLabel), [
+    "Exode rural",
+    "Émigration vers les États-Unis",
+    "Ouverture de régions de colonisation",
+    "Immigration transatlantique",
+  ]);
+  assert.deepEqual(record.knowledgePrecisions.map(({ officialOrder }) => officialOrder), [1, 2, 3, 4]);
+  assert.ok(record.knowledgePrecisions.every(({ coverageStatus, linkedStatementIds }) => coverageStatus === "complete" && linkedStatementIds.length >= 6));
+  assert.deepEqual(record.manual.sections.map(({ id }) => id), [
+    "mig-mono-definition",
+    "mig-mono-context",
+    "mig-mono-exode",
+    "mig-mono-emigration",
+    "mig-mono-colonization",
+    "mig-mono-immigration",
+    "mig-mono-connections",
+    "mig-mono-balance",
+  ]);
+  const paragraphs = record.manual.sections.flatMap(({ paragraphs }) => paragraphs);
+  const tables = record.manual.sections.flatMap(({ tables = [] }) => tables);
+  assert.ok(paragraphs.length >= 48);
+  assert.equal(tables.length, 3);
+  assert.ok(tables.every(({ columns, rows }) => rows.every(({ cells }) => cells.length === columns.length)));
+  const statements = [
+    ...record.knowledgePrecisions, ...paragraphs, ...tables.flatMap(({ rows }) => rows), ...record.narrative,
+    ...record.chronologicalMarkers, ...record.actors, ...record.territories, ...record.relationships,
+    ...record.vocabulary, ...record.misconceptions, ...record.expectedLearning,
+  ];
+  const statementIds = new Set(statements.map(({ id }) => id));
+  assert.equal(statementIds.size, statements.length);
+  const sourceIds = new Set(record.sourceCatalog.map(({ id }) => id));
+  assert.ok(statements.every(({ sourceIds: links }) => links.length > 0 && links.every((id) => sourceIds.has(id))));
+  assert.ok(record.knowledgePrecisions.every(({ linkedStatementIds }) => linkedStatementIds.every((id) => statementIds.has(id))));
+  assert.ok(record.sourceCatalog.every(({ verificationStatus, url, locator }) => verificationStatus === "verified" && Boolean(url) && locator.length > 20));
+  assert.ok(record.sourceCatalog.some(({ kind, locator }) => kind === "official-program" && locator.includes("quatre précisions")));
+  assert.deepEqual(record.chronologicalMarkers.map(({ sortYear }) => sortYear), [1832, 1845, 1847, 1848, 1849, 1871, 1872, 1876, 1879, 1880, 1891, 1896]);
+  const monographText = paragraphs.map(({ text }) => text).join("\n");
+  assert.match(monographText, /19,5 % en 1871[\s\S]*29,2 % en 1891/);
+  assert.match(monographText, /ne sont pas des territoires vides/);
+  assert.match(monographText, /arrivée au port de Québec ne signifie pas nécessairement un établissement permanent/);
+  assert.ok(record.misconceptions.some(({ misconception }) => /Ouest canadien/.test(misconception)));
+  assert.deepEqual(new Set(record.expectedLearning.flatMap(({ operationIds }) => operationIds)), new Set([
+    "time_and_space", "establish_facts", "differences_and_similarities", "causes_and_consequences",
+    "changes_and_continuities", "relationships_between_facts", "causal_connections",
+  ]));
+  assert.deepEqual(validateHistoricalRecord(record), {});
+  assert.deepEqual(validateHistoricalRecord({ ...record, status: "ready-for-review" }), {});
+  const route = readFileSync(new URL("../app/admin/pedagogical-reference/notions/[notionId]/page.tsx", import.meta.url), "utf8");
+  assert.match(route, /notionId === "migrations".*record=\{MIGRATIONS_HISTORICAL_RECORD\}/);
+});
 
 test("documente les quatre précisions de la Politique nationale sans approuver le dossier", () => {
   const record = NATIONAL_POLICY_HISTORICAL_RECORD;
@@ -396,7 +606,7 @@ test("prépare les dossiers pilotes, les questions approuvées et les questions 
     "revolution-tranquille",
   ]);
   assert.ok(PEDAGOGICAL_REFERENCE_PILOTS.every(({ questionDraft }) => questionDraft.status === "not-started" && !questionDraft.prompt));
-  assert.equal(PEDAGOGICAL_QUESTION_CATALOG.length, 116);
+  assert.equal(PEDAGOGICAL_QUESTION_CATALOG.length, 134);
   assert.equal(PEDAGOGICAL_QUESTION_CATALOG.filter(({ status }) => status === "approved").length, 35);
   assert.ok(PEDAGOGICAL_QUESTION_CATALOG.every((question) => Object.keys(validateApprovedQuestion(question)).length === 0));
   assert.equal(getQuestionsForKnowledgeHeading("acte-union").length, 35);
