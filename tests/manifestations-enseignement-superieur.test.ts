@@ -14,6 +14,7 @@ test("documente les développements de Laval et de McGill à partir d’annuaire
   for (const document of MANIFESTATIONS_HIGHER_EDUCATION_DOCUMENTS) {
     assert.deepEqual(validateHistoricalDocument(document), {});
     assert.match(document.rightsStatement, /domaine public/i);
+    assert.equal(document.transcription.split(/[.!?](?:\s|$)/).filter((part) => part.trim()).length, 4);
   }
   assert.match(MANIFESTATIONS_HIGHER_EDUCATION_DOCUMENTS[0].transcription, /1852[\s\S]*théologie[\s\S]*Montréal/i);
   assert.match(MANIFESTATIONS_HIGHER_EDUCATION_DOCUMENTS[1].transcription, /1852[\s\S]*sciences appliquées[\s\S]*Donalda/i);

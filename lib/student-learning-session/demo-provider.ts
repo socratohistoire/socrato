@@ -47,7 +47,6 @@ const DEMO_ACTIVITIES = new Set([
   "demo-activity-manifestations-enseignement-superieur",
   "demo-activity-manifestations-oeuvres-patriotiques",
   "demo-activity-manifestations-femmes-vie-litteraire",
-  "demo-activity-manifestations-nouvelle",
 ]);
 
 const PUBLISHED_TEST_QUESTION_IDS = [
@@ -181,8 +180,6 @@ export function createDemoStudentLearningSession(
       ? "Contexte politique et œuvres patriotiques"
     : activityId === "demo-activity-manifestations-femmes-vie-litteraire"
       ? "Les femmes dans la vie littéraire"
-    : activityId === "demo-activity-manifestations-nouvelle"
-      ? "Une nouvelle manifestation socioculturelle"
       : "Révision de l’Acte d’Union";
   const hasActeUnionDocuments = notionId === "acte-union";
   const isTimelinePrototype = activityId === "demo-activity-timeline";
@@ -727,25 +724,6 @@ export function createDemoStudentLearningSession(
 
   if (activityId === "demo-activity-manifestations-femmes-vie-litteraire") {
     const published = createCatalogLearningSessionQuestions(["question:manifestations-socioculturelles:short-answer-003"]);
-    return {
-      id: `local-session-${activityId}`,
-      activityId,
-      activityTitle,
-      origin: "teacher_assigned",
-      notionId: "manifestations-socioculturelles",
-      notionTitle: "Manifestations socioculturelles",
-      historicalPeriod: { startYear: 1840, endYear: 1896 },
-      currentQuestionIndex: 0,
-      dashboardHref: getDashboardUrl("manifestations-socioculturelles", "teacher-assigned", activityId),
-      source: "local_demo",
-      localDemoNotice: "",
-      documentCatalog: published.documents,
-      questions: published.questions,
-    };
-  }
-
-  if (activityId === "demo-activity-manifestations-nouvelle") {
-    const published = createCatalogLearningSessionQuestions(["question:manifestations-socioculturelles:short-answer-004"]);
     return {
       id: `local-session-${activityId}`,
       activityId,
