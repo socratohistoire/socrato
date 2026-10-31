@@ -157,7 +157,7 @@ export const MIGRATIONS_SPATIAL_CAUSALITY_QUESTION = {
   prompt: "Situe les principaux mouvements migratoires qui touchent le Québec et le Canada entre 1840 et 1896, puis associe chaque mouvement au document qui en présente une cause.",
   instruction: "Place d’abord chaque mouvement sur le bon trajet. Consulte ensuite la banque de documents et dépose seulement le numéro du document-cause dans le cercle placé au-dessus du trajet.",
   initialGuidance: "Commence par les cinq mouvements. Les numéros des documents seront ensuite placés dans les cercles « Cause ».",
-  expectedAnswer: "Immigration transatlantique vers le Canada — document 3, qui montre les conséquences de la Grande Famine en Irlande. Émigration canadienne-française vers les États-Unis — document 1, qui décrit l’endettement, les mauvaises récoltes et les difficultés agricoles. Colonisation de nouvelles régions du Québec — document 4, qui relie le financement du chemin Kenogami à l’avancée de la colonisation vers le Lac-Saint-Jean. Établissement d’immigrants dans l’Ouest canadien — document 2, une affiche gouvernementale qui offre des fermes de 160 acres et met en valeur le Canadien Pacifique. Exode rural — document 5, qui décrit les privations rurales, le désir de quitter les champs pour la ville et la dépopulation des campagnes.",
+  expectedAnswer: "Immigration transatlantique — document 3, qui montre les conséquences de la Grande Famine en Irlande. Émigration canadienne-française vers les États-Unis — document 1, qui décrit l’endettement, les mauvaises récoltes et les difficultés agricoles. Colonisation de nouvelles régions du Québec — document 4, qui relie le financement du chemin Kenogami à l’avancée de la colonisation vers le Lac-Saint-Jean. Établissement d’immigrants dans l’Ouest canadien — document 2, une affiche gouvernementale qui offre des fermes de 160 acres et met en valeur le Canadien Pacifique. Exode rural — document 5, qui décrit les privations rurales, le désir de quitter les champs pour la ville et la dépopulation des campagnes.",
   historicalDocumentIds: MIGRATIONS_SPATIAL_CAUSALITY_DOCUMENTS.map(({ id }) => id),
   commonErrors: [
     "Inverser le sens de l’immigration transatlantique et placer le départ au Canada.",
@@ -173,12 +173,12 @@ export const MIGRATIONS_SPATIAL_CAUSALITY_QUESTION = {
   rationale: "L’élève doit d’abord interpréter cinq trajectoires à plusieurs échelles, puis établir un lien causal entre chaque déplacement et une source historique. Les mouvements et les causes sont manipulés séparément afin d’éviter qu’un document volumineux masque la carte.",
   associationInteraction: {
     map: {
-      imageUrl: "/historical-documents/migrations-atlantique-canada-europe-natural-earth.svg?v=compact-height",
+      imageUrl: "/historical-documents/migrations-atlantique-canada-europe-natural-earth.svg?v=balanced-new-england",
       imageAlt: "Carte de l’Atlantique Nord montrant le Canada au complet, les États-Unis, l’Europe et cinq trajets migratoires en pointillés, avec trois agrandissements consacrés à l’émigration vers la Nouvelle-Angleterre, aux régions de colonisation du Québec et à l’exode rural vers Montréal.",
       dropLabel: "Mouvement",
     },
     items: [
-      { id: "migration-transatlantique", label: "Immigration transatlantique vers le Canada" },
+      { id: "migration-transatlantique", label: "Immigration transatlantique" },
       { id: "migration-etats-unis", label: "Émigration canadienne-française vers les États-Unis" },
       { id: "migration-colonisation-quebec", label: "Colonisation de nouvelles régions du Québec" },
       { id: "migration-ouest", label: "Établissement d’immigrants dans l’Ouest canadien" },

@@ -21,10 +21,12 @@ test("prépare une carte publique couvrant le Canada, l’Atlantique, les États
   assert.match(svg, /CANADA/);
   assert.match(svg, /ÉTATS-UNIS/);
   assert.match(svg, /EUROPE/);
-  assert.match(svg, /OCÉAN ATLANTIQUE/);
+  assert.doesNotMatch(svg, /OCÉAN ATLANTIQUE/);
   assert.match(svg, /MOUVEMENTS MIGRATOIRES AU CANADA ET AU QUÉBEC · 1840–1896/);
   assert.match(svg, /AGRANDISSEMENT DU QUÉBEC/);
   assert.match(svg, /SUD DU QUÉBEC/);
+  assert.match(svg, /transform="translate\(0 -94\) scale\(1 1\.14\)"/);
+  assert.match(svg, /x="580" y="744">NOUVELLE-ANGLETERRE<\/text>/);
   assert.doesNotMatch(svg, /NORD DE LA NOUVELLE-ANGLETERRE/);
   assert.match(svg, /MONTRÉAL ET ENVIRONS/);
   assert.equal((svg.match(/route route--new-england/g) ?? []).length, 3);
@@ -49,6 +51,7 @@ test("associe cinq mouvements à cinq documents-causes numérotés", () => {
   const interaction = MIGRATIONS_SPATIAL_CAUSALITY_QUESTION.associationInteraction;
   assert.deepEqual(validateApprovedQuestion(MIGRATIONS_SPATIAL_CAUSALITY_QUESTION), {});
   assert.equal(interaction.items.length, 5);
+  assert.equal(interaction.items.find(({ id }) => id === "migration-transatlantique")?.label, "Immigration transatlantique");
   assert.equal(interaction.targets.length, 5);
   assert.deepEqual(interaction.causeDocuments.map(({ number }) => number), [1, 2, 3, 4, 5]);
   assert.ok(interaction.causeDocuments.every((document) => !("shortTitle" in document)));
@@ -62,7 +65,7 @@ test("publie un aperçu avec la carte et les cinq documents dans l’ordre de la
   const session = createDemoStudentLearningSession("demo-activity-migrations-mouvements-causes", "migrations");
   assert.ok(session);
   assert.equal(session.questions[0]?.type, "interactive_association");
-  assert.equal(session.questions[0]?.associationInteraction?.map?.imageUrl, "/historical-documents/migrations-atlantique-canada-europe-natural-earth.svg?v=compact-height");
+  assert.equal(session.questions[0]?.associationInteraction?.map?.imageUrl, "/historical-documents/migrations-atlantique-canada-europe-natural-earth.svg?v=balanced-new-england");
   assert.deepEqual(session.documentCatalog.map(({ id }) => id), ["MIG-T-001", "MIG-T-003", "MIG-I-001", "MIG-T-004", "PN-I-001"]);
   assert.deepEqual(session.questions[0]?.documentRelations.map(({ documentId }) => documentId), ["MIG-T-003", "PN-I-001", "MIG-I-001", "MIG-T-001", "MIG-T-004"]);
 });

@@ -379,7 +379,6 @@
   <text class="country-label" x="417.0" y="315.8">CANADA</text>
 <text class="country-label country-label--small" x="425.4" y="489.9">ÉTATS-UNIS</text>
 <text class="country-label" x="1343.0" y="373.9">EUROPE</text>
-<text class="ocean-label" x="964.2" y="480.2">OCÉAN ATLANTIQUE</text>
 <text class="region-label" x="669.5" y="354.5">Québec</text>
   <text class="map-title" x="800" y="35">MOUVEMENTS MIGRATOIRES AU CANADA ET AU QUÉBEC · 1840–1896</text>
   <path class="route" d="M 1208.3 344.8 Q 964.2 257.8 682.1 402.9"/>
@@ -389,6 +388,7 @@
   <rect x="42" y="594" width="770" height="246" rx="18" fill="#f8fbfc" stroke="#6d8d9e" stroke-width="2" filter="url(#shadow)"/>
   <g clip-path="url(#new-england-inset-clip)">
     <rect x="42" y="594" width="770" height="246" fill="#dcecf3"/>
+    <g transform="translate(0 -94) scale(1 1.14)">
     <g id="new-england-geography"><path class="inset-land inset-land--usa" d="M15298.4,475.9 L15294.6,476.5 L15292.6,474.9 L15292.4,474.0 L15294.5,473.0 L15298.1,473.7 L15300.3,474.6 L15298.4,475.9 Z"/>
 <path class="inset-land inset-land--usa" d="M15350.3,495.9 L15340.0,495.9 L15319.1,489.9 L15308.6,488.0 L15302.7,485.9 L15305.3,485.5 L15318.1,487.0 L15328.5,490.2 L15334.3,492.3 L15341.0,494.1 L15348.2,494.8 L15350.3,495.9 Z"/>
 <path class="inset-land inset-land--usa" d="M15011.0,459.6 L15007.1,459.7 L15004.7,458.5 L14992.0,458.0 L14993.3,456.8 L14998.7,456.3 L15007.1,454.3 L15014.1,454.7 L15012.3,456.4 L15011.0,459.6 Z"/>
@@ -591,14 +591,15 @@
     <path class="route route--new-england" d="M 527.7 660.1 Q 589.9 658.3 646.2 680.3"/>
 <path class="route route--new-england" d="M 444.8 693.1 Q 507.0 700.5 551.4 728.0"/>
 <path class="route route--new-england" d="M 397.4 715.2 Q 447.7 729.9 483.3 761.1"/>
+    </g>
   </g>
   <text class="inset-title inset-title--wide" x="64" y="625">AGRANDISSEMENT · SUD DU QUÉBEC</text>
   <text class="inset-region" x="210" y="668">SUD DU QUÉBEC</text>
-  <text class="inset-region" x="594" y="775">NOUVELLE-ANGLETERRE</text>
-  <circle class="place-dot" cx="363.6" cy="711.5" r="5"/>
-  <text class="inset-label" x="351.6230769230773" y="701.4925373134329" text-anchor="end">Montréal</text>
-  <circle class="place-dot" cx="503.4" cy="663.4" r="5"/>
-  <text class="inset-label" x="515.4076923076926" y="654.3940298507463">Québec</text>
+  <text class="inset-region" x="580" y="744">NOUVELLE-ANGLETERRE</text>
+  <circle class="place-dot" cx="363.6" cy="717.1" r="5"/>
+  <text class="inset-label" x="351.6230769230773" y="705.7" text-anchor="end">Montréal</text>
+  <circle class="place-dot" cx="503.4" cy="662.3" r="5"/>
+  <text class="inset-label" x="515.4076923076926" y="652">Québec</text>
   <rect x="870" y="594" width="675" height="246" rx="18" fill="#f8fbfc" stroke="#6d8d9e" stroke-width="2" filter="url(#shadow)"/>
   <g clip-path="url(#inset-clip)">
     <rect x="870" y="594" width="675" height="246" fill="#dcecf3"/>
