@@ -1450,7 +1450,7 @@ function DocumentContent({ document, expanded = false, compact = false, hideHead
         ) : document.content.kind === "comparison_table" ? (
           <div className="population-table-wrap">
             <table>
-              <caption>{document.content.caption}</caption>
+              <caption className={document.content.caption.startsWith("Université ") ? "university-table-title" : undefined}>{document.content.caption}</caption>
               <thead><tr>{document.content.headers.map((header) => <th scope="col" key={header}>{header}</th>)}</tr></thead>
               <tbody>{document.content.rows.map((row) => <tr key={row.label}><th scope="row">{row.label}</th><td>{row.value}</td></tr>)}</tbody>
             </table>

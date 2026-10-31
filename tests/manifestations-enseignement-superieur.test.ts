@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { validateApprovedQuestion } from "../lib/pedagogical-reference/approved-question.ts";
@@ -40,4 +41,8 @@ test("publie l’aperçu avec deux tableaux comparables", () => {
   assert.equal(session.questions[0]?.intellectualOperations[0]?.label, "Dégager des différences et des similitudes");
   assert.deepEqual(session.questions[0]?.documentRelations.map(({ documentId }) => documentId), ["MSC-D-002", "MSC-D-003"]);
   assert.deepEqual(session.documentCatalog.map(({ content }) => content.kind), ["comparison_table", "comparison_table"]);
+  const viewSource = readFileSync("app/eleve/activite/[activityId]/session-view.tsx", "utf8");
+  const cssSource = readFileSync("app/eleve/activite/[activityId]/session.css", "utf8");
+  assert.match(viewSource, /caption\.startsWith\("Université "\) \? "university-table-title"/);
+  assert.match(cssSource, /caption\.university-table-title \{[^}]*font-size:clamp\(1\.05rem,1\.35vw,1\.3rem\)[^}]*font-weight:800/);
 });

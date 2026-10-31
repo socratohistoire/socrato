@@ -172,6 +172,7 @@
 .population-table-wrap { margin-top:15px; }
 .population-table-wrap table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:14px; line-height:1.4; }
 .population-table-wrap caption { margin-bottom:8px; color:var(--muted); font-weight:700; text-align:left; }
+.population-table-wrap caption.university-table-title { color:var(--ink); font-size:clamp(1.05rem,1.35vw,1.3rem); font-weight:800; line-height:1.2; }
 .population-table-wrap th,.population-table-wrap td { border:1px solid color-mix(in srgb,var(--line) 80%,transparent); padding:10px; text-align:left; vertical-align:top; overflow-wrap:anywhere; }
 .population-table-wrap thead th { background:color-mix(in srgb,var(--gold) 16%,transparent); color:var(--ink); }
 .document-identification { min-width:0; display:block; margin:0; color:var(--muted); font-size:13px; font-style:normal; font-weight:700; line-height:1.4; }
