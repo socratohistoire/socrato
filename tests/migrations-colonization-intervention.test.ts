@@ -29,7 +29,7 @@ test("les deux extraits distinguent une intervention de colonisation du manque d
   assert.match(MIGRATIONS_RURAL_LAND_SHORTAGE_DISTRACTOR_DOCUMENT.transcription, /États-Unis|régions du Canada/i);
 });
 
-test("la question fait décrire une intervention et discriminer une cause de départ", () => {
+test("la question fait décrire une intervention sans exiger de justifier le rejet du distracteur", () => {
   assert.deepEqual(validateApprovedQuestion(MIGRATIONS_COLONIZATION_INTERVENTION_QUESTION), {});
   assert.equal(
     MIGRATIONS_COLONIZATION_INTERVENTION_QUESTION.prompt,
@@ -38,10 +38,12 @@ test("la question fait décrire une intervention et discriminer une cause de dé
   assert.equal(MIGRATIONS_COLONIZATION_INTERVENTION_QUESTION.operationId, "establish_facts");
   assert.deepEqual(MIGRATIONS_COLONIZATION_INTERVENTION_QUESTION.historicalDocumentIds, ["MIG-T-001", "MIG-T-002"]);
   assert.deepEqual(MIGRATIONS_COLONIZATION_INTERVENTION_QUESTION.distractors, ["MIG-T-002"]);
-  assert.match(MIGRATIONS_COLONIZATION_INTERVENTION_QUESTION.expectedAnswer, /document 1[\s\S]*Lac-Saint-Jean/i);
+  assert.match(MIGRATIONS_COLONIZATION_INTERVENTION_QUESTION.instruction, /document pertinent/i);
+  assert.doesNotMatch(MIGRATIONS_COLONIZATION_INTERVENTION_QUESTION.instruction, /écart|rejet|distracteur/i);
   assert.match(MIGRATIONS_COLONIZATION_INTERVENTION_QUESTION.expectedAnswer, /gouvernement[\s\S]*chemin Kenogami/i);
   assert.match(MIGRATIONS_COLONIZATION_INTERVENTION_QUESTION.expectedAnswer, /colonisation/i);
-  assert.match(MIGRATIONS_COLONIZATION_INTERVENTION_QUESTION.expectedAnswer, /document 2[\s\S]*manque de terres/i);
+  assert.doesNotMatch(MIGRATIONS_COLONIZATION_INTERVENTION_QUESTION.expectedAnswer, /document 2|écart|rejet|distracteur/i);
+  assert.ok(MIGRATIONS_COLONIZATION_INTERVENTION_QUESTION.commonErrors.every((error) => !/document 2|écart|rejet|distracteur/i.test(error)));
   assert.ok(PEDAGOGICAL_QUESTION_CATALOG.some(({ id }) => id === MIGRATIONS_COLONIZATION_INTERVENTION_QUESTION.id));
 });
 

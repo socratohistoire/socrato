@@ -30,7 +30,7 @@ test("la question fait expliquer les motifs de Macdonald et discriminer le docum
   assert.deepEqual(POLITIQUE_NATIONALE_MACDONALD_MOTIVES_QUESTION.historicalDocumentIds, ["PN-T-005", "AANB-T-001"]);
   assert.deepEqual(POLITIQUE_NATIONALE_MACDONALD_MOTIVES_QUESTION.distractors, ["AANB-T-001"]);
   assert.match(POLITIQUE_NATIONALE_MACDONALD_MOTIVES_QUESTION.expectedAnswer, /industries|commerce/i);
-  assert.match(POLITIQUE_NATIONALE_MACDONALD_MOTIVES_QUESTION.expectedAnswer, /Confédération/i);
+  assert.doesNotMatch(POLITIQUE_NATIONALE_MACDONALD_MOTIVES_QUESTION.instruction, /écart|rejet|distracteur|discrim/i);
   assert.ok(PEDAGOGICAL_QUESTION_CATALOG.some(({ id }) => id === POLITIQUE_NATIONALE_MACDONALD_MOTIVES_QUESTION.id));
 });
 

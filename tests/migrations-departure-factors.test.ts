@@ -19,7 +19,7 @@ test("demande d’expliquer deux facteurs distincts du départ", () => {
   assert.match(MIGRATIONS_DEPARTURE_FACTORS_QUESTION.expectedAnswer, /endettement/i);
   assert.match(MIGRATIONS_DEPARTURE_FACTORS_QUESTION.expectedAnswer, /mauvaises récoltes|difficultés agricoles/i);
   assert.match(MIGRATIONS_DEPARTURE_FACTORS_QUESTION.expectedAnswer, /marchés|voies de communication/i);
-  assert.match(MIGRATIONS_DEPARTURE_FACTORS_QUESTION.expectedAnswer, /conséquence/i);
+  assert.doesNotMatch(MIGRATIONS_DEPARTURE_FACTORS_QUESTION.instruction, /écart|rejet|distracteur|discrim/i);
   assert.deepEqual(validateHistoricalDocument(MIGRATIONS_NEW_ENGLAND_COMMUNITIES_CONSEQUENCE_DOCUMENT), {});
   assert.ok(PEDAGOGICAL_QUESTION_CATALOG.some(({ id }) => id === MIGRATIONS_DEPARTURE_FACTORS_QUESTION.id));
 });

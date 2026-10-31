@@ -142,8 +142,8 @@ export const POLITIQUE_NATIONALE_CRISIS_MANIFESTATIONS_QUESTION = {
   status: "ready-for-review",
   format: "document-interpretation",
   prompt: "Relève deux manifestations de la crise économique commencée en 1873.",
-  instruction: "Parmi les trois documents, écarte celui qui ne correspond pas à la période. Formule ensuite une manifestation de la crise à partir de chacun des deux documents pertinents et appuie-les sur des données précises.",
-  expectedAnswer: "Deux manifestations peuvent être relevées. D’abord, les prix agricoles diminuent : le prix de gros des bouvillons passe de 7,21 cents la livre en 1873 à 4,61 cents en 1879. Ensuite, les difficultés des entreprises s’accentuent : les montants associés aux faillites commerciales atteignent 28 843 000 $ en 1875 et 29 347 000 $ en 1879, contre 12 334 000 $ en 1873. Le document sur l’indice des prix à la consommation doit être écarté parce qu’il porte sur 1929-1933 et sur la Grande Dépression.",
+  instruction: "Formule une manifestation de la crise à partir de chacun des deux documents pertinents et appuie-les sur des données précises.",
+  expectedAnswer: "Deux manifestations peuvent être relevées. D’abord, les prix agricoles diminuent : le prix de gros des bouvillons passe de 7,21 cents la livre en 1873 à 4,61 cents en 1879. Ensuite, les difficultés des entreprises s’accentuent : les montants associés aux faillites commerciales atteignent 28 843 000 $ en 1875 et 29 347 000 $ en 1879, contre 12 334 000 $ en 1873.",
   historicalDocumentIds: POLITIQUE_NATIONALE_CRISIS_MANIFESTATION_DOCUMENTS.map(({ id }) => id),
   commonErrors: [
     "Utiliser le document de 1929-1933 comme preuve de la crise commencée en 1873.",

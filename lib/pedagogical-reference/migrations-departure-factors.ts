@@ -65,9 +65,9 @@ export const MIGRATIONS_DEPARTURE_FACTORS_QUESTION = {
   status: "ready-for-review",
   format: "short-answer",
   prompt: "Entre 1840 et 1896, expliquez deux facteurs qui contribuent au départ de familles des milieux ruraux du Québec vers les États-Unis.",
-  instruction: "Appuyez les deux facteurs sur le document qui présente des causes. Écartez l’autre document en expliquant pourquoi il présente une conséquence du déplacement.",
+  instruction: "Appuyez les deux facteurs sur le document pertinent.",
   initialGuidance: "J’attends ta réponse…",
-  expectedAnswer: "Le document 1 présente des facteurs de départ. Plusieurs réponses sont possibles : l’endettement force certaines familles à vendre leurs terres et leurs biens; les mauvaises récoltes et les difficultés de l’agriculture réduisent leurs ressources; l’éloignement des marchés et le manque de voies de communication empêchent les cultivateurs de vendre avantageusement leurs produits. L’élève doit expliquer deux de ces facteurs. Le document 2 doit être écarté : la présence de représentants, de journaux francophones, de membres du clergé et de sociétés canadiennes-françaises en Nouvelle-Angleterre montre la formation de communautés après l’émigration, donc une conséquence du déplacement.",
+  expectedAnswer: "Plusieurs réponses sont possibles : l’endettement force certaines familles à vendre leurs terres et leurs biens; les mauvaises récoltes et les difficultés de l’agriculture réduisent leurs ressources; l’éloignement des marchés et le manque de voies de communication empêchent les cultivateurs de vendre avantageusement leurs produits. L’élève doit expliquer deux de ces facteurs.",
   historicalDocumentIds: [
     MIGRATIONS_EMIGRATION_CAUSES_REPORT_DOCUMENT.id,
     MIGRATIONS_NEW_ENGLAND_COMMUNITIES_CONSEQUENCE_DOCUMENT.id,

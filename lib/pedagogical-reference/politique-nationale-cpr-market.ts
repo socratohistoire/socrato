@@ -104,9 +104,9 @@ export const POLITIQUE_NATIONALE_CPR_MARKET_QUESTION = {
   status: "ready-for-review",
   format: "document-interpretation",
   prompt: "Explique comment le Canadien Pacifique relie la colonisation de l’Ouest au développement du marché intérieur.",
-  instruction: "Un seul des deux documents permet d’établir le lien demandé. Sélectionne-le, puis explique comment le chemin de fer favorise à la fois le peuplement de l’Ouest et les échanges entre l’Ouest et l’Est du Canada. Écarte l’autre document en précisant pourquoi il ne répond pas à la question.",
+  instruction: "Appuie-toi sur le document pertinent, puis explique comment le chemin de fer favorise à la fois le peuplement de l’Ouest et les échanges entre l’Ouest et l’Est du Canada.",
   initialGuidance: "J’attends ta réponse…",
-  expectedAnswer: "Le document 1 permet de répondre. Le Canadien Pacifique rend l’établissement agricole dans les Prairies plus accessible et permet aux colons d’expédier leur grain vers les marchés de l’Est. En retour, l’augmentation de la population et de sa richesse crée dans l’Ouest des consommateurs pour les produits fabriqués dans les régions industrielles de l’Est. Le chemin de fer relie donc l’Ouest agricole à l’Est manufacturier et agrandit le marché intérieur canadien. Le document 2 doit être écarté : Macdonald y traite de la protection de la voie ferrée et du déplacement de cavaliers pendant la Résistance du Nord-Ouest, et non des échanges économiques entre les régions.",
+  expectedAnswer: "Le Canadien Pacifique rend l’établissement agricole dans les Prairies plus accessible et permet aux colons d’expédier leur grain vers les marchés de l’Est. En retour, l’augmentation de la population et de sa richesse crée dans l’Ouest des consommateurs pour les produits fabriqués dans les régions industrielles de l’Est. Le chemin de fer relie donc l’Ouest agricole à l’Est manufacturier et agrandit le marché intérieur canadien.",
   historicalDocumentIds: POLITIQUE_NATIONALE_CPR_MARKET_DOCUMENTS.map(({ id }) => id),
   commonErrors: [
     "Expliquer seulement que le chemin de fer transporte des personnes sans relier les colons aux échanges de marchandises.",

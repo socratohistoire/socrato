@@ -4,7 +4,7 @@ import { METIS_POLITICAL_OUTCOMES_QUESTION as q } from "../lib/pedagogical-refer
 import { PEDAGOGICAL_QUESTION_CATALOG } from "../lib/pedagogical-reference/question-catalog.ts";
 import { ACTE_UNION_DOCUMENTS } from "../lib/student-learning-session/document-catalog.ts";
 
-test("compare les conséquences avec deux preuves et un document à discriminer", () => {
+test("compare les conséquences avec deux preuves sans exiger de justifier le distracteur", () => {
   assert.equal(q.prompt, "Dégage une différence entre les conséquences politiques de la résistance de 1869-1870 et celles de la résistance de 1885.");
   assert.equal(q.operationId, "differences_and_similarities");
   assert.equal(PEDAGOGICAL_QUESTION_CATALOG.filter(({id}) => id === q.id).length, 1);
@@ -14,7 +14,8 @@ test("compare les conséquences avec deux preuves et un document à discriminer"
     assert.equal(docs.length, 1);
     assert.equal(docs[0].content.kind, "historical_excerpt");
   }
-  assert.match(q.expectedAnswer, /AANB-T-004.*à écarter/);
+  assert.doesNotMatch(q.instruction, /écart|rejet|distracteur|discrim/i);
+  assert.doesNotMatch(q.expectedAnswer, /AANB-T-004.*(?:écart|rejet|distracteur|discrim)/i);
   assert.match(q.expectedAnswer, /partie des Canadiens français/);
   assert.ok(!q.instruction.includes("AANB-T-004"));
   assert.equal(q.sourceCatalog.length, 3);

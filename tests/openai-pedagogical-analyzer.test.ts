@@ -71,6 +71,8 @@ test("envoie une requête sans conservation et valide la sortie structurée", as
   assert.match(instructions, /priorTurn ou dans la réponse actuelle/);
   assert.match(instructions, /n’exige pas une phrase de synthèse supplémentaire/);
   assert.match(instructions, /liste fermée des obligations explicitement formulées/);
+  assert.match(instructions, /document distracteur sert uniquement à vérifier la sélection autonome de l’information/);
+  assert.match(instructions, /Ne demande jamais à l’élève de nommer le distracteur, de justifier son rejet/);
   assert.match(instructions, /Il est interdit de transformer un détail supplémentaire/);
   assert.match(instructions, /une reformulation fidèle d’une information pertinente constitue déjà une preuve documentaire/);
   assert.match(instructions, /réunir les colonies sous une seule législature/);
