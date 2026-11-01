@@ -39,7 +39,9 @@ test("fait construire la chaîne famine, immigration transatlantique et quaranta
     "Expliquez le lien entre la Grande Famine en Irlande, l’immigration transatlantique de 1847 et le rôle joué par Grosse-Île au Québec.",
   );
   assert.equal(MIGRATIONS_FAMINE_GROSSE_ILE_QUESTION.operationId, "causal_connections");
-  assert.match(MIGRATIONS_FAMINE_GROSSE_ILE_QUESTION.expectedAnswer, /Grande Famine[\s\S]*traverser l’Atlantique[\s\S]*terres agricoles[\s\S]*station de quarantaine[\s\S]*inspectent[\s\S]*hôpital/i);
+  assert.match(MIGRATIONS_FAMINE_GROSSE_ILE_QUESTION.instruction, /une fonction précise[\s\S]*inspection[\s\S]*suffit[\s\S]*facultatives/i);
+  assert.match(MIGRATIONS_FAMINE_GROSSE_ILE_QUESTION.expectedAnswer, /Réponse minimale attendue[\s\S]*Grande Famine[\s\S]*traverser l’Atlantique[\s\S]*inspectant les navires et les passagers/i);
+  assert.match(MIGRATIONS_FAMINE_GROSSE_ILE_QUESTION.expectedAnswer, /Éléments d’enrichissement facultatifs[\s\S]*terres agricoles[\s\S]*station de quarantaine[\s\S]*hôpital/i);
   assert.ok(PEDAGOGICAL_QUESTION_CATALOG.some(({ id }) => id === MIGRATIONS_FAMINE_GROSSE_ILE_QUESTION.id));
 });
 

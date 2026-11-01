@@ -613,21 +613,33 @@
 /* Cette banque de quatre documents se lit comme une matrice 2 x 2 :
    crise et ampleur en haut, inspection et facteur d'attraction en bas. */
 @media(min-width:900px){
-  .document-system-card--stacked .stacked-document-list:has(>.stacked-document:nth-child(4):last-child):has(.historical-document-image[src$="migrations-clonakilty-famine-1847.jpg"]){
+  .document-system-card--stacked:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]){
+    height:calc(100dvh - 255px)!important;
+    max-height:calc(100dvh - 255px)!important;
+    overflow:hidden!important;
+  }
+  .document-system-card--stacked .stacked-document-list:has(>.stacked-document:nth-child(4):last-child):has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]){
     grid-template-columns:repeat(2,minmax(0,1fr));
     grid-template-rows:repeat(2,minmax(0,1fr))!important;
     grid-auto-rows:auto!important;
     overflow:hidden!important;
   }
-  .document-system-card--stacked .stacked-document-list:has(.historical-document-image[src$="migrations-clonakilty-famine-1847.jpg"])>.stacked-document{min-height:0!important}
-  .stacked-document:has(.historical-document-image[src$="migrations-clonakilty-famine-1847.jpg"]) .document-content-group-visual{display:flex;min-height:0;overflow:hidden}
-  .stacked-document:has(.historical-document-image[src$="migrations-clonakilty-famine-1847.jpg"]) .document-visual-viewport{display:grid;min-height:0;flex:1;place-items:center;overflow:hidden}
-  .stacked-document:has(.historical-document-image[src$="migrations-clonakilty-famine-1847.jpg"]) .historical-document-figure{display:flex;width:100%;height:100%;min-height:0;flex-direction:column;overflow:hidden}
-  .stacked-document .historical-document-image[src$="migrations-clonakilty-famine-1847.jpg"]{width:100%;height:100%;min-height:0;max-height:100%;margin-top:3px;border:0;border-radius:0;object-fit:contain;object-position:center}
-  .stacked-document .historical-document-image[src$="migrations-clonakilty-famine-1847.jpg"]+figcaption{display:none}
-  .stacked-document-list:has(.historical-document-image[src$="migrations-clonakilty-famine-1847.jpg"]) .population-table-wrap{margin-top:5px}
-  .stacked-document-list:has(.historical-document-image[src$="migrations-clonakilty-famine-1847.jpg"]) .population-table-wrap table{font-size:clamp(.54rem,.6vw,.64rem);line-height:1.08}
-  .stacked-document-list:has(.historical-document-image[src$="migrations-clonakilty-famine-1847.jpg"]) .population-table-wrap caption{margin-bottom:3px;font-size:clamp(.56rem,.62vw,.66rem);line-height:1.15}
-  .stacked-document-list:has(.historical-document-image[src$="migrations-clonakilty-famine-1847.jpg"]) .population-table-wrap th,
-  .stacked-document-list:has(.historical-document-image[src$="migrations-clonakilty-famine-1847.jpg"]) .population-table-wrap td{padding:2px 4px}
+  .document-system-card--stacked .stacked-document-list:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"])>.stacked-document{min-height:0!important}
+  .document-system-card--stacked .stacked-document-list:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"])>.stacked-document{padding:5px 7px}
+  .document-system-card--stacked .stacked-document-list:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .document-content-compact h3 strong,
+  .document-system-card--stacked .stacked-document-list:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .document-content-compact h3>span{font-size:clamp(.62rem,.68vw,.72rem)}
+  .document-system-card--stacked .stacked-document-list:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .document-content-compact h3 small{font-size:clamp(.74rem,.82vw,.86rem)}
+  .document-system-card--stacked .stacked-document-list:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .document-content-compact--medium blockquote,
+  .document-system-card--stacked .stacked-document-list:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .document-content-compact--long blockquote{padding:2px 5px;font-size:clamp(.55rem,.62vw,.65rem);line-height:1.15}
+  .document-system-card--stacked .stacked-document-list:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .document-identification{font-size:.49rem}
+  .stacked-document:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .document-content-group-visual{display:flex;min-height:0;overflow:hidden}
+  .stacked-document:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .document-visual-viewport{display:grid;min-height:0;flex:1;place-items:center;overflow:hidden}
+  .stacked-document:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .historical-document-figure{display:flex;width:100%;height:100%;min-height:0;flex-direction:column;overflow:hidden}
+  .stacked-document .historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]{width:100%;height:100%;min-height:0;max-height:100%;margin-top:3px;border:0;border-radius:0;object-fit:contain;object-position:center}
+  .stacked-document .historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]+figcaption{display:none}
+  .stacked-document-list:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .population-table-wrap{margin-top:5px}
+  .stacked-document-list:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .population-table-wrap table{font-size:clamp(.54rem,.6vw,.64rem);line-height:1.08}
+  .stacked-document-list:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .population-table-wrap caption{margin-bottom:3px;font-size:clamp(.56rem,.62vw,.66rem);line-height:1.15}
+  .stacked-document-list:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .population-table-wrap th,
+  .stacked-document-list:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .population-table-wrap td{padding:2px 4px}
 }
