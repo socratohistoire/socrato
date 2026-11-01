@@ -1528,7 +1528,7 @@ function DocumentContent({ document, expanded = false, compact = false, hideHead
             <figure className={`historical-document-figure${imageZoom > 1 ? " is-zoomed" : ""}`} style={imageZoom > 1 ? { width: `${imageZoom * 100}%` } : undefined}>
               <Image className="historical-document-image" src={document.content.localSrc} alt={document.content.alt} width={1600} height={1100} unoptimized />
               <figcaption className={document.content.visibleCaption ? "historical-document-caption historical-document-caption--expanded" : "historical-document-caption"}>
-                {document.content.visibleCaption ? <>{document.id !== "RFP-I-003" ? <strong>{document.id === "RFP-I-001" ? "Description factuelle" : "Description traduite"}</strong> : null}<span>{document.content.visibleCaption}</span>{document.content.visibleCaptionNote ? <small>{document.content.visibleCaptionNote}</small> : null}</> : document.title}
+                {document.content.visibleCaption ? <>{document.id !== "RFP-I-003" && document.id !== "MIG-I-002" ? <strong>{document.id === "RFP-I-001" ? "Description factuelle" : "Description traduite"}</strong> : null}<span>{document.content.visibleCaption}</span>{document.content.visibleCaptionNote ? <small>{document.content.visibleCaptionNote}</small> : null}</> : document.title}
               </figcaption>
             </figure>
           </div>

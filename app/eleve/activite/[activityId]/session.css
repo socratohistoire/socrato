@@ -643,3 +643,14 @@
   .stacked-document-list:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .population-table-wrap th,
   .stacked-document-list:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .population-table-wrap td{padding:2px 4px}
 }
+@media(min-width:900px) and (max-width:1119px){
+  .document-system-card--stacked:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]){
+    height:calc(100dvh - 320px)!important;
+    max-height:calc(100dvh - 320px)!important;
+  }
+  .document-system-card--stacked .stacked-document-list:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .document-content-compact--medium blockquote,
+  .document-system-card--stacked .stacked-document-list:has(.historical-document-image[src*="migrations-clonakilty-famine-1847.jpg"]) .document-content-compact--long blockquote{
+    font-size:clamp(.52rem,.58vw,.59rem);
+    line-height:1.12;
+  }
+}
