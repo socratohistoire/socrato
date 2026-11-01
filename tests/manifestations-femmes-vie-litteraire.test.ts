@@ -26,6 +26,9 @@ test("demande de décrire un changement sans l’annoncer dans la formulation", 
     "Décrivez un changement dans la participation des femmes à la vie littéraire québécoise entre 1880 et 1896.",
   );
   assert.equal(MANIFESTATIONS_WOMEN_LITERARY_LIFE_CHANGE_QUESTION.operationId, "changes_and_continuities");
+  assert.match(MANIFESTATIONS_WOMEN_LITERARY_LIFE_CHANGE_QUESTION.expectedAnswer, /Félicité Angers[\s\S]*pseudonyme de Laure Conan/i);
+  assert.match(MANIFESTATIONS_WOMEN_LITERARY_LIFE_CHANGE_QUESTION.expectedAnswer, /plusieurs façons équivalentes/i);
+  assert.match(MANIFESTATIONS_WOMEN_LITERARY_LIFE_CHANGE_QUESTION.commonErrors.join(" "), /nom véritable[\s\S]*pseudonyme de Félicité Angers/i);
   assert.ok(PEDAGOGICAL_QUESTION_CATALOG.some(({ id }) => id === MANIFESTATIONS_WOMEN_LITERARY_LIFE_CHANGE_QUESTION.id));
 });
 
