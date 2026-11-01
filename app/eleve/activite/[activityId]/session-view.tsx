@@ -1007,7 +1007,7 @@ function InteractiveAssociationQuestion({ question, documents, operationLabel, i
             : "Relis attentivement chaque description.";
     const nextFeedback = `${correctAnswerCount(correctCount, expectedCount)} ${reviewHint} Ferme ce message pour corriger tes associations.`;
     setFeedback(nextFeedback);
-    if (hasCauseLayer) setReviewDialogOpen(true);
+    setReviewDialogOpen(true);
   }
 
   function renderAssociationItem(item: AssociationInteraction["items"][number]) {

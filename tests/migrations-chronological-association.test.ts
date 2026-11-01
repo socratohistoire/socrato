@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { validateApprovedQuestion } from "../lib/pedagogical-reference/approved-question.ts";
@@ -30,4 +31,13 @@ test("publie la question interactive dans un aperçu Socrato", () => {
   assert.equal(session.questions[0]?.intellectualOperations[0]?.label, "Situer dans le temps et dans l’espace");
   assert.equal(session.questions[0]?.associationInteraction?.items.length, 3);
   assert.deepEqual(session.questions[0]?.documentRelations, []);
+});
+
+test("affiche les erreurs dans une fenêtre à fermer avant la correction", () => {
+  const view = readFileSync("app/eleve/activite/[activityId]/session-view.tsx", "utf8");
+  const styles = readFileSync("app/eleve/activite/[activityId]/session.css", "utf8");
+  assert.match(view, /setFeedback\(nextFeedback\);\s*setReviewDialogOpen\(true\);/);
+  assert.doesNotMatch(view, /if \(hasCauseLayer\) setReviewDialogOpen\(true\)/);
+  assert.match(view, /Fermer et corriger mes réponses/);
+  assert.match(styles, /association-question--compact-dates \.timeline-question__footer p\{font-size:clamp\(16px,1\.25vw,18px\)/);
 });
