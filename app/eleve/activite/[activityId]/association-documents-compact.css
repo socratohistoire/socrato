@@ -90,6 +90,33 @@
   font-size: 11px;
 }
 
+.association-question--documents .association-targets article > .association-assigned-document {
+  width: 100%;
+  grid-column: 1;
+  grid-template-columns: 1fr;
+  gap: 5px;
+}
+
+.association-question--documents .association-assigned-document__preview {
+  min-height: 130px;
+  padding: 7px 8px !important;
+}
+
+.association-question--documents .association-assigned-document__excerpt {
+  font-size: 10.5px;
+  line-height: 1.34;
+  -webkit-line-clamp: 5;
+}
+
+.association-question--documents .association-assigned-document__image {
+  height: 90px;
+}
+
+.association-question--documents .association-assigned-document__remove {
+  min-height: 30px;
+  padding: 4px 8px;
+}
+
 @media (max-width: 860px) {
   .association-question--documents .association-pool--documents > div,
   .association-question--documents .association-targets {

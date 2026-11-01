@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { validateApprovedQuestion } from "../lib/pedagogical-reference/approved-question.ts";
@@ -22,7 +23,20 @@ test("associe quatre documents distincts aux quatre concepts", () => {
   ]);
   assert.equal(EGLISE_CONCEPTS_ASSOCIATION_QUESTION.associationInteraction.items.length, 4);
   assert.ok(EGLISE_CONCEPTS_ASSOCIATION_QUESTION.associationInteraction.items.every(({ documentId }) => documentId));
+  assert.match(EGLISE_CONCEPTS_ASSOCIATION_QUESTION.prompt, /^Au Québec, entre 1840 et 1896/);
+  assert.doesNotMatch(EGLISE_CONCEPTS_ASSOCIATION_QUESTION.prompt, /^Associez chacun des quatre documents/);
   assert.ok(PEDAGOGICAL_QUESTION_CATALOG.some(({ id }) => id === EGLISE_CONCEPTS_ASSOCIATION_QUESTION.id));
+});
+
+test("conserve une vignette consultable du document après son association", () => {
+  const view = readFileSync("app/eleve/activite/[activityId]/session-view.tsx", "utf8");
+  const styles = readFileSync("app/eleve/activite/[activityId]/session.css", "utf8");
+  const compactStyles = readFileSync("app/eleve/activite/[activityId]/association-documents-compact.css", "utf8");
+  assert.match(view, /association-assigned-document__preview/);
+  assert.match(view, /association-assigned-document__excerpt/);
+  assert.match(view, /association-assigned-document__remove/);
+  assert.match(styles, /\.association-assigned-document__preview/);
+  assert.match(compactStyles, /article > \.association-assigned-document[\s\S]*grid-column: 1/);
 });
 
 test("documente le schéma du dualisme comme une reconstitution fondée sur la loi de 1869", () => {
