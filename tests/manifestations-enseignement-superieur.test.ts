@@ -25,8 +25,10 @@ test("demande explicitement une similitude et une différence", () => {
   assert.deepEqual(validateApprovedQuestion(MANIFESTATIONS_HIGHER_EDUCATION_COMPARISON_QUESTION), {});
   assert.equal(
     MANIFESTATIONS_HIGHER_EDUCATION_COMPARISON_QUESTION.prompt,
-    "Comparez le développement de l’enseignement supérieur francophone et anglophone au Québec entre 1852 et 1896. Indiquez une similitude et une différence.",
+    "Comparez le développement de l’enseignement supérieur francophone et anglophone au Québec entre 1852 et 1896. Indiquez une similitude et, à part la langue d’enseignement, une différence.",
   );
+  assert.match(MANIFESTATIONS_HIGHER_EDUCATION_COMPARISON_QUESTION.instruction, /facultés ou les domaines d’enseignement/i);
+  assert.match(MANIFESTATIONS_HIGHER_EDUCATION_COMPARISON_QUESTION.expectedAnswer, /différence de langue[\s\S]*ne suffit pas/i);
   assert.equal(MANIFESTATIONS_HIGHER_EDUCATION_COMPARISON_QUESTION.operationId, "differences_and_similarities");
   assert.ok(PEDAGOGICAL_QUESTION_CATALOG.some(({ id }) => id === MANIFESTATIONS_HIGHER_EDUCATION_COMPARISON_QUESTION.id));
 });
