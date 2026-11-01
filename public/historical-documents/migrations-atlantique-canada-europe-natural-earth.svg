@@ -807,9 +807,6 @@
     <path class="route route--local" d="M 1261.5 748.5 Q 1295.3 694.7 1329.0 710.7"/>
   </g>
   <text class="inset-title" x="892" y="626">AGRANDISSEMENT DU QUÉBEC</text>
-  <text class="inset-label" x="1045.7142857142856" y="710.2307692307692">Laurentides</text>
-  <text class="inset-label" x="1210.7142857142856" y="666.076923076923">Saguenay–Lac-Saint-Jean</text>
-  <text class="inset-label" x="1347.0000000000002" y="702.6923076923076">Bas-Saint-Laurent</text>
   <text class="inset-label" x="1121.8571428571427" y="805.7692307692307">Vallée du Saint-Laurent</text>
   <text class="north" x="1510" y="636">N</text><path d="M1515 646 l-9 18 h18 Z" fill="#17344b"/>
   <rect x="415" y="935" width="770" height="246" rx="18" fill="#f8fbfc" stroke="#6d8d9e" stroke-width="2" filter="url(#shadow)"/>

@@ -173,7 +173,7 @@ export const MIGRATIONS_SPATIAL_CAUSALITY_QUESTION = {
   rationale: "L’élève doit d’abord interpréter cinq trajectoires à plusieurs échelles, puis établir un lien causal entre chaque déplacement et une source historique. Les mouvements et les causes sont manipulés séparément afin d’éviter qu’un document volumineux masque la carte.",
   associationInteraction: {
     map: {
-      imageUrl: "/historical-documents/migrations-atlantique-canada-europe-natural-earth.svg?v=balanced-new-england",
+      imageUrl: "/historical-documents/migrations-atlantique-canada-europe-natural-earth.svg?v=regions-unlabelled",
       imageAlt: "Carte de l’Atlantique Nord montrant le Canada au complet, les États-Unis, l’Europe et cinq trajets migratoires en pointillés, avec trois agrandissements consacrés à l’émigration vers la Nouvelle-Angleterre, aux régions de colonisation du Québec et à l’exode rural vers Montréal.",
       dropLabel: "Mouvement",
     },

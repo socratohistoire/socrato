@@ -35,8 +35,7 @@ test("prépare une carte publique couvrant le Canada, l’Atlantique, les États
   assert.match(svg, /<circle class="route-origin" cx="638\.4" cy="418\.2" r="8"\/>/);
   assert.match(svg, /\.route--local\{stroke:#315f78;/);
   assert.match(svg, /id="arrow-local"[^>]+><path[^>]+fill="#315f78"/);
-  assert.match(svg, /y="666\.076923076923">Saguenay–Lac-Saint-Jean<\/text>/);
-  assert.match(svg, /y="710\.2307692307692">Laurentides<\/text>/);
+  assert.doesNotMatch(svg, /Laurentides|Saguenay–Lac-Saint-Jean|Bas-Saint-Laurent/);
   assert.doesNotMatch(svg, /COMMENT LIRE LA CARTE/);
   assert.match(MIGRATIONS_NATURAL_EARTH_MAP_SOURCE.rightsNote ?? "", /domaine public/i);
 });
@@ -65,7 +64,7 @@ test("publie un aperçu avec la carte et les cinq documents dans l’ordre de la
   const session = createDemoStudentLearningSession("demo-activity-migrations-mouvements-causes", "migrations");
   assert.ok(session);
   assert.equal(session.questions[0]?.type, "interactive_association");
-  assert.equal(session.questions[0]?.associationInteraction?.map?.imageUrl, "/historical-documents/migrations-atlantique-canada-europe-natural-earth.svg?v=balanced-new-england");
+  assert.equal(session.questions[0]?.associationInteraction?.map?.imageUrl, "/historical-documents/migrations-atlantique-canada-europe-natural-earth.svg?v=regions-unlabelled");
   assert.deepEqual(session.documentCatalog.map(({ id }) => id), ["MIG-T-001", "MIG-T-003", "MIG-I-001", "MIG-T-004", "PN-I-001"]);
   assert.deepEqual(session.questions[0]?.documentRelations.map(({ documentId }) => documentId), ["MIG-T-003", "PN-I-001", "MIG-I-001", "MIG-T-001", "MIG-T-004"]);
 });
@@ -77,4 +76,16 @@ test("permet d’agrandir chaque document de la banque sans conserver les cercle
   assert.match(view, /expandedCauseDocument/);
   assert.match(view, /closest\("button, details, a"\)/);
   assert.doesNotMatch(map, /route-origin--new-england|route-origin--local/);
+});
+
+test("affiche la rétroaction de la carte dans une grande fenêtre à fermer avant la correction", () => {
+  const view = readFileSync("app/eleve/activite/[activityId]/session-view.tsx", "utf8");
+  const styles = readFileSync("app/eleve/activite/[activityId]/session.css", "utf8");
+  assert.match(view, /association-feedback-dialog/);
+  assert.match(view, /Quelques associations sont à revoir/);
+  assert.match(view, /Fermer et corriger mes réponses/);
+  assert.match(view, /Les mouvements sont bien placés\. Relis les documents-causes/);
+  assert.match(view, /completed \|\| reviewDialogOpen/);
+  assert.match(styles, /\.association-feedback-dialog-backdrop\{position:fixed/);
+  assert.match(styles, /font-size:clamp\(28px,4vw,40px\)/);
 });
