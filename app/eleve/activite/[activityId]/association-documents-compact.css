@@ -3,7 +3,7 @@
 }
 
 .association-question--documents .timeline-question__header h2 {
-  font-size: clamp(11px, 1vw, 15px);
+  font-size: clamp(16.5px, 1.5vw, 22.5px);
 }
 
 .association-question--documents .association-question__intro {

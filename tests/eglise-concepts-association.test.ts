@@ -25,6 +25,7 @@ test("associe quatre documents distincts aux quatre concepts", () => {
   assert.ok(EGLISE_CONCEPTS_ASSOCIATION_QUESTION.associationInteraction.items.every(({ documentId }) => documentId));
   assert.match(EGLISE_CONCEPTS_ASSOCIATION_QUESTION.prompt, /^Au Québec, entre 1840 et 1896/);
   assert.doesNotMatch(EGLISE_CONCEPTS_ASSOCIATION_QUESTION.prompt, /^Associez chacun des quatre documents/);
+  assert.equal(EGLISE_CONCEPTS_ASSOCIATION_QUESTION.instruction, EGLISE_CONCEPTS_ASSOCIATION_QUESTION.prompt);
   assert.ok(PEDAGOGICAL_QUESTION_CATALOG.some(({ id }) => id === EGLISE_CONCEPTS_ASSOCIATION_QUESTION.id));
 });
 

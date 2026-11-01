@@ -80,7 +80,7 @@ export const EGLISE_CONCEPTS_ASSOCIATION_QUESTION = {
   status: "ready-for-review",
   format: "interactive-association",
   prompt: "Au Québec, entre 1840 et 1896, les débats sur la place de l’Église catholique touchent l’organisation de la société, l’éducation et la préservation de l’identité canadienne-française. Lisez ou observez chaque document, puis associez-le au bon concept.",
-  instruction: "Sélectionnez un document, puis placez-le sous le concept correspondant.",
+  instruction: "Au Québec, entre 1840 et 1896, les débats sur la place de l’Église catholique touchent l’organisation de la société, l’éducation et la préservation de l’identité canadienne-française. Lisez ou observez chaque document, puis associez-le au bon concept.",
   initialGuidance: "J’attends vos quatre associations…",
   expectedAnswer: "Document 1 — anticléricalisme : Dessaulles critique le contrôle du domaine temporel au nom de la religion et défend la liberté de penser. Document 2 — dualisme confessionnel : le système scolaire est organisé en deux secteurs parallèles, catholique et protestant. Document 3 — ultramontanisme : Bourget soumet les lectures et les bibliothèques à l’autorité religieuse. Document 4 — nationalisme de survivance : Laflèche associe la mission de la nation canadienne-française à la foi catholique.",
   historicalDocumentIds: EGLISE_CONCEPTS_ASSOCIATION_DOCUMENTS.map(({ id }) => id),
