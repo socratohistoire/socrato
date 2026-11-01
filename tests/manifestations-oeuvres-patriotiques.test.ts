@@ -33,5 +33,6 @@ test("publie l’aperçu avec la chanson et l’extrait de Garneau", () => {
   assert.equal(session.questions[0]?.id, MANIFESTATIONS_OEUVRES_PATRIOTIQUES_QUESTION.id);
   assert.deepEqual(session.questions[0]?.documentRelations.map(({ documentId }) => documentId), ["MSC-T-001", "MSC-T-004"]);
   assert.deepEqual(session.documentCatalog.map(({ content }) => content.kind), ["historical_excerpt", "historical_excerpt"]);
+  assert.equal(session.documentCatalog[0]?.typeLabel, "Chanson composée après l’exil de Patriotes à la suite des Rébellions de 1837-1838");
   assert.equal(session.documentCatalog[1]?.content.kind === "historical_excerpt" && session.documentCatalog[1].content.adapted, true);
 });

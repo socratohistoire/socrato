@@ -296,7 +296,9 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
   ...[MANIFESTATIONS_CANADIEN_ERRANT_DOCUMENT, MANIFESTATIONS_GARNEAU_PATRIOTISM_DOCUMENT].map((document) => ({
     id: document.id,
     title: document.title,
-    typeLabel: document.id === MANIFESTATIONS_CANADIEN_ERRANT_DOCUMENT.id ? "Chanson patriotique" : "Extrait adapté d’un ouvrage historique",
+    typeLabel: document.id === MANIFESTATIONS_CANADIEN_ERRANT_DOCUMENT.id
+      ? "Chanson composée après l’exil de Patriotes à la suite des Rébellions de 1837-1838"
+      : "Extrait adapté d’un ouvrage historique",
     dateLabel: document.historicalDate,
     authorLabel: document.creator,
     institutionLabel: document.holdingInstitution,
