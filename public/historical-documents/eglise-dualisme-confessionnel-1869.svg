@@ -6,8 +6,8 @@
       <stop offset="0" stop-color="#fffdf6"/>
       <stop offset="1" stop-color="#f4ecdc"/>
     </linearGradient>
-    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
-      <path d="M0 0L12 6L0 12Z" fill="#9b7437"/>
+    <marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="18" refX="16" refY="9" orient="auto">
+      <path d="M0 0L18 9L0 18Z" fill="#9b7437"/>
     </marker>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
       <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#172d42" flood-opacity=".18"/>

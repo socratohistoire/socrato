@@ -48,6 +48,9 @@ test("documente le schéma du dualisme comme une reconstitution fondée sur la l
   assert.ok(nationalismeDocument);
   assert.doesNotMatch(nationalismeDocument.transcription, /\bnation(?:alité)?\b/i);
   assert.match(nationalismeDocument.transcription, /\[peuple\]|\[la collectivité\]/i);
+  const dualismeDiagram = readFileSync("public/historical-documents/eglise-dualisme-confessionnel-1869.svg", "utf8");
+  assert.match(dualismeDiagram, /markerUnits="userSpaceOnUse"/);
+  assert.match(dualismeDiagram, /markerWidth="18" markerHeight="18"/);
 });
 
 test("publie une séance interactive avec les quatre documents intégrés", () => {

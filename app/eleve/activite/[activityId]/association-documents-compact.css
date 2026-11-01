@@ -2,6 +2,10 @@
   gap: 8px;
 }
 
+.association-question--documents .timeline-question__header h2 {
+  font-size: clamp(22px, 2vw, 30px);
+}
+
 .association-question--documents .association-question__intro {
   max-width: 92ch;
   margin-top: 6px;
