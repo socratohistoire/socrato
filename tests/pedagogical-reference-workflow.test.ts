@@ -606,7 +606,7 @@ test("prépare les dossiers pilotes, les questions approuvées et les questions 
     "revolution-tranquille",
   ]);
   assert.ok(PEDAGOGICAL_REFERENCE_PILOTS.every(({ questionDraft }) => questionDraft.status === "not-started" && !questionDraft.prompt));
-  assert.equal(PEDAGOGICAL_QUESTION_CATALOG.length, 134);
+  assert.equal(PEDAGOGICAL_QUESTION_CATALOG.length, 135);
   assert.equal(PEDAGOGICAL_QUESTION_CATALOG.filter(({ status }) => status === "approved").length, 35);
   assert.ok(PEDAGOGICAL_QUESTION_CATALOG.every((question) => Object.keys(validateApprovedQuestion(question)).length === 0));
   assert.equal(getQuestionsForKnowledgeHeading("acte-union").length, 35);
