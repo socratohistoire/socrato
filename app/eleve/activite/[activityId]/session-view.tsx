@@ -902,12 +902,18 @@ function InteractiveCausalChainQuestion({ question, operationLabel, initialAttem
 function InteractiveAssociationQuestion({ question, documents, operationLabel, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete }: ObjectiveQuestionProps & { documents: LearningSessionDocument[] }) {
   const interaction = question.associationInteraction as AssociationInteraction;
   const hasDocumentItems = interaction.items.some(({ documentId }) => Boolean(documentId));
-  const [causeLayerReady, setCauseLayerReady] = useState(false);
+  const causeDocuments = interaction.causeDocuments ?? [];
+  const causeTargets = interaction.causeTargets ?? [];
+  const hasCauseLayer = causeDocuments.length > 0 && causeTargets.length > 0;
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [causeAssignments, setCauseAssignments] = useState<Record<string, string>>({});
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [selectedCauseDocumentId, setSelectedCauseDocumentId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState(hasDocumentItems ? "Sélectionne un document, puis le concept qu’il illustre." : "Sélectionne un élément, puis l’emplacement auquel il correspond.");
+  const [feedback, setFeedback] = useState(() => {
+    if (causeDocuments.length) return `Commence par placer les ${interaction.items.length} mouvements sur les trajets en pointillés.`;
+    if (hasDocumentItems) return "Sélectionne un document, puis le concept qu’il illustre.";
+    return "Sélectionne un élément, puis l’emplacement auquel il correspond.";
+  });
   const [attempts, setAttempts] = useState(initialAttempts);
   const [completed, setCompleted] = useState(false);
   const [showHint, setShowHint] = useState(initialHintLevel > 0);
@@ -919,9 +925,6 @@ function InteractiveAssociationQuestion({ question, documents, operationLabel, i
   const reviewDialogCloseButtonRef = useRef<HTMLButtonElement>(null);
   const itemById = new Map(interaction.items.map((item) => [item.id, item]));
   const assignedItemIds = new Set(Object.values(assignments));
-  const causeDocuments = interaction.causeDocuments ?? [];
-  const causeTargets = interaction.causeTargets ?? [];
-  const hasCauseLayer = causeLayerReady && causeDocuments.length > 0 && causeTargets.length > 0;
   const causeDocumentById = new Map(causeDocuments.map((document) => [document.documentId, document]));
   const learningDocumentById = new Map(documents.map((document) => [document.id, document]));
   const expandedCauseReference = causeDocuments.find(({ documentId }) => documentId === expandedCauseDocumentId);
@@ -938,11 +941,6 @@ function InteractiveAssociationQuestion({ question, documents, operationLabel, i
   const expandedItemDocument = expandedItemDocumentBase && expandedItem
     ? { ...expandedItemDocumentBase, displayOrder: interaction.items.findIndex(({ id }) => id === expandedItem.id) + 1 }
     : null;
-
-  useEffect(() => {
-    setCauseLayerReady(true);
-    if (interaction.causeDocuments?.length) setFeedback(`Commence par placer les ${interaction.items.length} mouvements sur les trajets en pointillés.`);
-  }, [interaction.causeDocuments]);
 
   useEffect(() => {
     if (!expandedItemId) return;
