@@ -631,3 +631,105 @@
   .stacked-document-list:has(.historical-document-image[src$="migrations-clonakilty-famine-1847.jpg"]) .population-table-wrap th,
   .stacked-document-list:has(.historical-document-image[src$="migrations-clonakilty-famine-1847.jpg"]) .population-table-wrap td{padding:2px 4px}
 }
+
+.historical-document-image[src$="industrialisation-greve-canal-lachine-1878.jpg"],
+.document-thumbnail-image[src$="industrialisation-greve-canal-lachine-1878.jpg"],
+.stacked-document:has(.historical-document-image[src$="industrialisation-greve-canal-lachine-1878.jpg"]) {
+  border: 0;
+  box-shadow: none;
+}
+
+@media (min-width: 800px) {
+  .timeline-question[data-slot-count="3"] .timeline-question__dates,
+  .timeline-question[data-slot-count="3"] .timeline-card-pool > div {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.timeline-question[data-slot-count="3"] {
+  --phase-card-title-size: 20px;
+}
+
+.timeline-question[data-slot-count="3"] .timeline-empty-slot,
+.timeline-question[data-slot-count="3"] .timeline-placed-card,
+.timeline-question[data-slot-count="3"] .timeline-card-pool > div > button {
+  height: auto;
+  min-height: 112px;
+  max-height: none;
+}
+
+.timeline-question[data-slot-count="3"] .timeline-placed-card,
+.timeline-question[data-slot-count="3"] .timeline-card-pool > div > button {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.timeline-question[data-slot-count="3"] .timeline-placed-card__content,
+.timeline-question[data-slot-count="3"] .timeline-card-pool button > span {
+  flex: none;
+  padding: 12px 40px 12px 14px;
+}
+
+.timeline-question[data-slot-count="3"] .timeline-placed-card__content h3,
+.timeline-question[data-slot-count="3"] .timeline-card-pool button strong {
+  display: block;
+  overflow: visible;
+  font-size: var(--phase-card-title-size);
+  font-weight: 700;
+  line-height: 1.25;
+  -webkit-line-clamp: unset;
+  overflow-wrap: anywhere;
+}
+
+.document-system-card--stacked:has(.historical-document-image:is([src$="industrialisation-filature-hudon-1874.jpg"], [src$="Wheelock_Engine_Illustration.png"])) {
+  height: auto;
+  max-height: none;
+}
+
+.document-system-card--stacked .stacked-document-list:has(>.stacked-document:nth-child(4):last-child):has(.historical-document-image:is([src$="industrialisation-filature-hudon-1874.jpg"], [src$="Wheelock_Engine_Illustration.png"])) {
+  height: auto;
+  grid-template-rows: repeat(4, max-content) !important;
+  gap: 7px;
+}
+
+.stacked-document-list:has(.historical-document-image:is([src$="industrialisation-filature-hudon-1874.jpg"], [src$="Wheelock_Engine_Illustration.png"])) > .stacked-document {
+  min-height: 0;
+  padding-block: 4px;
+}
+
+.stacked-document:has(.historical-document-image:is([src$="industrialisation-filature-hudon-1874.jpg"], [src$="Wheelock_Engine_Illustration.png"])) .document-visual-viewport,
+.stacked-document:has(.historical-document-image:is([src$="industrialisation-filature-hudon-1874.jpg"], [src$="Wheelock_Engine_Illustration.png"])) .historical-document-figure {
+  height: auto;
+}
+
+.stacked-document .historical-document-image:is([src$="industrialisation-filature-hudon-1874.jpg"], [src$="Wheelock_Engine_Illustration.png"]) {
+  width: 100%;
+  height: clamp(140px, 21.5vh, 225px);
+  max-height: none;
+  margin: 0;
+  object-fit: contain;
+}
+
+.stacked-document-list:has(.historical-document-image:is([src$="industrialisation-filature-hudon-1874.jpg"], [src$="Wheelock_Engine_Illustration.png"])) .document-content-compact {
+  height: auto;
+}
+
+.stacked-document-list:has(.historical-document-image:is([src$="industrialisation-filature-hudon-1874.jpg"], [src$="Wheelock_Engine_Illustration.png"])) .document-content-group,
+.stacked-document-list:has(.historical-document-image:is([src$="industrialisation-filature-hudon-1874.jpg"], [src$="Wheelock_Engine_Illustration.png"])) blockquote {
+  flex: none;
+}
+
+.stacked-document-list:has(.historical-document-image:is([src$="industrialisation-filature-hudon-1874.jpg"], [src$="Wheelock_Engine_Illustration.png"])) blockquote {
+  margin-block: 1px 0;
+  padding-block: 0;
+}
+
+.stacked-document .historical-document-image[src$="Wheelock_Engine_Illustration.png"] {
+  height: clamp(105px, calc(60vh - 325px), 200px);
+}
+
+.historical-document-image[src$="Wheelock_Engine_Illustration.png"] {
+  border: 0;
+  border-radius: 0;
+}

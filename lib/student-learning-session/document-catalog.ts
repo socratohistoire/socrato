@@ -10,6 +10,9 @@ import { COLONIAL_ECONOMY_PRIMARY_DOCUMENTS } from "../pedagogical-reference/col
 import { INDIAN_AFFAIRS_PRIMARY_DOCUMENTS } from "../pedagogical-reference/indian-affairs-primary-documents.ts";
 import { INDIAN_AFFAIRS_ICONOGRAPHIC_DOCUMENTS } from "../pedagogical-reference/indian-affairs-iconography.ts";
 import { FEDERAL_PROVINCIAL_RELATIONS_PRIMARY_DOCUMENTS } from "../pedagogical-reference/federal-provincial-relations-primary-documents.ts";
+import { INDUSTRIALIZATION_LIVING_WORKING_CONDITIONS_DOCUMENTS } from "../pedagogical-reference/industrialization-living-working-conditions.ts";
+import { INDUSTRIALIZATION_CAUSES_DOCUMENTS } from "../pedagogical-reference/industrialization-causes.ts";
+import { INDUSTRIALIZATION_LABOR_MOVEMENT_DOCUMENTS } from "../pedagogical-reference/industrialization-labor-movement.ts";
 import { INDUSTRIALIZATION_ICONOGRAPHIC_DOCUMENTS } from "../pedagogical-reference/industrialization-iconography.ts";
 import { BRITISH_NORTH_AMERICA_ACT_TERRITORIAL_MAPS } from "../pedagogical-reference/british-north-america-act-maps.ts";
 import { BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS } from "../pedagogical-reference/british-north-america-confederation-documents.ts";
@@ -793,6 +796,9 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
     historicalKnowledgeIds: ["economie-coloniale", "preferences-imperiales", "traite-reciprocite"],
     intellectualOperationIds: [...document.operationIds],
   })),
+  ...INDUSTRIALIZATION_LABOR_MOVEMENT_DOCUMENTS,
+  ...INDUSTRIALIZATION_LIVING_WORKING_CONDITIONS_DOCUMENTS,
+  ...INDUSTRIALIZATION_CAUSES_DOCUMENTS,
   ...INDUSTRIALIZATION_ICONOGRAPHIC_DOCUMENTS.map((document) => ({
     id: document.id,
     title: document.title,
