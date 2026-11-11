@@ -257,10 +257,10 @@ export interface ApprovedQuestion {
       date: string;
       title: string;
       description: string;
-      imageUrl: string;
+      imageUrl?: string;
       imageUrls?: readonly string[];
-      imageAlt: string;
-      credit: string;
+      imageAlt?: string;
+      credit?: string;
     }[];
   };
   associationInteraction?: {
