@@ -1,0 +1,4 @@
+.pn-rubric{margin-block:24px}.pn-table-scroll{overflow-x:auto}.pn-rubric table{width:100%;border-collapse:collapse;font-size:14px}.pn-rubric caption{text-align:left;font-weight:bold;padding:12px 0}.pn-rubric th,.pn-rubric td{border:1px solid var(--pb-border);padding:12px;text-align:center}.pn-rubric th{background:var(--pb-group)}
+.pn-evaluation .partieb-document-image{grid-column:auto}.pn-evaluation .partieb-document-image>a{width:100%;max-width:440px}.pn-evaluation .partieb-document-image>a>img{width:auto!important;height:auto!important;max-width:100%;max-height:280px;object-fit:contain;margin-inline:auto}.pn-evaluation .partieb-document-image>a>.partieb-note{display:block;text-align:center;margin-top:10px}
+@media print{.pn-evaluation .partieb-document-image>a>img{max-height:190px}}
+@media print{.pn-rubric{break-before:page}.pn-rubric table{font-size:11pt}.pn-rubric a{font-size:9pt}}

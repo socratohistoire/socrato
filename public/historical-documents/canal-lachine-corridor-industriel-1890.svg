@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="448" viewBox="0 0 960 448" role="img" aria-labelledby="title description">
+  <title id="title">Le canal de Lachine et ses manufactures vers 1890</title>
+  <desc id="description">Carte schématique allant du lac Saint-Louis au port de Montréal, avec trois secteurs de manufactures le long du canal et des quais dans la portion proche du port.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 0 10 5 0 10z" fill="#28627c"/>
+    </marker>
+  </defs>
+  <rect width="960" height="448" fill="#f8f3e7"/>
+  <rect x="20" y="20" width="920" height="408" rx="8" fill="none" stroke="#bcb298"/>
+  <g font-family="Arial, sans-serif" fill="#252c29">
+    <text x="43" y="60" font-size="31" font-weight="700">Le canal de Lachine vers 1890</text>
+    <text x="44" y="90" font-size="17" fill="#545e55">Carte schématique du corridor industriel · Montréal</text>
+    <path d="M21 237 Q64 205 128 245 L145 304 Q92 351 21 333Z" fill="#d5e8ed"/>
+    <path d="M782 326 Q866 273 939 217 L939 416 Q851 426 782 406 Q755 386 782 326Z" fill="#d5e8ed"/>
+    <path d="M94 279 C166 285 199 265 256 265 C330 265 355 255 423 255 L680 255 Q733 255 773 290 L839 335" fill="none" stroke="#28627c" stroke-width="21" stroke-linecap="round"/>
+    <path d="M100 279 C166 285 199 265 256 265 C330 265 355 255 423 255 L680 255 Q733 255 773 290 L828 328" fill="none" stroke="#9bc9da" stroke-width="10" stroke-linecap="round"/>
+    <path d="M75 312H124 M845 343l65-44" fill="none" stroke="#28627c" stroke-width="2.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+    <text x="47" y="353" font-size="17" font-weight="700" fill="#224f65">Lac Saint-Louis</text>
+    <text x="47" y="374" font-size="15" fill="#224f65">Vers les Grands Lacs</text>
+    <text x="756" y="198" font-size="20" font-weight="700">Port de Montréal</text>
+    <path d="M835 208v88" stroke="#75654c" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <text x="780" y="380" font-size="16" font-weight="700" fill="#224f65">Fleuve Saint-Laurent</text>
+    <text x="780" y="401" font-size="15" fill="#224f65">Vers l’Atlantique</text>
+    <text x="337" y="304" font-size="23" font-weight="700" fill="#224f65">Canal de Lachine</text>
+    <g stroke="#85623f" stroke-width="1.5" fill="none">
+      <path d="M240 188v66"/>
+      <path d="M456 188v57"/>
+      <path d="M666 188v57"/>
+    </g>
+    <g fill="#a45434" stroke="#f8f3e7" stroke-width="2">
+      <rect x="231" y="248" width="18" height="18" rx="3"/>
+      <rect x="447" y="239" width="18" height="18" rx="3"/>
+      <rect x="657" y="239" width="18" height="18" rx="3"/>
+    </g>
+    <g text-anchor="middle">
+      <text x="240" y="145" font-size="20" font-weight="700">Côte-Saint-Paul</text>
+      <text x="240" y="169" font-size="16">Fabrication d’outils</text>
+      <text x="456" y="145" font-size="20" font-weight="700">Saint-Gabriel</text>
+      <text x="456" y="169" font-size="16">Ateliers du bois et du fer</text>
+      <text x="666" y="145" font-size="20" font-weight="700">Bassin nº 2</text>
+      <text x="666" y="169" font-size="16">Meuneries et travail du fer</text>
+    </g>
+    <g fill="none" stroke="#4e655d" stroke-width="4" stroke-linecap="round">
+      <path d="M562 270h39 M623 270h37 M685 274l29 9"/>
+    </g>
+    <path d="M635 275v47" stroke="#4e655d" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <text x="635" y="344" text-anchor="middle" font-size="18" font-weight="700">Quais et bassins</text>
+    <rect x="268" y="382" width="14" height="14" rx="2" fill="#a45434"/>
+    <text x="290" y="394" font-size="15">Secteur industriel</text>
+    <path d="M447 389h25" stroke="#28627c" stroke-width="5" stroke-linecap="round"/>
+    <text x="481" y="394" font-size="15">Voie navigable</text>
+  </g>
+</svg>

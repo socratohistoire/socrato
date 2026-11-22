@@ -1,44 +1,55 @@
-export const POLITIQUE_NATIONALE_ACTIVITY_ID = "politique-nationale-partie-b-v2";
+export const POLITIQUE_NATIONALE_ACTIVITY_ID = "politique-nationale-partie-b-v3-evaluation";
 export const POLITIQUE_NATIONALE_TITLE = "Le Canada, 1873-1896";
-export const POLITIQUE_NATIONALE_INSTRUCTION = "Décrivez le contexte et les principales composantes d’une politique mise en œuvre par le gouvernement canadien à partir de 1879. Complétez le schéma à l’aide de vos connaissances et des documents pertinents. Pour chaque document, choisissez « Utile » ou « À discriminer » selon son lien avec cette politique.";
+export const POLITIQUE_NATIONALE_INSTRUCTION = "Décrivez la politique économique et territoriale mise en œuvre par le gouvernement canadien à partir de 1879. Remplissez le schéma à l’aide de vos connaissances et des documents pertinents. Formulez des réponses courtes et précises. Seul le schéma est évalué, sur 8 points.";
 
 export const POLITIQUE_NATIONALE_SCHEMA_FIELDS = [
   {
     id: "object",
     prompt: "Nommez la politique économique et territoriale mise en œuvre par le gouvernement fédéral à partir de 1879.",
-    answer: "La Politique nationale.",
   },
   {
     id: "context",
-    prompt: "Nommez le contexte économique qui favorise l’adoption de cette politique.",
-    answer: "La crise économique de 1873 et la dépression qui se prolonge pendant les années 1870 (document 1).",
+    prompt: "Nommez le contexte économique dans lequel cette mesure douanière est adoptée.",
   },
   {
-    id: "adoption",
-    prompt: "Nommez le premier ministre dont le gouvernement met cette politique en œuvre et indiquez l’année.",
-    answer: "Le gouvernement conservateur de John A. Macdonald la met en œuvre en 1879 (document 2).",
+    id: "trade",
+    prompt: "Décrivez un échange de marchandises entre l’Ouest et l’Est que ce chemin de fer favorise.",
   },
   {
     id: "industrial",
-    prompt: "Décrivez un changement de l’activité industrielle associé à cette politique.",
-    answer: "L’activité industrielle prend de l’expansion : les établissements manufacturiers occupent une plus grande partie des rives du canal de Lachine et la grande industrie textile apparaît (document 4).",
+    prompt: "Décrivez un changement de l’activité industrielle associé à cette mesure.",
   },
   {
     id: "tariff",
     prompt: "Décrivez la mesure qui concerne les produits importés.",
-    answer: "Le gouvernement augmente les droits de douane sur plusieurs produits importés afin de protéger et de favoriser les industries canadiennes : c’est une politique tarifaire protectionniste (document 3).",
   },
   {
     id: "railway",
-    prompt: "Décrivez la mesure qui relie l’Est et l’Ouest du Canada.",
-    answer: "Le gouvernement soutient la construction du chemin de fer transcontinental du Canadien Pacifique. Le dernier crampon est posé en 1885 (document 5).",
+    prompt: "Nommez le chemin de fer transcontinental représenté par le tracé rouge dans le document 5.",
   },
   {
     id: "settlement",
-    prompt: "Décrivez la mesure qui vise les terres de l’Ouest.",
-    answer: "Le gouvernement favorise la colonisation des terres de l’Ouest en offrant des lots aux colons et en encourageant leur établissement, notamment au Manitoba et dans les Territoires du Nord-Ouest (document 7).",
+    prompt: "Décrivez une mesure qui encourage l’établissement de colons dans l’Ouest desservi par ce chemin de fer.",
   },
 ] as const;
+export const POLITIQUE_NATIONALE_BRANCHES = [
+  { central: "tariff", details: ["context", "industrial"], label: "Protection des industries canadiennes" },
+  { central: "railway", details: ["settlement", "trade"], label: "Développement de l’Ouest et du marché intérieur" },
+] as const;
+export const POLITIQUE_NATIONALE_ANSWERS: Record<PolitiqueNationaleSchemaFieldId, string> = {
+  object: "La Politique nationale.",
+  tariff: "Le gouvernement augmente les droits de douane sur les produits importés pour protéger les industries canadiennes (document 2). Accepter une politique tarifaire protectionniste clairement décrite. « Des taxes » seul est insuffisant.",
+  context: "La crise économique de 1873 ou la dépression économique des années 1870 (document 1). Accepter un ralentissement économique des années 1870, marqué par la baisse des prix et les difficultés des entreprises. Une baisse du prix des bouvillons seule ne caractérise pas suffisamment le contexte général.",
+  industrial: "L’activité manufacturière prend de l’expansion, les établissements industriels se multiplient ou s’étendent, ou la grande industrie textile se développe (document 4). Nommer seulement « textile » ne décrit pas un changement.",
+  railway: "Le chemin de fer transcontinental du Canadien Pacifique, représenté en rouge dans le document 5. Accepter Canadien Pacifique ou CPR : cette case demande de nommer le réseau. Un chemin de fer sans identification est incomplet. La carte décrit l’état des réseaux en 1900 et ne constitue pas une preuve de leur date d’achèvement.",
+  settlement: "L’offre de lots agricoles aux colons, présentés comme des fermes gratuites dans l’Ouest (document 7), encourage la colonisation des terres de l’Ouest. Les Premières Nations et les Métis y vivent déjà. La gratuité annoncée est soumise à des conditions d’établissement.",
+  trade: "Du grain ou d’autres produits agricoles de l’Ouest sont acheminés vers les marchés de l’Est, ou des produits manufacturés de l’Est sont vendus aux habitants de l’Ouest (document 3). Une direction correcte et le type de marchandises suffisent. Accepter les deux directions. « Transport de marchandises » seul est trop vague.",
+};
+export function scorePolitiqueNationaleRelation(central: 0 | 1 | 2, details: 0 | 1 | 2): number {
+  if (central === 2) return 1 + details;
+  if (central === 1) return details;
+  return details === 2 ? 1 : 0;
+}
 
 export type PolitiqueNationaleSchemaFieldId = (typeof POLITIQUE_NATIONALE_SCHEMA_FIELDS)[number]["id"];
 export type PolitiqueNationaleAnswerFeedback = { status: "recognized" | "partial" | "review"; label: string; message: string };
@@ -55,14 +66,14 @@ const LOCAL_ANSWER_RULES: Record<PolitiqueNationaleSchemaFieldId, { accepted: Re
     hint: "Précisez qu’il s’agit de la crise économique de 1873 ou de la dépression des années 1870.",
   },
   industrial: {
-    accepted: [/\b(expansion|developpement|croissance|essor).{0,40}(industrie|industriel|manufactur)/, /\b(industrie|activite industrielle|manufactures?|usines?).{0,40}(s etend|augment|se developp|prend de l expansion|croissance)/, /\b(grande industrie textile|industrie textile)\b/],
+    accepted: [/\b(expansion|developpement|croissance|essor).{0,40}(industrie|industriel|manufactur)/, /\b(industrie|activite industrielle|manufactures?|usines?).{0,40}(s etend|augment|se developp|prend de l expansion|croissance|apparait)/],
     related: /\b(industrie|industriel|manufactures?|usines?|textile|canal de lachine|entreprises?)\b/,
     hint: "Décrivez l’expansion de l’activité manufacturière ou l’apparition de la grande industrie textile.",
   },
-  adoption: {
-    accepted: [/\b(macdonald|conservateurs?|gouvernement conservateur).{0,45}\b1879\b/, /\b1879\b.{0,45}\b(macdonald|conservateurs?|gouvernement conservateur)\b/],
-    related: /\b(1878|1879|macdonald|conservateurs?|gouvernement)\b/,
-    hint: "La réponse doit préciser à la fois le premier ministre John A. Macdonald et l’année 1879.",
+  trade: {
+    accepted: [/\b(grain|ble|cereales|produits agricoles).{0,65}\bouest\b.{0,35}\best\b/, /\b(produits manufactures|biens manufactures).{0,65}\best\b.{0,35}\bouest\b/],
+    related: /\b(marchandises|commerce|echanges|grain|ble|produits|marche|est|ouest)\b/,
+    hint: "Précisez les marchandises et la direction : produits agricoles de l’Ouest vers l’Est, ou produits manufacturés de l’Est vers l’Ouest.",
   },
   tariff: {
     accepted: [/\b(hausse|augmentation|relevement).{0,35}(tarifs?|droits? de douane)\b/, /\b(tarifs?|droits? de douane).{0,35}(protecteurs?|eleves?|augmentes?|hausses?)\b/, /\b(protectionnisme|politique tarifaire protectionniste|proteger les industries? canadiennes?)\b/],
@@ -107,42 +118,43 @@ export type PolitiqueNationaleDraft = {
 export const POLITIQUE_NATIONALE_DOCUMENTS = [
   {
     number: 1,
-    date: "CANADA, 1872-1879",
-    title: "Prix de gros des bouvillons au Canada",
-    note: "Un bouvillon est un jeune bovin destiné à la production de viande. Les prix sont exprimés en cents par livre (¢/lb).",
-    source: "Source statistique : Statistique Canada, Statistiques historiques du Canada, série M234, « Prix de gros de certains produits agricoles, 1867 à 1974 ». Les données de 1870 à 1889 proviennent de H. Michell, Statistics of Price, 1931.",
+    date: "CANADA, 1873-1879",
+    title: "Deux indicateurs économiques au Canada",
+    note: "Un bouvillon est un jeune bovin destiné à la production de viande. La dernière colonne présente les montants en dollars associés aux faillites commerciales, et non le nombre d’entreprises. La série des faillites est présentée rétrospectivement par Charles Tupper en 1887.",
+    source: "Source statistique : Statistique Canada, Statistiques historiques du Canada, série M234 (prix des bouvillons, d’après H. Michell, 1931); Charles Tupper, discours budgétaire du 12 mai 1887, tableau Business Failures in Canada, p. 25 (page 25 du PDF). Mise en tableau pédagogique de deux séries distinctes.",
     supports: "context",
     links: [
       { url: "https://epe.lac-bac.gc.ca/100/200/301/statcan/historical_statistics_can-e/sectionm/M228_238.csv?nodisclaimer=1", label: "Statistique Canada — tableau M228-238" },
       { url: "https://epe.lac-bac.gc.ca/100/200/301/statcan/historical_statistics_can-e/sectionm/sectionm.htm?nodisclaimer=1", label: "Statistique Canada — source et précisions de la série M234" },
+      { url: "https://publications.gc.ca/collections/collection_2016/fin/F1-23-1-1887-eng.pdf#page=25", label: "Budget de 1887 — montants associés aux faillites" },
     ],
     table: {
-      headers: ["Année", "Prix de gros des bouvillons (¢/lb)"],
-      rows: [["1872", "7,58"], ["1873", "7,21"], ["1874", "5,80"], ["1875", "5,16"], ["1876", "4,86"], ["1877", "5,17"], ["1878", "4,80"], ["1879", "4,61"]],
+      headers: ["Année", "Prix de gros des bouvillons (¢/lb)", "Montants associés aux faillites ($)"],
+      rows: [["1873", "7,21", "12 334 000"], ["1874", "5,80", "7 696 000"], ["1875", "5,16", "28 843 000"], ["1876", "4,86", "25 517 000"], ["1877", "5,17", "25 523 000"], ["1878", "4,80", "23 908 000"], ["1879", "4,61", "29 347 000"]],
     },
   },
   {
     number: 2,
     date: "CHAMBRE DES COMMUNES, 14 MARS 1879",
-    title: "Le budget de 1879 et le nouveau tarif",
+    title: "",
     excerpt: "À propos du tarif douanier proposé sur les produits importés, Tilley annonce : « Voitures de chemin de fer, wagons, traîneaux, brouettes et véhicules semblables : un droit de 25 % de leur valeur; meubles de maison ou d’ébénisterie : un droit de 35 % de leur valeur. » — Samuel Leonard Tilley, ministre des Finances.",
-    note: "Le premier ministre est John A. Macdonald. Tilley est son ministre des Finances : il présente le budget au nom du gouvernement conservateur.",
+    note: "Les pourcentages indiquent la part de la valeur du produit importé prélevée en droits de douane.",
     source: "Source primaire : Débats de la Chambre des communes du Canada, discours du budget de Samuel Leonard Tilley, 14 mars 1879, p. 420. Court extrait traduit et adapté de l’anglais.",
-    supports: "adoption",
+    supports: "tariff",
     links: [
       { url: "https://lop.parl.ca/staticfiles/ParlInfo/Documents/Budgets/En/1879-03-14.pdf", label: "Bibliothèque du Parlement — budget de 1879" },
     ],
   },
   {
     number: 3,
-    date: "CHAMBRE DES COMMUNES, 12 MAI 1887",
-    title: "Macdonald défend les tarifs protecteurs",
-    excerpt: "John A. Macdonald affirme que la Politique nationale a stimulé les industries du pays, fourni du travail à la main-d’œuvre canadienne et gardé davantage d’argent au Canada. Il propose d’étendre cette protection à l’industrie du fer, dont les produits importés concurrencent la production canadienne.",
-    note: "Résumé fidèle d’un discours parlementaire; les affirmations expriment le point de vue de Macdonald.",
-    source: "Source primaire : Débats de la Chambre des communes du Canada, 12 mai 1887, p. 384 et suivantes. Résumé français d’un discours anglais du domaine public.",
-    supports: "tariff",
+    date: "CHAMBRE DES COMMUNES, 26 FÉVRIER 1886",
+    title: "Les échanges entre les régions canadiennes",
+    excerpt: "Le chemin de fer rend possible l’établissement de colons dans les Prairies. Il permet d’y cultiver du grain et de l’acheminer vers les marchés. Des quantités importantes de grain ont déjà été apportées du Nord-Ouest vers cette partie du Canada. À mesure que la population de l’Ouest augmente, les produits des régions de l’Est peuvent y trouver de nouveaux acheteurs.",
+    note: "Résumé français des propos d’Horace Everett, député de Saint-Jean au Nouveau-Brunswick, favorable au gouvernement. Le discours adopte une perspective colonisatrice : les Prairies sont déjà habitées par les Premières Nations et les Métis.",
+    source: "Source primaire sous-jacente : Horace Everett, Débats de la Chambre des communes, 26 février 1886, p. 11-12 (PDF, p. 3-4). Résumé pédagogique français, non citation littérale.",
+    supports: "trade",
     links: [
-      { url: "https://bdp.parl.ca/staticfiles/ParlInfo/Documents/Budgets/En/1887-05-12.pdf", label: "Bibliothèque du Parlement — débat de 1887" },
+      { url: "https://primarydocuments.ca/wp-content/uploads/2019/10/HOCDebates26February1886.pdf#page=4", label: "Débats de la Chambre des communes — 26 février 1886" },
     ],
   },
   {
@@ -159,27 +171,27 @@ export const POLITIQUE_NATIONALE_DOCUMENTS = [
   },
   {
     number: 5,
-    date: "CRAIGELLACHIE, 7 NOVEMBRE 1885",
-    title: "La pose du dernier crampon du Canadien Pacifique",
-    note: "Donald A. Smith pose le dernier crampon de la voie ferrée transcontinentale du Canadien Pacifique, en Colombie-Britannique.",
-    source: "Source primaire : Alexander Ross, photographie, 7 novembre 1885. Bibliothèque et Archives Canada, C-003693, no d’article 3194528. Droits expirés; reproduction numérique via Wikimedia Commons.",
+    date: "CANADA, 1900 — REPÈRE RÉTROSPECTIF",
+    title: "Les réseaux ferroviaires du Canada",
+    note: "Carte de synthèse représentant les réseaux en 1900, utilisée comme repère rétrospectif pour identifier la liaison transcontinentale développée pendant la période étudiée. Les couleurs distinguent les tracés; les noms des compagnies ne sont pas indiqués. Cette carte ne permet pas de dater l’achèvement des lignes.",
+    source: "Source secondaire : carte pédagogique de Socrato, tracés historiques simplifiés d’après Historical Canadian Railroads, University of Toronto Libraries, Borealis (doi:10.5683/SP2/UCCFVQ). Fond territorial : Ressources naturelles Canada, limites de 1898 utilisées pour le Canada en 1900. Ce document est une reconstitution cartographique, non une carte d’archives.",
     supports: "railway",
     image: {
-      url: "/historical-documents/politique-nationale-dernier-crampon-1885.jpg",
-      alt: "Donald A. Smith frappe le dernier crampon du Canadien Pacifique devant un groupe d’hommes réunis sur la voie ferrée à Craigellachie en 1885.",
-      width: 1280,
-      height: 1024,
+      url: "/historical-documents/industrialisation-reseaux-ferroviaires-carte.png",
+      alt: "Carte du Canada en 1900, sans noms de compagnies ferroviaires. Le tracé rouge relie Vancouver à Montréal par Calgary et Winnipeg. Le tracé bleu relie Windsor, Toronto, Montréal et Portland. Le tracé vert rejoint les Maritimes et Halifax depuis la rive sud du Saint-Laurent.",
+      width: 1800,
+      height: 1140,
     },
     links: [
-      { url: "https://recherche-collection-search.bac-lac.gc.ca/eng/Home/Record?IdNumber=3194528&app=fonandcol&ecopy=c003693", label: "Bibliothèque et Archives Canada — C-003693" },
-      { url: "https://commons.wikimedia.org/wiki/File:Donald_A._Smith_driving_the_Last_Spike_to_complete_the_Canadian_Pacific_Railway,_1885.jpg", label: "Wikimedia Commons — photographie et droits" },
+      { url: "https://doi.org/10.5683/SP2/UCCFVQ", label: "University of Toronto Libraries — Historical Canadian Railroads" },
+      { url: "https://geoappext.nrcan.gc.ca/arcgis/rest/services/FGP/TE/MapServer/316", label: "Ressources naturelles Canada — fond territorial" },
     ],
   },
   {
     number: 6,
-    date: "CANADA, VERS 1914",
-    title: "Le paquebot à vapeur Empress of Ireland",
-    note: "Construit en 1906, l’Empress of Ireland transporte des passagers et du courrier entre Liverpool et Québec. Il est propulsé par des machines à vapeur.",
+    date: "",
+    title: "L’Empress of Ireland transporte des passagers et du courrier entre Liverpool et Québec. Il est propulsé par des machines à vapeur.",
+    note: "",
     source: "Source primaire : Agence Rol, photographie de l’Empress of Ireland, vers 1914. Bibliothèque nationale de France. Image du domaine public reproduite par Wikimedia Commons.",
     supports: null,
     image: {
@@ -196,7 +208,7 @@ export const POLITIQUE_NATIONALE_DOCUMENTS = [
   {
     number: 7,
     date: "OUEST CANADIEN, 1892",
-    title: "Des fermes gratuites dans l’Ouest canadien",
+    title: "",
     note: "La couverture annonce des « fermes gratuites » au Manitoba ainsi que dans les districts d’Assiniboia, d’Alberta et de Saskatchewan.",
     source: "Source primaire : Compagnie du chemin de fer Canadien Pacifique, Fermes gratuites, Manitoba, Assiniboia, Alberta, Saskatchewan, brochure publicitaire en français, 1892. Exemplaire des Archives publiques du Canada, numérisé par Canadiana.",
     supports: "settlement",
@@ -226,14 +238,14 @@ export const POLITIQUE_NATIONALE_DOCUMENTS = [
   },
   {
     number: 9,
-    date: "CANADA, 12 AVRIL 1876",
-    title: "La Loi sur les Indiens et l’administration fédérale",
-    excerpt: "« La présente loi sera connue sous le nom de Loi sur les Indiens de 1876. […] Le ministre de l’Intérieur sera surintendant général des Affaires indiennes. »",
-    note: "",
-    source: "Source primaire : Parlement du Canada, Loi sur les Indiens de 1876, 39 Victoria, chapitre 18, articles 1 et 2, p. 43-44. Traduction-adaptation française d’un texte législatif anglais du domaine public.",
+    date: "BAS-CANADA, 30 AOÛT 1851",
+    title: "La mise à part de terres pour les Premières Nations",
+    excerpt: "« Des terres du Bas-Canada, jusqu’à un maximum total de [230 000 acres], peuvent être décrites, arpentées et mises à part par le commissaire des terres de la Couronne. […] Ces terres sont destinées à l’usage des [Premières Nations] désignées par décret. […] Aucun prix ni paiement n’est exigé pour ces terres. […] Leur gestion est confiée au commissaire des terres indiennes pour le Bas-Canada. »",
+    note: "Traduction-adaptation en quatre phrases de l’article I. Les […] indiquent les coupures et les autres crochets signalent une modernisation du vocabulaire ou de la notation. Cette loi autorise de nouvelles réserves; elle n’est pas à l’origine de toutes les réserves du Québec.",
+    source: "Source primaire : Parlement de la Province du Canada, An Act to authorize the setting apart of Lands for the use of certain Indian Tribes in Lower Canada, 30 août 1851, 14 & 15 Victoria, chapitre 106, article I, p. 2096. Texte reproduit par la British North American Legislative Database de l’Université du Nouveau-Brunswick. Traduction-adaptation française d’un texte anglais du domaine public.",
     supports: null,
     links: [
-      { url: "https://publications.gc.ca/collections/collection_2017/aanc-inac/R5-158-2-1978-eng.pdf", label: "Gouvernement du Canada — reproduction de la loi de 1876" },
+      { url: "https://bnald.lib.unb.ca/sites/default/files/UnC.1851.ch_.106_0.pdf", label: "Université du Nouveau-Brunswick — texte de la loi du 30 août 1851" },
     ],
   },
   {
@@ -278,8 +290,7 @@ export function restorePolitiqueNationaleDraft(raw: unknown): PolitiqueNationale
 }
 
 export function politiqueNationaleMissingCount(draft: PolitiqueNationaleDraft) {
-  return POLITIQUE_NATIONALE_SCHEMA_FIELDS.filter(({ id }) => !draft.answers[id].trim()).length
-    + POLITIQUE_NATIONALE_DOCUMENTS.filter(({ number }) => !draft.choices[number]).length;
+  return POLITIQUE_NATIONALE_SCHEMA_FIELDS.filter(({ id }) => !draft.answers[id].trim()).length;
 }
 
 export function expectedPolitiqueNationaleDocumentChoice(number: number): Exclude<PolitiqueNationaleDocumentChoice, ""> {
@@ -287,14 +298,14 @@ export function expectedPolitiqueNationaleDocumentChoice(number: number): Exclud
 }
 
 export const POLITIQUE_NATIONALE_DOCUMENT_FEEDBACK: Record<number, string> = {
-  1: "La diminution du prix de gros des bouvillons entre 1872 et 1879 permet de dégager une tendance et de la rattacher au contexte économique qui suit la crise de 1873.",
-  2: "En 1879, Samuel Leonard Tilley présente le budget au nom du gouvernement conservateur dirigé par le premier ministre John A. Macdonald.",
-  3: "Le discours de Macdonald expose l’objectif protecteur de la hausse des droits de douane.",
+  1: "La baisse du prix des bouvillons et les montants élevés associés aux faillites après 1874 appuient le contexte de difficultés économiques des années 1870. Le tableau seul ne date pas le déclenchement de la crise : l’élève mobilise aussi ses connaissances.",
+  2: "Les droits de douane du budget de 1879 illustrent la mesure tarifaire. La réponse doit décrire cette mesure, pas seulement recopier un pourcentage.",
+  3: "Le discours d’Everett relie le rail au peuplement de l’Ouest et aux échanges : grain de l’Ouest vers l’Est, débouchés de l’Ouest pour les produits de l’Est.",
   4: "Les faits présentés permettent d’associer la période à l’expansion de l’activité manufacturière et à l’apparition de la grande industrie textile.",
-  5: "La photographie documente l’achèvement du chemin de fer transcontinental du Canadien Pacifique en 1885.",
+  5: "La carte permet de reconnaître le Canadien Pacifique par son tracé rouge de Montréal à Vancouver à travers les Prairies. Elle représente les réseaux en 1900 : elle sert à identifier spatialement le réseau étudié, sans prouver sa date d’achèvement. Ne pas l’écarter uniquement à cause de cette date, puisque son usage rétrospectif est explicite.",
   6: "À discriminer : l’Empress of Ireland appartient au début du 20e siècle et témoigne du transport transatlantique à vapeur; il ne fait pas partie de la Politique nationale.",
   7: "La brochure française du Canadien Pacifique annonce des fermes gratuites dans les régions de l’Ouest canadien afin d’y attirer des colons.",
   8: "À discriminer : Alexander Mackenzie présente des réformes électorales et la création de la Cour suprême; ces mesures politiques et institutionnelles ne font pas partie de la Politique nationale.",
-  9: "À discriminer : la Loi sur les Indiens de 1876 concerne l’administration fédérale des affaires autochtones; elle ne constitue pas une composante de la Politique nationale.",
+  9: "La loi de 1851 concerne la mise à part de terres pour certaines Premières Nations au Bas-Canada, avant la Politique nationale. Elle ne décrit ni l’offre de lots agricoles aux colons de l’Ouest ni le rôle du Canadien Pacifique. Les réserves autochtones et les lots offerts aux colons ne sont pas interchangeables. Cet extrait n’est donc pas pertinent pour compléter les cases demandées, même si les politiques autochtones font partie du contexte colonial plus large.",
   10: "À discriminer : la loi électorale de 1849 concerne les conditions du droit de vote dans la Province du Canada; elle ne porte pas sur la Politique nationale.",
 };

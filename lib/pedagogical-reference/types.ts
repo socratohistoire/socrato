@@ -232,6 +232,7 @@ export interface ApprovedQuestion {
   format: ApprovedQuestionFormat;
   prompt: string;
   instruction: string;
+  developmentContext?: string;
   initialGuidance?: string;
   expectedAnswer: string;
   historicalDocumentIds: readonly string[];

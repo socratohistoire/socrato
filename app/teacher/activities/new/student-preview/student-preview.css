@@ -114,3 +114,18 @@ body:has(.student-preview-surface--constitution){height:100%;overflow:hidden}
 .student-preview-surface--constitution .question-pane,
 .student-preview-surface--constitution .documents-pane{min-height:0;overflow:hidden}
 .student-preview-surface--constitution .conversation{min-height:0;overflow:hidden}
+
+/* The migrations exercise places its source documents below the map. */
+html:has(.student-preview-surface .migration-map-board) {
+  overflow-y: auto;
+}
+
+body:has(.student-preview-surface .migration-map-board) {
+  overflow: visible;
+}
+
+.student-preview-surface .learning-session:has(.migration-map-board),
+.student-preview-surface .learning-session .session-layout--timeline:has(.migration-map-board) {
+  height: auto;
+  overflow: visible;
+}

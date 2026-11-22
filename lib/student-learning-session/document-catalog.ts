@@ -1,3 +1,10 @@
+import { INDUSTRIALIZATION_URBANIZATION_HOUSING_DOCUMENTS } from "../pedagogical-reference/industrialization-urbanization-housing.ts";
+import { MIGRATIONS_DEVELOPMENT_DOCUMENTS } from "../pedagogical-reference/migrations-development.ts";
+import { INDUSTRIALIZATION_ECONOMIC_DOCUMENTS } from "../pedagogical-reference/industrialization-economic-development.ts";
+import { INDUSTRIALIZATION_LACHINE_CANAL_DOCUMENTS } from "../pedagogical-reference/industrialization-lachine-canal.ts";
+import { INDUSTRIALIZATION_WORKER_ORGANIZING_DOCUMENTS } from "../pedagogical-reference/industrialization-worker-organizing.ts";
+import { INDUSTRIALIZATION_HOUSING_DOCUMENTS } from "../pedagogical-reference/industrialization-housing.ts";
+import { INDUSTRIALIZATION_CAPITALISM_DOCUMENTS } from "../pedagogical-reference/industrialization-capitalism.ts";
 import type { LearningSessionDocument } from "./types.ts";
 import { FEDERAL_REVENUE_TABLE, MANITOBA_CARTOON_TRANSLATION, PROVINCIAL_REVENUE_TABLE } from "../pedagogical-reference/federal-provincial-relations-primary-documents.ts";
 import { ACTE_UNION_AUSTRALIA_DEPORTATION_DOCUMENT, ACTE_UNION_BANQ_512_PRISONERS_DOCUMENT, ACTE_UNION_BERMUDA_EXILE_DOCUMENT, ACTE_UNION_CONSOLIDATED_REVENUE_FUND_DOCUMENT, ACTE_UNION_EXECUTIVE_COUNCIL_DOCUMENT, ACTE_UNION_HINCKS_LAFONTAINE_ALLIANCE_DOCUMENT, ACTE_UNION_LAFONTAINE_DOCUMENT_DRAFT, ACTE_UNION_LANGUAGE_ARTICLE_DOCUMENT, ACTE_UNION_MAP_ADAPTATION_DRAFT, ACTE_UNION_OFFICIAL_EXCERPT_DOCUMENT, ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENT, ACTE_UNION_RUSSELL_POINT_OF_VIEW_DOCUMENT, PATRIOTES_MINERVE_BRITISH_REFUSAL_RESISTANCE_DOCUMENT, PATRIOTES_NINETY_TWO_RESOLUTIONS_DOCUMENT, PATRIOTES_RUSSELL_RESOLUTIONS_DOCUMENT, RESPONSIBLE_GOVERNMENT_BALDWIN_ALLIANCE_DOCUMENT, RESPONSIBLE_GOVERNMENT_LAFONTAINE_ALLIANCE_DOCUMENT } from "../pedagogical-reference/historical-document-needs.ts";
@@ -83,6 +90,13 @@ export const ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENTS: LearningSessionDocument
 }));
 
 export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
+  ...INDUSTRIALIZATION_CAPITALISM_DOCUMENTS,
+  ...INDUSTRIALIZATION_HOUSING_DOCUMENTS,
+  ...INDUSTRIALIZATION_URBANIZATION_HOUSING_DOCUMENTS,
+  ...INDUSTRIALIZATION_WORKER_ORGANIZING_DOCUMENTS,
+  ...INDUSTRIALIZATION_LACHINE_CANAL_DOCUMENTS,
+  ...INDUSTRIALIZATION_ECONOMIC_DOCUMENTS,
+  ...MIGRATIONS_DEVELOPMENT_DOCUMENTS,
   {
     id: MIGRATIONS_CLONAKILTY_FAMINE_IMAGE_DOCUMENT.id,
     title: MIGRATIONS_CLONAKILTY_FAMINE_IMAGE_DOCUMENT.title,
@@ -497,7 +511,7 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
       localSrc: MIGRATIONS_IRISH_FAMINE_DOCUMENT.assetUrl,
       alt: MIGRATIONS_IRISH_FAMINE_DOCUMENT.accessibleDescription,
       description: MIGRATIONS_IRISH_FAMINE_DOCUMENT.accessibleDescription,
-      visibleCaption: "Des habitants transportent un cercueil pendant la Grande Famine en Irlande.",
+      visibleCaption: "Des habitants transportent un corps sur une charrette pendant la Grande Famine en Irlande.",
       visibleCaptionNote: "Illustration publiée dans The Illustrated London News le 30 janvier 1847.",
     },
     historicalKnowledgeIds: ["migrations", "immigration-transatlantique", "grande-famine-irlande"],
@@ -685,7 +699,7 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
   ...BRITISH_NORTH_AMERICA_CONFEDERATION_DOCUMENTS.map((document) => ({
     id: document.id,
     title: document.title,
-    typeLabel: document.kind === "political-diagram" ? "Schéma pédagogique" : document.id === "AANB-M-005" ? "Carte historique" : document.id === "AANB-S-001" ? "Tableau statistique" : document.id === "AANB-I-001" ? "Caricature politique" : "Discours parlementaire",
+    typeLabel: document.kind === "political-diagram" ? "Schéma pédagogique" : document.kind === "image" ? document.id === "AANB-I-001" ? "Caricature politique" : "Photographie d’archives" : document.id === "AANB-M-005" ? "Carte historique" : document.id === "AANB-S-002" ? "Tableau chronologique" : document.id === "AANB-S-001" ? "Tableau statistique" : "Discours parlementaire",
     dateLabel: document.historicalDate,
     authorLabel: document.creator,
     institutionLabel: document.holdingInstitution,
@@ -693,9 +707,11 @@ export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
     sourceUrls: [document.sourceUrl, document.assetUrl],
     rightsLabel: document.rightsStatement,
     editorialNote: document.interpretationCautions[0],
-    content: document.kind === "political-diagram" || document.id === "AANB-M-005" || document.id === "AANB-I-001"
+    content: document.kind === "political-diagram" || document.kind === "image" || document.id === "AANB-M-005"
       ? { kind: "historical_image" as const, localSrc: document.assetUrl, alt: document.accessibleDescription, description: document.id === "AANB-I-001" ? "" : document.historicalContext }
-      : document.id === "AANB-S-001"
+      : document.id === "AANB-S-002"
+        ? { kind: "comparison_table" as const, caption: "Formations ministérielles dans la Province du Canada, 1854-1864", headers: ["Date de formation", "Ministère ou coalition"] as [string, string], rows: [{ label: "10 septembre 1854", value: "A. Napier MacNab et A.-N. Morin" }, { label: "27 janvier 1855", value: "A. Napier MacNab et É.-P. Taché" }, { label: "24 mai 1856", value: "É.-P. Taché et J. A. Macdonald" }, { label: "26 novembre 1857", value: "J. A. Macdonald et G.-É. Cartier" }, { label: "2 août 1858", value: "G. Brown et A.-A. Dorion" }, { label: "6 août 1858", value: "G.-É. Cartier et J. A. Macdonald" }, { label: "24 mai 1862", value: "J. S. Macdonald et L.-V. Sicotte" }, { label: "mai 1863", value: "J. S. Macdonald et A.-A. Dorion" }, { label: "mars 1864", value: "É.-P. Taché et J. A. Macdonald" }, { label: "22 juin 1864", value: "Grande Coalition : Taché, Macdonald, Cartier et Brown" }] }
+        : document.id === "AANB-S-001"
         ? { kind: "comparison_table" as const, caption: "Marchandises transportées par le chemin de fer Intercolonial", headers: ["Période", "Marchandises transportées"] as [string, string], rows: [{ label: "1875-1876 · liaison non achevée", value: "342 196 tonnes" }, { label: "1876-1877 · première année après l’achèvement", value: "421 327 tonnes" }, { label: "1877-1878 · deuxième année après l’achèvement", value: "522 710 tonnes" }] }
         : { kind: "historical_excerpt" as const, excerpt: document.transcription },
     historicalKnowledgeIds: ["acte-de-l-amerique-du-nord-britannique", "confederation", "partage-des-pouvoirs"],

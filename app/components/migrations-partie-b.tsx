@@ -2,31 +2,32 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ThemeToggle } from "@/app/eleve/tableau-de-bord/theme-toggle";
 import {
   MIGRATIONS_ACTIVITY_ID,
-  MIGRATIONS_DOCUMENT_FEEDBACK,
   MIGRATIONS_DOCUMENTS,
   MIGRATIONS_INSTRUCTION,
   MIGRATIONS_SCHEMA_FIELDS,
+  MIGRATIONS_RELATION_RUBRIC,
   MIGRATIONS_TITLE,
-  assessMigrationsAnswer,
   emptyMigrationsDraft,
-  expectedMigrationsDocumentChoice,
   migrationsMissingCount,
   restoreMigrationsDraft,
-  type MigrationsDocumentChoice,
   type MigrationsDraft,
   type MigrationsSchemaFieldId,
 } from "@/lib/migrations-partie-b";
 import "./industrialisation-partie-b.css";
+import "./migrations-partie-b.css";
 
-export function MigrationsPartieB({ teacherMode = false, storageScope = "practice" }: { teacherMode?: boolean; storageScope?: string }) {
+type MigrationsDocument = (typeof MIGRATIONS_DOCUMENTS)[number];
+
+export function MigrationsPartieB({ teacherMode = false, storageScope = "evaluation", children }: { teacherMode?: boolean; storageScope?: string; children?: ReactNode }) {
   const [draft, setDraft] = useState<MigrationsDraft>(emptyMigrationsDraft);
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState("Chargement des réponses…");
   const [error, setError] = useState("");
+  const [expandedDocument, setExpandedDocument] = useState<MigrationsDocument | null>(null);
   const storageKey = `socrato:${MIGRATIONS_ACTIVITY_ID}:${storageScope}`;
 
   useEffect(() => {
@@ -79,10 +80,11 @@ export function MigrationsPartieB({ teacherMode = false, storageScope = "practic
   function finish() {
     const missing = migrationsMissingCount(draft);
     if (missing) {
-      setError(`Complétez les cases du schéma et le classement des dix documents. Il reste ${missing} élément${missing > 1 ? "s" : ""} à compléter.`);
+      setError(`Il reste ${missing} case${missing > 1 ? "s" : ""} à compléter. Vous pouvez aussi télécharger vos réponses incomplètes avec le premier bouton.`);
       return;
     }
     setError("");
+    download();
     setDraft((current) => ({ ...current, submitted: true }));
   }
 
@@ -91,8 +93,7 @@ export function MigrationsPartieB({ teacherMode = false, storageScope = "practic
       MIGRATIONS_TITLE,
       "",
       ...MIGRATIONS_SCHEMA_FIELDS.flatMap(({ id, prompt }) => [prompt, draft.answers[id] || "—", ""]),
-      "Dossier documentaire",
-      ...MIGRATIONS_DOCUMENTS.flatMap(({ number, title }) => [title ? `Document ${number} — ${title}` : `Document ${number}`, `Choix : ${choiceLabels[draft.choices[number] || ""]}`, ""]),
+      "Correction par l’enseignant : objet /2, première mise en relation /3, deuxième mise en relation /3. Total /8.",
     ].join("\n");
     const url = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
     const anchor = document.createElement("a");
@@ -102,7 +103,7 @@ export function MigrationsPartieB({ teacherMode = false, storageScope = "practic
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
-  return <main className="partieb-page">
+  return <main className="partieb-page migrations-evaluation">
     <header className="partieb-site-header">
       <div className="partieb-site-header-top">
         <Link href={teacherMode ? "/teacher" : "/eleve/tableau-de-bord"} className="partieb-site-brand" aria-label="Retour au tableau de bord Socrato">
@@ -111,7 +112,7 @@ export function MigrationsPartieB({ teacherMode = false, storageScope = "practic
         </Link>
         <div className="partieb-site-title">
           <h1>{MIGRATIONS_TITLE}</h1>
-          <strong>Pratiquer · Partie B — Décrire une période historique</strong>
+          <strong>Évaluation · Section B · 8 points</strong>
           <span>Période historique · 1840-1896</span>
         </div>
         <div className="partieb-site-tools"><ThemeToggle /><button className="partieb-print" type="button" onClick={() => window.print()}>Imprimer</button></div>
@@ -127,8 +128,9 @@ export function MigrationsPartieB({ teacherMode = false, storageScope = "practic
         <h2>Consigne</h2>
         <p>{MIGRATIONS_INSTRUCTION}</p>
         {teacherMode
-          ? <p className="partieb-mode">Modèle prêt à utiliser en classe · fondé sur les quatre précisions du <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/secondaire/programmes/PFEQ-histoire-quebec-canada-secondaire.pdf" target="_blank" rel="noreferrer">programme de 4e secondaire ↗</a> · aucune assignation à un groupe.</p>
-          : <p className="partieb-mode">Entraînement autonome · téléchargez vos réponses pour les remettre à votre enseignant.</p>}
+          ? <p className="partieb-mode">Évaluation locale : émigration et immigration · corrigé réservé à l’enseignant · aucune assignation à un groupe.</p>
+          : <p className="partieb-mode">Correction par votre enseignant sur 8 points. Téléchargez vos réponses pour les lui remettre; elles ne sont pas transmises automatiquement.</p>}
+        <p className="migrations-marking-summary">Objet de la description : 2 points · Première mise en relation : 3 points · Deuxième mise en relation : 3 points. Seules les réponses du schéma sont évaluées.</p>
       </header>
 
       <section className="partieb-schema-section" aria-labelledby="migrations-schema-title">
@@ -137,15 +139,15 @@ export function MigrationsPartieB({ teacherMode = false, storageScope = "practic
           <svg className="partieb-lines partieb-main-lines" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true"><path d="M 295 255 L 395 175 M 295 375 L 395 470" /></svg>
           <div className="partieb-object"><h3>Objet de la description</h3>{answerBox("object")}</div>
           <div className="partieb-groups">
-            <section className="partieb-group" aria-label="Départs et déplacements de la population">
+            <section className="partieb-group" aria-label="Première mise en relation">
               <svg className="partieb-lines" viewBox="0 0 600 280" preserveAspectRatio="none" aria-hidden="true"><path d="M 265 155 L 375 76 M 265 180 L 375 210" /></svg>
-              <div className="partieb-central"><h3>Élément central</h3>{answerBox("exode")}</div>
-              <div className="partieb-details">{answerBox("us_destination")}{answerBox("us_causes")}</div>
+              <div className="partieb-central"><h3>Élément central</h3>{answerBox("us_destination")}</div>
+              <div className="partieb-details">{answerBox("us_causes")}{answerBox("colonization")}</div>
             </section>
-            <section className="partieb-group" aria-label="Immigration et intervention des autorités">
+            <section className="partieb-group" aria-label="Deuxième mise en relation">
               <svg className="partieb-lines" viewBox="0 0 600 280" preserveAspectRatio="none" aria-hidden="true"><path d="M 265 155 L 375 76 M 265 180 L 375 210" /></svg>
               <div className="partieb-central"><h3>Élément central</h3>{answerBox("transatlantic")}</div>
-              <div className="partieb-details">{answerBox("colonization")}{answerBox("quarantine")}</div>
+              <div className="partieb-details">{answerBox("famine")}{answerBox("quarantine")}</div>
             </section>
           </div>
         </div>
@@ -156,26 +158,21 @@ export function MigrationsPartieB({ teacherMode = false, storageScope = "practic
         <div className="partieb-documents">
           {MIGRATIONS_DOCUMENTS.map((document) => <article key={document.number} className={`partieb-document${"image" in document ? " partieb-document-image" : ""}`}>
             <header><span>Document {document.number}</span><small>{document.date}</small>{document.title ? <h3>{document.title}</h3> : null}</header>
-            {"excerpt" in document ? <blockquote>{document.excerpt}</blockquote> : null}
-            {"attribution" in document ? <p className="partieb-note">{document.attribution}</p> : null}
-            {"image" in document ? <a href={document.image.url} target="_blank" rel="noreferrer" aria-label={`Agrandir l’image du document ${document.number}`}>
+            {"excerpt" in document ? <blockquote><button type="button" className="migrations-text-trigger" onClick={() => setExpandedDocument(document)} aria-label={`Agrandir le texte du document ${document.number}`} aria-haspopup="dialog">
+              <span>{document.excerpt}</span>
+              <span className="partieb-note migrations-enlarge-hint">Agrandir le texte</span>
+            </button></blockquote> : null}
+            {teacherMode && "attribution" in document ? <p className="partieb-note">{document.attribution}</p> : null}
+            {"image" in document ? <button type="button" className="migrations-image-trigger" onClick={() => setExpandedDocument(document)} aria-label={`Agrandir l’image du document ${document.number}`} aria-haspopup="dialog">
               <Image src={document.image.url} alt={document.image.alt} width={document.image.width} height={document.image.height} unoptimized style={{ width: "100%", height: "auto", display: "block" }} />
-              <span className="partieb-note">Agrandir l’image ↗</span>
-            </a> : null}
-            {"table" in document ? <table>
-              <caption>{document.title}</caption>
-              <thead><tr>{document.table.headers.map((header) => <th scope="col" key={header}>{header}</th>)}</tr></thead>
-              <tbody>{document.table.rows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, cellIndex) => <td key={cellIndex}>{cell}</td>)}</tr>)}</tbody>
-            </table> : null}
+              <span className="partieb-note">Agrandir l’image</span>
+            </button> : null}
+            {"table" in document ? <>
+              <MigrationsDocumentTable document={document} />
+              <button type="button" className="migrations-text-trigger migrations-enlarge-hint" onClick={() => setExpandedDocument(document)} aria-label={`Agrandir le tableau du document ${document.number}`} aria-haspopup="dialog">Agrandir le tableau</button>
+            </> : null}
             {document.note ? <p className="partieb-note">{document.note}</p> : null}
-            <details className="partieb-source"><summary>Source et provenance</summary><p>{document.source}</p>{document.links.map((link) => <a key={link.url} href={link.url} target="_blank" rel="noreferrer">{link.label} ↗</a>)}</details>
-            <fieldset className="partieb-document-answer" disabled={!ready || draft.submitted}>
-              <legend>Utile ou à discriminer</legend>
-              <div className="partieb-document-choices">{(["direct", "exclude"] as const).map((choice) => <label key={choice}>
-                <input type="radio" name={`migrations-choice-${document.number}`} value={choice} checked={draft.choices[document.number] === choice} onChange={() => setDraft((current) => ({ ...current, choices: { ...current.choices, [document.number]: choice } }))} />
-                <span>{choiceLabels[choice]}</span>
-              </label>)}</div>
-            </fieldset>
+            <details className="partieb-source"><summary>Source</summary><p>{document.source}</p>{document.links.slice(0, 1).map((link) => <a key={link.url} href={link.url} target="_blank" rel="noreferrer">Consulter la source originale ↗</a>)}</details>
           </article>)}
         </div>
       </section>
@@ -185,34 +182,76 @@ export function MigrationsPartieB({ teacherMode = false, storageScope = "practic
         <div>
           <button type="button" onClick={download} disabled={!ready}>Télécharger mes réponses</button>
           {draft.submitted
-            ? <button type="button" onClick={() => setDraft((current) => ({ ...current, submitted: false }))}>Reprendre mes réponses</button>
-            : <button type="button" className="partieb-primary" disabled={!ready} onClick={finish}>Terminer et comparer au corrigé</button>}
+            ? <p>Réponses finalisées et téléchargées. Remettez le fichier à votre enseignant.</p>
+            : <button type="button" className="partieb-primary" disabled={!ready} onClick={finish}>Finaliser et télécharger mes réponses</button>}
         </div>
         {error ? <p role="alert">{error}</p> : null}
       </footer>
 
-      {draft.submitted ? <section className="partieb-correction" aria-labelledby="migrations-feedback-title">
-        <h2 id="migrations-feedback-title">Rétroaction sur mes réponses</h2>
-        <p>Vérification locale sans IA ni envoi de vos réponses à une API. Elle reconnaît des formulations prévues, mais ne comprend pas toutes les phrases. « À vérifier » ne signifie pas « faux ». Aucune note n’est attribuée.</p>
-        <dl>{MIGRATIONS_SCHEMA_FIELDS.map((field) => {
-          const feedback = assessMigrationsAnswer(field.id, draft.answers[field.id]);
-          return <div key={field.id}><dt>{field.prompt}</dt><dd><p>Votre réponse : {draft.answers[field.id]}</p><p><strong>{feedback.label}</strong> — {feedback.message}</p><p>Piste de réponse : {field.answer}</p></dd></div>;
-        })}</dl>
-      </section> : null}
-
-      {teacherMode || draft.submitted ? <details className="partieb-correction" open={draft.submitted}>
-        <summary>Corrigé — pistes de réponses</summary>
-        <p>Plusieurs formulations sont acceptables. Les réponses ouvertes ne sont pas notées automatiquement. Vérifiez leur précision et les relations entre les faits.</p>
-        <dl>{MIGRATIONS_SCHEMA_FIELDS.map((field) => <div key={field.id}><dt>{field.prompt}</dt><dd>{field.answer}</dd></div>)}</dl>
-        <h3>Discrimination des documents</h3>
-        <ul>{MIGRATIONS_DOCUMENTS.map(({ number }) => <li key={number}>
-          <strong>Document {number} : {choiceLabels[expectedMigrationsDocumentChoice(number)]}.</strong> {MIGRATIONS_DOCUMENT_FEEDBACK[number]}
-          {draft.submitted ? <span> Votre choix : {choiceLabels[draft.choices[number] || ""]} — {draft.choices[number] === expectedMigrationsDocumentChoice(number) ? "concorde avec le corrigé" : "à revoir"}.</span> : null}
-        </li>)}</ul>
-        <p>Le <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/secondaire/programmes/PFEQ-histoire-quebec-canada-secondaire.pdf" target="_blank" rel="noreferrer">programme officiel de 4e secondaire ↗</a> retient quatre précisions pour la notion Migrations : exode rural, émigration vers les États-Unis, ouverture de régions de colonisation et immigration transatlantique. Activité inspirée du modèle ministériel fourni; ce n’est pas une épreuve ni un barème officiels du Ministère.</p>
-      </details> : null}
+      <MigrationsRubric />
+      {teacherMode ? children : null}
     </div>
+    {expandedDocument ? <MigrationsDocumentDialog document={expandedDocument} onClose={() => setExpandedDocument(null)} /> : null}
   </main>;
 }
 
-const choiceLabels: Record<MigrationsDocumentChoice, string> = { "": "Non classé", direct: "Utile", exclude: "À discriminer" };
+function MigrationsDocumentTable({ document }: { document: MigrationsDocument }) {
+  if (!("table" in document)) return null;
+  return <table>
+    <caption>{document.title}</caption>
+    <thead><tr>{document.table.headers.map((header) => <th scope="col" key={header}>{header}</th>)}</tr></thead>
+    <tbody>{document.table.rows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, cellIndex) => <td key={cellIndex}>{cell}</td>)}</tr>)}</tbody>
+  </table>;
+}
+
+function MigrationsDocumentDialog({ document: expandedDocument, onClose }: { document: MigrationsDocument; onClose: () => void }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    dialog?.showModal();
+    return () => {
+      dialog?.close();
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus();
+    };
+  }, []);
+  return <dialog ref={dialogRef} className={`migrations-image-dialog${"image" in expandedDocument ? "" : " migrations-written-dialog"}`} aria-labelledby="migrations-image-dialog-title" onCancel={(event) => { event.preventDefault(); onClose(); }} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <header><h2 id="migrations-image-dialog-title">Document {expandedDocument.number}</h2><button type="button" onClick={onClose} aria-label="Fermer la vue agrandie" autoFocus>×</button></header>
+    <div className="migrations-image-dialog-content">
+      {"image" in expandedDocument
+        ? <Image src={expandedDocument.image.url} alt={expandedDocument.image.alt} width={expandedDocument.image.width} height={expandedDocument.image.height} unoptimized />
+        : <article className="migrations-expanded-document">
+          <p className="migrations-expanded-date">{expandedDocument.date}</p>
+          {expandedDocument.title ? <h3>{expandedDocument.title}</h3> : null}
+          {"excerpt" in expandedDocument ? <blockquote>{expandedDocument.excerpt}</blockquote> : null}
+          {"table" in expandedDocument ? <div className="migrations-table-scroll"><MigrationsDocumentTable document={expandedDocument} /></div> : null}
+          {expandedDocument.note ? <p className="migrations-expanded-note">{expandedDocument.note}</p> : null}
+          <p className="migrations-expanded-source">Source : {expandedDocument.source}</p>
+        </article>}
+    </div>
+  </dialog>;
+}
+
+function MigrationsRubric() {
+  return <section className="migrations-rubric" aria-labelledby="migrations-rubric-title">
+    <h2 id="migrations-rubric-title">Grille d’évaluation de la section B</h2>
+    <p>Critère : représentation cohérente d’une période de l’histoire du Québec et du Canada.</p>
+    <h3>Objet de la description - /2</h3>
+    <div className="migrations-table-scroll"><table>
+      <thead><tr><th>Objet correct</th><th>Objet plus ou moins correct</th><th>Objet incorrect ou absent</th></tr></thead>
+      <tbody><tr><td>2 points</td><td>1 point</td><td>0 point</td></tr></tbody>
+    </table></div>
+    {[1, 2].map((relation) => <div key={relation}>
+      <h3>{relation === 1 ? "Première" : "Deuxième"} mise en relation - /3</h3>
+      <div className="migrations-table-scroll"><table>
+        <thead><tr><th scope="col">Élément central</th><th scope="col">Les deux précisions sont correctes</th><th scope="col">Une précision est correcte</th><th scope="col">Aucune précision n’est correcte</th></tr></thead>
+        <tbody>{MIGRATIONS_RELATION_RUBRIC.map((row) => <tr key={row.central}><th scope="row">{row.label}</th>{row.scores.map((score, index) => <td key={index}>{score} point{score > 1 ? "s" : ""}</td>)}</tr>)}</tbody>
+      </table></div>
+    </div>)}
+    <p><strong>Total : /8.</strong> Une réponse correcte est complète, exacte et claire. Une réponse plus ou moins correcte est incomplète, imprécise ou contient une inexactitude. Les formulations équivalentes sont acceptées. Chaque précision doit se rattacher à l’élément central de sa branche. La sélection des documents ne reçoit pas de points distincts.</p>
+    <p>Barème repris des <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/evaluation-epreuves-ministerielles/documents-information/HQC_Precisions_outils_evaluation.pdf" target="_blank" rel="noreferrer">précisions ministérielles sur les outils d’évaluation</a>. Cette activité est une évaluation locale de Socrato.</p>
+  </section>;
+}

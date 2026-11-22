@@ -9,44 +9,39 @@ export const SCHEMA_FIELDS = [
   },
   {
     "id": "central1",
-    "prompt": "Indiquez une transformation de la production des biens.",
-    "answer": "Mécanisation de la production, ou passage de l’artisanat à la production industrielle."
+    "prompt": "Indiquez une transformation dans la façon dont les ouvriers se regroupent pour défendre leurs intérêts à cette époque.",
+    "answer": "Les ouvriers forment des syndicats et développent le mouvement ouvrier."
   },
   {
     "id": "detail1",
+    "prompt": "Indiquez une condition de travail qui pousse les ouvriers à s’organiser.",
+    "answer": "Travail des enfants, faibles salaires ou amendes imposées aux apprentis (document 4), ou longues journées : Adèle Lavoie commence à 6 h 30 et termine à 18 h 15 ou à 19 h 15 (document 9)."
+  },
+  {
+    "id": "detail2",
+    "prompt": "Nommez une forme d’action ouvrière.",
+    "answer": "La grève (document 8)."
+  },
+  {
+    "id": "central2",
+    "prompt": "Indiquez une transformation dans l’organisation de la production des biens au Québec.",
+    "answer": "La production se concentre dans des manufactures plutôt que dans de petits ateliers artisanaux."
+  },
+  {
+    "id": "detail3",
     "prompt": "Indiquez dans quel type de milieu se concentre la production industrielle.",
     "answer": "Le milieu urbain : les villes, notamment Montréal, où se regroupent des établissements industriels près du canal de Lachine (documents 2 et 5)."
   },
   {
-    "id": "detail2",
-    "prompt": "Précisez un changement dans les méthodes de production.",
-    "answer": "La production textile utilise des métiers à tisser et des machines à filer, ainsi que l’énergie de la vapeur produite grâce au charbon (document 1). La division du travail est aussi acceptable."
-  },
-  {
-    "id": "central2",
-    "prompt": "Nommez le groupe social qui travaille contre un salaire dans les manufactures.",
-    "answer": "La classe ouvrière : les travailleurs salariés des manufactures."
-  },
-  {
-    "id": "detail3",
-    "prompt": "Décrivez une condition de travail de ce groupe.",
-    "answer": "Travail des enfants (document 4) ou longues journées : Adèle Lavoie commence à 6 h 30 et termine à 18 h 15 ou à 19 h 15 (document 9)."
-  },
-  {
     "id": "detail4",
-    "prompt": "Indiquez une revendication de ce groupe.",
-    "answer": "La réduction de la journée de travail, notamment à neuf heures (document 8)."
+    "prompt": "Indiquez une infrastructure qui favorise le développement de la production industrielle à Montréal.",
+    "answer": "Le canal de Lachine (document 5)."
   }
 ] as const;
 export type SchemaFieldId = (typeof SCHEMA_FIELDS)[number]["id"];
 export type AnswerFeedback = { status: "recognized" | "partial" | "review"; label: string; message: string };
 // Conservative local assistance, not a semantic grade. Ambiguous or negative
 // statements must never pass solely because they contain a target keyword.
-const MACHINE_METHODS = [
-  /\b(utilise|utilisent|utiliser|emploie|emploient|employer) (des|les|de nouvelles) machines\b/,
-  /\b(produit|produisent|produire|fabrique|fabriquent|fabriquer) (avec|a l aide de) (des|les) machines\b/,
-  /\bmachines remplacent (le travail manuel|le travail artisanal|les outils manuels)\b/,
-];
 const LOCAL_ANSWER_RULES: Record<SchemaFieldId, { accepted: RegExp[]; related: RegExp; hint: string }> = {
   object: {
     accepted: [/\bindustrialisation\b/, /\brevolution industrielle\b/],
@@ -54,34 +49,34 @@ const LOCAL_ANSWER_RULES: Record<SchemaFieldId, { accepted: RegExp[]; related: R
     hint: "Nommez le phénomène économique, plutôt qu’un de ses effets ou un équipement."
   },
   central1: {
-    accepted: [/\bmecanisation\b/, /\b(production|fabrication) (industrielle|mecanisee|en serie|de masse)\b/, /\b(utilisation|usage|emploi|introduction) (de |des |d )?machines\b/, /\b(passage|transition).{0,45}artisan.{0,55}(industri|usine|manufacture)/, /\bdivision (du travail|des taches)\b/],
-    related: /\b(machine|machines|usine|usines|production|industrie)\b/,
-    hint: "Précisez ce qui change dans la façon de produire : recours aux machines, production industrielle ou division du travail."
+    accepted: [/\bsyndicalisme\b/, /\bmouvement ouvrier\b/, /\b(developpement|essor|apparition).{0,35}(syndicats?|organisations? ouvrieres?|organisations? syndicales?)\b/],
+    related: /\b(syndicats?|ouvriers?|travailleurs?|organisation collective|greves?)\b/,
+    hint: "Précisez la transformation : le développement du mouvement ouvrier et du syndicalisme."
   },
   detail1: {
-    accepted: [/\b(villes?|urbain|urbaine|urbains|urbaines)\b/],
-    related: /\b(montreal|quebec|usines?|manufactures?|lachine)\b/,
-    hint: "Nommez le type de milieu : un nom de ville ou de bâtiment seul ne suffit pas à le préciser."
-  },
-  detail2: {
-    accepted: [/\bmecanisation\b/, /\bmetiers? (a |pour )tisser\b/, /\bmachines? (a |pour )(filer|tisser)\b/, /\b(energie|force|machine|machines|moteur) (de la |a |de |motrice de la )?vapeur\b/, /\b(utilisation|usage|emploi|introduction) (de |des |d )?machines\b/, /\bdivision (du travail|des taches)\b/, /\bspecialisation des (taches|ouvriers|travailleurs)\b/],
-    related: /\b(machines?|vapeur|charbon|textile|coton|production)\b/,
-    hint: "Précisez la méthode ou l’équipement : métiers à tisser, machines à filer, vapeur ou division des tâches."
-  },
-  central2: {
-    accepted: [/\b(ouvriers?|ouvrieres?|proletariat|proletaires?)\b/, /\b(travailleurs?|travailleuses?) salaries?\b/, /\b(salaries?|salariees?) des (usines|manufactures)\b/],
-    related: /\b(travailleurs?|travailleuses?|salaries?|employes?|pauvres|enfants|femmes)\b/,
-    hint: "Précisez le groupe : la classe ouvrière, c’est-à-dire les travailleurs salariés des manufactures."
-  },
-  detail3: {
     accepted: [/\btravail des enfants\b/, /\benfants.{0,25}travaill/, /\b(longues? journees?|longs? horaires?)\b/, /\bjournees? (de travail )?(longues?|de (1[0-6]|dix|onze|douze|treize|quatorze) heures)\b/, /\b(salaires? (faibles?|bas|insuffisants?)|faibles? salaires?|mal payes?)\b/, /\b(punitions? corporelles?|coups|battus?|battues?|violence physique)\b/, /\b(conditions? dangereuses?|risques? d accidents?|accidents? de travail|amendes)\b/],
     related: /\b(difficiles?|mauvaises?|dures?|enfants|heures|salaires?|danger)\b/,
     hint: "Décrivez une condition concrète : travail des enfants, longues journées, faible salaire ou danger, par exemple."
   },
+  detail2: {
+    accepted: [/\bgreves?\b/, /\bfaire (la |une )?greve\b/],
+    related: /\b(protestations?|mobilisations?|manifestations?|actions? collectives?|ouvriers?|travailleurs?)\b/,
+    hint: "Nommez une action précise menée collectivement par les ouvriers : la grève."
+  },
+  central2: {
+    accepted: [/\b(concentration|regroupement).{0,45}(production|activites?).{0,45}(usines?|manufactures?)\b/, /\b(production|fabrication).{0,30}(usines?|manufactures?)\b/, /\b(passage|transition).{0,45}(ateliers?|artisanat|production artisanale).{0,55}(usines?|manufactures?|production industrielle)\b/, /\b(developpement|essor|multiplication).{0,35}(usines?|manufactures?)\b/],
+    related: /\b(production|usines?|manufactures?|ateliers?|artisanat|industrie)\b/,
+    hint: "Précisez comment la production s’organise : elle se concentre dans des manufactures plutôt que dans de petits ateliers artisanaux."
+  },
+  detail3: {
+    accepted: [/\b(villes?|urbain|urbaine|urbains|urbaines)\b/],
+    related: /\b(montreal|quebec|usines?|manufactures?|lachine)\b/,
+    hint: "Nommez le type de milieu : un nom de ville ou de bâtiment seul ne suffit pas à le préciser."
+  },
   detail4: {
-    accepted: [/\b(reduction|diminution) (du temps|des heures|de la duree|de la journee) (de travail)?\b/, /\b(reduire|diminuer|raccourcir).{0,30}(heures|journee|temps de travail)/, /\b(travailler moins|moins d heures|journees? plus courtes)\b/, /\b(neuf|9) heures\b/],
-    related: /\b(syndicats?|greves?|salaires?|conditions?|droits?|heures)\b/,
-    hint: "Indiquez une demande précise. Le document 8 appuie la réduction du temps de travail, notamment la journée de neuf heures; une autre revendication doit être vérifiée avec l’enseignant."
+    accepted: [/\bcanal de lachine\b/, /\bcanal lachine\b/],
+    related: /\b(canal|canaux|lachine|voie navigable|infrastructures?|ports?|chemins? de fer)\b/,
+    hint: "Nommez l’infrastructure montréalaise appuyée par le document 5 : le canal de Lachine."
   }
 };
 export function assessIndustrialisationAnswer(id: SchemaFieldId, answer: string): AnswerFeedback {
@@ -91,9 +86,8 @@ export function assessIndustrialisationAnswer(id: SchemaFieldId, answer: string)
   if (!text) return review("Aucune réponse à vérifier.");
   if (text.length > 260 || /\b(ne|n|pas|non|aucun|aucune|jamais|sans|sauf|contraire|plutot|mais|ou|peut etre|sais|refuse|refusent|refuser)\b/.test(text)) return review("Votre formulation demande une lecture humaine : comparez-la au corrigé ou faites-la valider par l’enseignant.");
   if (/\b(rural|rurale|campagnes?|agriculture|agricole|bourgeoisie|patrons?|esclaves?|deuxieme|seconde|electricite|ordinateurs?|robots?)\b/.test(text)) return review("Vérifiez le groupe, le milieu ou la période évoqués : cette formulation ne peut pas être validée automatiquement.");
-  const naturalMachineMethod = (id === "central1" || id === "detail2") && MACHINE_METHODS.some(pattern => pattern.test(text));
-  const longWorkingDay = id === "detail3" && /\b(travaille|travaillent|travailler) (pendant |jusqu a |plus de |environ )?(1[0-6]|dix|onze|douze|treize|quatorze|quinze|seize) heures (par jour|chaque jour|quotidiennement)\b/.test(text);
-  if (rule.accepted.some(pattern => pattern.test(text)) || naturalMachineMethod || longWorkingDay) return { status: "recognized", label: "Réponse reconnue", message: "Votre réponse contient une formulation attendue pour cette case. Cette reconnaissance locale ne garantit pas la justesse de toute la phrase." };
+  const longWorkingDay = id === "detail1" && /\b(travaille|travaillent|travailler) (pendant |jusqu a |plus de |environ )?(1[0-6]|dix|onze|douze|treize|quatorze|quinze|seize) heures (par jour|chaque jour|quotidiennement)\b/.test(text);
+  if (rule.accepted.some(pattern => pattern.test(text)) || longWorkingDay) return { status: "recognized", label: "Réponse reconnue", message: "Votre réponse contient une formulation attendue pour cette case. Cette reconnaissance locale ne garantit pas la justesse de toute la phrase." };
   if (rule.related.test(text)) return { status: "partial", label: "À préciser", message: rule.hint };
   return review("Cette formulation n’est pas reconnue; elle n’est pas nécessairement fausse. Comparez-la à la piste de réponse ou consultez l’enseignant.");
 }
@@ -154,14 +148,14 @@ export const INDUSTRIALISATION_DOCUMENTS = [
   {
     "number": 4,
     "date": "MONTRÉAL, RAPPORT DE 1889",
-    "title": "Un apprenti de la manufacture J. M. Fortier",
-    "excerpt": "« J’ai seize ans. […] J’ai commencé [mon apprentissage] à treize ans. […] J’ai été battu rien qu’une fois […]. Non, ça ne m’empêchait pas de travailler, mais j’avais de la misère à m’asseoir. »",
-    "note": "Réponses de William Plante aux questions du commissaire sur son âge, son apprentissage et une punition corporelle subie à la manufacture.",
-    "source": "Source primaire : William Plante, témoignage devant la Commission royale d’enquête sur les relations entre le capital et le travail, rapport publié à Ottawa en 1889. Transcription : UQAM, Déjouer la fatalité — Archives, d’après BAnQ-Numérique. Questions omises, réponses réunies.",
+    "title": "Le salaire et les amendes d’un jeune apprenti",
+    "excerpt": "« J’ai commencé mon apprentissage à douze ans. L’entente prévoyait 1 $ par semaine la première année, 2 $ la deuxième et 3 $ la troisième. Une semaine, j’avais gagné 1,60 $, mais j’ai reçu une amende de 1,75 $ après avoir travaillé dix heures par jour [et sept heures le samedi]. À la fin de la semaine, je devais donc 15 cents à mon employeur. »",
+    "note": "Réponses de Ferdinand Brissette, fabricant de cigares âgé de 17 ans, aux questions des commissaires. Traduction française et regroupement pédagogique de ses réponses; l’ajout entre crochets précise l’horaire du samedi.",
+    "source": "Source primaire : témoignage de Ferdinand Brissette devant la Commission royale d’enquête sur les relations entre le capital et le travail, Montréal, rapport publié à Ottawa en 1889, Evidence — Quebec, part I, p. 28 (page 30 du PDF).",
     "links": [
       {
-        "url": "https://dejouerfatalite.uqam.ca/introduction/introduction-archives/",
-        "label": "Transcription : UQAM, Déjouer la fatalité — Archives"
+        "url": "https://publications.gc.ca/collections/collection_2024/bcp-pco/Z1-1886-1-31-3-eng.pdf?wbdisable=true#page=30",
+        "label": "Commission royale de 1889 — témoignage de Ferdinand Brissette, p. 28"
       }
     ]
   },
@@ -169,7 +163,7 @@ export const INDUSTRIALISATION_DOCUMENTS = [
     "number": 5,
     "date": "MONTRÉAL, XIXᵉ SIÈCLE",
     "title": "Le canal de Lachine",
-    "excerpt": "Le canal de Lachine offre aux navires un passage qui contourne les rapides du Saint-Laurent et fournit aux industries une force motrice tirée de l’eau. Ses rives accueillent des manufactures aux productions variées et deviennent, dès le milieu du XIXe siècle, un important centre industriel canadien. Relié aux autres canaux du fleuve, il favorise aussi les échanges commerciaux entre Montréal, les Grands Lacs et l’Atlantique.",
+    "excerpt": "Le canal de Lachine offre aux navires un passage qui contourne les rapides du Saint-Laurent et fournit aux industries une force motrice tirée de l’eau. Ses rives accueillent des manufactures aux productions variées et deviennent, dès le milieu du XIXe siècle, un important centre industriel canadien.",
     "note": "",
     "source": "Texte adapté de Parcs Canada, Canal-de-Lachine; reformulation, non citation littérale.",
     "links": [
@@ -226,7 +220,7 @@ export const INDUSTRIALISATION_DOCUMENTS = [
     "number": 8,
     "date": "CANADA, 1872",
     "title": "Une mobilisation de travailleurs",
-    "excerpt": "En 1872, des ouvriers dont les journées dépassent souvent dix heures se mobilisent pour limiter le travail quotidien à neuf heures. À Toronto, les responsables d’une grève sont arrêtés, car l’organisation syndicale se heurte alors à la loi. La même année, le Parlement adopte une loi qui autorise la formation de syndicats, ouvrant ainsi de nouvelles possibilités à l’action collective des travailleurs.",
+    "excerpt": "En 1872, des ouvriers dont les journées dépassent souvent dix heures se mobilisent pour limiter le travail quotidien à neuf heures. À Toronto, les responsables d’une grève sont arrêtés, car l’organisation syndicale se heurte alors à la loi.",
     "note": "",
     "source": "Texte adapté de Patrimoine canadien, 150ᵉ anniversaire du Mouvement pour une journée de travail de neuf heures; reformulation, non citation littérale.",
     "links": [

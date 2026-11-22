@@ -161,7 +161,8 @@ function insetPoint(longitude, latitude) {
   return { x, y };
 }
 
-const valley = insetPoint(-73.4, 46.1);
+const colonizationMontreal = insetPoint(-73.57, 45.5);
+const colonizationQuebecCity = insetPoint(-71.21, 46.81);
 const laurentides = insetPoint(-74.7, 47.1);
 const saguenay = insetPoint(-71.2, 48.5);
 const basSaintLaurent = insetPoint(-68.6, 48.1);
@@ -235,7 +236,10 @@ const svg = `<?xml version="1.0" encoding="UTF-8"?>
   <text class="inset-label" x="${laurentides.x - 48}" y="${laurentides.y - 32}">Laurentides</text>
   <text class="inset-label" x="${saguenay.x - 18}" y="${saguenay.y - 32}">Saguenay–Lac-Saint-Jean</text>
   <text class="inset-label" x="${basSaintLaurent.x + 18}" y="${basSaintLaurent.y - 8}">Bas-Saint-Laurent</text>
-  <text class="inset-label" x="${valley.x - 22}" y="${valley.y + 32}">Vallée du Saint-Laurent</text>
+  <circle class="place-dot" cx="${colonizationMontreal.x.toFixed(1)}" cy="${colonizationMontreal.y.toFixed(1)}" r="5"/>
+  <text class="inset-label" x="${(colonizationMontreal.x - 12).toFixed(1)}" y="${(colonizationMontreal.y + 23).toFixed(1)}" text-anchor="end">Montréal</text>
+  <circle class="place-dot" cx="${colonizationQuebecCity.x.toFixed(1)}" cy="${colonizationQuebecCity.y.toFixed(1)}" r="5"/>
+  <text class="inset-label" x="${(colonizationQuebecCity.x + 12).toFixed(1)}" y="${(colonizationQuebecCity.y + 23).toFixed(1)}">Québec</text>
   <text class="north" x="1510" y="${inset.y + 42}">N</text><path d="M1515 ${inset.y + 52} l-9 18 h18 Z" fill="#17344b"/>
   <rect x="${ruralInset.x}" y="${ruralInset.y}" width="${ruralInset.width}" height="${ruralInset.height}" rx="18" fill="#f8fbfc" stroke="#6d8d9e" stroke-width="2" filter="url(#shadow)"/>
   <g clip-path="url(#rural-inset-clip)">

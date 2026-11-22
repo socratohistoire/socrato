@@ -58,6 +58,7 @@ export type LearningSessionQuestion = {
   number: number;
   prompt: string;
   instruction: string;
+  developmentContext?: string;
   primaryOperationId: string;
   featuredDocumentId?: string;
   intellectualOperations: Array<{ id: string; label: string }>;

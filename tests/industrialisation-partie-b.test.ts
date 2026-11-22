@@ -3,37 +3,35 @@ import assert from "node:assert/strict";
 import { assessIndustrialisationAnswer, type SchemaFieldId } from "../lib/industrialisation-partie-b.ts";
 
 test("recognizes ordinary student phrasing observed in the live Partie B audit", () => {
-  for (const id of ["central1", "detail2"] as const) {
-    for (const answer of ["On utilise des machines pour produire en usine.", "Les ouvriers utilisent des machines.", "On produit avec des machines.", "Les machines remplacent le travail manuel."]) {
-      assert.equal(assessIndustrialisationAnswer(id, answer).status, "recognized", answer);
-    }
-    assert.notEqual(assessIndustrialisationAnswer(id, "On n’utilise pas de machines.").status, "recognized");
+  for (const answer of ["Le canal de Lachine", "Le canal Lachine", "Le canal de Lachine favorise les manufactures."]) {
+    assert.equal(assessIndustrialisationAnswer("detail4", answer).status, "recognized", answer);
   }
+  assert.notEqual(assessIndustrialisationAnswer("detail4", "Les machines").status, "recognized");
   for (const answer of ["Ils travaillent douze heures par jour.", "Les ouvriers travaillent 12 heures chaque jour.", "Ils travaillent jusqu’à quatorze heures par jour."]) {
-    assert.equal(assessIndustrialisationAnswer("detail3", answer).status, "recognized", answer);
+    assert.equal(assessIndustrialisationAnswer("detail1", answer).status, "recognized", answer);
   }
   for (const answer of ["Ils ne travaillent pas douze heures par jour.", "Ils travaillent douze heures par semaine.", "Ils travaillent deux heures par jour.", "Ils ont douze ans."]) {
-    assert.notEqual(assessIndustrialisationAnswer("detail3", answer).status, "recognized", answer);
+    assert.notEqual(assessIndustrialisationAnswer("detail1", answer).status, "recognized", answer);
   }
 });
 
 test("local feedback recognizes variants in each of the seven boxes", () => {
   const examples: Record<SchemaFieldId, string[]> = {
     object: ["Première phase d’industrialisation", "La révolution industrielle", "INDUSTRIALISATION"],
-    central1: ["Mécanisation de la production", "Utilisation des machines", "Production en série", "Passage de l’artisanat à la production industrielle"],
-    detail1: ["Dans les villes", "En milieu urbain", "Les centres urbains comme Montréal"],
-    detail2: ["Métiers à tisser", "Machines à filer", "L’énergie de la vapeur", "Division des tâches"],
-    central2: ["La classe ouvrière", "Les ouvriers", "Le prolétariat", "Les travailleurs salariés"],
-    detail3: ["Travail des enfants", "De longues journées", "Des salaires faibles", "Ils sont mal payés", "Punitions corporelles", "Des journées de douze heures"],
-    detail4: ["Réduction des heures de travail", "Travailler moins", "Une journée de 9 heures", "Des journées plus courtes"]
+    central1: ["Le syndicalisme", "Le mouvement ouvrier", "Le développement des syndicats", "L’essor des organisations ouvrières"],
+    detail1: ["Travail des enfants", "De longues journées", "Des salaires faibles", "Ils sont mal payés", "Punitions corporelles", "Des journées de douze heures"],
+    detail2: ["Faire la grève", "Une grève", "Les grèves", "Ils font une grève"],
+    central2: ["Concentration de la production dans les manufactures", "La production se fait dans les usines", "Passage des ateliers artisanaux aux manufactures", "Développement des usines"],
+    detail3: ["Dans les villes", "En milieu urbain", "Les centres urbains comme Montréal"],
+    detail4: ["Le canal de Lachine", "Canal Lachine", "Le canal de Lachine favorise l’industrie", "Le canal de Lachine à Montréal"]
   };
   for (const [id, answers] of Object.entries(examples)) for (const answer of answers) assert.equal(assessIndustrialisationAnswer(id as SchemaFieldId, answer).status, "recognized", `${id}: ${answer}`);
 });
 test("local feedback does not equate unknown, vague or contradictory answers with correct answers", () => {
-  for (const [id, answer] of [["object", "Ce n’est pas l’industrialisation"], ["object", "La seconde industrialisation"], ["detail1", "Les villes ou les campagnes"], ["central2", "Les patrons et les ouvriers"], ["detail4", "Ils refusent de travailler moins"], ["detail1", ""], ["detail2", "Une formulation imprévue"]] as const) {
+  for (const [id, answer] of [["object", "Ce n’est pas l’industrialisation"], ["object", "La seconde industrialisation"], ["detail1", "Les villes ou les campagnes"], ["central2", "Les patrons et les ouvriers"], ["central2", "La mécanisation"], ["detail4", "Ils refusent de travailler moins"], ["detail1", ""], ["detail2", "Une formulation imprévue"]] as const) {
     assert.notEqual(assessIndustrialisationAnswer(id, answer).status, "recognized", answer);
   }
-  for (const [id, answer] of [["detail1", "Montréal"], ["detail3", "Conditions difficiles"], ["detail2", "Machines"], ["detail4", "Faire la grève"]] as const) assert.equal(assessIndustrialisationAnswer(id, answer).status, "partial", answer);
+  for (const [id, answer] of [["detail3", "Montréal"], ["detail1", "Conditions difficiles"], ["detail4", "Un canal"], ["detail2", "Les ouvriers protestent"]] as const) assert.equal(assessIndustrialisationAnswer(id, answer).status, "partial", answer);
 });
 import { INDUSTRIALISATION_DOCUMENTS, SCHEMA_FIELDS, emptyIndustrialisationDraft, expectedDocumentChoice, industrialisationMissingCount, restoreIndustrialisationDraft } from "../lib/industrialisation-partie-b.ts";
 
@@ -45,6 +43,9 @@ test("Partie B has seven response boxes and ten sourced documents without Allopr
     assert.ok(doc.links.every(link => new URL(link.url).protocol === "https:"));
   }
   assert.doesNotMatch(JSON.stringify(INDUSTRIALISATION_DOCUMENTS), /alloprof|nouvelle-france/i);
+  assert.match(INDUSTRIALISATION_DOCUMENTS[3].excerpt ?? "", /Ferdinand Brissette|douze ans|amende de 1,75 \$/);
+  assert.doesNotMatch(INDUSTRIALISATION_DOCUMENTS[4].excerpt ?? "", /Relié aux autres canaux du fleuve/);
+  assert.doesNotMatch(INDUSTRIALISATION_DOCUMENTS[7].excerpt ?? "", /Le Parlement adopte une loi qui autorise la formation de syndicats/);
   assert.deepEqual(INDUSTRIALISATION_DOCUMENTS.filter(doc => expectedDocumentChoice(doc.number) === "exclude").map(doc => doc.number), [3,7,10]);
 });
 

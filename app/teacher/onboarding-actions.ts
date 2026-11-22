@@ -13,7 +13,7 @@ const code = () => Array.from(randomBytes(12), (byte) => STUDENT_ACCESS_CODE_ALP
 const digest = (value: string) => createHash("sha256").update(value).digest("hex");
 
 export async function createTeacherGroupWithCodes(setup: Setup) {
-  if (!setup.displayName.trim() || !setup.group.name.trim() || !setup.group.aliases.length || setup.group.aliases.some((alias) => !/^[\p{L}'’\-]+(?:\s[\p{L}'’\-]+)*\s\p{Lu}\.$/u.test(alias))) return { ok: false as const, error: "Les renseignements du groupe n’ont pas été reconnus. Vérifiez l’aperçu des élèves." };
+  if (!setup.displayName.trim() || !setup.group.name.trim() || !setup.group.aliases.length || setup.group.aliases.some((alias) => !/^[\p{L}'’\-]+(?:\s[\p{L}'’\-]+)*\s\p{Lu}\.(?: [1-9][0-9]*)?$/u.test(alias))) return { ok: false as const, error: "Les renseignements du groupe n’ont pas été reconnus. Vérifiez l’aperçu des élèves." };
   const actor = await requireTeacherActor(); const sql = getSocratoDatabase(); const generatedCodes: GeneratedStudentCode[] = [];
   try { await sql.begin(async (tx) => {
     await tx`insert into socrato.schools (id, display_name) values (${"school-demo-local"}, ${"École Socrato"}) on conflict (id) do nothing`;

@@ -56,7 +56,7 @@ export const MIGRATIONS_IRISH_FAMINE_DOCUMENT = {
   assetUrl: "/historical-documents/migrations-famine-skibbereen-1847.jpg",
   rightsStatement: "Illustration publiée en 1847 et appartenant au domaine public; reproduction numérique diffusée sur Wikimedia Commons.",
   transcription: "The Famine in Ireland — Funeral at Skibbereen.",
-  accessibleDescription: "Gravure de presse de 1847 montrant des habitants de Skibbereen transportant un cercueil pendant la Grande Famine en Irlande.",
+  accessibleDescription: "Gravure de presse de 1847 montrant des habitants de Skibbereen transportant un corps sur une charrette pendant la Grande Famine en Irlande.",
   historicalContext: "La Grande Famine frappe l’Irlande à partir de 1845. La faim, les maladies et la pauvreté poussent une partie importante de la population à quitter l’île, notamment vers l’Amérique du Nord.",
   observationGuide: [
     "Identifier le lieu et la date indiqués dans la légende.",

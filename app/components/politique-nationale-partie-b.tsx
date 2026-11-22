@@ -6,27 +6,26 @@ import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/app/eleve/tableau-de-bord/theme-toggle";
 import {
   POLITIQUE_NATIONALE_ACTIVITY_ID,
-  POLITIQUE_NATIONALE_DOCUMENT_FEEDBACK,
   POLITIQUE_NATIONALE_DOCUMENTS,
   POLITIQUE_NATIONALE_INSTRUCTION,
   POLITIQUE_NATIONALE_SCHEMA_FIELDS,
+  POLITIQUE_NATIONALE_BRANCHES,
   POLITIQUE_NATIONALE_TITLE,
-  assessPolitiqueNationaleAnswer,
   emptyPolitiqueNationaleDraft,
   expectedPolitiqueNationaleDocumentChoice,
-  politiqueNationaleMissingCount,
+  scorePolitiqueNationaleRelation,
   restorePolitiqueNationaleDraft,
   type PolitiqueNationaleDocumentChoice,
   type PolitiqueNationaleDraft,
   type PolitiqueNationaleSchemaFieldId,
 } from "@/lib/politique-nationale-partie-b";
 import "./industrialisation-partie-b.css";
+import "./politique-nationale-partie-b.css";
 
-export function PolitiqueNationalePartieB({ teacherMode = false, storageScope = "practice" }: { teacherMode?: boolean; storageScope?: string }) {
+export function PolitiqueNationalePartieB({ teacherMode = false, storageScope = "evaluation", correctionAnswers, correctionFeedback }: { teacherMode?: boolean; storageScope?: string; correctionAnswers?: Record<PolitiqueNationaleSchemaFieldId, string>; correctionFeedback?: Record<number, string> }) {
   const [draft, setDraft] = useState<PolitiqueNationaleDraft>(emptyPolitiqueNationaleDraft);
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState("Chargement des réponses…");
-  const [error, setError] = useState("");
   const storageKey = `socrato:${POLITIQUE_NATIONALE_ACTIVITY_ID}:${storageScope}`;
 
   useEffect(() => {
@@ -77,12 +76,6 @@ export function PolitiqueNationalePartieB({ teacherMode = false, storageScope = 
   }
 
   function finish() {
-    const missing = politiqueNationaleMissingCount(draft);
-    if (missing) {
-      setError(`Complétez les cases du schéma et le classement des dix documents. Il reste ${missing} élément${missing > 1 ? "s" : ""} à compléter.`);
-      return;
-    }
-    setError("");
     setDraft((current) => ({ ...current, submitted: true }));
   }
 
@@ -92,7 +85,8 @@ export function PolitiqueNationalePartieB({ teacherMode = false, storageScope = 
       "",
       ...POLITIQUE_NATIONALE_SCHEMA_FIELDS.flatMap(({ id, prompt }) => [prompt, draft.answers[id] || "—", ""]),
       "Dossier documentaire",
-      ...POLITIQUE_NATIONALE_DOCUMENTS.flatMap(({ number, title }) => [`Document ${number} — ${title}`, `Choix : ${choiceLabels[draft.choices[number] || ""]}`, ""]),
+      "Barème : objet /2; première mise en relation /3; deuxième mise en relation /3. Total /8.",
+      "Correction par l’enseignant. Ce fichier n’est pas une remise automatique.",
     ].join("\n");
     const url = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
     const anchor = document.createElement("a");
@@ -102,7 +96,7 @@ export function PolitiqueNationalePartieB({ teacherMode = false, storageScope = 
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
-  return <main className="partieb-page">
+  return <main className="partieb-page pn-evaluation">
     <header className="partieb-site-header">
       <div className="partieb-site-header-top">
         <Link href={teacherMode ? "/teacher" : "/eleve/tableau-de-bord"} className="partieb-site-brand" aria-label="Retour au tableau de bord Socrato">
@@ -111,7 +105,7 @@ export function PolitiqueNationalePartieB({ teacherMode = false, storageScope = 
         </Link>
         <div className="partieb-site-title">
           <h1>{POLITIQUE_NATIONALE_TITLE}</h1>
-          <strong>Pratiquer · Partie B — Décrire une période historique</strong>
+          <strong>Évaluation · Section B — Décrire une période historique</strong>
           <span>Période historique · 1840-1896</span>
         </div>
         <div className="partieb-site-tools"><ThemeToggle /><button className="partieb-print" type="button" onClick={() => window.print()}>Imprimer</button></div>
@@ -128,7 +122,7 @@ export function PolitiqueNationalePartieB({ teacherMode = false, storageScope = 
         <p>{POLITIQUE_NATIONALE_INSTRUCTION}</p>
         {teacherMode
           ? <p className="partieb-mode">Modèle prêt à utiliser en classe · fondé sur les quatre précisions du <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/secondaire/programmes/PFEQ-histoire-quebec-canada-secondaire.pdf" target="_blank" rel="noreferrer">programme de 4e secondaire ↗</a> · aucune assignation à un groupe.</p>
-          : <p className="partieb-mode">Entraînement autonome · téléchargez vos réponses pour les remettre à votre enseignant.</p>}
+          : <p className="partieb-mode">Évaluation sur 8 points · téléchargez vos réponses pour les remettre à votre enseignant. Le corrigé est réservé à l’espace enseignant.</p>}
       </header>
 
       <section className="partieb-schema-section" aria-labelledby="politique-nationale-schema-title">
@@ -137,26 +131,21 @@ export function PolitiqueNationalePartieB({ teacherMode = false, storageScope = 
           <svg className="partieb-lines partieb-main-lines" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true"><path d="M 295 255 L 395 175 M 295 375 L 395 470" /></svg>
           <div className="partieb-object"><h3>Objet de la description</h3>{answerBox("object")}</div>
           <div className="partieb-groups">
-            <section className="partieb-group" aria-label="Premier élément central et repères de mise en œuvre">
+            {POLITIQUE_NATIONALE_BRANCHES.map((branch, index) => <section key={branch.central} className="partieb-group" aria-label={`Mise en relation ${index + 1}`}>
               <svg className="partieb-lines" viewBox="0 0 600 280" preserveAspectRatio="none" aria-hidden="true"><path d="M 265 155 L 375 76 M 265 180 L 375 210" /></svg>
-              <div className="partieb-central"><h3>Élément central</h3>{answerBox("context")}</div>
-              <div className="partieb-details">{answerBox("adoption")}{answerBox("industrial")}</div>
-            </section>
-            <section className="partieb-group" aria-label="Deuxième élément central et mesures territoriales">
-              <svg className="partieb-lines" viewBox="0 0 600 280" preserveAspectRatio="none" aria-hidden="true"><path d="M 265 155 L 375 76 M 265 180 L 375 210" /></svg>
-              <div className="partieb-central"><h3>Élément central</h3>{answerBox("tariff")}</div>
-              <div className="partieb-details">{answerBox("railway")}{answerBox("settlement")}</div>
-            </section>
+              <div className="partieb-central"><h3>Élément central</h3>{answerBox(branch.central)}</div>
+              <div className="partieb-details">{branch.details.map((id) => <div key={id}>{answerBox(id)}</div>)}</div>
+            </section>)}
           </div>
         </div>
       </section>
 
       <section className="partieb-dossier" aria-labelledby="politique-nationale-dossier-title">
         <h2 id="politique-nationale-dossier-title">Dossier documentaire</h2>
-        <p className="partieb-document-note">Dix documents à examiner : six sont utiles pour compléter les six bulles du schéma et quatre sont à discriminer. Les traductions, adaptations et synthèses sont signalées dans la provenance.</p>
+        <p className="partieb-document-note">Consultez les dix documents et sélectionnez ceux qui éclairent les éléments demandés. Tous ne sont pas nécessaires et un document peut servir à plusieurs cases. Les traductions, adaptations et synthèses sont signalées dans la provenance.</p>
         <div className="partieb-documents">
           {POLITIQUE_NATIONALE_DOCUMENTS.map((document) => <article key={document.number} className={`partieb-document${"image" in document ? " partieb-document-image" : ""}`}>
-            <header><span>Document {document.number}</span><small>{document.date}</small><h3>{document.title}</h3></header>
+            <header><span>Document {document.number}</span>{document.date ? <small>{document.date}</small> : null}{document.title ? <h3>{document.title}</h3> : null}</header>
             {"excerpt" in document ? <blockquote>{document.excerpt}</blockquote> : null}
             {"image" in document ? <a href={document.image.url} target="_blank" rel="noreferrer" aria-label={`Agrandir l’image du document ${document.number}`}>
               <Image src={document.image.url} alt={document.image.alt} width={document.image.width} height={document.image.height} unoptimized style={{ width: "100%", height: "auto", display: "block" }} />
@@ -169,13 +158,6 @@ export function PolitiqueNationalePartieB({ teacherMode = false, storageScope = 
             </table> : null}
             {document.note ? <p className="partieb-note">{document.note}</p> : null}
             <details className="partieb-source"><summary>Source et provenance</summary><p>{document.source}</p>{document.links.map((link) => <a key={link.url} href={link.url} target="_blank" rel="noreferrer">{link.label} ↗</a>)}</details>
-            <fieldset className="partieb-document-answer" disabled={!ready || draft.submitted}>
-              <legend>Utile ou à discriminer</legend>
-              <div className="partieb-document-choices">{(["direct", "exclude"] as const).map((choice) => <label key={choice}>
-                <input type="radio" name={`politique-nationale-choice-${document.number}`} value={choice} checked={draft.choices[document.number] === choice} onChange={() => setDraft((current) => ({ ...current, choices: { ...current.choices, [document.number]: choice } }))} />
-                <span>{choiceLabels[choice]}</span>
-              </label>)}</div>
-            </fieldset>
           </article>)}
         </div>
       </section>
@@ -186,28 +168,32 @@ export function PolitiqueNationalePartieB({ teacherMode = false, storageScope = 
           <button type="button" onClick={download} disabled={!ready}>Télécharger mes réponses</button>
           {draft.submitted
             ? <button type="button" onClick={() => setDraft((current) => ({ ...current, submitted: false }))}>Reprendre mes réponses</button>
-            : <button type="button" className="partieb-primary" disabled={!ready} onClick={finish}>Terminer et comparer au corrigé</button>}
+            : <button type="button" className="partieb-primary" disabled={!ready} onClick={finish}>Terminer ma rédaction</button>}
         </div>
-        {error ? <p role="alert">{error}</p> : null}
+        {draft.submitted ? <p role="status">Rédaction terminée dans cet onglet. Téléchargez vos réponses et remettez le fichier à votre enseignant. Aucune note automatique n’est attribuée.</p> : null}
       </footer>
 
-      {draft.submitted ? <section className="partieb-correction" aria-labelledby="politique-nationale-feedback-title">
-        <h2 id="politique-nationale-feedback-title">Rétroaction sur mes réponses</h2>
-        <p>Vérification locale sans IA ni envoi de vos réponses à une API. Elle reconnaît des formulations prévues, mais ne comprend pas toutes les phrases. « À vérifier » ne signifie pas « faux ». Aucune note n’est attribuée.</p>
-        <dl>{POLITIQUE_NATIONALE_SCHEMA_FIELDS.map((field) => {
-          const feedback = assessPolitiqueNationaleAnswer(field.id, draft.answers[field.id]);
-          return <div key={field.id}><dt>{field.prompt}</dt><dd><p>Votre réponse : {draft.answers[field.id]}</p><p><strong>{feedback.label}</strong> — {feedback.message}</p><p>Piste de réponse : {field.answer}</p></dd></div>;
-        })}</dl>
-      </section> : null}
+      <section className="partieb-correction pn-rubric" aria-labelledby="pn-rubric-title">
+        <h2 id="pn-rubric-title">Grille d’évaluation — Section B</h2>
+        <p>Critère : représentation cohérente d’une période de l’histoire du Québec et du Canada.</p>
+        <p>Objet de la description : correct, 2 points; plus ou moins correct, 1 point; incorrect ou absent, 0 point.</p>
+        <div className="pn-table-scroll"><table><caption>Barème de chacune des deux mises en relation</caption>
+          <thead><tr><th scope="col">Élément central</th><th scope="col">Deux précisions correctes</th><th scope="col">Une précision correcte</th><th scope="col">Aucune précision correcte</th></tr></thead>
+          <tbody>{([2, 1, 0] as const).map((central) => <tr key={central}><th scope="row">{["Incorrect ou absent", "Plus ou moins correct", "Correct"][central]}</th>{([2, 1, 0] as const).map((details) => <td key={details}>{scorePolitiqueNationaleRelation(central, details)} point(s)</td>)}</tr>)}</tbody>
+        </table></div>
+        <p><strong>Objet /2 + première mise en relation /3 + deuxième mise en relation /3 = total /8.</strong></p>
+        <p>Une réponse correcte est complète, exacte et claire. Toute formulation équivalente est acceptée. Les deux précisions sont appréciées selon leur exactitude et leur relation avec l’élément central.</p>
+        <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/evaluation-epreuves-ministerielles/documents-information/HQC_Precisions_outils_evaluation.pdf" target="_blank" rel="noreferrer">Source : modalités ministérielles, p. 10–12 ↗</a>
+      </section>
 
-      {teacherMode || draft.submitted ? <details className="partieb-correction" open={draft.submitted}>
+      {teacherMode && correctionAnswers ? <details className="partieb-correction">
         <summary>Corrigé — pistes de réponses</summary>
         <p>Plusieurs formulations sont acceptables. Les réponses ouvertes ne sont pas notées automatiquement. Vérifiez leur précision et les relations entre les faits.</p>
-        <dl>{POLITIQUE_NATIONALE_SCHEMA_FIELDS.map((field) => <div key={field.id}><dt>{field.prompt}</dt><dd>{field.answer}</dd></div>)}</dl>
+        {POLITIQUE_NATIONALE_BRANCHES.map((branch) => <section key={branch.central}><h3>{branch.label}</h3><p>Évaluez l’élément central et ses deux précisions ensemble, selon la grille ci-dessus.</p></section>)}
+        <dl>{POLITIQUE_NATIONALE_SCHEMA_FIELDS.map((field) => <div key={field.id}><dt>{field.prompt}</dt><dd>{correctionAnswers[field.id]}</dd></div>)}</dl>
         <h3>Discrimination des documents</h3>
         <ul>{POLITIQUE_NATIONALE_DOCUMENTS.map(({ number }) => <li key={number}>
-          <strong>Document {number} : {choiceLabels[expectedPolitiqueNationaleDocumentChoice(number)]}.</strong> {POLITIQUE_NATIONALE_DOCUMENT_FEEDBACK[number]}
-          {draft.submitted ? <span> Votre choix : {choiceLabels[draft.choices[number] || ""]} — {draft.choices[number] === expectedPolitiqueNationaleDocumentChoice(number) ? "concorde avec le corrigé" : "à revoir"}.</span> : null}
+          <strong>Document {number} : {choiceLabels[expectedPolitiqueNationaleDocumentChoice(number)]}.</strong> {correctionFeedback?.[number]}
         </li>)}</ul>
         <p>Le <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/secondaire/programmes/PFEQ-histoire-quebec-canada-secondaire.pdf" target="_blank" rel="noreferrer">programme officiel de 4e secondaire ↗</a> retient quatre précisions pour la Politique nationale : crise économique de 1873, politique tarifaire, chemin de fer transcontinental du Canadien Pacifique et colonisation des terres de l’Ouest. Activité inspirée du modèle ministériel fourni; ce n’est pas une épreuve ni un barème officiels du Ministère.</p>
       </details> : null}

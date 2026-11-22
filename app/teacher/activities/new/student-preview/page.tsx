@@ -39,6 +39,7 @@ export default async function StudentActivityPreviewPage({ searchParams }: { sea
     number: requestedIds.length === 1 ? Math.max(1, Number.parseInt(questionNumber ?? "1", 10) || 1) : index + 1,
     prompt: preview.question,
     instruction: preview.instruction,
+    developmentContext: eligibleQuestions[variants[index]]?.developmentContext,
     primaryOperationId: preview.operationId,
     featuredDocumentId: preview.documents[0]?.id,
     intellectualOperations: [{ id: preview.operationId, label: preview.operationLabel }],
@@ -59,5 +60,21 @@ export default async function StudentActivityPreviewPage({ searchParams }: { sea
   if (!preview) notFound();
   const resolvedActivityId = published === "1" && (activityId || publishedActivityId) ? (activityId || publishedActivityId)! : data.activityId;
   const showStudentHeader = classroom === "1" && questions.some(question => ["question:acte-de-l-amerique-du-nord-britannique:union-federation-change", "question:transversal:chronology-1867", "question:acte-de-l-amerique-du-nord-britannique:map-choice-1867"].includes(question.id));
-  return <div className={`student-preview-surface${questions.some(question => question.id === "question:acte-de-l-amerique-du-nord-britannique:union-federation-change") ? " student-preview-surface--constitution" : ""}${showStudentHeader ? " student-preview-surface--activity" : ""}${classroom === "1" ? " student-preview-surface--classroom" : ""}${embedded === "1" ? " student-preview-surface--embedded" : ""}`}><StudentLearningSessionView classroomMode={classroom === "1"} teacherApiTest forceReferenceCorrection={apiUnavailable === "1"} teacherPreview={classroom !== "1" && embedded !== "1" && published !== "1"} persistProgress={published === "1"} data={{ ...data, id: resolvedActivityId, activityId: resolvedActivityId, activityTitle: config.title, notionId: notion, notionTitle: preview.notionTitle, questions, documentCatalog, dashboardHref: `/eleve/tableau-de-bord?activity=${encodeURIComponent(resolvedActivityId)}#activite` }} /></div>;
+  const hasDevelopmentContext = questions.some(({ developmentContext }) => Boolean(developmentContext));
+  return <div className={`student-preview-surface${hasDevelopmentContext ? " student-preview-surface--section-c" : ""}${questions.some(question => question.id === "question:acte-de-l-amerique-du-nord-britannique:union-federation-change") ? " student-preview-surface--constitution" : ""}${showStudentHeader ? " student-preview-surface--activity" : ""}${classroom === "1" ? " student-preview-surface--classroom" : ""}${embedded === "1" ? " student-preview-surface--embedded" : ""}`}>{hasDevelopmentContext ? <style>{`
+    @media (min-width: 721px) and (max-width: 1119px) {
+      .student-preview-surface.student-preview-surface--section-c .learning-session .session-layout {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr);
+      }
+      .student-preview-surface.student-preview-surface--section-c .session-layout .documents-heading {
+        grid-column: 2;
+        grid-row: 1;
+      }
+      .student-preview-surface.student-preview-surface--section-c .session-layout .documents-pane {
+        grid-column: 2;
+        grid-row: 2;
+      }
+    }
+  `}</style> : null}<StudentLearningSessionView classroomMode={classroom === "1"} teacherApiTest forceReferenceCorrection={apiUnavailable === "1"} teacherPreview={classroom !== "1" && embedded !== "1" && published !== "1"} persistProgress={published === "1"} data={{ ...data, id: resolvedActivityId, activityId: resolvedActivityId, activityTitle: config.title, notionId: notion, notionTitle: preview.notionTitle, questions, documentCatalog, dashboardHref: `/eleve/tableau-de-bord?activity=${encodeURIComponent(resolvedActivityId)}#activite` }} /></div>;
 }

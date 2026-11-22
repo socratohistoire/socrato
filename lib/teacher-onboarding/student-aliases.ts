@@ -1,6 +1,5 @@
 export type StudentAliasPreview = {
   aliases: string[];
-  ambiguousAliases: string[];
   ignoredLineCount: number;
 };
 
@@ -36,9 +35,16 @@ export function createStudentAliasPreview(pastedRoster: string): StudentAliasPre
   const aliases = lines.map(aliasFromLine).filter((value): value is string => Boolean(value));
   const counts = new Map<string, number>();
   for (const alias of aliases) counts.set(alias, (counts.get(alias) ?? 0) + 1);
+  const occurrences = new Map<string, number>();
+  const numberedAliases = aliases.map((alias) => {
+    if (counts.get(alias) === 1) return alias;
+    const number = (occurrences.get(alias) ?? 0) + 1;
+    occurrences.set(alias, number);
+    return `${alias} ${number}`;
+  });
+
   return {
-    aliases: [...new Set(aliases)],
-    ambiguousAliases: [...counts].filter(([, count]) => count > 1).map(([alias]) => alias),
+    aliases: numberedAliases,
     ignoredLineCount: lines.length - aliases.length,
   };
 }

@@ -773,9 +773,18 @@ export function StudentLearningSessionView({ data, teacherPreview = false, class
                 <h2 id="question-section-title">Question {question.number}</h2>
                 {primaryOperation ? <span className="operation-chip">{primaryOperation.label}</span> : null}
               </div>
+              {question.developmentContext ? <p>{question.developmentContext}</p> : null}
               <div className="question-card-heading-row">
                 <h3 id="question-title">{question.prompt}</h3>
               </div>
+              {question.developmentContext ? (
+                <div style={{ marginTop: 8 }}>
+                  <p>{question.instruction.split("\n")[0]}</p>
+                  <ul style={{ listStyle: "disc", paddingInlineStart: 20, marginBlockStart: 6 }}>
+                    {question.instruction.split("\n").slice(1).map((instruction) => <li key={instruction}>{instruction}</li>)}
+                  </ul>
+                </div>
+              ) : null}
               {isMultipleChoice && question.answerOptions ? (
                 <div className={`multiple-choice-options${question.answerOptions.some(option => option.imageUrl) ? " multiple-choice-options--maps" : ""}`} role="radiogroup" aria-label="Choix de réponse">
                   {question.answerOptions.map((option) => (

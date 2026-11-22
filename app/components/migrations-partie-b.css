@@ -1,0 +1,43 @@
+.migrations-evaluation .migrations-marking-summary{font-size:14px;color:var(--pb-muted)}
+.migrations-evaluation .partieb-document-image{grid-column:auto}
+.migrations-evaluation .partieb-document-image>a{width:fit-content;max-width:100%}
+.migrations-evaluation .partieb-document-image img{max-height:420px;object-fit:contain}
+.migrations-image-trigger{display:block;width:100%;max-width:100%;padding:0;border:0;background:transparent;color:inherit;text-align:left;cursor:zoom-in}
+.migrations-image-trigger:focus-visible{outline:3px solid #88a9ef;outline-offset:5px;border-radius:4px}
+.migrations-image-dialog{width:min(96vw,1400px);max-width:96vw;max-height:94dvh;margin:auto;padding:0;border:1px solid var(--pb-border);border-radius:12px;background:var(--pb-paper);color:var(--pb-text);overflow:hidden;box-shadow:0 20px 80px #0009}
+.migrations-image-dialog::backdrop{background:#000c}
+.migrations-image-dialog header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 16px;border-bottom:1px solid var(--pb-border)}
+.migrations-image-dialog h2{font-size:18px;font-weight:600;margin:0}
+.migrations-image-dialog header button{display:grid;place-items:center;width:44px;height:44px;padding:0;border:1px solid var(--pb-border);border-radius:8px;background:var(--pb-group);color:inherit;font-size:32px;cursor:pointer}
+.migrations-image-dialog header button:focus-visible{outline:3px solid #88a9ef;outline-offset:2px}
+.migrations-image-dialog-content{display:flex;justify-content:center;align-items:flex-start;max-height:calc(94dvh - 66px);overflow:auto;padding:12px}
+.migrations-image-dialog-content img{display:block;width:auto;height:auto;max-width:100%;max-height:calc(94dvh - 90px);object-fit:contain}
+@media print{.migrations-image-dialog{display:none!important}.migrations-image-trigger{break-inside:avoid}}
+.migrations-rubric{margin:28px 0;padding:24px;border:1px solid var(--pb-border);border-radius:14px;background:var(--pb-paper)}
+.migrations-rubric h2{font-size:22px;font-weight:700;margin:0 0 12px}
+.migrations-rubric h3{font-size:17px;font-weight:600;margin:22px 0 10px}
+.migrations-rubric p{margin:12px 0;font-size:14px;line-height:1.6}
+.migrations-table-scroll{overflow-x:auto}
+.migrations-rubric table{width:100%;border-collapse:collapse;font-size:14px}
+.migrations-rubric th,.migrations-rubric td{border:1px solid var(--pb-border);padding:12px;text-align:center;vertical-align:middle}
+.migrations-rubric th{background:var(--pb-group);font-weight:600}
+.migrations-rubric th[scope=row]{text-align:left}
+@media(max-width:600px){.migrations-rubric{padding:16px}.migrations-rubric table{min-width:540px}.migrations-evaluation .partieb-document-image img{max-height:330px}}
+@media print{@page{size:letter landscape;margin:10mm}.migrations-evaluation .partieb-document-image{grid-column:auto}.migrations-evaluation .partieb-document-image img{max-height:180px}.migrations-evaluation .partieb-source{display:block}.migrations-rubric{break-before:page;border:0;padding:0}.migrations-rubric h2{font-size:15pt}.migrations-rubric h3{font-size:11pt;margin:12px 0 6px}.migrations-rubric p,.migrations-rubric table{font-size:9pt}.migrations-rubric th,.migrations-rubric td{padding:7px}.migrations-table-scroll{overflow:visible}.migrations-rubric table{min-width:0}.migrations-rubric>div{break-inside:avoid}}
+
+.migrations-text-trigger{display:block;width:100%;padding:0;border:0;background:transparent;color:inherit;text-align:left;font:inherit;line-height:inherit;cursor:zoom-in}
+.migrations-text-trigger:focus-visible{outline:3px solid #88a9ef;outline-offset:5px;border-radius:4px}
+.migrations-enlarge-hint{display:block;margin-top:10px;color:var(--pb-muted);font-size:13px;line-height:1.5}
+.migrations-written-dialog{width:min(96vw,1000px)}
+.migrations-written-dialog .migrations-image-dialog-content{display:block;padding:clamp(18px,4vw,36px)}
+.migrations-expanded-document{max-width:850px;margin-inline:auto}
+.migrations-expanded-date{margin:0 0 16px;color:var(--pb-muted);font-size:14px}
+.migrations-expanded-document h3{margin:0 0 20px;font-size:clamp(20px,2.5vw,28px);line-height:1.35}
+.migrations-expanded-document blockquote{margin:0;font-size:clamp(20px,2.5vw,26px);line-height:1.7;overflow-wrap:anywhere}
+.migrations-expanded-note,.migrations-expanded-source{margin:22px 0 0;color:var(--pb-muted);font-size:15px;line-height:1.6;overflow-wrap:anywhere}
+.migrations-expanded-source{padding-top:16px;border-top:1px solid var(--pb-border)}
+.migrations-expanded-document table{width:100%;border-collapse:collapse;font-size:clamp(18px,2.3vw,24px);line-height:1.5}
+.migrations-expanded-document caption{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.migrations-expanded-document th,.migrations-expanded-document td{padding:14px 10px;border:1px solid var(--pb-border);text-align:left;vertical-align:top}
+.migrations-expanded-document th{background:var(--pb-group);font-weight:600}
+@media print{.migrations-enlarge-hint{display:none!important}}

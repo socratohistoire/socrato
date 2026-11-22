@@ -1,144 +1,162 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
+  MIGRATIONS_ACTIVITY_ID,
   MIGRATIONS_DOCUMENTS,
+  MIGRATIONS_INSTRUCTION,
+  MIGRATIONS_TITLE,
   MIGRATIONS_SCHEMA_FIELDS,
-  assessMigrationsAnswer,
   emptyMigrationsDraft,
-  expectedMigrationsDocumentChoice,
   migrationsMissingCount,
+  migrationsRelationScore,
   restoreMigrationsDraft,
-  type MigrationsSchemaFieldId,
 } from "../lib/migrations-partie-b.ts";
+import { MIGRATIONS_CORRECTION, MIGRATIONS_DOCUMENT_FEEDBACK } from "../lib/migrations-partie-b-correction.ts";
 
-test("la Partie B couvre les quatre précisions officielles de la notion Migrations", () => {
-  assert.equal(MIGRATIONS_SCHEMA_FIELDS.length, 7);
-  assert.match(MIGRATIONS_SCHEMA_FIELDS[0].prompt, /phénomène démographique/i);
-  const content = JSON.stringify(MIGRATIONS_SCHEMA_FIELDS);
-  assert.match(content, /exode rural/i);
-  assert.match(content, /États-Unis/i);
-  assert.match(content, /régions de colonisation/i);
-  assert.match(content, /transatlantiques|îles Britanniques/i);
+test("le schéma sépare les deux mouvements et ne demande qu’une information par précision", () => {
+  assert.match(MIGRATIONS_INSTRUCTION, /déplacements de population.*1840.*1896/);
+  assert.doesNotMatch(MIGRATIONS_TITLE + MIGRATIONS_INSTRUCTION, /migrations|mouvements migratoires/i, "le titre et la consigne ne donnent pas la réponse à l’objet sur 2 points");
+  assert.doesNotMatch(MIGRATIONS_INSTRUCTION, /évolution de la démographie|Utile|À discriminer/);
+  assert.deepEqual(MIGRATIONS_SCHEMA_FIELDS.map(({ id }) => id), ["object", "us_destination", "us_causes", "colonization", "transatlantic", "famine", "quarantine"]);
+  const fields = Object.fromEntries(MIGRATIONS_SCHEMA_FIELDS.map(({ id, prompt }) => [id, prompt]));
+  assert.equal(fields.us_destination, "Nommez précisément la région des États-Unis vers laquelle émigrent les Canadiens français.");
+  assert.match(fields.us_causes, /une cause/);
+  assert.match(fields.transatlantic, /pays d’origine.*années 1840/);
+  assert.doesNotMatch(fields.transatlantic, /ce qui provoque/);
+  assert.match(fields.famine, /événement.*départ/);
+  assert.equal(fields.quarantine, "Décrivez une mesure appliquée à leur arrivée.");
+  assert.match(MIGRATIONS_CORRECTION.us_destination.answer, /Nouvelle-Angleterre/);
+  assert.match(MIGRATIONS_CORRECTION.us_destination.criteria, /pays, mais ne précise pas la région/);
 });
 
-test("le dossier contient dix documents sourcés, six utiles et quatre à discriminer", () => {
+test("la carte de Socrato situe les déplacements sans donner le nom de la région à trouver", () => {
+  const document = MIGRATIONS_DOCUMENTS.find(({ number }) => number === 2)!;
+  assert.ok("image" in document);
+  assert.match(document.image.url, /migrations-canadiens-francais-etats-unis-section-b\.png$/);
+  assert.equal(document.image.width, 1588);
+  assert.equal(document.image.height, 600);
+  assert.match(document.source, /Socrato.*Natural Earth.*pédagogique/);
+  assert.match(document.fullSource, /schématiques.*ne représentent pas des effectifs/);
+  assert.doesNotMatch(document.title + document.note + document.source + document.image.alt, /Nouvelle-Angleterre|Détroit|recensement|Terre-Neuve/);
+  const map = readFileSync(new URL("../public/historical-documents/migrations-canadiens-francais-etats-unis-section-b.svg", import.meta.url), "utf8");
+  assert.match(map, /ÉTATS-UNIS/);
+  assert.match(map, /Direction des déplacements de population/);
+  assert.match(map, /route--local/);
+  assert.doesNotMatch(map, /NOUVELLE-ANGLETERRE|Nouvelle-Angleterre/);
+});
+
+test("la grille applique la dépendance à l’élément central pour les neuf combinaisons", () => {
+  for (const [central, expected] of [
+    ["correct", [1, 2, 3]],
+    ["partial", [0, 1, 2]],
+    ["incorrect", [0, 0, 1]],
+  ] as const) {
+    for (const details of [0, 1, 2] as const) assert.equal(migrationsRelationScore(central, details), expected[details]);
+  }
+  assert.equal(2 + migrationsRelationScore("correct", 2) + migrationsRelationScore("correct", 2), 8);
+  assert.equal(migrationsRelationScore("incorrect", 2), 1, "deux détails corrects ne compensent pas un élément central incorrect");
+});
+
+test("les dix documents sont mélangés, renumérotés et conservent leurs références", () => {
   assert.deepEqual(MIGRATIONS_DOCUMENTS.map(({ number }) => number), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.deepEqual(MIGRATIONS_DOCUMENTS.map(({ number }) => MIGRATIONS_DOCUMENT_FEEDBACK[number].useful), [false, true, false, true, true, false, true, false, true, false]);
   for (const document of MIGRATIONS_DOCUMENTS) {
     assert.ok(document.links.length);
     assert.ok(document.links.every(({ url }) => new URL(url).protocol === "https:"));
-    assert.match(document.source, /Source (primaire|statistique|cartographique)|source primaire|source statistique|source cartographique/i);
+    assert.ok(document.source.length > 0);
+    assert.ok(document.source.split(/\s+/).length <= 22, `source abrégée du document ${document.number}`);
+    assert.ok(document.fullSource.length >= document.source.length);
+    assert.ok(MIGRATIONS_DOCUMENT_FEEDBACK[document.number]);
+    assert.equal("supports" in document, false, "le dossier élève ne révèle pas les cases du corrigé");
   }
-  assert.deepEqual(MIGRATIONS_DOCUMENTS.filter(({ number }) => expectedMigrationsDocumentChoice(number) === "exclude").map(({ number }) => number), [7, 8, 9, 10]);
-  assert.deepEqual(MIGRATIONS_DOCUMENTS.filter(({ supports }) => supports !== null).map(({ supports }) => supports).sort(), ["colonization", "exode", "quarantine", "transatlantic", "us_causes", "us_destination"]);
-  const document8 = MIGRATIONS_DOCUMENTS.find(({ number }) => number === 8);
-  assert.ok(document8 && "excerpt" in document8 && !("image" in document8));
-  assert.equal(document8.title, "");
-  assert.match(document8.excerpt, /8 \$ par semaine.*famille risque d’être séparée/i);
-  assert.match(document8.source, /Archives publiques de l’Ontario.*RG 3-9-0-391/i);
-  assert.doesNotMatch(JSON.stringify(document8), /Loi sur les Indiens/i);
-  const document9 = MIGRATIONS_DOCUMENTS.find(({ number }) => number === 9);
-  assert.ok(document9 && "excerpt" in document9 && !("image" in document9));
-  assert.equal(document9.title, "");
-  assert.match(document9.excerpt, /surpeuplement/i);
-  assert.match(document9.source, /Bureau fédéral de la statistique.*1946/i);
-  assert.doesNotMatch(JSON.stringify(document9), /Acte de l’Amérique du Nord britannique/i);
-  const document10 = MIGRATIONS_DOCUMENTS.find(({ number }) => number === 10);
-  assert.ok(document10 && "excerpt" in document10 && !("image" in document10));
-  assert.equal(document10.title, "");
-  assert.match(document10.excerpt, /Boston.*Halifax.*Nouvelle-Angleterre/i);
-  assert.match(document10.source, /Lucy Knox.*Hannah Urquhart.*1776/i);
-  assert.doesNotMatch(JSON.stringify(document10), /RÉCIT|migrations-loyalistes-1783-recitus/i);
+  const text = JSON.stringify(MIGRATIONS_DOCUMENTS);
+  assert.match(text, /Canadien Pacifique.*1892/);
+  assert.doesNotMatch(text, /14 FÉVRIER 1933|Funeral at Skibbereen/);
+  assert.match(text, /Bureau fédéral de la statistique.*1946/);
+  assert.match(text, /Lucy Knox.*Hannah Urquhart/);
+  assert.match(text, /Lord Elgin.*28 juin 1848/);
+  const document3 = MIGRATIONS_DOCUMENTS.find(({ number }) => number === 3)!;
+  assert.ok("image" in document3);
+  assert.match(document3.image.url, /fermes-gratuites-1892\.png$/);
+  assert.match(document3.date, /1892/);
+  assert.match(MIGRATIONS_DOCUMENT_FEEDBACK[3].explanation, /Manitoba.*retenir les familles au Québec/);
+  const document4 = MIGRATIONS_DOCUMENTS.find(({ number }) => number === 4)!;
+  assert.ok("image" in document4);
+  assert.match(document4.image.url, /clonakilty-famine-1847\.jpg$/);
+  assert.match(document4.source, /13 février 1847/);
+  assert.doesNotMatch(document4.date + document4.title + document4.note + document4.image.alt, /Irlande/i);
+  const document6 = MIGRATIONS_DOCUMENTS.find(({ number }) => number === 6)!;
+  assert.ok("excerpt" in document6);
+  assert.doesNotMatch(document6.date + document6.excerpt + document6.note, /Nouvelle-Angleterre/i);
+  assert.match(MIGRATIONS_CORRECTION.transatlantic.answer, /Angleterre.*Écosse.*Royaume-Uni/);
+  assert.match(MIGRATIONS_CORRECTION.transatlantic.criteria, /Ne pas refuser une réponse exacte/);
+  assert.match(MIGRATIONS_CORRECTION.famine.criteria, /accepter un autre événement/);
 });
 
-test("chacun des six documents utiles soutient une seule bulle différente", () => {
-  const useful = MIGRATIONS_DOCUMENTS.filter(({ supports }) => supports !== null);
-  assert.equal(useful.length, 6);
-  assert.equal(new Set(useful.map(({ supports }) => supports)).size, 6);
-  assert.deepEqual(useful.map(({ number }) => number), [1, 2, 3, 4, 5, 6]);
-  const document6 = MIGRATIONS_DOCUMENTS.find(({ number }) => number === 6);
-  assert.ok(document6 && "attribution" in document6);
-  assert.equal(document6.attribution, "Journal de Robert Whyte, passager irlandais du George");
-});
-
-test("les extraits recomposés ont au moins trois phrases et signalent les crochets", () => {
-  const excerpts = MIGRATIONS_DOCUMENTS.filter((document): document is typeof document & { excerpt: string } => "excerpt" in document);
-  assert.deepEqual(excerpts.map(({ number }) => number), [3, 6, 8, 9, 10]);
-  for (const document of excerpts) {
-    const sentenceMarks = document.excerpt.match(/[.!?](?:[”»]|\s|$)/g) ?? [];
-    assert.ok(sentenceMarks.length >= 3, `document ${document.number}`);
-    assert.match(document.excerpt, /\[[^\]]+\]/);
-    assert.match(document.note, /recomposé/i);
-    assert.match(document.note, /crochets/i);
+test("les références du corrigé suivent la nouvelle numérotation et explicitent les limites documentaires", () => {
+  for (const { id } of MIGRATIONS_SCHEMA_FIELDS) {
+    assert.ok(MIGRATIONS_CORRECTION[id].answer);
+    assert.ok(MIGRATIONS_CORRECTION[id].criteria);
+    for (const number of MIGRATIONS_CORRECTION[id].documents) assert.equal(MIGRATIONS_DOCUMENT_FEEDBACK[number].useful, true);
   }
+  assert.match(MIGRATIONS_DOCUMENTS[4].source, /Chauveau/);
+  assert.match(MIGRATIONS_DOCUMENTS[6].fullSource, /Au nord/);
+  assert.match(MIGRATIONS_DOCUMENTS[8].source, /Lord Elgin/);
+  assert.match(MIGRATIONS_DOCUMENTS[8].date, /28 JUIN 1848/);
+  const document9 = MIGRATIONS_DOCUMENTS[8];
+  assert.ok("excerpt" in document9);
+  assert.match(document9.excerpt, /Grosse-Île, les immigrants débarqués des navires placés en quarantaine.*autorisation du commandant.*hôpitaux/);
+  assert.equal((document9.excerpt.match(/\.(?:\s|\s*»|$)/g) ?? []).length, 4);
+  assert.doesNotMatch(document9.excerpt, /Ces mesures visent|propagation de la fièvre/);
+  assert.match(document9.excerpt, /\[…\]/);
+  assert.doesNotMatch(document9.excerpt, /croyaient|espéraient/);
+  assert.match(MIGRATIONS_DOCUMENT_FEEDBACK[2].explanation, /carte pédagogique.*ne mesurent pas le nombre/);
+  assert.match(MIGRATIONS_DOCUMENT_FEEDBACK[10].explanation, /ne prouve pas à lui seul/);
+  assert.match(MIGRATIONS_CORRECTION.quarantine.criteria, /lieu, pas une mesure/);
+  assert.match(MIGRATIONS_CORRECTION.colonization.criteria, /Labelle seul ne décrit pas une mesure/);
+  assert.match(MIGRATIONS_CORRECTION.us_causes.criteria, /ne pas exiger deux causes/);
 });
 
-test("le corpus comprend un tableau, deux cartes et une illustration de la famine", () => {
-  const document1 = MIGRATIONS_DOCUMENTS[0];
-  const document2 = MIGRATIONS_DOCUMENTS[1];
-  const document4 = MIGRATIONS_DOCUMENTS[3];
-  const document5 = MIGRATIONS_DOCUMENTS[4];
-  assert.ok("table" in document1);
-  assert.deepEqual(document1.table.rows, [["1871", "19,5 %", "80,5 %"], ["1881", "22,8 %", "77,2 %"], ["1891", "29,2 %", "70,8 %"]]);
-  assert.match(document2.image.url, /migrations-canadiens-etats-unis-1890-villes-pays\.png$/);
-  assert.match(document4.image.url, /migrations-colonisation-au-nord-1883\.jpg$/);
-  assert.match(document5.image.url, /migrations-famine-skibbereen-1847\.jpg$/);
+test("seuls les six titres demandés sont conservés et les images s’agrandissent dans un dialogue", () => {
+  assert.deepEqual(MIGRATIONS_DOCUMENTS.filter(({ title }) => title).map(({ number }) => number), [1, 2, 3, 4, 7, 10]);
+  const student = readFileSync(new URL("../app/components/migrations-partie-b.tsx", import.meta.url), "utf8");
+  assert.match(student, /aria-haspopup="dialog"/);
+  assert.match(student, /dialog\?\.showModal\(\)/);
+  assert.match(student, /Fermer la vue agrandie/);
+  assert.match(student, /onCancel=/);
+  assert.doesNotMatch(student, /<a href=\{document\.image\.url\}/);
+  assert.match(student, /<p>\{document\.source\}<\/p>/);
+  assert.doesNotMatch(student, /document\.fullSource/);
 });
 
-test("le pont Victoria est un document à discriminer", () => {
-  const document7 = MIGRATIONS_DOCUMENTS[6];
-  assert.match(document7.title, /pont Victoria/i);
-  assert.match(document7.image.url, /industrialisation-pont-victoria-construction\.jpg$/);
-  assert.equal(document7.supports, null);
-  assert.equal(expectedMigrationsDocumentChoice(7), "exclude");
-});
-
-test("la rétroaction locale reconnaît des formulations attendues dans les sept cases", () => {
-  const examples: Record<MigrationsSchemaFieldId, string[]> = {
-    object: ["Les migrations"],
-    exode: ["L’exode rural", "Des habitants quittent les campagnes pour les villes"],
-    us_destination: ["Les États-Unis", "Les villes de Nouvelle-Angleterre"],
-    us_causes: ["Les dettes et les mauvaises récoltes", "Les emplois mieux payés en Nouvelle-Angleterre"],
-    colonization: ["L’ouverture de régions de colonisation dans les Laurentides", "Le curé Labelle"],
-    transatlantic: ["Les Irlandais fuient la Grande Famine", "Les îles Britanniques"],
-    quarantine: ["La quarantaine à Grosse-Île", "L’inspection des navires d’immigrants"],
-  };
-  for (const [id, answers] of Object.entries(examples)) {
-    for (const answer of answers) assert.equal(assessMigrationsAnswer(id as MigrationsSchemaFieldId, answer).status, "recognized", `${id}: ${answer}`);
-  }
-});
-
-test("la rétroaction locale ne valide pas les anachronismes ou les réponses contradictoires", () => {
-  for (const [id, answer] of [
-    ["object", "Ce ne sont pas des migrations"],
-    ["us_destination", "Clifford Sifton et l’immigration de masse de 1900"],
-    ["quarantine", "Il n’y a aucune quarantaine"],
-    ["exode", "Le baby boom"],
-    ["quarantine", ""],
-  ] as const) assert.notEqual(assessMigrationsAnswer(id, answer).status, "recognized", answer);
-
-  for (const [id, answer] of [["exode", "Les campagnes"], ["us_destination", "Des villes industrielles"], ["colonization", "Des terres"]] as const) {
-    assert.equal(assessMigrationsAnswer(id, answer).status, "partial", answer);
-  }
-});
-
-test("la restauration ignore les données mal formées et n’ouvre pas un corrigé incomplet", () => {
-  const restored = restoreMigrationsDraft({ answers: { object: 9, exode: "Exode rural" }, choices: { 1: "invalid", 2: "direct" }, submitted: true });
+test("le nouveau brouillon exige seulement les sept réponses et ne récupère pas l’ancien schéma", () => {
+  assert.notEqual(MIGRATIONS_ACTIVITY_ID, "migrations-partie-b-v1");
+  const draft = emptyMigrationsDraft();
+  assert.equal(migrationsMissingCount(draft), 7);
+  for (const { id } of MIGRATIONS_SCHEMA_FIELDS) draft.answers[id] = "Une réponse";
+  assert.equal(migrationsMissingCount(draft), 0);
+  draft.submitted = true;
+  assert.deepEqual(restoreMigrationsDraft(draft), draft);
+  draft.answers.famine = " ";
+  assert.equal(restoreMigrationsDraft(draft).submitted, false);
+  const restored = restoreMigrationsDraft({ answers: { object: 9, exode: "Exode rural", famine: "x".repeat(3000) }, submitted: true });
   assert.equal(restored.answers.object, "");
-  assert.equal(restored.answers.exode, "Exode rural");
-  assert.equal(restored.choices[1], undefined);
-  assert.equal(restored.choices[2], "direct");
+  assert.equal("exode" in restored.answers, false);
+  assert.equal(restored.answers.famine.length, 2000);
   assert.equal(restored.submitted, false);
   assert.deepEqual(restoreMigrationsDraft(null), emptyMigrationsDraft());
 });
 
-test("la complétion exige sept réponses et dix choix binaires", () => {
-  const draft = emptyMigrationsDraft();
-  assert.equal(migrationsMissingCount(draft), 17);
-  for (const field of MIGRATIONS_SCHEMA_FIELDS) draft.answers[field.id] = "Une réponse";
-  for (const document of MIGRATIONS_DOCUMENTS) draft.choices[document.number] = expectedMigrationsDocumentChoice(document.number);
-  assert.equal(migrationsMissingCount(draft), 0);
-  draft.submitted = true;
-  assert.equal(restoreMigrationsDraft(draft).submitted, true);
-  draft.choices[3] = "";
-  assert.equal(migrationsMissingCount(draft), 1);
+test("le corrigé reste dans la route enseignant authentifiée, sans comparaison automatique côté élève", () => {
+  const student = readFileSync(new URL("../app/components/migrations-partie-b.tsx", import.meta.url), "utf8");
+  const teacher = readFileSync(new URL("../app/teacher/activities/migrations-partie-b/page.tsx", import.meta.url), "utf8");
+  const data = readFileSync(new URL("../lib/migrations-partie-b.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(student, /assessMigrationsAnswer|MIGRATIONS_CORRECTION|migrations-partie-b-correction|Terminer et comparer|choiceLabels/);
+  assert.doesNotMatch(data, /LOCAL_ANSWER_RULES|answer:|supports:/);
+  assert.match(student, /teacherMode \? children : null/);
+  assert.match(teacher, /await requireTeacherActor\(\)/);
+  assert.match(teacher, /MIGRATIONS_CORRECTION/);
+  assert.match(student, /<MigrationsRubric \/>/);
+  assert.match(student, /Finaliser et télécharger mes réponses/);
 });

@@ -1,3 +1,4 @@
+import { AGRICULTURE_HISTORICAL_RECORD, FORESTRY_HISTORICAL_RECORD, INDUSTRIALIZATION_HISTORICAL_RECORD } from "@/lib/pedagogical-reference/records/economic-transformations";
 import Link from "next/link";
 import { ACTE_UNION_HISTORICAL_RECORD, BRITISH_NORTH_AMERICA_ACT_HISTORICAL_RECORD, CATHOLIC_CHURCH_PRESENCE_HISTORICAL_RECORD, COLONIAL_ECONOMY_HISTORICAL_RECORD, FEDERAL_PROVINCIAL_RELATIONS_HISTORICAL_RECORD, INDIAN_AFFAIRS_HISTORICAL_RECORD, MIGRATIONS_HISTORICAL_RECORD, NATIONAL_POLICY_HISTORICAL_RECORD, RESPONSIBLE_GOVERNMENT_HISTORICAL_RECORD, SOCIOCULTURAL_MANIFESTATIONS_HISTORICAL_RECORD, WOMEN_ROLE_HISTORICAL_RECORD, getSecondaryFourKnowledgeHeading, getSecondaryFourPeriod } from "@/lib/pedagogical-reference";
 import { NotionTabs, type NotionSectionId, NOTION_SECTIONS } from "../../notion-tabs";
@@ -24,6 +25,9 @@ export default async function PedagogicalReferenceNotionPage({ params, searchPar
   if (notionId === "presence-de-l-eglise-catholique") return <ReferenceValidationView record={CATHOLIC_CHURCH_PRESENCE_HISTORICAL_RECORD} initialSection={section} />;
   if (notionId === "role-des-femmes") return <ReferenceValidationView record={WOMEN_ROLE_HISTORICAL_RECORD} initialSection={section} />;
   if (notionId === "manifestations-socioculturelles") return <ReferenceValidationView record={SOCIOCULTURAL_MANIFESTATIONS_HISTORICAL_RECORD} initialSection={section} />;
+  const economicRecord = [INDUSTRIALIZATION_HISTORICAL_RECORD, FORESTRY_HISTORICAL_RECORD, AGRICULTURE_HISTORICAL_RECORD]
+    .find((record) => record.knowledgeHeadingId === notionId);
+  if (economicRecord) return <ReferenceValidationView record={economicRecord} initialSection={section} />;
   const notionLabel = heading?.officialLabel ?? notionId;
   return <main className="reference-admin">
     <header className="reference-admin__header"><div><p>Administration · Référentiel pédagogique</p><h1>{notionLabel}</h1><span>{period ? `${period.officialPeriodLabel} · ${period.officialSocialReality}` : "Notion historique"}</span></div><div className="reference-admin__header-actions"><Link href="/admin/pedagogical-reference">Toutes les périodes</Link><Link href="/teacher">Espace enseignant</Link></div></header>

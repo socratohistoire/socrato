@@ -9,10 +9,9 @@ test("transforme immédiatement les noms complets sans les retourner", () => {
   assert.doesNotMatch(JSON.stringify(preview), /Pelletier|Roy|Gagnon/);
 });
 
-test("signale les alias ambigus avant l’enregistrement", () => {
-  const preview = createStudentAliasPreview("Mathieu Pelletier\nMathieu Parent");
-  assert.deepEqual(preview.aliases, ["Mathieu P."]);
-  assert.deepEqual(preview.ambiguousAliases, ["Mathieu P."]);
+test("numérote les alias identiques dans l’ordre de la liste", () => {
+  const preview = createStudentAliasPreview("Mathieu Pelletier\nCamille Roy\nMathieu Pelletier\nMathieu Parent");
+  assert.deepEqual(preview.aliases, ["Mathieu P. 1", "Camille R.", "Mathieu P. 2", "Mathieu P. 3"]);
 });
 
 test("ignore les lignes qui ne peuvent pas être anonymisées", () => {
