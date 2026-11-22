@@ -911,12 +911,18 @@ function InteractiveCausalChainQuestion({ question, operationLabel, initialAttem
 function InteractiveAssociationQuestion({ question, documents, operationLabel, initialAttempts, initialHintLevel, onAttempt, onHint, onComplete }: ObjectiveQuestionProps & { documents: LearningSessionDocument[] }) {
   const interaction = question.associationInteraction as AssociationInteraction;
   const hasDocumentItems = interaction.items.some(({ documentId }) => Boolean(documentId));
-  const [causeLayerReady, setCauseLayerReady] = useState(false);
+  const causeDocuments = interaction.causeDocuments ?? [];
+  const causeTargets = interaction.causeTargets ?? [];
+  const hasCauseLayer = causeDocuments.length > 0 && causeTargets.length > 0;
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [causeAssignments, setCauseAssignments] = useState<Record<string, string>>({});
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [selectedCauseDocumentId, setSelectedCauseDocumentId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState(hasDocumentItems ? "Sélectionne un document, puis le concept qu’il illustre." : "Sélectionne un élément, puis l’emplacement auquel il correspond.");
+  const [feedback, setFeedback] = useState(() => {
+    if (causeDocuments.length) return `Commence par placer les ${interaction.items.length} mouvements sur les trajets en pointillés.`;
+    if (hasDocumentItems) return "Sélectionne un document, puis le concept qu’il illustre.";
+    return "Sélectionne un élément, puis l’emplacement auquel il correspond.";
+  });
   const [attempts, setAttempts] = useState(initialAttempts);
   const [completed, setCompleted] = useState(false);
   const [showHint, setShowHint] = useState(initialHintLevel > 0);
@@ -928,9 +934,6 @@ function InteractiveAssociationQuestion({ question, documents, operationLabel, i
   const reviewDialogCloseButtonRef = useRef<HTMLButtonElement>(null);
   const itemById = new Map(interaction.items.map((item) => [item.id, item]));
   const assignedItemIds = new Set(Object.values(assignments));
-  const causeDocuments = interaction.causeDocuments ?? [];
-  const causeTargets = interaction.causeTargets ?? [];
-  const hasCauseLayer = causeLayerReady && causeDocuments.length > 0 && causeTargets.length > 0;
   const causeDocumentById = new Map(causeDocuments.map((document) => [document.documentId, document]));
   const learningDocumentById = new Map(documents.map((document) => [document.id, document]));
   const expandedCauseReference = causeDocuments.find(({ documentId }) => documentId === expandedCauseDocumentId);
@@ -947,11 +950,6 @@ function InteractiveAssociationQuestion({ question, documents, operationLabel, i
   const expandedItemDocument = expandedItemDocumentBase && expandedItem
     ? { ...expandedItemDocumentBase, displayOrder: interaction.items.findIndex(({ id }) => id === expandedItem.id) + 1 }
     : null;
-
-  useEffect(() => {
-    setCauseLayerReady(true);
-    if (interaction.causeDocuments?.length) setFeedback(`Commence par placer les ${interaction.items.length} mouvements sur les trajets en pointillés.`);
-  }, [interaction.causeDocuments]);
 
   useEffect(() => {
     if (!expandedItemId) return;
@@ -1165,8 +1163,9 @@ function timelineImagePosition(entryId: string) {
 }
 
 function TimelineEntryVisual({ entry, width, height }: { entry: TimelineInteraction["entries"][number]; width: number; height: number }) {
-  const sources = entry.imageUrls?.length ? entry.imageUrls : [entry.imageUrl];
-  if (sources.length === 1) return <Image src={sources[0]} alt={entry.imageAlt} width={width} height={height} draggable={false} unoptimized style={{ objectPosition: timelineImagePosition(entry.id) }} />;
+  const sources = entry.imageUrls?.length ? entry.imageUrls : entry.imageUrl ? [entry.imageUrl] : [];
+  if (!sources.length) return null;
+  if (sources.length === 1) return <Image src={sources[0]} alt={entry.imageAlt ?? ""} width={width} height={height} draggable={false} unoptimized style={{ objectPosition: timelineImagePosition(entry.id) }} />;
   return <div className="timeline-entry-image-pair" role="img" aria-label={entry.imageAlt} style={{ gridTemplateColumns: `repeat(${sources.length}, minmax(0, 1fr))` }}>{sources.map((source) => <Image key={source} src={source} alt="" width={Math.round(width / sources.length)} height={height} draggable={false} unoptimized />)}</div>;
 }
 
@@ -1245,7 +1244,7 @@ function InteractiveTimelineQuestion({ question, operationLabel, initialAttempts
     setFeedback(`Voici la réponse attendue. Les ${interaction.dates.length} événements sont maintenant placés dans le bon ordre chronologique.`);
   }
 
-  return <section className="timeline-question" aria-labelledby="timeline-question-title">
+  return <section className="timeline-question" data-slot-count={interaction.dates.length} aria-labelledby="timeline-question-title">
     <header className="timeline-question__header"><div><div className="association-question__meta"><p>Question {question.number}</p>{operationLabel ? <span className="operation-chip">{operationLabel}</span> : null}</div><h2 id="timeline-question-title">{question.prompt}</h2><span>{question.instruction}</span></div></header>
     {showHint ? <p className="timeline-question__hint" role="status">{question.localHint}</p> : null}
     <div className="timeline-question__dates" aria-label="Dates de la ligne du temps">{interaction.dates.map((date) => {
@@ -1442,6 +1441,8 @@ function getNeutralDocumentType(document: OrderedDocument) {
 }
 
 function getVisibleDocumentHeading(document: OrderedDocument) {
+  if (document.id === "IND-I-005") return `${document.typeLabel} : ${document.title}`;
+  if (document.id === "IND-I-006") return document.title;
   return document.id === "PN-I-002" || document.id === "PN-I-003" || document.id === "PN-I-004"
     ? document.title
     : getNeutralDocumentType(document);
@@ -1553,9 +1554,9 @@ function DocumentContent({ document, expanded = false, compact = false, hideHead
           <div className={`document-visual-viewport${expanded ? " document-visual-viewport--expanded" : ""}`}>
             <figure className={`historical-document-figure${imageZoom > 1 ? " is-zoomed" : ""}`} style={imageZoom > 1 ? { width: `${imageZoom * 100}%` } : undefined}>
               <Image className="historical-document-image" src={document.content.localSrc} alt={document.content.alt} width={1600} height={1100} unoptimized />
-              <figcaption className={document.content.visibleCaption ? "historical-document-caption historical-document-caption--expanded" : "historical-document-caption"}>
+              {document.id !== "IND-I-005" && document.id !== "IND-I-006" ? <figcaption className={document.content.visibleCaption ? "historical-document-caption historical-document-caption--expanded" : "historical-document-caption"}>
                 {document.content.visibleCaption ? <>{document.id !== "RFP-I-003" && document.id !== "MIG-I-002" ? <strong>{document.id === "RFP-I-001" ? "Description factuelle" : "Description traduite"}</strong> : null}<span>{document.content.visibleCaption}</span>{document.content.visibleCaptionNote ? <small>{document.content.visibleCaptionNote}</small> : null}</> : document.title}
-              </figcaption>
+              </figcaption> : null}
             </figure>
           </div>
         </>) : <blockquote>{document.content.adapted ? document.content.excerpt : <>« {document.content.excerpt} »</>}</blockquote>}
