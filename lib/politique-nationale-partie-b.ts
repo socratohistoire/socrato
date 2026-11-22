@@ -25,7 +25,7 @@ export const POLITIQUE_NATIONALE_SCHEMA_FIELDS = [
   },
   {
     id: "railway",
-    prompt: "Nommez le chemin de fer transcontinental représenté par le tracé rouge dans le document 5.",
+    prompt: "Nommez le chemin de fer transcontinental.",
   },
   {
     id: "settlement",

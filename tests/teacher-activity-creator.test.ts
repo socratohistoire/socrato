@@ -213,7 +213,7 @@ test("rend les questions de 150 mots accessibles en développement et en révisi
   assert.ok(enrichmentQuestions.length > 0);
   assert.equal(revisionQuestions.some(({ format }) => format === "development-150"), true);
   assert.equal(enrichmentQuestions.some(({ format }) => format === "development-150"), false);
-  assert.equal(catalog.questions.filter(({ format }) => format === "development-150").every(({ prompt }) => prompt.endsWith("(150 mots).")), true);
+  assert.equal(catalog.questions.filter(({ format }) => format === "development-150").every(({ prompt, instruction }) => /150 mots/.test(`${prompt} ${instruction}`)), true);
   const allDevelopment = Array.from({ length: 5 }, (_, variant) => createLocalActivityPreview({ ...developmentConfig, operationId: null }, catalog, variant));
   assert.equal(new Set(allDevelopment.map(({ question }) => question)).size, 5);
   const timelineQuestion = allDevelopment.find(({ question }) => question.startsWith("À l’aide de la ligne du temps"));
@@ -285,7 +285,7 @@ test("génère un aperçu déterministe depuis les documents approuvés", async 
   const second = createLocalActivityPreview(unlimitedRevisionConfig, catalog);
   assert.deepEqual(first, second);
   assert.deepEqual(first.documents.map(({ id }) => id), ["PAT-T-002", "PAT-T-003", "PAT-T-007"]);
-  assert.equal(catalog.questions.length, 138);
+  assert.equal(catalog.questions.length, 148);
   assert.equal(catalog.questions.some(({ id }) => id === "question:acte-union:document-interpretation-005"), false);
   assert.equal(first.operationLabel, "Établir des liens de causalité");
   assert.equal(first.question, catalog.questions[0]?.prompt);

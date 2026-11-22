@@ -86,7 +86,7 @@ test("le document ferroviaire utile n’est plus doublé par un autre chemin de 
   assert.match(document5.image.url, /industrialisation-reseaux-ferroviaires-carte\.png$/);
   assert.doesNotMatch(document5.title + document5.note + document5.image.alt, /Canadien Pacifique|Grand Tronc|Intercolonial/i);
   assert.match(document5.note, /rétrospectif/);
-  assert.match(POLITIQUE_NATIONALE_SCHEMA_FIELDS.find(({ id }) => id === "railway")!.prompt, /tracé rouge/);
+  assert.equal(POLITIQUE_NATIONALE_SCHEMA_FIELDS.find(({ id }) => id === "railway")!.prompt, "Nommez le chemin de fer transcontinental.");
   assert.equal(document5.supports, "railway");
   assert.equal(document6.title, "L’Empress of Ireland transporte des passagers et du courrier entre Liverpool et Québec. Il est propulsé par des machines à vapeur.");
   assert.equal(document6.date, "");
