@@ -1,3 +1,4 @@
+import { WOMEN_ROLE_DOCUMENTS } from "@/lib/pedagogical-reference/role-des-femmes-questions";
 import Image from "next/image";
 import { POLITIQUE_NATIONALE_TARIFF_COMPARISON_DOCUMENTS } from "@/lib/pedagogical-reference/politique-nationale-tariff-comparison";
 import { POLITIQUE_NATIONALE_CRISIS_MANIFESTATION_DOCUMENTS } from "@/lib/pedagogical-reference/politique-nationale-crisis-manifestations";
@@ -126,7 +127,7 @@ function ReviewableTextDocument({ document }: { document: HistoricalDocumentReco
 export function HistoricalDocumentsNotionPage({ notionId }: { notionId: string }) {
   const officialHeading = SECONDARY_FOUR_PERIODS.flatMap(({ knowledgeHeadings }) => knowledgeHeadings).find(({ id }) => id === notionId);
   const notionLabel = notionId === "rebellions-1837-1838" ? "Rébellions de 1837-1838" : officialHeading?.officialLabel ?? notionId;
-  const hasDocuments = ["acte-union", "acte-de-l-amerique-du-nord-britannique", "gouvernement-responsable", "rebellions-1837-1838", "economie-coloniale", "affaires-indiennes", "relations-federales-provinciales", "premiere-phase-d-industrialisation", "politique-nationale"].includes(notionId);
+  const hasDocuments = ["role-des-femmes", "acte-union", "acte-de-l-amerique-du-nord-britannique", "gouvernement-responsable", "rebellions-1837-1838", "economie-coloniale", "affaires-indiennes", "relations-federales-provinciales", "premiere-phase-d-industrialisation", "politique-nationale"].includes(notionId);
   return <main className="reference-admin document-bank">
     <header className="reference-admin__header">
       <div><p>Administration · Référentiel pédagogique</p><h1>{notionLabel}</h1><span>{officialHeading ? `${SECONDARY_FOUR_PERIODS.find(({ id }) => id === officialHeading.periodId)?.officialPeriodLabel} · Dossier de la notion` : "Notion historique"}</span></div>
@@ -472,7 +473,8 @@ export function HistoricalDocumentsNotionPage({ notionId }: { notionId: string }
       </article>)}</div>
     </section></>}
 
-    {notionId === "role-des-femmes" && <section className="document-bank__text-documents" aria-labelledby="responsible-government-electoral-law-title">
+    {notionId === "role-des-femmes" && WOMEN_ROLE_DOCUMENTS.map((document) => <section id={document.id} key={document.id} className="document-bank__candidates"><h2>{document.title}</h2><p>{document.typeLabel}</p>{document.content.kind === "historical_excerpt" && <p>{document.content.excerpt}</p>}<p><small>{document.editorialNote}</small></p><p>{document.sourceLabel}</p><a href={document.sourceUrls[0]} target="_blank" rel="noreferrer">Consulter la source</a></section>)}
+{notionId === "role-des-femmes" && <section className="document-bank__text-documents" aria-labelledby="responsible-government-electoral-law-title">
       <div className="document-bank__section-title"><p>Notion · Rôle des femmes</p><h2 id="responsible-government-electoral-law-title">Documents textuels</h2></div>
       <article className="student-document-preview"><p className="student-document-preview__label">Aperçu exact du contenu de la carte élève</p><div className="student-document-preview__card">
         <h4><strong>{RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.title}</strong><span aria-hidden="true"> · </span><small>{RESPONSIBLE_GOVERNMENT_ELECTORAL_LAW_PRESENTATION.typeLabel}</small></h4>

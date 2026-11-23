@@ -1,3 +1,4 @@
+import { WOMEN_ROLE_DOCUMENTS } from "../pedagogical-reference/role-des-femmes-questions.ts";
 import { INDUSTRIALIZATION_URBANIZATION_HOUSING_DOCUMENTS } from "../pedagogical-reference/industrialization-urbanization-housing.ts";
 import { MIGRATIONS_DEVELOPMENT_DOCUMENTS } from "../pedagogical-reference/migrations-development.ts";
 import { INDUSTRIALIZATION_ECONOMIC_DOCUMENTS } from "../pedagogical-reference/industrialization-economic-development.ts";
@@ -92,7 +93,7 @@ export const ACTE_UNION_REBELLION_CONSEQUENCE_DOCUMENTS: LearningSessionDocument
   intellectualOperationIds: [...document.operationIds],
 }));
 
-export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [
+export const ACTE_UNION_DOCUMENTS: LearningSessionDocument[] = [...WOMEN_ROLE_DOCUMENTS, 
   ...INDUSTRIALIZATION_CAPITALISM_DOCUMENTS,
   ...INDUSTRIALIZATION_HOUSING_DOCUMENTS,
   ...INDUSTRIALIZATION_URBANIZATION_HOUSING_DOCUMENTS,
